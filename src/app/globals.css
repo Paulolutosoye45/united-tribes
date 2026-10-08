@@ -1,0 +1,574 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque/standard.css";
+
+/*
+ * United Tribes design tokens.
+ *
+ * The four crest colours are sampled from the Covenant Nation logo:
+ * the charcoal and flame quarters, the ribbon gold, and the amber of the
+ * flames. Everything else is derived so text always passes WCAG AA.
+ *
+ * The look: a quiet stone canvas, white raised cards with soft layered
+ * shadow, and "night" panels in crest charcoal lit from one corner by an
+ * ember glow (flame, amber, gold). The quartered shield is the identity
+ * device: it is the logo, the progress meter and the compatibility score.
+ */
+:root {
+  /* Crest palette (from the logo) */
+  --crest-charcoal: #2e2e2b;
+  --crest-flame: #e86838;
+  --crest-gold: #f4c443;
+  --crest-amber: #e89838;
+
+  /* Derived */
+  --crest-ink: #1a1917; /* text on flame and gold: 5.4:1 on flame */
+  --crest-flame-deep: #b8441c; /* flame as text on white: 5.4:1 */
+  --night: #232321;
+  --night-edge: #3a3a36;
+
+  /* Light theme (default) */
+  --page: #f5f4f1;
+  --raised: #ffffff;
+  --surface: #eeece7;
+  --surface-strong: #e4e1da;
+  --line: #e1ded7;
+  --ink: #1a1917;
+  --soft: #5b5852; /* secondary text: 6.4:1 on the canvas */
+  --accent-text: var(--crest-flame-deep);
+  --focus: #1a1917;
+  --danger: #b3261e;
+  --success: #1f7a45;
+
+  --shadow-card:
+    0 1px 0 rgb(26 25 23 / 0.04), 0 1px 2px rgb(26 25 23 / 0.06),
+    0 14px 32px -14px rgb(26 25 23 / 0.16);
+  --shadow-pop:
+    0 2px 4px rgb(26 25 23 / 0.06), 0 28px 56px -18px rgb(26 25 23 / 0.32);
+  --shadow-flame: 0 10px 24px -10px rgb(232 104 56 / 0.7);
+  --glass: rgb(245 244 241 / 0.78);
+
+  --radius-sheet: 32px;
+  --radius-card: 24px;
+  --radius-control: 16px;
+  --radius-chip: 999px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #121211;
+    --raised: #1c1b19;
+    --surface: #242321;
+    --surface-strong: #2f2d2a;
+    --line: #34322e;
+    --ink: #f5f3ee;
+    --soft: #b9b5ac; /* 8:1 on page */
+    --accent-text: var(--crest-gold);
+    --focus: #f5f3ee;
+    --danger: #ff8a80;
+    --success: #6fd49a;
+    --shadow-card:
+      0 0 0 1px rgb(255 255 255 / 0.03), 0 14px 32px -14px rgb(0 0 0 / 0.7);
+    --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.05), 0 28px 56px -18px rgb(0 0 0 / 0.8);
+    --glass: rgb(18 18 17 / 0.78);
+  }
+}
+
+:root[data-theme="dark"] {
+  --page: #121211;
+  --raised: #1c1b19;
+  --surface: #242321;
+  --surface-strong: #2f2d2a;
+  --line: #34322e;
+  --ink: #f5f3ee;
+  --soft: #b9b5ac;
+  --accent-text: var(--crest-gold);
+  --focus: #f5f3ee;
+  --danger: #ff8a80;
+  --success: #6fd49a;
+  --shadow-card: 0 0 0 1px rgb(255 255 255 / 0.03), 0 14px 32px -14px rgb(0 0 0 / 0.7);
+  --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.05), 0 28px 56px -18px rgb(0 0 0 / 0.8);
+  --glass: rgb(18 18 17 / 0.78);
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-raised: var(--raised);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-soft: var(--soft);
+  --color-accent: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-charcoal: var(--crest-charcoal);
+  --color-night: var(--night);
+  --color-flame: var(--crest-flame);
+  --color-flame-deep: var(--crest-flame-deep);
+  --color-gold: var(--crest-gold);
+  --color-amber: var(--crest-amber);
+  --color-on-flame: var(--crest-ink);
+  --font-sans:
+    "Bricolage Grotesque Variable", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --radius-control: var(--radius-control);
+  --radius-sheet: var(--radius-sheet);
+  --radius-card: var(--radius-card);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+}
+
+html {
+  color-scheme: light dark;
+  -webkit-text-size-adjust: 100%;
+  font-optical-sizing: auto;
+  scroll-behavior: smooth;
+  /* Sticky bars must never hide the field someone is moving to (focus stays visible). */
+  scroll-padding-block: 5.5rem 8rem;
+  overflow-x: clip;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: clip;
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* A heading that takes focus on a new screen is not a control: no ring around it. */
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+::selection {
+  background: var(--crest-gold);
+  color: var(--crest-ink);
+}
+
+/*
+ * Type scale. One family, used at different optical sizes and widths:
+ * large type is narrower and heavier, small type is open and regular.
+ */
+.t-hero {
+  font-size: clamp(2.9rem, 12vw, 6.25rem);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  font-weight: 780;
+  font-stretch: 78%;
+}
+.t-display {
+  font-size: clamp(2.6rem, 9vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  font-weight: 750;
+  font-stretch: 82%;
+}
+.t-title {
+  font-size: clamp(1.85rem, 6vw, 2.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  font-weight: 700;
+  font-stretch: 86%;
+}
+.t-question {
+  font-size: clamp(1.7rem, 6.2vw, 2.4rem);
+  line-height: 1.06;
+  letter-spacing: -0.026em;
+  font-weight: 700;
+  font-stretch: 86%;
+  text-wrap: balance;
+}
+.t-heading {
+  font-size: 1.25rem;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  font-weight: 650;
+}
+.t-body {
+  font-size: 1rem;
+  line-height: 1.55;
+}
+.t-small {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.t-figure {
+  font-size: clamp(3rem, 14vw, 4.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+  font-stretch: 76%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Reading width */
+.measure {
+  max-width: 62ch;
+}
+.balance {
+  text-wrap: balance;
+}
+
+/* ------------------------------------------------------------------ */
+/* Surfaces                                                            */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .card {
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /*
+   * Night panel: crest charcoal, lit from the top right by an ember glow,
+   * with a fine grain so large areas do not look flat.
+   */
+  .night {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: #fff;
+    background:
+      radial-gradient(70% 90% at 100% 0%, rgb(232 104 56 / 0.42), transparent 62%),
+      radial-gradient(60% 70% at 0% 100%, rgb(244 196 67 / 0.2), transparent 64%),
+      linear-gradient(160deg, #343431, var(--night) 55%, #1c1c1a);
+  }
+  .night::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.09;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* A single warm line, for dividers that want to feel lit */
+  .ember-line {
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--crest-gold), var(--crest-amber), var(--crest-flame), transparent);
+  }
+
+  .glass {
+    background: var(--glass);
+    -webkit-backdrop-filter: saturate(1.6) blur(18px);
+    backdrop-filter: saturate(1.6) blur(18px);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Buttons                                                           */
+  /* ---------------------------------------------------------------- */
+  .btn {
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 160ms var(--ease-spring),
+      box-shadow 220ms ease,
+      background-color 160ms ease,
+      border-color 160ms ease,
+      filter 160ms ease;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .btn-primary {
+    color: var(--crest-ink);
+    background: linear-gradient(180deg, #f27d4a 0%, var(--crest-flame) 55%, #de5b2b 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.38),
+      inset 0 -1px 0 rgb(0 0 0 / 0.1),
+      var(--shadow-flame);
+  }
+  .btn-primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.4) 50%, transparent 65%);
+    transform: translateX(-120%);
+    pointer-events: none;
+  }
+  .btn-solid {
+    color: var(--page);
+    background: var(--ink);
+    box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.5);
+  }
+  .btn-quiet {
+    color: var(--ink);
+    background: var(--raised);
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgb(26 25 23 / 0.05);
+  }
+  .btn-ghost {
+    color: var(--ink);
+    background: transparent;
+  }
+  .btn-night {
+    color: #fff;
+    background: rgb(255 255 255 / 0.1);
+    border: 1px solid rgb(255 255 255 / 0.18);
+  }
+  @media (hover: hover) {
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: saturate(1.08);
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.38),
+        inset 0 -1px 0 rgb(0 0 0 / 0.1),
+        0 14px 28px -10px rgb(232 104 56 / 0.8);
+    }
+    .btn-primary:hover:not(:disabled)::after {
+      transform: translateX(120%);
+      transition: transform 700ms var(--ease-out);
+    }
+    .btn-solid:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn-quiet:hover:not(:disabled) { border-color: var(--soft); }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface); }
+    .btn-night:hover:not(:disabled) { background: rgb(255 255 255 / 0.18); }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Choice cards: the answer you tap                                  */
+  /* ---------------------------------------------------------------- */
+  .choice {
+    position: relative;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.875rem;
+    min-height: 3.5rem;
+    padding: 0.875rem 1rem;
+    text-align: left;
+    background: var(--raised);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-control);
+    transition:
+      transform 220ms var(--ease-spring),
+      border-color 160ms ease,
+      background-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+  .choice:active { transform: scale(0.985); }
+  .choice:has(:checked) {
+    border-color: var(--ink);
+    background: color-mix(in srgb, var(--crest-gold) 14%, var(--raised));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--crest-gold) 40%, transparent);
+  }
+  @media (hover: hover) {
+    .choice:hover { border-color: var(--soft); }
+    .choice:has(:checked):hover { border-color: var(--ink); }
+  }
+  .choice-mark {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: var(--raised);
+    transition: background-color 160ms ease, border-color 160ms ease, transform 280ms var(--ease-spring);
+  }
+  .choice:has(:checked) .choice-mark {
+    background: var(--ink);
+    border-color: var(--ink);
+    transform: scale(1.08);
+  }
+  .choice-mark svg path {
+    stroke: var(--page);
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    transition: stroke-dashoffset 260ms var(--ease-out) 60ms;
+  }
+  .choice:has(:checked) .choice-mark svg path {
+    stroke-dashoffset: 0;
+  }
+  /* The square variant is used when several answers can be chosen */
+  .choice-mark.square { border-radius: 8px; }
+
+  /* A suggestion from the assistant, lit with a thin ember edge */
+  .suggested {
+    border-color: transparent;
+    background:
+      linear-gradient(var(--raised), var(--raised)) padding-box,
+      linear-gradient(135deg, var(--crest-gold), var(--crest-flame)) border-box;
+    border: 1.5px solid transparent;
+  }
+  .suggested:has(:checked) {
+    background:
+      linear-gradient(color-mix(in srgb, var(--crest-gold) 18%, var(--raised)), color-mix(in srgb, var(--crest-gold) 18%, var(--raised))) padding-box,
+      linear-gradient(135deg, var(--crest-gold), var(--crest-flame)) border-box;
+  }
+
+  /* Segmented control for short either/or answers */
+  .segmented {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .segmented label {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    cursor: pointer;
+    min-height: 2.75rem;
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--soft);
+    transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease, transform 200ms var(--ease-spring);
+  }
+  .segmented label:has(:checked) {
+    background: var(--raised);
+    color: var(--ink);
+    font-weight: 650;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.14), 0 6px 14px -8px rgb(0 0 0 / 0.3);
+  }
+  .segmented label:active { transform: scale(0.96); }
+  .segmented label:has(:focus-visible),
+  .choice:has(:focus-visible) {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                              */
+/* ------------------------------------------------------------------ */
+@keyframes quarter-in-tl { from { transform: translate(-22px, -22px); opacity: 0; } }
+@keyframes quarter-in-tr { from { transform: translate(22px, -22px); opacity: 0; } }
+@keyframes quarter-in-bl { from { transform: translate(-22px, 22px); opacity: 0; } }
+@keyframes quarter-in-br { from { transform: translate(22px, 22px); opacity: 0; } }
+@keyframes fill-up { from { transform: scaleY(0); } }
+@keyframes rise-in { from { transform: translateY(14px); opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes pop-in { from { transform: scale(0.94); opacity: 0; } }
+@keyframes step-forward { from { transform: translateX(32px); opacity: 0; } }
+@keyframes step-back { from { transform: translateX(-32px); opacity: 0; } }
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+@keyframes burst {
+  0% { transform: translate(0, 0) rotate(0) scale(0.4); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1); opacity: 0; }
+}
+@keyframes ring-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(244 196 67 / 0.55); }
+  100% { box-shadow: 0 0 0 14px rgb(244 196 67 / 0); }
+}
+@keyframes quarter-flash {
+  0% { opacity: 0.35; }
+  40% { opacity: 1; filter: brightness(1.25); }
+  100% { opacity: 1; filter: none; }
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes draw-line { from { transform: scaleX(0); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .quarter-tl { animation: quarter-in-tl 700ms var(--ease-out) both; }
+  .quarter-tr { animation: quarter-in-tr 700ms var(--ease-out) 90ms both; }
+  .quarter-bl { animation: quarter-in-bl 700ms var(--ease-out) 180ms both; }
+  .quarter-br { animation: quarter-in-br 700ms var(--ease-out) 270ms both; }
+  .meter-fill {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: fill-up 900ms var(--ease-out) 150ms both;
+  }
+  .bar-up { transform-origin: bottom; animation: fill-up 800ms var(--ease-out) calc(var(--i, 0) * 45ms + 150ms) both; }
+  .bar-right { transform-origin: left; animation: draw-line 800ms var(--ease-out) calc(var(--i, 0) * 70ms + 150ms) both; }
+  .rise-in { animation: rise-in 520ms var(--ease-out) both; }
+  .fade-in { animation: fade-in 400ms ease both; }
+  .pop-in { animation: pop-in 420ms var(--ease-spring) both; }
+  .screen-enter { animation: rise-in 380ms var(--ease-out) both; }
+  .step-forward { animation: step-forward 420ms var(--ease-out) both; }
+  .step-back { animation: step-back 420ms var(--ease-out) both; }
+  /* Children appear one after another; set --i on each child */
+  .stagger > * { animation: rise-in 520ms var(--ease-out) calc(var(--i, 0) * 55ms + 60ms) both; }
+  .glow-breathe { animation: glow-breathe 7s ease-in-out infinite; }
+  .draw-line { transform-origin: left; animation: draw-line 900ms var(--ease-out) 200ms both; }
+  .quarter-flash { animation: quarter-flash 800ms var(--ease-out) both; }
+  .ring-pulse { animation: ring-pulse 1.8s ease-out infinite; }
+  .shake { animation: shake 420ms ease-in-out both; }
+  .burst > span { animation: burst 1.3s var(--ease-out) calc(var(--d, 0) * 1ms) both; }
+}
+
+/* Tap feedback answers the person's action */
+.press {
+  transition:
+    transform 140ms var(--ease-spring),
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Skeleton shimmer, calm and slow */
+.skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--surface) 30%,
+    var(--surface-strong) 50%,
+    var(--surface) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s linear infinite;
+  border-radius: 12px;
+}
+
+/* Safe areas for notched phones */
+.safe-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+/* Set --safe-pt for extra top padding: a plain pt-* utility would lose to this rule. */
+.safe-top {
+  padding-top: calc(var(--safe-pt, 0px) + env(safe-area-inset-top, 0px));
+}
+
+/* Hide scrollbars on horizontal strips without removing scrolling */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

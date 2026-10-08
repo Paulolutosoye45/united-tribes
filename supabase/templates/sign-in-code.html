@@ -1,0 +1,14 @@
+<!--
+  Paste into: Supabase > Authentication > Emails > "Magic link" (and "Confirm signup").
+  Subject: Your United Tribes sign-in code
+
+  It shows the six-digit code and deliberately has NO link. Many email security
+  tools open every link in a message, and that uses up the one-time code before
+  the person can type it.
+-->
+<div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #1a1917;">
+  <p style="font-size: 18px; margin: 0 0 8px;"><strong>United Tribes</strong></p>
+  <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">Enter this code to sign in:</p>
+  <p style="font-size: 36px; letter-spacing: 8px; font-weight: bold; margin: 0 0 20px; padding: 16px; background: #f7f6f3; border-radius: 12px; text-align: center;">{{ .Token }}</p>
+  <p style="font-size: 14px; line-height: 1.5; color: #5b5852; margin: 0;">If you didn't ask to sign in, you can ignore this email. Nobody can sign in without the code.</p>
+</div>
