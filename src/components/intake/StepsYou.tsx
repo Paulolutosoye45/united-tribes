@@ -16,7 +16,7 @@ export function AgeStep({ answers, set, catalogue }: StepProps & { catalogue: Ca
 
   return (
     <>
-      <StepHeading title="How old are you?" hint="A range is plenty. It helps us place you with people in a similar season of life." />
+      <StepHeading title="How old are you?" hint="Helps us place you with people in a similar season of life." />
       <div role="radiogroup" aria-label="Age range" className="stagger grid grid-cols-2 gap-3">
         {catalogue.ageRanges.map((r, i) => (
           <Choice

@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: { default: "United Tribes", template: "%s · United Tribes" },
   description: "Find your people. Grow together. Small Tribes at The Covenant Nation, built around your season of life.",
   applicationName: "United Tribes",
+  verification: {
+    google: 'google-site-verification: google7d689d94de0f9315.html',
+  },
 };
 
 export const viewport: Viewport = {

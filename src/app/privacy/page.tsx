@@ -72,7 +72,6 @@ export default function PrivacyPage() {
           </span>
         </Link>
         <h1 className="t-title">Privacy notice</h1>
-        <p className="t-body text-soft">In plain words. Draft wording: have counsel review it against the Nigeria Data Protection Act 2023 before launch, and add the office’s contact details.</p>
       </header>
       {SECTIONS.map((s) => (
         <section key={s.title} className="flex flex-col gap-3">
