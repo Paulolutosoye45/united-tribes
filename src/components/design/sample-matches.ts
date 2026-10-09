@@ -3,7 +3,7 @@ import type { MatchCardData } from "@/components/ui/MatchCard";
 /** Invented sample data for the style page and the phone preview. Not real people. */
 export const SAMPLE_MATCHES: MatchCardData[] = [
   {
-    circleName: "Surulere Wednesday Circle",
+    circleName: "Surulere Wednesday Tribe",
     tribe: "Professionals",
     track: "Builders",
     goal: "Step into a leadership role",
@@ -25,7 +25,7 @@ export const SAMPLE_MATCHES: MatchCardData[] = [
     ],
   },
   {
-    circleName: "Lekki Career Shift Circle",
+    circleName: "Lekki Career Shift Tribe",
     tribe: "Professionals",
     track: "Builders",
     goal: "Change career direction with confidence",

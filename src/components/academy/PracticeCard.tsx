@@ -12,7 +12,7 @@ export function PracticeCard({ my }: { my: MyAcademy }) {
         {p ? p.ready ? <Badge tone="gold">Ready</Badge> : <Badge tone="flame">Not yet</Badge> : <Badge tone="outline">Not arranged</Badge>}
       </div>
       <p className="t-body text-soft">
-        You co-lead one Starter Circle session, or record a simulation, with a coach watching. It is 75 minutes, and a coach marks you ready when you can run a meeting with care.
+        You co-lead one Starter Tribe session, or record a simulation, with a coach watching. It is 75 minutes, and a coach marks you ready when you can run a meeting with care.
       </p>
       {p ? (
         <div className="rounded-[var(--radius-control)] bg-surface p-4">

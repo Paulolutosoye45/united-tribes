@@ -21,7 +21,7 @@ export function CircleResults({ circles, verdicts, canOpen, complete }: { circle
     <section aria-labelledby="circles-heading" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="circles-heading" className="t-heading">
-          Circles
+          Tribes
         </h2>
         <p className="flex flex-wrap gap-2">
           {summary.map((s) => (
@@ -32,7 +32,7 @@ export function CircleResults({ circles, verdicts, canOpen, complete }: { circle
         </p>
       </div>
       {circles.length === 0 ? (
-        <p className="t-body text-soft">No circles with members yet.</p>
+        <p className="t-body text-soft">No Tribes with members yet.</p>
       ) : (
         <ul className="stagger flex flex-col gap-3">
           {circles.map((c, i) => {
@@ -75,7 +75,7 @@ export function CircleResults({ circles, verdicts, canOpen, complete }: { circle
         </ul>
       )}
       <p className="t-small text-soft">
-        {plural(circles.length, "circle")} shown. A circle is effective when at least 80% of its members thrive and at least 70% gain two points or more on the Success Picture. That is judged when the season ends.
+        {plural(circles.length, "Tribe")} shown. A Tribe is effective when at least 80% of its members thrive and at least 70% gain two points or more on the Success Picture. That is judged when the season ends.
       </p>
     </section>
   );

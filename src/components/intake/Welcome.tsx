@@ -29,7 +29,7 @@ export function Welcome({
   return (
     <>
       <StepHeading
-        title="Let’s find your circle."
+        title="Let’s find your Tribe."
         hint={`It takes about four minutes.${seasonName ? ` These answers place you for ${seasonName}.` : ""} Here is how we look after what you share.`}
       />
       <ul className="card rise-in mb-8 divide-y divide-line overflow-hidden">

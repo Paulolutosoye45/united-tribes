@@ -54,17 +54,17 @@ export function SupplyMap({ supply }: { supply: Supply }) {
           Seats and demand
         </h2>
         <p className="t-small text-soft">
-          {supply.wants} members asked for a circle and there are {supply.seats} seats in approved circles with a certified leader.{" "}
+          {supply.wants} members asked for a Tribe and there are {supply.seats} seats in approved Tribes with a certified leader.{" "}
           {short > 0 ? `${short} more seats are needed where the map is red. ` : "Every group has enough seats. "}
-          {supply.unmet > 0 ? `${supply.unmet} members could not be shown three good circles.` : ""}
+          {supply.unmet > 0 ? `${supply.unmet} members could not be shown three good Tribes.` : ""}
         </p>
       </div>
       {active.length === 0 ? (
-        <p className="t-body text-soft">No member has finished the form yet, and no circle has been approved.</p>
+        <p className="t-body text-soft">No member has finished the form yet, and no Tribe has been approved.</p>
       ) : (
         <div className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
           <table className={`w-full ${tracks.length > 2 ? "min-w-[34rem]" : ""} border-separate border-spacing-1.5 text-left`}>
-            <caption className="sr-only">Members who asked for a circle and seats available, by tribe and life stage</caption>
+            <caption className="sr-only">Members who asked for a Tribe and seats available, by tribe and life stage</caption>
             <thead>
               <tr>
                 <th scope="col" className="t-small w-[30%] pb-1 font-medium text-soft">
@@ -114,7 +114,7 @@ export function SupplyMap({ supply }: { supply: Supply }) {
         </div>
       )}
       <p className="t-small text-soft">
-        Each box: members who asked, seats, and the difference.{quiet > 0 ? ` ${quiet} tribes${supply.tracks.length - tracks.length > 0 ? ` and ${supply.tracks.length - tracks.length} life stages` : ""} have no members or circles yet.` : ""} Seats count circles with a certified leader; the Starter Circle is not counted.
+        Each box: members who asked, seats, and the difference.{quiet > 0 ? ` ${quiet} tribes${supply.tracks.length - tracks.length > 0 ? ` and ${supply.tracks.length - tracks.length} life stages` : ""} have no members or Tribes yet.` : ""} Seats count Tribes with a certified leader; the Starter Tribe is not counted.
       </p>
     </section>
   );

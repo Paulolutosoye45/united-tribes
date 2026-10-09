@@ -43,7 +43,7 @@ export function salutation(fullName: string): string {
 
 /** The WhatsApp message an applicant sends a referee along with their private link. */
 export function refereeMessage(refereeName: string, url: string): string {
-  return `Hello ${salutation(refereeName)}, I am applying to lead a small group (a circle) at The Covenant Nation, and I would be grateful if you would give a short reference for me. It takes about two minutes. This private link works once: ${url}`;
+  return `Hello ${salutation(refereeName)}, I am applying to lead a small group (a Tribe) at The Covenant Nation, and I would be grateful if you would give a short reference for me. It takes about two minutes. This private link works once: ${url}`;
 }
 
 /** wa.me link: opens the referee’s chat when we have their number, otherwise lets the sender choose. */

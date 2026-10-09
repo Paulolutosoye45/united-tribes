@@ -85,10 +85,10 @@ export function MatchCard({ shown, featured, index }: { shown: ShownCircle; feat
       </details>
 
       {full ? (
-        <p className={cn("t-small rounded-[var(--radius-control)] px-4 py-3", night ? "bg-white/10" : "bg-surface text-soft")}>This circle has filled since you looked. Check again for others.</p>
+        <p className={cn("t-small rounded-[var(--radius-control)] px-4 py-3", night ? "bg-white/10" : "bg-surface text-soft")}>This Tribe has filled since you looked. Check again for others.</p>
       ) : (
         <Link href={`/circle/choose/${c.id}`} className={buttonClasses({ variant: night ? "primary" : "solid", fullWidth: true })}>
-          <span className="relative">Choose this circle</span>
+          <span className="relative">Choose this Tribe</span>
         </Link>
       )}
     </article>

@@ -30,12 +30,12 @@ export function JoinedView({
             <h1 className="t-title">You’re in{answers.preferredName ? `, ${answers.preferredName}` : ""}.</h1>
             <p className="t-body max-w-[44ch] text-white/80">
               {seasonName
-                ? `We’ll match you for ${seasonName}${seasonStarts ? `, which starts on ${seasonStarts}` : ""}. See which circles fit you, each with its own score.`
-                : "See which circles fit you, each with its own score."}
+                ? `We’ll match you for ${seasonName}${seasonStarts ? `, which starts on ${seasonStarts}` : ""}. See which Tribes fit you, each with its own score.`
+                : "See which Tribes fit you, each with its own score."}
             </p>
             <div className="pt-1">
               <Link href="/circle" className={buttonClasses({ className: "px-8" })}>
-                <span className="relative">See my circles</span>
+                <span className="relative">See my Tribes</span>
               </Link>
             </div>
           </div>

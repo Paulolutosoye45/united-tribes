@@ -34,7 +34,7 @@ export const SUCCESS_PICTURE_NOTE =
   "The Success Picture score adds a member’s three answers (God, others, life, each 1 to 5), so it runs from 3 to 15. The gain is the latest score minus the first.";
 
 export const STANDING: Record<MyStanding, { title: string; line: string }> = {
-  before: { title: "Your season has not started.", line: "Your numbers will appear here once the circle begins to meet." },
+  before: { title: "Your season has not started.", line: "Your numbers will appear here once the Tribe begins to meet." },
   too_early: { title: "It is early.", line: "Your picture appears after week 3. Keep coming and keep taking your step." },
   on_pace: { title: "You are on pace.", line: "Keep going: it is the small, steady steps that carry the season." },
   catching_up: { title: "You can still catch up.", line: "Come to the next meetings, and tell your leader what would help you." },

@@ -45,7 +45,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
             <span className="text-gold">Grow together.</span>
           </h1>
           <p className="t-body max-w-[38ch] text-white/75 rise-in" style={{ animationDelay: "120ms" }}>
-            Small circles of up to twelve, built around the season you are in and the goal you are after.
+            Small Tribes of up to twelve, built around the season you are in and the goal you are after.
           </p>
 
           <ul className="stagger mt-2 hidden flex-col gap-3 lg:flex">
@@ -69,7 +69,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
         <footer className="mx-auto flex w-full max-w-md items-center gap-3 text-soft">
           <Image src="/brand/tcn-logo.png" alt="" width={44} height={44} className="h-11 w-11 shrink-0" />
           <p className="t-small">
-            A ministry of The Covenant Nation. We use your email or WhatsApp number only to sign you in and to reach you about your circle.
+            A ministry of The Covenant Nation. We use your email or WhatsApp number only to sign you in and to reach you about your Tribe.
           </p>
         </footer>
       </section>

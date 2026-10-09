@@ -21,13 +21,13 @@ const LINE_FIELDS = [
   {
     key: "god",
     label: "Loving God",
-    hint: "The faith habit your circle keeps together.",
+    hint: "The faith habit your Tribe keeps together.",
     example: "Read the week’s passage and say the confession five days a week.",
   },
   {
     key: "others",
     label: "Loving Others",
-    hint: "How your circle carries each other.",
+    hint: "How your Tribe carries each other.",
     example: "Pray for our triad weekly; nobody misses twice without a call.",
   },
   {
@@ -147,14 +147,14 @@ export function CircleBuilder({
           <section className="card flex flex-col gap-1 p-5">
             <h2 className="font-semibold">Published</h2>
             <p className="t-body text-soft">
-              Members can now find your circle. {card.certified ? "You are certified." : "Members are matched to you once you are certified."}
+              Members can now find your Tribe. {card.certified ? "You are certified." : "Members are matched to you once you are certified."}
             </p>
           </section>
         ) : null}
 
-        <Section title="Your circle" step="1">
+        <Section title="Your Tribe" step="1">
           <Input
-            label="Circle name"
+            label="Tribe name"
             name="name"
             value={values.name}
             maxLength={LIMITS.name.max}
@@ -167,7 +167,7 @@ export function CircleBuilder({
             <p className="text-[0.95rem] font-medium">Who it is for</p>
             <Segmented
               name="circle_type"
-              label="Who the circle is for"
+              label="Who the Tribe is for"
               value={values.circle_type}
               options={CIRCLE_TYPES.map((t) => ({ value: t.id, label: t.label }))}
               onChange={(v) => change({ circle_type: v }, true)}
@@ -185,9 +185,9 @@ export function CircleBuilder({
 
         <Section title="What it is built on" step="2">
           {fixed.size === 3 ? (
-            <p className="t-small text-soft">These come from your approved application, because your circle is built on the goal you have lived.</p>
+            <p className="t-small text-soft">These come from your approved application, because your Tribe is built on the goal you have lived.</p>
           ) : (
-            <p className="t-small text-soft">Choose the tribe and Season Goal your circle is built on. Anything from your application is already filled in.</p>
+            <p className="t-small text-soft">Choose the tribe and Season Goal your Tribe is built on. Anything from your application is already filled in.</p>
           )}
           {fixed.has("track") ? (
             <Fixed label="Life-stage track" value={track?.name ?? card.track?.name ?? ""} />
@@ -314,7 +314,7 @@ export function CircleBuilder({
 
         <Section title="Your draft Success Picture" step="5">
           <p className="t-small text-soft">
-            One line for each value. In week 1 your circle will refine these and sign them as its Circle Covenant. Make each line something the whole circle could see happen.
+            One line for each value. In week 1 your Tribe will refine these and sign them as its Tribe Covenant. Make each line something the whole Tribe could see happen.
           </p>
           {LINE_FIELDS.map((f) => (
             <Textarea
@@ -368,7 +368,7 @@ export function CircleBuilder({
             ) : null}
             <div>
               <Button size="lg" loading={submitting} disabled={!canSend} onClick={() => void send()} className="sm:px-10">
-                Send my Circle Card
+                Send my Tribe Card
               </Button>
             </div>
           </section>

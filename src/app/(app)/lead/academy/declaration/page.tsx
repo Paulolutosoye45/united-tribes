@@ -24,7 +24,7 @@ export default async function DeclarationPage() {
         </Link>
         <h1 className="t-title">Safeguarding declaration</h1>
         <p className="t-body measure text-soft">
-          Eight promises you make to the people in your circle and to the church. Read them slowly. Signing is part of becoming certified.
+          Eight promises you make to the people in your Tribe and to the church. Read them slowly. Signing is part of becoming certified.
         </p>
       </header>
       {unlocked || my.declaration ? (

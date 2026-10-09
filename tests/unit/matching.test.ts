@@ -68,7 +68,7 @@ describe("matching wording", () => {
   });
 
   it("writes a short welcome a leader can send", () => {
-    const text = welcomeMessage({ memberFirst: "Ada", leaderFirst: "Tola", circle: "Tola’s Professionals circle", when: "Wednesday 18 Feb" });
+    const text = welcomeMessage({ memberFirst: "Ada", leaderFirst: "Tola", circle: "Tola’s Professionals Tribe", when: "Wednesday 18 Feb" });
     expect(text).toContain("Hello Ada");
     expect(text).toContain("Wednesday 18 Feb");
     expect(welcomeMessage({ memberFirst: "Ada", leaderFirst: "Tola", circle: "X", when: null })).not.toContain("first time on");

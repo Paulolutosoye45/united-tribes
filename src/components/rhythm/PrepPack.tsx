@@ -41,7 +41,7 @@ export function PrepPack({ week }: { week: CircleWeek }) {
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="card flex flex-col gap-2 p-5">
-          <h3 className="font-semibold">Questions for the circle</h3>
+          <h3 className="font-semibold">Questions for the Tribe</h3>
           <p className="t-small text-soft">{g.opening_question}</p>
           <ul className="t-small flex list-disc flex-col gap-1 pl-5">
             {g.questions.map((q) => (
@@ -62,7 +62,7 @@ export function PrepPack({ week }: { week: CircleWeek }) {
             {last.logged
               ? last.held
                 ? `${last.present} of ${plural(last.members, "member")} came (${percent(last.attendance_rate)}), and ${last.steps_done + last.steps_partly} of them finished their step.${last.highlight ? ` Your highlight: “${last.highlight}”` : ""}`
-                : `The circle did not meet.${last.highlight ? ` You wrote: “${last.highlight}”` : ""}`
+                : `The Tribe did not meet.${last.highlight ? ` You wrote: “${last.highlight}”` : ""}`
               : "No log was saved for last week."}
           </p>
         </div>

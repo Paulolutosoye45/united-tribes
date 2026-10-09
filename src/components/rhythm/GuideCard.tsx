@@ -45,7 +45,7 @@ export function PictureCard({ picture }: { picture: Picture }) {
     <section aria-labelledby="picture-heading" className="card flex flex-col gap-4 p-5 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="picture-heading" className="t-heading">
-          Your circle’s Success Picture
+          Your Tribe’s Success Picture
         </h2>
         <Badge tone={picture.refined ? "gold" : "outline"}>{picture.refined ? "Settled in week 1" : "Draft, settled in week 1"}</Badge>
       </div>

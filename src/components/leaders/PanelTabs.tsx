@@ -8,7 +8,7 @@ const TABS = [
   { href: "/review", label: "Applications", exact: true },
   { href: "/review/interviews", label: "Interviews" },
   { href: "/review/academy", label: "Academy" },
-  { href: "/review/cards", label: "Circle Cards" },
+  { href: "/review/cards", label: "Tribe Cards" },
   { href: "/review/rhythm", label: "Weekly report" },
 ] as const;
 

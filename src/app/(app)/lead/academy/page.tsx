@@ -27,7 +27,7 @@ export default async function AcademyPage() {
   return (
     <div className="flex flex-col gap-8">
       <Link href="/lead" className="press -mb-4 -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
-        ← Lead a circle
+        ← Lead a Tribe
       </Link>
       <TrainingHero my={my} />
       <div className="grid gap-8 lg:grid-cols-[1fr_1.15fr] lg:items-start">

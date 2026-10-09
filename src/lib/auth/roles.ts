@@ -19,7 +19,7 @@ export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
   member: "Member",
-  leader: "Circle leader",
+  leader: "Tribe leader",
   assistant_leader: "Assistant leader",
   coach: "Coach",
   tribe_champion: "Tribe champion",
@@ -100,8 +100,8 @@ export type NavItem = {
 /** The menu. "My circle" is where a member finds, chooses and joins a circle; the form itself lives at /join. */
 export const NAV: readonly NavItem[] = [
   { href: "/home", label: "Home", icon: "home" },
-  { href: "/circle", label: "My circle", short: "My circle", icon: "join" },
-  { href: "/lead", label: "Lead a circle", short: "Lead", icon: "lead" },
+  { href: "/circle", label: "My Tribe", short: "My Tribe", icon: "join" },
+  { href: "/lead", label: "Lead a Tribe", short: "Lead", icon: "lead" },
   { href: "/review", label: "Review leaders", short: "Review", icon: "review", roles: REVIEW_ROLES },
   { href: "/dashboard", label: "Dashboard", short: "Results", icon: "chart", roles: DASHBOARD_ROLES },
   // The care lead does not score applications and has no dashboard, so lands on the weekly report instead

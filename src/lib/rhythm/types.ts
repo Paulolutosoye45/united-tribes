@@ -91,9 +91,9 @@ export interface RhythmTestimony {
   id: string;
   week: number;
   body: string;
-  share_with: "circle" | "church";
+  share_with: "Tribe" | "church";
   credit: "full_name" | "first_name" | "anonymous";
-  status: "submitted" | "circle_approved" | "church_approved" | "declined" | "withdrawn";
+  status: "submitted" | "Tribe_approved" | "church_approved" | "declined" | "withdrawn";
   mine: boolean;
   decline_note: string | null;
   by: string;
@@ -185,11 +185,11 @@ export interface PendingTestimony {
   id: string;
   week: number;
   body: string;
-  share_with: "circle" | "church";
+  share_with: "Tribe" | "church";
   credit: "full_name" | "first_name" | "anonymous";
   by: string;
   circle: string;
-  status?: "submitted" | "circle_approved";
+  status?: "submitted" | "Tribe_approved";
   created_at: string;
 }
 

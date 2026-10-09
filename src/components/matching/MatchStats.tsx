@@ -6,9 +6,9 @@ export function MatchStatsPanel({ stats }: { stats: MatchStats }) {
   const seatsLeft = Math.max(0, stats.seats_total - stats.seats_taken);
   const tiles = [
     { label: "Placed", value: String(stats.placed), note: `${stats.profiled} have filled the form` },
-    { label: "Waiting", value: String(stats.waiting), note: `${stats.ran} have seen their circles` },
-    { label: "Seats open", value: String(seatsLeft), note: `${stats.circles_open} circles, ${stats.seats_total} seats` },
-    { label: "Need a leader", value: String(stats.unmet), note: `${stats.starter_list} asked for a Starter Circle` },
+    { label: "Waiting", value: String(stats.waiting), note: `${stats.ran} have seen their Tribes` },
+    { label: "Seats open", value: String(seatsLeft), note: `${stats.circles_open} Tribes, ${stats.seats_total} seats` },
+    { label: "Need a leader", value: String(stats.unmet), note: `${stats.starter_list} asked for a Starter Tribe` },
   ];
   const picks = [
     { label: "First card", n: stats.by_rank.first },
@@ -52,7 +52,7 @@ export function MatchStatsPanel({ stats }: { stats: MatchStats }) {
         <div className="card flex flex-col gap-3 p-5">
           <div>
             <h3 className="font-semibold">Where leaders are needed</h3>
-            <p className="t-small text-soft">Members who could not be shown three good circles, grouped by what they asked for.</p>
+            <p className="t-small text-soft">Members who could not be shown three good Tribes, grouped by what they asked for.</p>
           </div>
           {stats.gaps.length === 0 ? (
             <p className="t-body text-soft">No gaps yet.</p>

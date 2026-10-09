@@ -81,7 +81,7 @@ export function PulseForm({ week, weeks, picture, onDone }: { week: number; week
       >
         <Scale name="belonging" label={PULSE_QUESTIONS.belonging} value={a.belonging} labels={SCALE_LABELS} onChange={(n) => setA({ ...a, belonging: n })} />
         <div className="flex flex-col gap-1">
-          <p className="t-small text-soft">Your circle’s Success Picture. How close are you to each line today?</p>
+          <p className="t-small text-soft">Your Tribe’s Success Picture. How close are you to each line today?</p>
           <SuccessPicture god={picture.god} others={picture.others} life={picture.life} tone="light" />
         </div>
         <Scale name="god" label="Loving God" value={a.god} labels={PROGRESS_LABELS} onChange={(n) => setA({ ...a, god: n })} />
@@ -112,7 +112,7 @@ export function PulseSlot({ pulseWeek, weeks, picture }: { pulseWeek: number | n
   return (
     <section id="pulse" className="card flex scroll-mt-24 flex-col gap-2 p-5 sm:p-7" aria-live="polite">
       <h2 className="t-heading">Thank you.</h2>
-      <p className="t-body text-soft">Your answers are saved. They help your leader care for the circle.</p>
+      <p className="t-body text-soft">Your answers are saved. They help your leader care for the Tribe.</p>
     </section>
   );
 }

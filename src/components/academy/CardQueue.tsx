@@ -6,7 +6,7 @@ import { formatShortDate } from "@/lib/dates";
 
 export function CardQueue({ items }: { items: CardQueueItem[] }) {
   if (items.length === 0) {
-    return <p className="card t-body p-6 text-soft">No Circle Cards have been sent yet. They appear here as leaders finish the Success Picture module and send theirs.</p>;
+    return <p className="card t-body p-6 text-soft">No Tribe Cards have been sent yet. They appear here as leaders finish the Success Picture module and send theirs.</p>;
   }
   return (
     <ul className="stagger flex flex-col gap-3">
@@ -20,7 +20,7 @@ export function CardQueue({ items }: { items: CardQueueItem[] }) {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="font-semibold leading-snug">{c.name ?? "Unnamed circle"}</h3>
+                  <h3 className="font-semibold leading-snug">{c.name ?? "Unnamed Tribe"}</h3>
                   <p className="t-small text-soft">
                     {c.leader}
                     {c.tribe ? ` · ${c.tribe}` : ""}

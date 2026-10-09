@@ -55,7 +55,7 @@ export function LeaderWeek({
           {week.state === "before" ? `Your season starts on ${formatDate(week.starts_on)}.` : week.guide.title}
         </h1>
         <p className="t-body text-white/80">
-          Your circle meets on {meetingDay(week.meeting_date)} at {clockLabel(week.circle.meeting_time)}.
+          Your Tribe meets on {meetingDay(week.meeting_date)} at {clockLabel(week.circle.meeting_time)}.
           {week.state === "before" ? " Read the first week now so you are ready." : ""}
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -118,7 +118,7 @@ export function LeaderWeek({
             </h2>
             <p className="t-small text-soft">Nobody misses twice without a call. A short, warm message counts.</p>
           </div>
-          <FollowUpList rows={rows} canAct={week.can_edit} emptyText="Nobody needs a call right now. Thank you for staying close to your circle." />
+          <FollowUpList rows={rows} canAct={week.can_edit} emptyText="Nobody needs a call right now. Thank you for staying close to your Tribe." />
           {week.can_edit ? (
             <RaiseConcern
               circleId={week.circle.id}
@@ -139,10 +139,10 @@ export function LeaderWeek({
               Testimonies to read
             </h2>
             <p className="t-small text-soft">
-              {plural(pending.length, "testimony", "testimonies")} waiting. Nothing is shown to the circle until you approve it.
+              {plural(pending.length, "testimony", "testimonies")} waiting. Nothing is shown to the Tribe until you approve it.
             </p>
           </div>
-          <TestimonyReview items={pending} scope="circle" emptyText="No testimonies are waiting." />
+          <TestimonyReview items={pending} scope="Tribe" emptyText="No testimonies are waiting." />
         </section>
       ) : null}
     </div>

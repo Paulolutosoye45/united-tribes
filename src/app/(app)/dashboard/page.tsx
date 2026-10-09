@@ -24,7 +24,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
         <p className="t-body measure text-soft">
           {church
             ? "How the programme is doing: how many members are thriving, how far the Success Picture has moved, where people drop away, and where seats are short."
-            : "How your circles are doing, built from your leaders’ logs and the members’ check-ins."}
+            : "How your Tribes are doing, built from your leaders’ logs and the members’ check-ins."}
         </p>
       </header>
       {d ? <DashboardView d={d} canOpen={hasAnyRole(session.roles, ["pastor", "director", "coach"])} /> : <p className="t-body text-soft">The dashboard could not be loaded. Try again in a moment.</p>}

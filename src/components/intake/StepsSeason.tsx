@@ -202,7 +202,7 @@ export function GoalStep({
     <>
       <StepHeading
         title="What do you want to move forward this season?"
-        hint={tribe ? `These goals come from your tribe, ${tribe.name}. Your circle will work on one together for twelve weeks.` : "Describe it in a few words. Your circle will work on a shared goal together for twelve weeks."}
+        hint={tribe ? `These goals come from your tribe, ${tribe.name}. Your Tribe will work on one together for twelve weeks.` : "Describe it in a few words. Your Tribe will work on a shared goal together for twelve weeks."}
       />
 
       {tribe && (loading || suggested.length > 0) ? (
@@ -270,7 +270,7 @@ export function SuccessStep({ answers, set, goalTitle }: StepProps & { goalTitle
     <>
       <StepHeading
         title="In twelve weeks, what would you love to say?"
-        hint={goalTitle ? `Picture the end of your season on “${goalTitle}”. Your circle will share this picture and cheer each other on.` : "Picture the end of your season. Your circle will share this picture and cheer each other on."}
+        hint={goalTitle ? `Picture the end of your season on “${goalTitle}”. Your Tribe will share this picture and cheer each other on.` : "Picture the end of your season. Your Tribe will share this picture and cheer each other on."}
       />
       <div className="flex flex-col gap-8">
         <div className="relative">

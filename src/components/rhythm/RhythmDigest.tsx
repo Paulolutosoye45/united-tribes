@@ -18,7 +18,7 @@ export function RhythmDigest({ digest, canOpen }: { digest: Digest; canOpen: boo
   const rate = t.members > 0 ? t.present / t.members : null;
 
   const tiles = [
-    { label: "Attendance", value: percent(rate), note: t.members > 0 ? `${t.present} of ${t.members} in circles that met` : "no meetings logged yet" },
+    { label: "Attendance", value: percent(rate), note: t.members > 0 ? `${t.present} of ${t.members} in Tribes that met` : "no meetings logged yet" },
     { label: "Logged", value: `${t.logged} of ${t.circles}`, note: t.not_logged > 0 ? `${t.not_logged} not logged yet` : "all logged" },
     { label: "Need attention", value: `${t.needs_attention}`, note: `${t.watch} more to keep an eye on` },
     { label: "People to call", value: `${t.follow_ups}`, note: "follow-ups open" },
@@ -55,7 +55,7 @@ export function RhythmDigest({ digest, canOpen }: { digest: Digest; canOpen: boo
       </dl>
 
       {circles.length === 0 ? (
-        <p className="t-body text-soft">No circles with members yet this season.</p>
+        <p className="t-body text-soft">No Tribes with members yet this season.</p>
       ) : (
         <ul className="stagger flex flex-col gap-3">
           {circles.map((c, i) => {
@@ -77,7 +77,7 @@ export function RhythmDigest({ digest, canOpen }: { digest: Digest; canOpen: boo
                   {r.logged
                     ? r.held
                       ? `${r.present} of ${plural(r.members, "member")} came (${percent(r.attendance_rate)}). ${r.steps_done + r.steps_partly} finished their step.`
-                      : "The circle did not meet."
+                      : "The Tribe did not meet."
                     : r.status === "no_log"
                       ? "No log saved for this week."
                       : "Not met yet this week."}

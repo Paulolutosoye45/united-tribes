@@ -22,7 +22,7 @@ export function TrainingHero({ my }: { my: MyAcademy }) {
             {s.certified
               ? next.body
               : my.is_leader
-                ? "Certification needs your modules, the safeguarding declaration, a practice session and an approved Circle Card."
+                ? "Certification needs your modules, the safeguarding declaration, a practice session and an approved Tribe Card."
                 : "Certification needs your modules, the safeguarding declaration and a practice session."}
           </p>
           {!s.certified ? (

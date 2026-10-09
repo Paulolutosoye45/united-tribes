@@ -35,8 +35,8 @@ export function Done({
             {isEdit
               ? "Your changes are saved. We’ll use them when we match you."
               : seasonName
-                ? `Your answers are saved. ${seasonStarts ? `${seasonName} starts on ${seasonStarts}. ` : ""}Before it begins, we’ll show you your three best-fit circles, each with its own score.`
-                : "Your answers are saved. We’ll show you your three best-fit circles, each with its own score, when the season opens."}
+                ? `Your answers are saved. ${seasonStarts ? `${seasonName} starts on ${seasonStarts}. ` : ""}Before it begins, we’ll show you your three best-fit tribes, each with its own score.`
+                : "Your answers are saved. We’ll show you your three best-fit Tribes, each with its own score, when the season opens."}
           </p>
           {quick ? (
             <p className="mx-auto mt-1 inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-[0.9rem] text-white/85">

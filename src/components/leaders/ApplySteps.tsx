@@ -44,7 +44,7 @@ export function LeaderWelcome({ agreed, onAgree }: { agreed: boolean; onAgree: (
   return (
     <>
       <StepHeading
-        title="Lead a circle."
+        title="Lead a Tribe."
         hint="Leaders are chosen for character and reliability, not for title or talent. Here is how it works, and how we look after what you share."
       />
       <ol className="card rise-in mb-6 divide-y divide-line overflow-hidden">
@@ -61,7 +61,7 @@ export function LeaderWelcome({ agreed, onAgree }: { agreed: boolean; onAgree: (
         ))}
       </ol>
       <p className="t-small mb-6 rounded-[var(--radius-control)] bg-gold/20 px-4 py-3 text-ink">
-        What it asks of you: 75 minutes a week for 12 weeks, plus about 10 hours of training before your circle begins.
+        What it asks of you: 75 minutes a week for 12 weeks, plus about 10 hours of training before your Tribe begins.
       </p>
       <fieldset className="flex flex-col gap-3">
         <legend className="t-heading mb-3">Your agreement</legend>
@@ -200,8 +200,8 @@ export function GoalStep({ answers, patch, tribes }: Base & { tribes: LeaderCata
   return (
     <>
       <StepHeading
-        title="Which Season Goal could you lead a circle toward?"
-        hint="Your circle will work on this goal together. Choose one you have lived: you have reached it, or you are honestly in it now."
+        title="Which Season Goal could you lead a Tribe toward?"
+        hint="Your Tribe will work on this goal together. Choose one you have lived: you have reached it, or you are honestly in it now."
       />
       <div role="radiogroup" aria-label="Season Goals" className="flex flex-col gap-3">
         {goals.map((g) => (
@@ -316,7 +316,7 @@ const WRITTEN = {
     field: "goalStory",
   },
   why: {
-    title: "Why do you want to lead a circle?",
+    title: "Why do you want to lead a Tribe?",
     hint: "Tell us what you hope for the people in it. There is no right answer, but we read for who it is about.",
     label: "Why you want to lead",
     placeholder: "e.g. When I was struggling, someone sat with me. I want to do that for others…",

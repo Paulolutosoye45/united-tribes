@@ -53,7 +53,7 @@ export function CircleOnboarding({ roster, leaderFirstName }: { roster: Roster; 
         </h2>
         <p className="t-body measure text-soft">
           {members.length === 0
-            ? "No one has joined yet. Members choose your circle from the three they are shown, and appear here the moment they join."
+            ? "No one has joined yet. Members choose your Tribe from the three they are shown, and appear here the moment they join."
             : `${plural(members.length, "member")} of ${circle.capacity} seats. You have welcomed ${called} of ${members.length}.`}
         </p>
       </div>
@@ -116,7 +116,7 @@ export function CircleOnboarding({ roster, leaderFirstName }: { roster: Roster; 
           className="card grid gap-5 p-5 sm:grid-cols-2 sm:p-7"
         >
           <div className="sm:col-span-2">
-            <h3 className="font-semibold">For your circle</h3>
+            <h3 className="font-semibold">For your Tribe</h3>
             <p className="t-small text-soft">Members see these on their page as soon as you save.</p>
           </div>
           <Input

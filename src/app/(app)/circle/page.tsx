@@ -10,7 +10,7 @@ import { loadMyProgress } from "@/lib/dashboard/server";
 import { loadMyWeek } from "@/lib/rhythm/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "My circle" };
+export const metadata: Metadata = { title: "My Tribe" };
 
 type SearchParams = Promise<{ joined?: string; week?: string }>;
 
@@ -36,8 +36,8 @@ export default async function CirclePage({ searchParams }: { searchParams: Searc
     return (
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
-          <h1 className="t-title">Find your circle</h1>
-          <p className="t-body measure text-soft">Tell us about your season and your goal first. It takes about four minutes, and then we show you three circles that fit, each with its own score.</p>
+          <h1 className="t-title">Find your Tribe</h1>
+          <p className="t-body measure text-soft">Tell us about your season and your goal first. It takes about four minutes, and then we show you three Tribes that fit, each with its own score.</p>
         </header>
         <div>
           <Link href="/join" className={buttonClasses({ className: "px-8" })}>

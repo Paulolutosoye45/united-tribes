@@ -44,7 +44,7 @@ export default async function LeadPage() {
             </h2>
             <ul className="t-body flex flex-col gap-2 text-soft">
               <li>75 minutes a week, for 12 weeks.</li>
-              <li>About 10 hours of training before your circle begins, with a safeguarding course.</li>
+              <li>About 10 hours of training before your Tribe begins, with a safeguarding course.</li>
               <li>Keeping what members share private, unless someone is at risk.</li>
               <li>Six months in the church, Foundation of Faith done, and serving somewhere now.</li>
             </ul>
@@ -101,7 +101,7 @@ export default async function LeadPage() {
         </section>
         <div className="flex flex-wrap gap-3">
           <Link href="/join" className={buttonClasses({ size: "md" })}>
-            <span className="relative">Find my circle as a member</span>
+            <span className="relative">Find my Tribe as a member</span>
           </Link>
           <Link href="/lead/apply" className={buttonClasses({ variant: "quiet", size: "md" })}>
             <span className="relative">I answered by mistake. Start again</span>
@@ -135,7 +135,7 @@ export default async function LeadPage() {
                 </Link>
                 {application.status === "approved_leader" ? (
                   <Link href="/lead/circle" className={buttonClasses({ variant: "night", className: "px-6" })}>
-                    <span className="relative">My Circle Card</span>
+                    <span className="relative">My Tribe Card</span>
                   </Link>
                 ) : null}
                 <Link href="/lead/week" className={buttonClasses({ variant: "night", className: "px-6" })}>

@@ -47,10 +47,10 @@ export function WeekView({ week, progress }: { week: MyWeekPlaced; progress?: My
               {running && guide ? (
                 <>
                   {THEME_LABELS[guide.theme]} · {guide.passage}.{" "}
-                  {isCurrent && c.meeting_date ? `Your circle meets on ${meetingDay(c.meeting_date)} at ${clockLabel(c.meeting_time)}.` : null}
+                  {isCurrent && c.meeting_date ? `Your Tribe meets on ${meetingDay(c.meeting_date)} at ${clockLabel(c.meeting_time)}.` : null}
                 </>
               ) : (
-                `You came to ${week.attended} of ${plural(week.logged, "meeting")}. Thank you for walking with ${c.leader_first_name} and your circle.`
+                `You came to ${week.attended} of ${plural(week.logged, "meeting")}. Thank you for walking with ${c.leader_first_name} and your Tribe.`
               )}
             </p>
           </div>

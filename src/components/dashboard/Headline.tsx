@@ -54,7 +54,7 @@ export function Headline({ h, season, targets, scopeLabel, state }: { h: Headlin
                 {rate !== null
                   ? `Target ${pct(targets.thriving_rate)}, ${against(rate, targets.thriving_rate)}.`
                   : h.members === 0
-                    ? "Members appear here once they have chosen a circle."
+                    ? "Members appear here once they have chosen a Tribe."
                     : `A rate shows after ${targets.min_weeks} weeks of the season${state === "running" ? `. ${plural(h.members, "member")} placed so far.` : "."}`}
               </p>
             </div>
@@ -73,7 +73,7 @@ export function Headline({ h, season, targets, scopeLabel, state }: { h: Headlin
                 <dd className="font-semibold [font-variant-numeric:tabular-nums]">{season.weeks_over >= 4 && h.ever_came > 0 ? `${h.still_coming} of ${h.ever_came}` : "–"}</dd>
               </div>
               <div>
-                <dt className="t-small text-white/60">{state === "complete" ? "Effective circles" : "On course"}</dt>
+                <dt className="t-small text-white/60">{state === "complete" ? "Effective Tribes" : "On course"}</dt>
                 <dd className="font-semibold [font-variant-numeric:tabular-nums]">
                   {state === "before" ? "–" : `${state === "complete" ? h.verdicts.effective : h.verdicts.on_course} of ${h.circles}`}
                 </dd>

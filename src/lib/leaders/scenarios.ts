@@ -21,7 +21,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "s1",
     title: "One voice fills the room",
     situation:
-      "In your circle, Tunde answers every question first and talks for several minutes. The quieter members have stopped trying to speak.",
+      "In your Tribe, Tunde answers every question first and talks for several minutes. The quieter members have stopped trying to speak.",
     options: [
       { id: "a", text: "Say nothing. He will notice that others want a turn." },
       { id: "b", text: "Thank him warmly, then invite others by name. If it keeps happening, speak to him privately after." },
@@ -36,7 +36,7 @@ export const SCENARIOS: readonly Scenario[] = [
     options: [
       { id: "a", text: "Give her space. She will return when she is ready." },
       { id: "b", text: "Call her with no guilt, tell her she was missed, and let your coach know if she still does not reply." },
-      { id: "c", text: "Remind the circle that attendance matters, and name the people who have been absent." },
+      { id: "c", text: "Remind the Tribe that attendance matters, and name the people who have been absent." },
       { id: "d", text: "Send a warm message, keep her place open, and check again next week." },
     ],
   },
@@ -66,11 +66,11 @@ export const SCENARIOS: readonly Scenario[] = [
   {
     id: "s5",
     title: "Running on empty",
-    situation: "You are exhausted after a hard week, and your circle meets in an hour. Your assistant leader is free.",
+    situation: "You are exhausted after a hard week, and your Tribe meets in an hour. Your assistant leader is free.",
     options: [
       { id: "a", text: "Ask your assistant leader to lead tonight, and rest." },
       { id: "b", text: "Push through and tell no one. A leader shows up." },
-      { id: "c", text: "Message the circle to cancel this week, and rest." },
+      { id: "c", text: "Message the Tribe to cancel this week, and rest." },
       { id: "d", text: "Go, keep it short, and ask someone else to lead the prayer." },
     ],
   },
@@ -81,7 +81,7 @@ export const SCENARIOS: readonly Scenario[] = [
     options: [
       { id: "a", text: "Decline kindly, and help them reach the care ladder, where support is given properly." },
       { id: "b", text: "Lend a small amount quietly from your own pocket." },
-      { id: "c", text: "Tell the circle about the need and ask everyone to give." },
+      { id: "c", text: "Tell the Tribe about the need and ask everyone to give." },
       { id: "d", text: "Say you will think about it, and hope the matter fades." },
     ],
   },

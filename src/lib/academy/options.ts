@@ -11,13 +11,13 @@ export const SESSION_KINDS: Record<SessionKind, { label: string; short: string; 
   commissioning_workshop: {
     label: "Commissioning workshop",
     short: "Workshop 2",
-    blurb: "Finalise your Circle Card, meet your assistant leader and coach, and be prayed for.",
+    blurb: "Finalise your Tribe Card, meet your assistant leader and coach, and be prayed for.",
     order: 2,
   },
 };
 
 export const PRACTICE_FORMATS = [
-  { id: "co_lead", label: "Co-led a Starter Circle session" },
+  { id: "co_lead", label: "Co-led a Starter Tribe session" },
   { id: "recorded", label: "Recorded simulation" },
 ] as const;
 
@@ -97,7 +97,7 @@ export const CARD_STATUS: Record<string, { label: string; tone: "neutral" | "fla
 };
 
 export const CARD_MISSING: Record<string, string> = {
-  name: "Name your circle",
+  name: "Name your Tribe",
   track: "Choose your life-stage track",
   tribe: "Choose your tribe",
   goal: "Choose your Season Goal",
@@ -141,7 +141,7 @@ export function checklist(my: Pick<MyAcademy, "state" | "practice" | "card">): C
   if (s.card_required) {
     rows.push({
       id: "card",
-      label: "Circle Card published and approved",
+      label: "Tribe Card published and approved",
       detail: my.card ? (CARD_STATUS[my.card.status]?.label ?? "") : "Not started",
       done: s.card,
       href: "/lead/circle",
@@ -166,7 +166,7 @@ export function nextAction(my: MyAcademy): { title: string; body: string; cta: s
   const s = my.state;
   if (s.certified) {
     return my.state.card_required && my.card?.status !== "approved"
-      ? { title: "You are certified.", body: "Your Circle Card is the last thing members wait for.", cta: "Open my Circle Card", href: "/lead/circle" }
+      ? { title: "You are certified.", body: "Your Tribe Card is the last thing members wait for.", cta: "Open my Tribe Card", href: "/lead/circle" }
       : { title: "You are certified.", body: "Thank you for the work. Your coach will be in touch about the season ahead.", cta: "See my training", href: "/lead/academy" };
   }
   const nextModule = my.modules.find((m) => !m.passed);
@@ -189,7 +189,7 @@ export function nextAction(my: MyAcademy): { title: string; body: string; cta: s
       : { title: "Book your workshops", body: "Two live workshops, then a practice session with a coach.", cta: "Choose a date", href: "/lead/academy#workshops" };
   }
   if (s.card_required && !s.card) {
-    return { title: "Finish your Circle Card", body: "It is the page members choose your circle from.", cta: "Open my Circle Card", href: "/lead/circle" };
+    return { title: "Finish your Tribe Card", body: "It is the page members choose your Tribe from.", cta: "Open my Tribe Card", href: "/lead/circle" };
   }
   return { title: "Nearly there", body: "The pastorate will confirm your certification shortly.", cta: "See my training", href: "/lead/academy" };
 }

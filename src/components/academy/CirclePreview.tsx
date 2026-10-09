@@ -30,10 +30,10 @@ export function CirclePreview({
   const meets = values.meeting_day !== null && values.meeting_time ? `${dayName(values.meeting_day)}s, ${clockLabel(values.meeting_time)}` : null;
   const name = firstName(leader) || "Your name";
   return (
-    <article className={cn("card flex flex-col gap-5 p-5 sm:p-6", className)} aria-label="Preview of your Circle Card">
+    <article className={cn("card flex flex-col gap-5 p-5 sm:p-6", className)} aria-label="Preview of your Tribe Card">
       <div className="flex flex-col gap-1">
         <p className="t-small text-soft">{[tribe, track].filter(Boolean).join(" · ") || "Your tribe · Your track"}</p>
-        <h3 className="t-heading">{values.name.trim() || "Name your circle"}</h3>
+        <h3 className="t-heading">{values.name.trim() || "Name your Tribe"}</h3>
         <p className="t-small text-soft">Season Goal: {goal ?? "Not chosen yet"}</p>
       </div>
 

@@ -33,7 +33,7 @@ export function ChooseForm({ shown }: { shown: ShownCircle }) {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
         <Link href="/circle" className="press -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
-          ← Your circles
+          ← Your Tribes
         </Link>
         <h1 className="t-title">Join {c.name}</h1>
         <p className="t-body measure text-soft">
@@ -46,14 +46,14 @@ export function ChooseForm({ shown }: { shown: ShownCircle }) {
           <h2 id="picture-heading" className="t-heading">
             The Success Picture
           </h2>
-          <p className="t-small text-soft">What this circle is working toward by week 12. In week 1 you will refine it together.</p>
+          <p className="t-small text-soft">What this Tribe is working toward by week 12. In week 1 you will refine it together.</p>
         </div>
         <SuccessPicture god={c.god} others={c.others} life={c.life} />
       </section>
 
       <section aria-labelledby="covenant-heading" className="card flex flex-col gap-4 p-5 sm:p-7">
         <h2 id="covenant-heading" className="t-heading">
-          The Circle Covenant
+          The Tribe Covenant
         </h2>
         <ol className="flex flex-col gap-3">
           {COVENANT_PROMISES.map((p, i) => (
@@ -83,16 +83,16 @@ export function ChooseForm({ shown }: { shown: ShownCircle }) {
           <p role="alert" className="rounded-[var(--radius-control)] bg-danger/10 px-4 py-3 text-[0.95rem] text-danger">
             {error}{" "}
             <Link href="/circle" className="font-semibold underline underline-offset-4">
-              See your circles again
+              See your Tribes again
             </Link>
           </p>
         ) : null}
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button type="submit" size="lg" loading={busy} disabled={!agreed} className="sm:px-10">
-            Join this circle
+            Join this Tribe
           </Button>
           <Link href="/circle" className="btn-quiet inline-flex h-14 items-center justify-center rounded-[var(--radius-control)] px-6 font-medium">
-            Back to my circles
+            Back to my Tribes
           </Link>
         </div>
       </form>

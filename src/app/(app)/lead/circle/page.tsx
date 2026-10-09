@@ -12,7 +12,7 @@ import { requireRole } from "@/lib/auth/session";
 import { loadLeaderCatalogue, loadMyApplication } from "@/lib/leaders/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Circle Card" };
+export const metadata: Metadata = { title: "Tribe Card" };
 
 export default async function CirclePage() {
   const session = await requireRole(["leader", "assistant_leader"], "/lead/circle");
@@ -35,7 +35,7 @@ export default async function CirclePage() {
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
           {back}
-          <h1 className="t-title">{isLeader ? "Your Circle Card" : "Your circle"}</h1>
+          <h1 className="t-title">{isLeader ? "Your Tribe Card" : "Your circle"}</h1>
         </header>
         {isLeader ? (
           <StartCard />
@@ -43,7 +43,7 @@ export default async function CirclePage() {
           <section className="card flex flex-col gap-3 p-6">
             <h2 className="t-heading">Your pairing comes after your training</h2>
             <p className="t-body measure text-soft">
-              The pastorate pairs each assistant leader with a circle whose leader leads in a different way from you, so the two of you balance each other. You will see your circle here once that is done.
+              The pastorate pairs each assistant leader with a Tribe whose leader leads in a different way from you, so the two of you balance each other. You will see your Tribe Card here once that is done.
             </p>
           </section>
         )}
@@ -58,11 +58,11 @@ export default async function CirclePage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
         {back}
-        <h1 className="t-title">{card.role === "leader" ? "Your Circle Card" : `${card.leader.name}’s circle`}</h1>
+        <h1 className="t-title">{card.role === "leader" ? "Your Tribe Card" : `${card.leader.name}’s circle`}</h1>
         <p className="t-body measure text-soft">
           {card.role === "leader"
-            ? "This is the page members choose your circle from. Each member sees it with their own Degree of Compatibility. Your work saves as you type."
-            : "You are the assistant leader for this circle. You can read the card here; the leader writes it."}
+            ? "This is the page members choose your Tribe from. Each member sees it with their own Degree of Compatibility. Your work saves as you type."
+            : "You are the assistant leader for this Tribe. You can read the card here; the leader writes it."}
         </p>
       </header>
       {roster ? <CircleOnboarding roster={roster} leaderFirstName={firstName(card.leader.name)} /> : null}

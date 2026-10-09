@@ -103,7 +103,7 @@ export function ExtrasStep({ answers, set, assistantNote }: StepProps & { assist
             rows={4}
             maxLength={600}
             optional
-            placeholder="e.g. I use a wheelchair, or I would prefer a quieter circle."
+            placeholder="e.g. I use a wheelchair, or I would prefer a quieter Tribe."
             value={answers.supportNeeds ?? ""}
             onChange={(e) => set({ supportNeeds: e.target.value })}
           />
@@ -115,11 +115,11 @@ export function ExtrasStep({ answers, set, assistantNote }: StepProps & { assist
 
         <section aria-labelledby="serving-heading" className="flex flex-col gap-3">
           <h2 id="serving-heading" className="text-[0.95rem] font-medium">
-            Would you like to help lead a circle one day?
+            Would you like to help lead a Tribe one day?
           </h2>
           <Segmented
             name="openToServing"
-            label="Open to leading a circle"
+            label="Open to leading a Tribe"
             value={answers.openToServing ?? null}
             options={SERVING_OPTIONS.map((o) => ({ value: o.id, label: o.label }))}
             onChange={(v) => set({ openToServing: v })}
@@ -185,7 +185,7 @@ export function ReviewStep({ answers, catalogue, onEdit, error }: ReviewProps) {
       { step: "age", label: "Age", value: [age?.label, birthday && `birthday ${birthday}`].filter(Boolean).join(", ") || null },
       { step: "name", label: "Name", value: nameLine },
       { step: "gender", label: "Gender", value: find(GENDERS, answers.gender) ?? null },
-      { step: "gender", label: "Circle mix", value: find(CIRCLE_MIXES, answers.circleMix) ?? null },
+      { step: "gender", label: "Tribe mix", value: find(CIRCLE_MIXES, answers.circleMix) ?? null },
       { step: "where", label: "Based in", value: [find(ZONES, answers.zone), answers.areaNote].filter(Boolean).join(", ") },
     ],
     season: [
@@ -202,7 +202,7 @@ export function ReviewStep({ answers, catalogue, onEdit, error }: ReviewProps) {
       { step: "rhythm", label: "Meeting", value: find(MEETING_MODES, answers.meetingMode) ?? null },
       { step: "rhythm", label: "Times that work", value: (answers.times ?? []).map((t) => find(MEETING_TIMES, t)).filter(Boolean).join(", ") || null },
       { step: "style", label: "This or that", value: STYLE_PAIRS.some((p) => answers[p.key]) ? `${STYLE_PAIRS.filter((p) => answers[p.key]).length} of 6 answered` : null },
-      { step: "extras", label: "Leading a circle", value: SERVING_OPTIONS.find((o) => o.id === answers.openToServing)?.label ?? null },
+      { step: "extras", label: "Leading a Tribe", value: SERVING_OPTIONS.find((o) => o.id === answers.openToServing)?.label ?? null },
       { step: "extras", label: "WhatsApp", value: answers.whatsapp?.trim() ? (normaliseWhatsapp(answers.whatsapp) ?? answers.whatsapp) : null },
     ],
   };

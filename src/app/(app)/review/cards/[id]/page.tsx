@@ -8,7 +8,7 @@ import type { AssistantSuggestion, CardReview } from "@/lib/academy/types";
 import { isUuid } from "@/lib/leaders/errors";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Review a Circle Card" };
+export const metadata: Metadata = { title: "Review a Tribe Card" };
 
 export default async function ReviewCardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,9 +24,9 @@ export default async function ReviewCardPage({ params }: { params: Promise<{ id:
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
         <Link href="/review/cards" className="press -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
-          ← All Circle Cards
+          ← All Tribe Cards
         </Link>
-        <h1 className="t-title">{card.name ?? "Unnamed circle"}</h1>
+        <h1 className="t-title">{card.name ?? "Unnamed tribe"}</h1>
       </header>
       <CardReviewView card={card} suggestions={(suggestions.data as AssistantSuggestion[] | null) ?? []} canPair />
     </div>

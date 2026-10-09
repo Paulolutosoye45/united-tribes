@@ -6,7 +6,7 @@ import { isUuid } from "@/lib/leaders/errors";
 import { readMatch } from "@/lib/matching/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Join a circle" };
+export const metadata: Metadata = { title: "Join a Tribe" };
 
 export default async function ChoosePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

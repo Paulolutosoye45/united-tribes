@@ -5,14 +5,14 @@ import type { CircleCardForMember, DegreeLabel } from "./types";
 export const AGREEMENT_VERSION = "2026-11-c1";
 
 export const COVENANT_PROMISES = [
-  "I will come to my circle each week, on time, or tell my leader early if I cannot.",
-  "I will keep what is shared in my circle private.",
-  "I will pray for the people in my circle and take one small step toward my goal each week.",
-  "I will help my circle refine its Success Picture in week 1, and I will say honestly in week 12 whether we got there.",
+  "I will come to my Tribe each week, on time, or tell my leader early if I cannot.",
+  "I will keep what is shared in my Tribe private.",
+  "I will pray for the people in my Tribe and take one small step toward my goal each week.",
+  "I will help my Tribe refine its Success Picture in week 1, and I will say honestly in week 12 whether we got there.",
 ] as const;
 
 export const AGREEMENT_SENTENCE =
-  "I agree to this Success Picture and to the Circle Covenant. I understand my leader will see my name and, if I said yes to WhatsApp, my number.";
+  "I agree to this Success Picture and to the Tribe Covenant. I understand my leader will see my name and, if I said yes to WhatsApp, my number.";
 
 export const LABELS: Record<DegreeLabel, { text: string; blurb: string }> = {
   excellent: { text: "Excellent fit", blurb: "Very close to what you asked for" },
@@ -70,7 +70,7 @@ export function reasonText(key: string, c: CircleCardForMember): string | null {
     case "style_balance":
       return "You would add balance to the mix of voices in the group.";
     case "faith_needed":
-      return "Your stage of faith is one this circle will gain from.";
+      return "Your stage of faith is one this Tribe will gain from.";
     case "seats_open":
       return `It has room for you, and ${c.leader_first_name} is ready to walk with you.`;
     default:
@@ -91,5 +91,5 @@ export const CIRCLE_TYPE_LINE: Record<string, string> = {
 /** The message a leader sends a new member on WhatsApp. */
 export function welcomeMessage(opts: { memberFirst: string; leaderFirst: string; circle: string; when: string | null }): string {
   const start = opts.when ? ` We meet for the first time on ${opts.when}.` : "";
-  return `Hello ${opts.memberFirst}, welcome to ${opts.circle}! This is ${opts.leaderFirst}, your circle leader.${start} I will add you to our WhatsApp group soon. If you have any questions before then, just reply here.`;
+  return `Hello ${opts.memberFirst}, welcome to ${opts.circle}! This is ${opts.leaderFirst}, your Tribe leader.${start} I will add you to our WhatsApp group soon. If you have any questions before then, just reply here.`;
 }

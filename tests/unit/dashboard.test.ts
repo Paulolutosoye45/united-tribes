@@ -45,7 +45,7 @@ describe("dashboard wording", () => {
     );
   });
 
-  it("has a label for every verdict and puts the circles that need help first", () => {
+  it("has a label for every verdict and puts the Tribes that need help first", () => {
     const all: Verdict[] = ["before", "too_early", "on_course", "close", "at_risk", "effective", "not_yet"];
     for (const v of all) {
       expect(VERDICTS[v].text.length).toBeGreaterThan(0);

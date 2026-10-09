@@ -667,7 +667,7 @@ describe("the Success Picture, refined in week 1 or 2", () => {
 });
 
 describe("testimonies", () => {
-  const submit = (userId: string, body = "God opened a door at work that I did not expect.", share = "circle", credit = "first_name") =>
+  const submit = (userId: string, body = "God opened a door at work that I did not expect.", share = "Tribe", credit = "first_name") =>
     call(userId, "select public.submit_testimony($1, $2, $3) as r", [body, share, credit]);
   const visible = async (userId: string) => (await call(userId, "select public.circle_testimonies() as r")) as { id: string; by: string; status: string; mine: boolean; body: string }[];
 
@@ -677,9 +677,9 @@ describe("testimonies", () => {
     const ada = await join(circle, "Ada");
     const bisi = await join(circle, "Bisi");
     const chike = await join(circle, "Chike");
-    const idFirst = await submit(ada.id, "God opened a door at work that I did not expect.", "circle", "first_name");
-    const idAnon = await submit(bisi.id, "I forgave my brother this season and we spoke again.", "circle", "anonymous");
-    const idFull = await submit(chike.id, "I finished my business registration after years of waiting.", "circle", "full_name");
+    const idFirst = await submit(ada.id, "God opened a door at work that I did not expect.", "Tribe", "first_name");
+    const idAnon = await submit(bisi.id, "I forgave my brother this season and we spoke again.", "Tribe", "anonymous");
+    const idFull = await submit(chike.id, "I finished my business registration after years of waiting.", "Tribe", "full_name");
     expect((await visible(bisi.id)).map((t) => t.id)).toEqual([idAnon]); // her own only, still waiting
     expect((await visible(bisi.id))[0]).toMatchObject({ mine: true, status: "submitted" });
 
@@ -688,7 +688,7 @@ describe("testimonies", () => {
     const seen = await visible(chike.id);
     expect(seen).toHaveLength(3);
     expect(seen.find((t) => t.id === idFirst)!.by).toBe("Ada");
-    expect(seen.find((t) => t.id === idAnon)!.by).toBe("A member of the circle");
+    expect(seen.find((t) => t.id === idAnon)!.by).toBe("A member of the Tribe");
     expect(seen.find((t) => t.id === idFull)!.by).toBe("Chike Test");
     expect(JSON.stringify(seen.find((t) => t.id === idAnon))).not.toContain("Bisi");
     expect((await cweek(leader.id, circle)).testimonies_waiting).toBe(0);

@@ -45,7 +45,7 @@ const academy = (over: Partial<MyAcademy> = {}): MyAcademy => ({
 });
 
 const card = (over: Partial<CardValues> = {}): CardValues => ({
-  name: "Tola’s circle",
+  name: "Tola’s Tribe",
   circle_type: "mixed",
   track: "builders",
   tribe: "professionals",
@@ -162,7 +162,7 @@ describe("what to do next", () => {
   });
 });
 
-describe("the Circle Card", () => {
+describe("the Tribe Card", () => {
   it("is complete when everything is filled in", () => {
     expect(missingFields(card())).toEqual([]);
   });

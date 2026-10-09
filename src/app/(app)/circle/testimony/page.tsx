@@ -19,7 +19,7 @@ export default async function TestimonyPage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
         <Link href="/circle" className="press -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
-          ← My circle
+          ← My Tribe
         </Link>
         <h1 className="t-title">Testimonies</h1>
         <p className="t-body measure text-soft">

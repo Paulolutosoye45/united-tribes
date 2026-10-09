@@ -25,7 +25,7 @@ export const ZONES = [
   { id: "mainland", label: "Lagos Mainland", description: "Yaba, Ikeja, Maryland, Ikorodu and around" },
   { id: "island-lekki", label: "Lagos Island and Lekki", description: "Victoria Island, Ikoyi, Lekki, Ajah" },
   { id: "other-nigeria", label: "Elsewhere in Nigeria", description: "Ogun, Abuja, Port Harcourt and beyond" },
-  { id: "abroad", label: "Outside Nigeria", description: "Your circle will meet online" },
+  { id: "abroad", label: "Outside Nigeria", description: "Your Tribe will meet online" },
 ] as const satisfies readonly Option[];
 export type Zone = (typeof ZONES)[number]["id"];
 
@@ -40,8 +40,8 @@ export type FaithJourney = (typeof FAITH_JOURNEYS)[number]["id"];
 
 export const MEETING_MODES = [
   { id: "online", label: "Online", description: "On Sundays, from wherever I am" },
-  { id: "in_person", label: "In person", description: "Near me, when a circle meets that way" },
-  { id: "either", label: "Either works", description: "Whichever circle fits best" },
+  { id: "in_person", label: "In person", description: "Near me, when a Tribe meets that way" },
+  { id: "either", label: "Either works", description: "Whichever Tribe fits best" },
 ] as const satisfies readonly Option[];
 export type MeetingMode = (typeof MEETING_MODES)[number]["id"];
 

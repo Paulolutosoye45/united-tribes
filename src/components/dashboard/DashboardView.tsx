@@ -29,7 +29,7 @@ export function DashboardView({ d, canOpen }: { d: Dashboard; canOpen: boolean }
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="t-body text-soft">
-          {s.name}: {where}.{church ? "" : " Your circles only."}
+          {s.name}: {where}.{church ? "" : " Your Tribes only."}
         </p>
         {d.seasons && d.seasons.length > 1 ? (
           <nav aria-label="Seasons" className="flex flex-wrap gap-2">
@@ -47,7 +47,7 @@ export function DashboardView({ d, canOpen }: { d: Dashboard; canOpen: boolean }
         ) : null}
       </div>
 
-      <Headline h={h} season={s} targets={d.targets} scopeLabel={church ? "whole church" : "your circles"} state={d.state} />
+      <Headline h={h} season={s} targets={d.targets} scopeLabel={church ? "whole church" : "your Tribes"} state={d.state} />
 
       {d.state !== "before" ? <WeekBars weeks={s.weeks} rows={bars} pace={pace} title="Week by week" /> : null}
 

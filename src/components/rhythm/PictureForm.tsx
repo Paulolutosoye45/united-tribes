@@ -35,7 +35,7 @@ export function PictureForm({ week }: { week: CircleWeek }) {
           Settle your Success Picture
         </h2>
         <p className="t-small text-soft">
-          Change the words with your circle until everyone can say each line. Save the final version in the first two weeks. Members see it on their page, and answer the halfway and final check-ins against it.
+          Change the words with your Tribe until everyone can say each line. Save the final version in the first two weeks. Members see it on their page, and answer the halfway and final check-ins against it.
         </p>
       </div>
       <form

@@ -6,7 +6,7 @@ import { startCardAction } from "@/app/(app)/lead/circle/actions";
 import { Button } from "@/components/ui/Button";
 
 const PARTS = [
-  "Your circle’s name, and who it is for",
+  "Your Tribe’s name, and who it is for",
   "The tribe and Season Goal it is built on, taken from your application",
   "Your own story with that goal, in two lines",
   "The day, time and zone you meet",
@@ -32,7 +32,7 @@ export function StartCard() {
       <div className="flex flex-col gap-2">
         <h2 className="t-heading">The page members choose you from</h2>
         <p className="t-body measure text-soft">
-          Your Circle Card is how a member decides on your circle. It takes about twenty minutes and saves as you type. You can start now and finish after the Success Picture module.
+          Your Tribe Card is how a member decides on your Tribe. It takes about twenty minutes and saves as you type. You can start now and finish after the Success Picture module.
         </p>
       </div>
       <ul className="t-body flex flex-col gap-2">
@@ -50,7 +50,7 @@ export function StartCard() {
       ) : null}
       <div>
         <Button size="lg" loading={busy} onClick={() => void start()} className="sm:px-10">
-          Start my Circle Card
+          Start my Tribe Card
         </Button>
       </div>
     </section>

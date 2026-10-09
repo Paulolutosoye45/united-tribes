@@ -86,7 +86,7 @@ export function MatchCard({
 
       {onChoose ? (
         <Button className="mt-5" fullWidth onClick={onChoose}>
-          Join this circle
+          Join this Tribe
         </Button>
       ) : null}
     </article>

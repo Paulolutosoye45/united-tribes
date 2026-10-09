@@ -38,7 +38,7 @@ export function LeaderProgress({ p, weekHref }: { p: CircleProgress; weekHref: s
           {p.circle.name} · {s.name}
           {s.current_week ? ` · week ${s.current_week} of ${s.weeks}` : p.state === "complete" ? " · season ended" : " · starts soon"}
         </p>
-        <h1 className="t-title">Your circle’s season</h1>
+        <h1 className="t-title">Your Tribe’s season</h1>
         {verdict ? (
           <div className="flex flex-wrap items-center gap-3">
             <Badge tone={verdict.tone}>{verdict.text}</Badge>
@@ -51,8 +51,8 @@ export function LeaderProgress({ p, weekHref }: { p: CircleProgress; weekHref: s
         ) : (
           <p className="t-small max-w-prose text-white/80">
             {p.members < p.targets.min_cell
-              ? `With ${plural(p.members, "member")}, the circle-wide thriving figure is kept private: it could give away one person’s answer. You still see who came and who took their step.`
-              : "The circle-wide figure appears after three weeks."}
+              ? `With ${plural(p.members, "member")}, the Tribe-wide thriving figure is kept private: it could give away one person’s answer. You still see who came and who took their step.`
+              : "The Tribe-wide figure appears after three weeks."}
           </p>
         )}
       </header>
@@ -75,7 +75,7 @@ export function LeaderProgress({ p, weekHref }: { p: CircleProgress; weekHref: s
             Your people
           </h2>
           <p className="t-small text-soft">
-            {s.meetings_needed} of {s.weeks} meetings is the bar. “On pace” looks at meetings only. How someone feels about the circle stays private: if a member says they do not belong, they appear on your call list.
+            {s.meetings_needed} of {s.weeks} meetings is the bar. “On pace” looks at meetings only. How someone feels about the Tribe stays private: if a member says they do not belong, they appear on your call list.
           </p>
         </div>
         {p.member_rows.length === 0 ? (

@@ -11,7 +11,7 @@ import type { PendingTestimony } from "@/lib/rhythm/types";
 const CREDIT = { full_name: "full name", first_name: "first name", anonymous: "no name" } as const;
 
 /** Testimonies waiting to be read. A leader approves for the circle; a pastor approves for the church. */
-export function TestimonyReview({ items, scope, emptyText }: { items: PendingTestimony[]; scope: "circle" | "church"; emptyText: string }) {
+export function TestimonyReview({ items, scope, emptyText }: { items: PendingTestimony[]; scope: "Tribe" | "church"; emptyText: string }) {
   const router = useRouter();
   const [declining, setDeclining] = useState<string | null>(null);
   const [note, setNote] = useState("");
@@ -40,11 +40,11 @@ export function TestimonyReview({ items, scope, emptyText }: { items: PendingTes
               <p className="font-semibold">{t.by}</p>
               <div className="flex flex-wrap gap-1.5">
                 <Badge tone="outline">{t.circle}</Badge>
-                <Badge tone="neutral">{t.share_with === "church" ? "For the church" : "For the circle"}</Badge>
+                <Badge tone="neutral">{t.share_with === "church" ? "For the church" : "For the Tribe"}</Badge>
               </div>
             </div>
             <p className="t-body whitespace-pre-line">{t.body}</p>
-            <p className="t-small text-soft">They would like to be shown with {CREDIT[t.credit]}.{scope === "church" && t.status === "circle_approved" ? " The leader has approved it for the circle." : ""}</p>
+            <p className="t-small text-soft">They would like to be shown with {CREDIT[t.credit]}.{scope === "church" && t.status === "Tribe_approved" ? " The leader has approved it for the Tribe." : ""}</p>
             <div className="flex flex-wrap items-center gap-2.5">
               <Button size="sm" variant="solid" loading={working === t.id && declining !== t.id} onClick={() => void decide(t.id, "approve")}>
                 {scope === "church" ? "Approve for the church" : "Approve"}

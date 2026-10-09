@@ -35,7 +35,7 @@ export function DeclarationForm({ signed, defaultName }: { signed: { signed_at: 
       <section className="night rise-in flex flex-col items-center gap-5 rounded-[var(--radius-sheet)] p-8 text-center sm:p-10">
         {done ? <ShieldBurst label="Declaration signed" /> : null}
         <h2 className="t-title">{done ? "Signed. Thank you." : "You have signed."}</h2>
-        <p className="t-body max-w-[28rem] text-white/80">These promises protect the people in your circle, and you. Your coach has the same words.</p>
+        <p className="t-body max-w-[28rem] text-white/80">These promises protect the people in your Tribe, and you. Your coach has the same words.</p>
         <Link href="/lead/academy" className={buttonClasses({ className: "px-8" })}>
           <span className="relative">Back to my training</span>
         </Link>

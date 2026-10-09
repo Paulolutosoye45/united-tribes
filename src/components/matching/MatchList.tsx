@@ -24,7 +24,7 @@ export function MatchList({ match }: { match: MyMatch }) {
     router.refresh();
   }
 
-  const title = count === 3 ? "Three circles that fit you" : count > 0 ? (count === 1 ? "One circle fits you well" : `${count} circles fit you well`) : "No circle fits you well yet";
+  const title = count === 3 ? "Three Tribes that fit you" : count > 0 ? (count === 1 ? "One Tribe fits you well" : `${count} Tribes fit you well`) : "No Tribe fits you well yet";
 
   return (
     <div className="flex flex-col gap-8">
@@ -32,8 +32,8 @@ export function MatchList({ match }: { match: MyMatch }) {
         <h1 className="t-title">{title}</h1>
         <p className="t-body measure text-soft">
           {count > 0
-            ? `Each percentage is for that circle alone, so two circles can both score high. Choose the one you want to walk with for twelve weeks${match.season ? `, starting ${formatDate(match.season.starts_on)}` : ""}.`
-            : "Circles are built by leaders who have finished their training. As more open, they will appear here."}
+            ? `Each percentage is for that Tribe alone, so two Tribes can both score high. Choose the one you want to walk with for twelve weeks${match.season ? `, starting ${formatDate(match.season.starts_on)}` : ""}.`
+            : "Tribes are built by leaders who have finished their training. As more open, they will appear here."}
         </p>
       </header>
 
@@ -49,13 +49,13 @@ export function MatchList({ match }: { match: MyMatch }) {
         <section aria-labelledby="starter-heading" className="card flex flex-col gap-4 p-5 sm:p-7">
           <div className="flex flex-col gap-2">
             <h2 id="starter-heading" className="t-heading">
-              {count === 0 ? "Join the Starter Circle list" : "Want more to choose from?"}
+              {count === 0 ? "Join the Starter Tribe list" : "Want more to choose from?"}
             </h2>
             <p className="t-body measure text-soft">
               {count === 0
                 ? "We have noted the goal, stage of life and meeting times you asked for, so the team can look for a leader to serve you."
                 : "We could not find three strong fits, and we have noted what you are looking for so the team can find a leader for it."}{" "}
-              A Starter Circle is a small, welcoming group while a better-fitting circle is found. Joining the list tells us you want a place.
+              A Starter Tribe is a small, welcoming group while a better-fitting Tribe is found. Joining the list tells us you want a place.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -68,7 +68,7 @@ export function MatchList({ match }: { match: MyMatch }) {
               </>
             ) : (
               <Button variant="solid" size="md" loading={busy === "starter"} onClick={() => void run("starter", () => starterListAction(true))}>
-                Put me on the Starter Circle list
+                Put me on the Starter Tribe list
               </Button>
             )}
           </div>
@@ -102,9 +102,9 @@ export function MatchList({ match }: { match: MyMatch }) {
           </summary>
           <div className="t-body measure flex flex-col gap-3 pb-5 text-soft">
             <p>
-              We only look at circles you could actually join: your stage of life, a time you can meet, a format that works for you, a group that is right for you and a seat that is free. Then each one is scored on seven things, most important first: your Season Goal, your stage of life, your tribe, where it meets, how you like to work, the rhythm of the week and your stage of faith.
+              We only look at Tribes you could actually join: your stage of life, a time you can meet, a format that works for you, a group that is right for you and a seat that is free. Then each one is scored on seven things, most important first: your Season Goal, your stage of life, your tribe, where it meets, how you like to work, the rhythm of the week and your stage of faith.
             </p>
-            <p>The score is a guide, never a verdict. Read the reasons, read the leader’s story and choose the circle you want to be in.</p>
+            <p>The score is a guide, never a verdict. Read the reasons, read the leader’s story and choose the Tribe you want to be in.</p>
             <p>Your answers stay with us. A leader sees only your name, and your WhatsApp number if you agreed, once you have joined.</p>
           </div>
         </details>

@@ -77,7 +77,7 @@ export function LogForm({ week }: { week: CircleWeek }) {
           }}
         >
           {office ? <p className="t-small rounded-[var(--radius-control)] bg-surface-strong p-3 text-soft">You are correcting this log as a pastor or director.</p> : null}
-          <div role="radiogroup" aria-label="Did the circle meet?" className="segmented">
+          <div role="radiogroup" aria-label="Did the Tribe meet?" className="segmented">
             <label>
               <input type="radio" name="held" checked={held} onChange={() => setHeld(true)} className="sr-only" />
               We met
@@ -131,7 +131,7 @@ export function LogForm({ week }: { week: CircleWeek }) {
               </ul>
             </fieldset>
           ) : (
-            <p className="t-body text-soft">No attendance is counted for a week the circle did not meet. A line below helps your coach understand what happened.</p>
+            <p className="t-body text-soft">No attendance is counted for a week the Tribe did not meet. A line below helps your coach understand what happened.</p>
           )}
 
           <Textarea

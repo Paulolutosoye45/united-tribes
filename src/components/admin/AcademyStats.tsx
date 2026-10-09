@@ -7,7 +7,7 @@ export function AcademyStatsPanel({ stats }: { stats: AcademyStats }) {
   const tiles = [
     { label: "In training", value: String(stats.trainees - stats.certified), note: `${stats.leaders} leaders, ${stats.assistants} assistants approved` },
     { label: "Certified", value: String(stats.certified), note: `${stats.certified_leaders} leaders, ${stats.certified_assistants} assistants` },
-    { label: "Circle Cards", value: String(stats.cards_approved), note: `${stats.cards_submitted} waiting, ${stats.cards_paired} with an assistant` },
+    { label: "Tribe Cards", value: String(stats.cards_approved), note: `${stats.cards_submitted} waiting, ${stats.cards_paired} with an assistant` },
     { label: "Workshops ahead", value: String(stats.upcoming_workshops), note: `${stats.practice_ready} practice sessions ready` },
   ];
   return (

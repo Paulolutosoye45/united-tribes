@@ -14,7 +14,7 @@ import { CREDIT_OPTIONS, SHARE_OPTIONS, TESTIMONY_STATUS } from "@/lib/rhythm/wo
 export function TestimonyForm({ testimonies }: { testimonies: RhythmTestimony[] }) {
   const router = useRouter();
   const [body, setBody] = useState("");
-  const [share, setShare] = useState<"circle" | "church">("circle");
+  const [share, setShare] = useState<"Tribe" | "church">("Tribe");
   const [credit, setCredit] = useState<"first_name" | "full_name" | "anonymous">("first_name");
   const [busy, setBusy] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
@@ -128,7 +128,7 @@ export function TestimonyForm({ testimonies }: { testimonies: RhythmTestimony[] 
       {others.length > 0 ? (
         <section aria-labelledby="others-heading" className="flex flex-col gap-3">
           <h2 id="others-heading" className="t-heading">
-            From your circle
+            From your Tribe
           </h2>
           <ul className="stagger flex flex-col gap-3">
             {others.map((t, i) => (

@@ -48,7 +48,7 @@ export function CardReviewView({ card, suggestions, canPair }: { card: CardRevie
         </div>
         <CirclePreview values={valuesFromCard(card)} tribe={card.tribe?.name ?? null} track={card.track?.name ?? null} goal={card.goal?.title ?? null} leader={card.leader.name} />
         <p className="t-small text-soft">
-          {card.season.name}. {card.circle_type === "mixed" ? "Mixed circle" : card.circle_type === "women" ? "Women only" : "Men only"}.
+          {card.season.name}. {card.circle_type === "mixed" ? "Mixed Tribe" : card.circle_type === "women" ? "Women only" : "Men only"}.
           {card.place_note ? ` Area: ${card.place_note}.` : ""}
         </p>
       </div>
@@ -148,7 +148,7 @@ export function CardReviewView({ card, suggestions, canPair }: { card: CardRevie
               Coach
             </h2>
             <Select
-              label="Who looks after this circle"
+              label="Who looks after this Tribe"
               name="coach"
               value={card.coach?.id ?? ""}
               disabled={busy === "coach"}
@@ -157,11 +157,11 @@ export function CardReviewView({ card, suggestions, canPair }: { card: CardRevie
               <option value="">No coach yet</option>
               {card.coaches.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} ({c.circles} {c.circles === 1 ? "circle" : "circles"})
+                  {c.name} ({c.circles} {c.circles === 1 ? "Tribe" : "Tribes"})
                 </option>
               ))}
             </Select>
-            <p className="t-small -mt-2 text-soft">A coach looks after about five circles. They see this card and their circles’ health once the season starts.</p>
+            <p className="t-small -mt-2 text-soft">A coach looks after about five Tribes. They see this card and their Tribes’ health once the season starts.</p>
           </section>
         ) : card.coach ? (
           <p className="t-small text-soft">Coach: {card.coach.name}</p>
@@ -174,7 +174,7 @@ export function CardReviewView({ card, suggestions, canPair }: { card: CardRevie
         ) : null}
 
         <Link href="/review/cards" className="t-small w-fit font-semibold underline underline-offset-4">
-          All Circle Cards
+          All Tribe Cards
         </Link>
       </div>
     </div>

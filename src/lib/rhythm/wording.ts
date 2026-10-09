@@ -46,8 +46,8 @@ export function nudgeLine(kind: NudgeKind, week: number, weeks: number): { title
 }
 
 export const PULSE_QUESTIONS = {
-  belonging: "I belong in this circle.",
-  intro: "Five quick questions. Your answers help your leader care for the circle. Nothing you write here is shown to the circle.",
+  belonging: "I belong in this Tribe.",
+  intro: "Five quick questions. Your answers help your leader care for the Tribe. Nothing you write here is shown to the Tribe.",
 } as const;
 
 export const SCALE_LABELS = ["Not at all", "A little", "Somewhat", "Mostly", "Completely"] as const;
@@ -65,7 +65,7 @@ export const FLAG_LABELS: Record<FlagKind, string> = {
 export const FLAG_ADVICE: Record<FlagKind, string> = {
   missed_twice: "Nobody misses twice without a call. A short, warm call or voice note is best.",
   not_yet_twice: "Ask what is getting in the way and whether the step can be smaller.",
-  low_belonging: "Listen first. Ask what would help them feel part of the circle.",
+  low_belonging: "Listen first. Ask what would help them feel part of the Tribe.",
   leader_concern: "Follow up the way you planned, and tell your coach if you need support.",
 };
 
@@ -84,7 +84,7 @@ export const STATUS_LABELS: Record<ReportStatus, { text: string; tone: "gold" | 
 };
 
 export const SHARE_OPTIONS = [
-  { value: "circle", title: "My circle", description: "After your leader has read it." },
+  { value: "Tribe", title: "My Tribe", description: "After your leader has read it." },
   { value: "church", title: "The whole church", description: "After your leader and a pastor have read it." },
 ] as const;
 
@@ -96,7 +96,7 @@ export const CREDIT_OPTIONS = [
 
 export const TESTIMONY_STATUS: Record<string, string> = {
   submitted: "Waiting for your leader",
-  circle_approved: "Shared with your circle",
+  circle_approved: "Shared with your Tribe",
   church_approved: "Shared with the church",
   declined: "Not shared",
 };
@@ -108,7 +108,7 @@ export function celebrationLine(c: { kind: string; first_name: string; on?: stri
     case "every_meeting":
       return `${c.first_name} has been to every meeting so far. Thank them.`;
     case "steps_streak":
-      return `${c.first_name} has finished their step three weeks running. Say so in the circle.`;
+      return `${c.first_name} has finished their step three weeks running. Say so in the Tribe.`;
     default:
       return "";
   }
@@ -123,7 +123,7 @@ export function followUpMessage(opts: { memberFirst: string; leaderFirst: string
     case "not_yet_twice":
       return `Hello ${memberFirst}, it is ${leaderFirst} from ${circle}. I wanted to ask how your week has been and whether this week’s step feels too big. We can make it smaller together.`;
     case "low_belonging":
-      return `Hello ${memberFirst}, it is ${leaderFirst} from ${circle}. I would love to hear how you are finding the circle and what would make it feel more like home. Could we talk this week?`;
+      return `Hello ${memberFirst}, it is ${leaderFirst} from ${circle}. I would love to hear how you are finding the Tribe and what would make it feel more like home. Could we talk this week?`;
     default:
       return `Hello ${memberFirst}, it is ${leaderFirst} from ${circle}. I was thinking of you and wanted to check how you are doing.`;
   }

@@ -34,7 +34,7 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
     {
       title: "Join the WhatsApp group",
       done: false,
-      note: p.group_url ? "Tap the button to join. Everyone in your circle is there." : `${c.leader_first_name} will put the invite link here soon.`,
+      note: p.group_url ? "Tap the button to join. Everyone in your Tribe is there." : `${c.leader_first_name} will put the invite link here soon.`,
       action: p.group_url ? (
         <a href={p.group_url} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "solid", size: "md", className: "w-fit" })}>
           <span className="relative">Join the group</span>
@@ -65,14 +65,14 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
       <section className="night rise-in flex flex-col gap-5 rounded-[var(--radius-sheet)] p-6 sm:p-10" aria-labelledby="in-heading">
         <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:gap-8 sm:text-left">
           {justJoined ? (
-            <ShieldBurst label="You have joined your circle" />
+            <ShieldBurst label="You have joined your Tribe" />
           ) : (
             <span aria-hidden="true" className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-white/10 text-3xl font-bold">
               {c.leader_first_name.slice(0, 1).toUpperCase()}
             </span>
           )}
           <div className="flex flex-col gap-2.5">
-            <p className="t-small text-white/70">{justJoined ? "Your seat is confirmed" : "Your circle"}</p>
+            <p className="t-small text-white/70">{justJoined ? "Your seat is confirmed" : "Your Tribe"}</p>
             <h1 id="in-heading" className="t-title">
               {justJoined ? `You’re in, ${c.name}.` : c.name}
             </h1>
@@ -113,10 +113,10 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
       </section>
 
       <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
-        <section aria-labelledby="circle-heading" className="card flex flex-col gap-4 p-5 sm:p-6">
+        <section aria-labelledby="Tribe-heading" className="card flex flex-col gap-4 p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 id="circle-heading" className="t-heading">
-              Your circle
+            <h2 id="Tribe-heading" className="t-heading">
+              Your Tribe
             </h2>
             {p.degree !== null && p.label ? <Badge tone="gold">{p.degree}% · {LABELS[p.label].text}</Badge> : null}
           </div>
@@ -145,12 +145,12 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
             <h2 id="covenant-heading" className="t-heading">
               What you agreed to
             </h2>
-            <p className="t-small text-soft">On {formatDate(p.agreed_at.slice(0, 10))}. You will refine this with your circle in week 1.</p>
+            <p className="t-small text-soft">On {formatDate(p.agreed_at.slice(0, 10))}. You will refine this with your Tribe in week 1.</p>
           </div>
           <SuccessPicture god={p.covenant.god} others={p.covenant.others} life={p.covenant.life} />
           <details className="group border-t border-line pt-2">
             <summary className="t-small flex min-h-11 cursor-pointer list-none items-center justify-between font-semibold">
-              <span>The Circle Covenant</span>
+              <span>The Tribe Covenant</span>
               <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 transition-transform duration-300 group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 8l5 5 5-5" />
               </svg>
@@ -171,7 +171,7 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
 
       <section aria-labelledby="change-heading" className="flex flex-col gap-3">
         <h2 id="change-heading" className="t-heading">
-          Need a different circle?
+          Need a different Tribe?
         </h2>
         {p.can_release ? (
           asking ? (
@@ -183,8 +183,8 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
                 void release();
               }}
             >
-              <p className="t-body">You can give up your seat until the season starts. Your seat goes back to the circle and you will see your circles again.</p>
-              <Textarea label="Why? This helps us find better circles." name="reason" optional rows={3} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
+              <p className="t-body">You can give up your seat until the season starts. Your seat goes back to the Tribe and you will see your Tribes again.</p>
+              <Textarea label="Why? This helps us find better Tribes." name="reason" optional rows={3} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
               {error ? (
                 <p role="alert" className="t-small text-danger">
                   {error}
@@ -204,13 +204,13 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
               <p className="t-body measure text-soft">You can change your mind until {formatDate(p.season_starts_on)}, when the season starts.</p>
               <div>
                 <Button variant="quiet" size="md" onClick={() => setAsking(true)}>
-                  Choose a different circle
+                  Choose a different Tribe
                 </Button>
               </div>
             </div>
           )
         ) : (
-          <p className="t-body measure text-soft">The season has started. If this circle is not working for you, tell {c.leader_first_name} or ask your coach to help you move.</p>
+          <p className="t-body measure text-soft">The season has started. If this Tribe is not working for you, tell {c.leader_first_name} or ask your coach to help you move.</p>
         )}
       </section>
     </div>

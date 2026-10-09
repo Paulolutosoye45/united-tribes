@@ -36,7 +36,7 @@ export function AgeStep({ answers, set, catalogue }: StepProps & { catalogue: Ca
       {answers.ageRange === TEENS ? (
         <div className="pop-in mt-5">
           <Note tone="info">
-            Circles for teens open in a later release, with a parent or guardian&rsquo;s permission. Nothing you have entered
+            Tribes for teens open in a later release, with a parent or guardian&rsquo;s permission. Nothing you have entered
             here is kept. We&rsquo;d love to see you then.
           </Note>
         </div>
@@ -112,7 +112,7 @@ export function AgeStep({ answers, set, catalogue }: StepProps & { catalogue: Ca
 export function NameStep({ answers, set }: StepProps) {
   return (
     <>
-      <StepHeading title="What should we call you?" hint="Your leader and your circle will use this name." />
+      <StepHeading title="What should we call you?" hint="Your leader and your Tribe will use this name." />
       <div className="stagger flex flex-col gap-5">
         <div style={{ ["--i" as string]: 0 }}>
           <Input
@@ -145,7 +145,7 @@ export function NameStep({ answers, set }: StepProps) {
 export function GenderStep({ answers, set }: StepProps) {
   return (
     <>
-      <StepHeading title="Which describes you?" hint="Some circles are for men or women only, especially when the topics are personal." />
+      <StepHeading title="Which describes you?" hint="Some Tribes are for men or women only, especially when the topics are personal." />
       <div role="radiogroup" aria-label="Gender" className="stagger flex flex-col gap-3">
         {GENDERS.map((g, i) => (
           <Choice
@@ -163,7 +163,7 @@ export function GenderStep({ answers, set }: StepProps) {
       {answers.gender ? (
         <section className="rise-in mt-9" aria-labelledby="mix-heading">
           <h2 id="mix-heading" className="t-heading mb-3">
-            What kind of circle would feel right?
+            What kind of Tribe would feel right?
           </h2>
           <div role="radiogroup" aria-labelledby="mix-heading" className="flex flex-col gap-3">
             {CIRCLE_MIXES.map((m) => (
@@ -187,7 +187,7 @@ export function WhereStep({ answers, set }: StepProps) {
   const abroad = answers.zone === "abroad";
   return (
     <>
-      <StepHeading title="Where are you based?" hint="This helps us find a circle near you, or one that meets at a time that suits your country." />
+      <StepHeading title="Where are you based?" hint="This helps us find a Tribe near you, or one that meets at a time that suits your country." />
       <div role="radiogroup" aria-label="Where you are based" className="stagger flex flex-col gap-3">
         {ZONES.map((z, i) => (
           <Choice

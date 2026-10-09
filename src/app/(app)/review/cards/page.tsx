@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth/session";
 import type { CardQueueItem } from "@/lib/academy/types";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Review: Circle Cards" };
+export const metadata: Metadata = { title: "Review: Tribe Cards" };
 
 export default async function ReviewCardsPage() {
   await requireRole(REVIEW_ROLES, "/review/cards");
@@ -21,7 +21,7 @@ export default async function ReviewCardsPage() {
         <div className="flex flex-col gap-2">
           <h1 className="t-title">Review leaders</h1>
           <p className="t-body measure text-soft">
-            A Circle Card is what members choose from. A pastor or director approves each one, pairs the leader with an assistant, and assigns a coach.
+            A Tribe Card is what members choose from. A pastor or director approves each one, pairs the leader with an assistant, and assigns a coach.
             {waiting > 0 ? ` ${waiting} ${waiting === 1 ? "card is" : "cards are"} waiting.` : ""}
           </p>
         </div>

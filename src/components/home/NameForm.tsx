@@ -16,7 +16,7 @@ export function NameForm() {
         name="name"
         autoComplete="given-name"
         placeholder="Your first name"
-        hint="Leaders and your circle will see this."
+        hint="Leaders and your Tribes will see this."
         error={state.status === "error" ? state.message : null}
         maxLength={40}
         required

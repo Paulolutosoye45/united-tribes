@@ -117,7 +117,7 @@ export type Problem = { step: string; message: string };
  */
 export function firstProblem(a: Answers): Problem | null {
   if (!a.ageRange) return { step: "age", message: "Choose your age range." };
-  if (a.ageRange === TEENS) return { step: "age", message: "Circles for teens open in a later release." };
+  if (a.ageRange === TEENS) return { step: "age", message: "Tribes for teens open in a later release." };
   if (a.birthdayDay !== undefined || a.birthdayMonth !== undefined) {
     if (a.birthdayDay === undefined || a.birthdayMonth === undefined || !isValidBirthday(a.birthdayDay, a.birthdayMonth)) {
       return { step: "age", message: "That birthday is not a real date. Check the day and month, or remove it." };

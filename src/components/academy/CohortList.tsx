@@ -72,7 +72,7 @@ function Row({ row, open, onToggle }: { row: CohortRow; open: boolean; onToggle:
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-semibold leading-snug">{row.name}</h3>
-          <p className="t-small text-soft">{row.role === "leader" ? "Circle leader" : "Assistant leader"}</p>
+          <p className="t-small text-soft">{row.role === "leader" ? "Tribe leader" : "Assistant leader"}</p>
         </div>
         {s.certified ? <Badge tone="gold">Certified</Badge> : <Badge tone="outline">In training</Badge>}
       </div>
@@ -112,7 +112,7 @@ function Row({ row, open, onToggle }: { row: CohortRow; open: boolean; onToggle:
         </Button>
         {row.card ? (
           <a href={`/review/cards/${row.card.id}`} className="t-small font-semibold underline underline-offset-4">
-            Open the Circle Card
+            Open the Tribe Card
           </a>
         ) : null}
       </div>

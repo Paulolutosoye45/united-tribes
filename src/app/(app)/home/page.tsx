@@ -80,7 +80,7 @@ export default async function HomePage() {
       state: finished ? "done" : "current",
     },
     {
-      title: "Meet your three best-fit circles",
+      title: "Meet your three best-fit Tribes",
       detail: "Each comes with its own compatibility score.",
       state: finished ? "current" : "later",
     },
@@ -88,7 +88,7 @@ export default async function HomePage() {
   ];
   if (inSeason) {
     journey[1].state = "done";
-    journey[2] = { title: "Meet your three best-fit circles", detail: "You chose yours.", state: "done" };
+    journey[2] = { title: "Meet your three best-fit Tribes", detail: "You chose yours.", state: "done" };
     journey[3] = {
       title: "Join one and grow for twelve weeks",
       detail: inSeason.state === "complete" ? "Your twelve weeks are done." : `Week ${inSeason.week} of ${inSeason.weeks}.`,
@@ -148,11 +148,11 @@ export default async function HomePage() {
                   ? nudgeLine(inSeason.nudges[0].kind, inSeason.nudges[0].week, inSeason.weeks).title
                   : inSeason.state === "running"
                     ? "Your step is chosen. Come back on Friday to check in."
-                    : "Thank you for walking with your circle."}
+                    : "Thank you for walking with your Tribe."}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Link href="/circle" className={buttonClasses({ className: "px-8" })}>
-                  <span className="relative">{inSeason.state === "running" ? "Open this week" : "Open my circle"}</span>
+                  <span className="relative">{inSeason.state === "running" ? "Open this week" : "Open my Tribe"}</span>
                 </Link>
                 {inSeason.nudges.length > 1 ? <span className="t-small text-white/70">{inSeason.nudges.length} things for you</span> : null}
               </div>
@@ -168,26 +168,26 @@ export default async function HomePage() {
                   ? `You’re in ${placed.circle.name}.`
                   : finished
                     ? shownCount > 0
-                      ? "Your circles are ready."
-                      : "We’re finding your circles."
+                      ? "Your Tribes are ready."
+                      : "We’re finding your Tribes."
                     : draftStep
                       ? "Pick up where you left off."
-                      : "Find your circle."}
+                      : "Find your Tribe."}
               </h2>
               <p className="t-body text-white/80">
                 {placed
                   ? `${whenLine(placed.circle)}. ${placed.circle.leader_first_name} will be in touch before your first meeting.`
                   : finished
                     ? shownCount > 0
-                      ? `We found ${shownCount === 3 ? "three circles" : shownCount === 1 ? "a circle" : `${shownCount} circles`} that fit you, each with its own score. Choose one to join.`
-                      : "Your answers are saved. Circles open as leaders finish their training, and you will see them here."
+                      ? `We found ${shownCount === 3 ? "three Tribes" : shownCount === 1 ? "a Tribe" : `${shownCount} Tribes`} that fit you, each with its own score. Choose one to join.`
+                      : "Your answers are saved. Tribes open as leaders finish their training, and you will see them here."
                     : draftStep
                       ? `About ${minutesLeft} ${minutesLeft === 1 ? "minute" : "minutes"} to go. Your answers so far are saved.`
-                      : "Answer a few questions about your season and your goal. We’ll show you three circles that fit, each with its own score."}
+                      : "Answer a few questions about your season and your goal. We’ll show you three Tribes that fit, each with its own score."}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Link href={finished ? "/circle" : "/join"} className={buttonClasses({ className: "px-8" })}>
-                  <span className="relative">{placed ? "Open my circle" : finished ? (shownCount > 0 ? "See my circles" : "See where it stands") : draftStep ? "Continue" : "Start"}</span>
+                  <span className="relative">{placed ? "Open my Tribe" : finished ? (shownCount > 0 ? "See my Tribes" : "See where it stands") : draftStep ? "Continue" : "Start"}</span>
                 </Link>
                 {!finished ? <span className="t-small text-white/70">About four minutes</span> : null}
               </div>
@@ -224,7 +224,7 @@ export default async function HomePage() {
           ) : leaderWeek && leaderWeek.state !== "before" ? (
             <section aria-labelledby="lead-heading" className="card flex flex-col gap-3 p-6">
               <h2 id="lead-heading" className="t-heading">
-                Your circle this week
+                Your Tribe this week
               </h2>
               <div>
                 <p className="font-semibold">

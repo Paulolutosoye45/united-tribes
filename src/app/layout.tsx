@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "United Tribes", template: "%s · United Tribes" },
-  description: "Find your people. Grow together. Small circles at The Covenant Nation, built around your season of life.",
+  description: "Find your people. Grow together. Small Tribes at The Covenant Nation, built around your season of life.",
   applicationName: "United Tribes",
 };
 

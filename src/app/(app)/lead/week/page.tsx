@@ -28,7 +28,7 @@ export default async function LeadWeekPage({ searchParams }: { searchParams: Sea
       <div className="flex flex-col gap-6">
         <h1 className="t-title">This week</h1>
         <p className="t-body measure text-soft">
-          {circleId ? "We could not open that circle. You may not have access to it." : "Your weekly page opens once your Circle Card is approved and members have joined."}
+          {circleId ? "We could not open that circle. You may not have access to it." : "Your weekly page opens once your Tribe Card is approved and members have joined."}
         </p>
         <div>
           <Link href="/lead" className={buttonClasses({ variant: "quiet", size: "md" })}>
