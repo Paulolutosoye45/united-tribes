@@ -1,10 +1,15 @@
 "use server";
 
+import { providerFromEnv } from "@/lib/ai/suggest";
 import { getSession } from "@/lib/auth/session";
 import { normaliseWhatsapp } from "@/lib/intake/answers";
 import { firstProblem, normalisedContact, parseLeaderAnswers, refereeProblem, withNormalisedContact, type RefereeInput } from "@/lib/leaders/answers";
-import { LEADER_CONSENT_VERSION } from "@/lib/leaders/consent";
+import { leaderConsentFor } from "@/lib/leaders/consent";
 import { SESSION_ENDED, TRY_AGAIN, friendly, isUuid } from "@/lib/leaders/errors";
+import { MAX_ANSWER_LENGTH, isWrittenField } from "@/lib/leaders/quality/fields";
+import { kickLeaderReading } from "@/lib/leaders/quality/kick";
+import { checkAnswer } from "@/lib/leaders/quality/scorer";
+import { workerRpc, workerToken } from "@/lib/messaging/worker";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult<T = object> = ({ ok: true } & T) | { ok: false; message: string; step?: string };
@@ -18,9 +23,12 @@ export async function startApplicationAction(): Promise<ActionResult<{ id: strin
   const existing = await supabase.from("leader_applications").select("id").eq("person_id", session.person.id).eq("status", "draft").maybeSingle();
   if (existing.data) return { ok: true, id: existing.data.id };
 
+  // The version stored is the wording the person was shown, which depends on whether the first check is switched on.
+  const config = await supabase.rpc("leader_ai_public_config");
+  const consent = leaderConsentFor((config.data as { mode?: string } | null)?.mode);
   const { data, error } = await supabase
     .from("leader_applications")
-    .insert({ person_id: session.person.id, step: "eligibility", answers: {}, consent_version: LEADER_CONSENT_VERSION })
+    .insert({ person_id: session.person.id, step: "eligibility", answers: {}, consent_version: consent.version })
     .select("id")
     .single();
   if (error || !data) {
@@ -121,6 +129,72 @@ export async function submitApplicationAction(appId: string): Promise<ActionResu
   }
 
   const { error } = await supabase.rpc("submit_leader_application", { p_app: appId });
+  if (error) {
+    const message = friendly(error);
+    // A written answer that has not passed its quick check sends the person back to the written questions.
+    if (/quick check|written answers/i.test(message)) return { ok: false, message, step: "goal-story" };
+    if (/updated wording/i.test(message)) return { ok: false, message, step: "ai-consent" };
+    return { ok: false, message };
+  }
+  kickLeaderReading();
+  return { ok: true };
+}
+
+export type CheckResult = ActionResult<{
+  /** True when the first check is not switched on: nothing was checked and nothing is asked. */
+  skipped?: boolean;
+  passes?: boolean;
+  /** A kind note on what to add. Shown under the answer. */
+  note?: string | null;
+  triesLeft?: number;
+}>;
+
+/**
+ * The quick check on one written answer, when the person presses Continue. For a draft the text is read from what is
+ * saved, so what is checked is exactly what will be sent. After sending (adding to an answer when asked), the new text
+ * comes with the call. Nothing here can pass an answer: the database records the result and decides.
+ */
+export async function checkAnswerAction(appId: string, field: string, newText?: string): Promise<CheckResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId) || !isWrittenField(field)) return { ok: false, message: TRY_AGAIN };
+  const supabase = await createClient();
+
+  const config = await supabase.rpc("leader_ai_public_config");
+  const mode = (config.data as { mode?: string } | null)?.mode;
+  if (config.error) return { ok: false, message: TRY_AGAIN };
+  if (mode !== "on") return { ok: true, skipped: true };
+
+  const app = await supabase.from("leader_applications").select("answers, status").eq("id", appId).maybeSingle();
+  if (!app.data) return { ok: false, message: TRY_AGAIN };
+  const saved = String(((app.data.answers ?? {}) as { calling?: Record<string, unknown> }).calling?.[field] ?? "");
+  const text = (app.data.status === "draft" ? saved : String(newText ?? "")).slice(0, MAX_ANSWER_LENGTH[field]);
+
+  const token = workerToken();
+  if (!token) return { ok: false, message: "Checking is not available right now. Please try again in a little while." };
+  const outcome = await checkAnswer({ rpc: workerRpc(token), provider: providerFromEnv() }, { application: appId, field, text });
+  switch (outcome.kind) {
+    case "skip":
+      return { ok: true, skipped: true };
+    case "consent":
+      return { ok: false, message: "Please agree to the updated wording first." };
+    case "limited":
+      return { ok: false, message: "You have tried a lot of versions today. Please come back tomorrow and carry on." };
+    case "error":
+      return { ok: false, message: TRY_AGAIN };
+    case "result":
+      return { ok: true, passes: outcome.passes, note: outcome.note, triesLeft: outcome.triesLeft };
+  }
+}
+
+/** The applicant agrees to the wording that says an AI service reads their written answers. */
+export async function aiConsentAction(appId: string): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId)) return { ok: false, message: TRY_AGAIN };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("accept_leader_ai_consent", { p_app: appId });
   if (error) return { ok: false, message: friendly(error) };
+  kickLeaderReading();
   return { ok: true };
 }

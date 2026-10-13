@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldProgress } from "@/components/brand/ShieldProgress";
+import { FirstCheckPanel } from "@/components/leaders/FirstCheckPanel";
 import { InterviewPicker, type InterviewOptions } from "@/components/leaders/InterviewPicker";
 import { RefereeLinks } from "@/components/leaders/RefereeLinks";
 import { StageList } from "@/components/leaders/StageList";
@@ -8,6 +9,8 @@ import { WithdrawApplication } from "@/components/leaders/WithdrawApplication";
 import { buttonClasses } from "@/components/ui/Button";
 import { requireSession } from "@/lib/auth/session";
 import { ELIGIBILITY, ELIGIBILITY_ADVICE, OTHER_WAYS_TO_SERVE, STATUS_INFO, type EligibilityId } from "@/lib/leaders/options";
+import { LEADER_CONSENT_AI } from "@/lib/leaders/consent";
+import { readFirstCheckStatus } from "@/lib/leaders/quality/status";
 import { loadMyApplication } from "@/lib/leaders/server";
 import { isDecided, isInReview, stageStates } from "@/lib/leaders/status";
 import { isStepId, minutesLeft, shieldFills } from "@/lib/leaders/steps";
@@ -118,6 +121,11 @@ export default async function LeadPage() {
   const decided = isDecided(application.status);
   const approved = application.status === "approved_leader" || application.status === "approved_assistant";
 
+  // The first check on written answers, while the application is in review. Switched off, this is simply null.
+  const firstCheck = isInReview(application.status) ? readFirstCheckStatus((await supabase.rpc("leader_ai_status", { p_app: application.id })).data) : null;
+  const checkOn = firstCheck?.mode === "on";
+  const refereesOpen = !checkOn || firstCheck?.refereesOpen !== false;
+
   return (
     <div className="flex flex-col gap-8">
       <section aria-labelledby="status-heading" className="night rise-in rounded-[var(--radius-sheet)] p-6 sm:p-10">
@@ -176,10 +184,12 @@ export default async function LeadPage() {
         </section>
       ) : null}
 
+      {firstCheck && checkOn ? <FirstCheckPanel appId={application.id} status={firstCheck} consentText={LEADER_CONSENT_AI} /> : null}
+
       <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
         <StageList states={states} details={{ references: `${answered} of 2 answered` }} />
         <div className="flex flex-col gap-8">
-          {isInReview(application.status) && answered < 2 ? <RefereeLinks appId={application.id} references={references} /> : null}
+          {isInReview(application.status) && answered < 2 && refereesOpen ? <RefereeLinks appId={application.id} references={references} /> : null}
           {options ? <InterviewPicker options={options} /> : null}
         </div>
       </div>

@@ -73,7 +73,7 @@ export function Ineligible({
   );
 }
 
-export function Submitted({ name }: { name: string }) {
+export function Submitted({ name, firstCheck = false }: { name: string; firstCheck?: boolean }) {
   const [leaving, setLeaving] = useState(false);
   return (
     <main className="night safe-top flex min-h-dvh flex-col items-center justify-between px-6 pb-8 [--safe-pt:4rem] text-center">
@@ -82,13 +82,15 @@ export function Submitted({ name }: { name: string }) {
         <div className="rise-in flex flex-col gap-3" style={{ animationDelay: "250ms" }}>
           <h1 className="t-title">Sent, {name}.</h1>
           <p className="t-body mx-auto max-w-[38ch] text-white/80">
-            Your application is with the panel, who can start reading it now. One more step: send each referee their private link. Interview invitations wait until both have answered.
+            {firstCheck
+              ? "Your application is with us. We are reading it now, which takes a few minutes. We will message you when it is done, and your referees’ private links open then. Interview invitations wait until both have answered."
+              : "Your application is with the panel, who can start reading it now. One more step: send each referee their private link. Interview invitations wait until both have answered."}
           </p>
         </div>
       </div>
       <div className="rise-in flex w-full max-w-md flex-col gap-3" style={{ animationDelay: "450ms" }}>
         <Link href="/lead" onClick={() => setLeaving(true)} className={buttonClasses({ fullWidth: true })} aria-busy={leaving}>
-          <span className="relative">Send my referees their links</span>
+          <span className="relative">{firstCheck ? "See where it stands" : "Send my referees their links"}</span>
         </Link>
         <Link href="/home" className={buttonClasses({ fullWidth: true, variant: "night", size: "md" })}>
           <span className="relative">Go to home</span>

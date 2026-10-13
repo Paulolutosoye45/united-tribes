@@ -98,3 +98,29 @@ export async function removeSlotAction(slotId: string): Promise<Result> {
   revalidatePath("/review/interviews");
   return { ok: true };
 }
+
+/** A pastor has read an application the first check held and lets it through. From here reviewers score it. */
+export async function clearFirstCheckAction(appId: string, note: string): Promise<Result> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId)) return { ok: false, message: TRY_AGAIN };
+  const { error } = await supabase.rpc("leader_ai_clear", { p_app: appId, p_note: String(note ?? "").slice(0, 500) });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath(`/review/${appId}`);
+  revalidatePath("/review");
+  revalidatePath("/admin/leader-quality");
+  return { ok: true };
+}
+
+/** A pastor asks the applicant to add to chosen answers, in the pastor's own words. */
+export async function sendBackAction(appId: string, fields: string[], note: string): Promise<Result> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId) || !Array.isArray(fields)) return { ok: false, message: TRY_AGAIN };
+  const { error } = await supabase.rpc("leader_ai_send_back", { p_app: appId, p_fields: fields.map(String), p_note: String(note ?? "").slice(0, 300) });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath(`/review/${appId}`);
+  revalidatePath("/review");
+  revalidatePath("/admin/leader-quality");
+  return { ok: true };
+}

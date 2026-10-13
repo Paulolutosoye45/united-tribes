@@ -11,7 +11,6 @@ import { cn } from "@/lib/cn";
 import { hasWords, normaliseWhatsapp } from "@/lib/intake/answers";
 import { STYLE_PAIRS } from "@/lib/intake/options";
 import { charsToGo, type LeaderAnswers, type RefereeInput } from "@/lib/leaders/answers";
-import { LEADER_CONSENT } from "@/lib/leaders/consent";
 import {
   ELIGIBILITY,
   GOAL_RELATIONS,
@@ -21,6 +20,7 @@ import {
 } from "@/lib/leaders/options";
 import { SCENARIOS, SCENARIO_IDS, shuffled, type OptionId, type ScenarioId } from "@/lib/leaders/scenarios";
 import type { LeaderCatalogue } from "@/lib/leaders/server";
+import { countWords } from "@/lib/leaders/quality/text";
 import type { StepId } from "@/lib/leaders/steps";
 
 export type Patch = <K extends keyof LeaderAnswers>(section: K, value: Partial<LeaderAnswers[K]>) => void;
@@ -40,7 +40,7 @@ const STAGES_AT_A_GLANCE = [
   { title: "A pastor decides", body: "You see the result here, with a short note. Training follows." },
 ];
 
-export function LeaderWelcome({ agreed, onAgree }: { agreed: boolean; onAgree: (v: boolean) => void }) {
+export function LeaderWelcome({ agreed, onAgree, consentText }: { agreed: boolean; onAgree: (v: boolean) => void; consentText: string }) {
   return (
     <>
       <StepHeading
@@ -71,7 +71,7 @@ export function LeaderWelcome({ agreed, onAgree }: { agreed: boolean; onAgree: (
           value="yes"
           checked={agreed}
           onChange={(e) => onAgree(e.target.checked)}
-          title={LEADER_CONSENT}
+          title={consentText}
           description="Needed to continue"
         />
       </fieldset>
@@ -267,6 +267,22 @@ export function GoalStep({ answers, patch, communities }: Base & { communities: 
   );
 }
 
+/** What the quick check said about an answer, shown under it. Kind, specific, and never about scores. */
+export type AnswerNote = { note: string; triesLeft: number };
+
+export function AnswerFeedback({ note, triesLeft, again = "Change it and press Continue again." }: AnswerNote & { again?: string }) {
+  return (
+    <div role="alert" data-testid="answer-feedback" className="rise-in mt-4 rounded-[var(--radius-control)] border-[1.5px] border-gold bg-gold/20 px-4 py-3">
+      <p className="font-semibold">Not quite yet</p>
+      <p className="t-small mt-1 text-ink">{note}</p>
+      <p className="t-small mt-1.5 text-soft">
+        {again}
+        {triesLeft === 1 ? " If it is still not right after that, it will go through and a person will read it." : ""}
+      </p>
+    </div>
+  );
+}
+
 /** A written answer with a microphone for people who would rather speak. */
 function Writing({
   label,
@@ -276,6 +292,8 @@ function Writing({
   max,
   placeholder,
   rows = 6,
+  minWords,
+  feedback,
 }: {
   label: string;
   name: string;
@@ -284,24 +302,38 @@ function Writing({
   max: number;
   placeholder: string;
   rows?: number;
+  /** When the first check is on, the answer needs this many words, and the counter says so in words. */
+  minWords?: number;
+  feedback?: AnswerNote | null;
 }) {
   const dictation = useDictation((text) => onChange(append(value, text, max)));
   const togo = charsToGo(value);
-  const hint = dictation.error ?? (dictation.listening ? "Listening… speak now." : togo > 0 ? `${togo} more ${togo === 1 ? "character" : "characters"} to go` : "That’s enough. Add more if you like.");
+  const wordsToGo = minWords ? Math.max(0, minWords - countWords(value ?? "")) : 0;
+  const counter = minWords
+    ? wordsToGo > 0
+      ? `${wordsToGo} more ${wordsToGo === 1 ? "word" : "words"} to go`
+      : "That’s enough. Add more if you like."
+    : togo > 0
+      ? `${togo} more ${togo === 1 ? "character" : "characters"} to go`
+      : "That’s enough. Add more if you like.";
+  const hint = dictation.error ?? (dictation.listening ? "Listening… speak now." : counter);
   return (
-    <div className="relative">
-      <Textarea
-        label={label}
-        name={name}
-        rows={rows}
-        maxLength={max}
-        placeholder={placeholder}
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="min-h-48 pb-14 text-[1.05rem]"
-        hint={hint}
-      />
-      {dictation.supported ? <MicButton listening={dictation.listening} onClick={dictation.listening ? dictation.stop : dictation.start} /> : null}
+    <div>
+      <div className="relative">
+        <Textarea
+          label={label}
+          name={name}
+          rows={rows}
+          maxLength={max}
+          placeholder={placeholder}
+          value={value ?? ""}
+          onChange={(e) => onChange(e.target.value)}
+          className="min-h-48 pb-14 text-[1.05rem]"
+          hint={hint}
+        />
+        {dictation.supported ? <MicButton listening={dictation.listening} onClick={dictation.listening ? dictation.stop : dictation.start} /> : null}
+      </div>
+      {feedback ? <AnswerFeedback {...feedback} /> : null}
     </div>
   );
 }
@@ -341,7 +373,7 @@ const WRITTEN = {
   },
 } as const;
 
-export function WrittenStep({ step, answers, patch, goalTitle }: Base & { step: "goal-story" | "why" | "walked" | "obstacles"; goalTitle: string | null }) {
+export function WrittenStep({ step, answers, patch, goalTitle, minWords, feedback }: Base & { step: "goal-story" | "why" | "walked" | "obstacles"; goalTitle: string | null; minWords?: number; feedback?: AnswerNote | null }) {
   const cfg = WRITTEN[step];
   return (
     <>
@@ -356,12 +388,14 @@ export function WrittenStep({ step, answers, patch, goalTitle }: Base & { step: 
         onChange={(text) => patch("calling", { [cfg.field]: text })}
         max={cfg.max}
         placeholder={cfg.placeholder}
+        minWords={minWords}
+        feedback={feedback}
       />
     </>
   );
 }
 
-export function WalkStep({ answers, patch }: Base) {
+export function WalkStep({ answers, patch, minWords, feedback }: Base & { minWords?: number; feedback?: AnswerNote | null }) {
   return (
     <>
       <StepHeading
@@ -385,6 +419,8 @@ export function WalkStep({ answers, patch }: Base) {
           max={800}
           rows={4}
           placeholder="e.g. Steady, though I get tired in busy seasons and pray less than I want to."
+          minWords={minWords}
+          feedback={feedback}
         />
       </div>
     </>
@@ -715,6 +751,25 @@ export function ReviewStep({
           <Note tone="info">{error}</Note>
         </div>
       ) : null}
+    </>
+  );
+}
+
+/** Shown to someone who started before the first check existed: one new sentence to read and agree to. */
+export function AiConsentStep({ text, agreed, onAgree }: { text: string; agreed: boolean; onAgree: (v: boolean) => void }) {
+  return (
+    <>
+      <StepHeading
+        title="We have changed one sentence."
+        hint="Before you carry on, please read it. Your answers so far are saved, and nothing else about your application changes."
+      />
+      <fieldset className="flex flex-col gap-3">
+        <legend className="sr-only">Your agreement</legend>
+        <Choice type="checkbox" name="consent-leader-ai" value="yes" checked={agreed} onChange={(e) => onAgree(e.target.checked)} title={text} description="Needed to continue" />
+      </fieldset>
+      <p className="t-small mt-4 text-soft">
+        What the computer program sees: only your written answers, with phone numbers and email addresses removed and without your name. It never makes a decision, and a pastor reads anything it is unsure about.
+      </p>
     </>
   );
 }

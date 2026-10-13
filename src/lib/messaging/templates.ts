@@ -884,6 +884,72 @@ const applicationNotApproved: TemplateDef = {
   }),
 };
 
+// The first check on a leader application. Kind, short, and never about how anything was read: no score, no flag, and
+// no mention of a computer. The database decides when each one is sent (supabase/migrations/…leader_ai_scoring.sql).
+
+const leaderCheckConsent: TemplateDef = {
+  key: "leader_check_consent",
+  audience: "applicant",
+  title: "One sentence on your application has changed",
+  email: (_p, c) => ({
+    subject: "Please read one new sentence on your application",
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      "Thank you for applying to lead. We have changed one sentence in the agreement on your application. Nothing else about it is different, and your answers are safe.",
+      "Please open your application, read it, and agree so we can carry on.",
+    ],
+    cta: { label: "Read it and agree", url: c.link("/lead") },
+  }),
+  sms: (_p, c) => smsLine("We changed one sentence on your leader application. Please read it and agree so we can carry on:", c.link("/lead")),
+  whatsapp: (_p, c) => ({
+    body: "Hi {{1}}, we have changed one sentence in the agreement on your leader application. Nothing else is different. Please read it and agree so we can carry on: {{2}}",
+    example: ["Ngozi", "https://unitedtribes.example/lead"],
+    vars: [flat(c.first), flat(c.link("/lead"))],
+  }),
+};
+
+const leaderCheckStrengthen: TemplateDef = {
+  key: "leader_check_strengthen",
+  audience: "applicant",
+  title: "A little more would help your application",
+  email: (p, c) => ({
+    subject: "A little more would help your application",
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      `Thank you for your application. ${num(p.count, 1) === 1 ? "One answer" : "A few answers"} would be stronger with a few more words, and we have said what to add.`,
+      "Open your application to see it. You can add to your answers in your own words, or ask for a person to read it as it is. Your referees’ links open once this is done.",
+    ],
+    cta: { label: "See what to add", url: c.link("/lead") },
+  }),
+  sms: (_p, c) => smsLine("A little more would help your leader application. See what to add, or ask for a person to read it as it is:", c.link("/lead")),
+  whatsapp: (_p, c) => ({
+    body: "Hi {{1}}, thank you for your application. A little more would help it. You can add to your answers in your own words, or ask for a person to read it as it is: {{2}}",
+    example: ["Ngozi", "https://unitedtribes.example/lead"],
+    vars: [flat(c.first), flat(c.link("/lead"))],
+  }),
+};
+
+const leaderCheckClear: TemplateDef = {
+  key: "leader_check_clear",
+  audience: "applicant",
+  title: "Your referees’ links are ready",
+  email: (_p, c) => ({
+    subject: "Your referees’ links are ready",
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      "Thank you for your application. We have read it, and the panel will take it from here.",
+      "One more step: send each of your two referees their private link. Interview invitations wait until both have answered.",
+    ],
+    cta: { label: "Send my referees their links", url: c.link("/lead") },
+  }),
+  sms: (_p, c) => smsLine("Your leader application has been read. Next, send each referee their private link:", c.link("/lead")),
+  whatsapp: (_p, c) => ({
+    body: "Hi {{1}}, your leader application has been read and the panel will take it from here. Next, please send each of your two referees their private link: {{2}}",
+    example: ["Ngozi", "https://unitedtribes.example/lead"],
+    vars: [flat(c.first), flat(c.link("/lead"))],
+  }),
+};
+
 // ---------------------------------------------------------------------------
 // A referee, with no account
 // ---------------------------------------------------------------------------
@@ -1142,6 +1208,7 @@ export const TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(
     coachDigest, coachLogMissing, coachMissedThree, coachLowPulse, coachWelcomeOverdue,
     careUrgent, careTask, careTaskReminder, careTaskOverdue, coachHelp, celebrationPrompt,
     applicationReceived, applicationInterviewInvited, applicationInterviewBooked, applicationApproved, applicationNotApproved,
+    leaderCheckConsent, leaderCheckStrengthen, leaderCheckClear,
     refereeRequest, reportReady,
     swapRequested, swapOffered, swapDeclined, swapMoved, guardianRequest, guardianUpdate,
   ].map((t) => [t.key, signed(t)]),

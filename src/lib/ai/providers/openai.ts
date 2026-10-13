@@ -1,5 +1,5 @@
 import { suggestionSchema } from "../prompts";
-import type { AiProvider, ProviderInput, RawSuggestions, RawText, WriteInput } from "../types";
+import type { AiProvider, JudgeInput, ProviderInput, RawJudgement, RawSuggestions, RawText, WriteInput } from "../types";
 
 const ENDPOINT = "https://api.openai.com/v1/chat/completions";
 
@@ -74,6 +74,34 @@ export function openaiProvider(apiKey: string, model: string): AiProvider {
         text: data.choices?.[0]?.message?.content ?? "",
         usage: { inputTokens: data.usage?.prompt_tokens, outputTokens: data.usage?.completion_tokens },
       };
+    },
+    async judge(input: JudgeInput, signal: AbortSignal): Promise<RawJudgement> {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        signal,
+        headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model,
+          max_completion_tokens: input.maxTokens,
+          messages: [
+            { role: "system", content: input.system },
+            { role: "user", content: input.user },
+          ],
+          response_format: { type: "json_schema", json_schema: { name: input.schemaName, strict: true, schema: input.schema } },
+        }),
+      });
+      if (!res.ok) throw new Error(`openai ${res.status}`);
+      const data = (await res.json()) as {
+        choices?: { message?: { content?: string | null } }[];
+        usage?: { prompt_tokens?: number; completion_tokens?: number };
+      };
+      let json: unknown = null;
+      try {
+        json = JSON.parse(data.choices?.[0]?.message?.content ?? "");
+      } catch {
+        json = null;
+      }
+      return { json, usage: { inputTokens: data.usage?.prompt_tokens, outputTokens: data.usage?.completion_tokens } };
     },
   };
 }

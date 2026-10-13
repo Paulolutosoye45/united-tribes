@@ -6,13 +6,26 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import { formatLagosDay, formatLagosTime, formatShortDate } from "@/lib/dates";
 import { REVIEW_STATUS } from "@/lib/leaders/options";
-import type { QueueItem } from "@/lib/leaders/review-types";
+import type { QueueAi, QueueItem } from "@/lib/leaders/review-types";
+import { STATE_SHORT } from "@/lib/leaders/quality/wording";
 import { isDecided, isInReview } from "@/lib/leaders/status";
 
 type Filter = "todo" | "review" | "decided" | "all";
 
-function needsMe(i: QueueItem) {
+/**
+ * With the first check on, an application still being read, waiting for the applicant, or already scored by the first
+ * check does not need a reviewer's score yet. One held for a person does. An application picked for audit does too:
+ * a person scores it so the first check can be compared with them.
+ */
+function waitingOnFirstCheck(ai: QueueAi | undefined, on: boolean) {
+  if (!on || !ai) return false;
+  if (ai.state === "consent_needed" || ai.state === "checking" || ai.state === "strengthen") return true;
+  return ai.state === "clear" && ai.basis === "ai" && !ai.audit;
+}
+
+function needsMe(i: QueueItem, ai: QueueAi | undefined, on: boolean) {
   if (!isInReview(i.status)) return false;
+  if (waitingOnFirstCheck(ai, on)) return false;
   if (!i.i_reviewed_calling) return true;
   return (i.status === "interview_booked" || i.status === "interviewed") && !i.i_reviewed_interview;
 }
@@ -24,8 +37,8 @@ const initials = (name: string) =>
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("");
 
-export function ReviewQueue({ items, names }: { items: QueueItem[]; names: Record<string, string> }) {
-  const todo = items.filter(needsMe);
+export function ReviewQueue({ items, names, ai = {}, firstCheckOn = false }: { items: QueueItem[]; names: Record<string, string>; ai?: Record<string, QueueAi>; firstCheckOn?: boolean }) {
+  const todo = items.filter((i) => needsMe(i, ai[i.id], firstCheckOn));
   const [filter, setFilter] = useState<Filter>(todo.length > 0 ? "todo" : "review");
 
   const lists: Record<Filter, QueueItem[]> = {
@@ -90,9 +103,15 @@ export function ReviewQueue({ items, names }: { items: QueueItem[]; names: Recor
                     <span className="t-small mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <span>References {i.references_received} of 2</span>
                       <span>Scored by {i.calling_reviews}</span>
-                      {isInReview(i.status) ? (
+                      {isInReview(i.status) && !waitingOnFirstCheck(ai[i.id], firstCheckOn) ? (
                         <span className={cn("font-semibold", i.i_reviewed_calling ? "text-success" : "text-accent")}>
                           {i.i_reviewed_calling ? "You scored it" : "Needs your score"}
+                        </span>
+                      ) : null}
+                      {firstCheckOn && ai[i.id] && isInReview(i.status) ? (
+                        <span className={cn("font-semibold", ai[i.id].state === "held" ? "text-danger" : "text-soft")} data-testid="queue-first-check">
+                          {STATE_SHORT[ai[i.id].state] ?? ai[i.id].state}
+                          {ai[i.id].audit ? ", audit: score it too" : ""}
                         </span>
                       ) : null}
                       {i.open_concern ? <span className="font-semibold text-danger">Open concern</span> : null}

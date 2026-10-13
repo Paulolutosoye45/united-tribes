@@ -7,7 +7,7 @@ import { LeaderStatsPanel } from "@/components/admin/LeaderStats";
 import { MatchStatsPanel } from "@/components/matching/MatchStats";
 import { loadChecklist } from "@/lib/admin/server";
 import type { AcademyStats } from "@/lib/academy/types";
-import { DATA_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PRIVACY_ROLES, PROGRAMME_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole, type Role } from "@/lib/auth/roles";
+import { DATA_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PRIVACY_ROLES, PROGRAMME_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole, type Role } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import type { LeaderStats } from "@/lib/leaders/review-types";
 import type { MatchStats } from "@/lib/matching/types";
@@ -32,6 +32,7 @@ const GROUPS: { title: string; tiles: Tile[] }[] = [
     tiles: [
       { href: "/admin/catalogue", title: "Communities and goals", body: "The shared list members and leaders choose from, and the goals members write in.", roles: OFFICE_ROLES },
       { href: "/admin/champions", title: "Community champions", body: "Who looks after each community.", roles: OFFICE_ROLES },
+      { href: "/admin/leader-quality", title: "Leader quality", body: "The first check on leader applications: the switch, the thresholds and the applications held for a person.", roles: LEADER_QUALITY_ROLES },
       { href: "/admin/people", title: "People and roles", body: "Invite the team and see who holds each role.", roles: PROGRAMME_ROLES },
       { href: "/care/teens", title: "Young people", body: "Parent and guardian permission, and the call that confirms it.", roles: TEEN_ROLES },
       { href: "/admin/privacy", title: "Data requests", body: "Members who ask for their account and everything in it to be deleted.", roles: PRIVACY_ROLES },

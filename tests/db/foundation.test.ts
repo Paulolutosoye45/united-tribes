@@ -577,6 +577,20 @@ describe("locked-down defaults", () => {
       "book_interview_slot",
       "cancel_interview_booking",
       "leader_stats",
+      // Round 2, Phase 1: the first check on a leader application
+      "leader_ai_public_config",
+      "leader_ai_status",
+      "accept_leader_ai_consent",
+      "resubmit_leader_answers",
+      "ask_leader_person_look",
+      "leader_ai_scorecard",
+      "leader_ai_queue",
+      "leader_ai_list",
+      "leader_ai_overview",
+      "leader_ai_set_settings",
+      "leader_ai_set_mode",
+      "leader_ai_clear",
+      "leader_ai_send_back",
       "get_reference_request",
       "submit_reference",
       // Phase 3: the Leader Academy and Tribe Cards
@@ -769,6 +783,13 @@ describe("locked-down defaults", () => {
       "worker_opt_out",
       "worker_pending_summaries",
       "worker_set_summary",
+      "worker_leader_check_state",
+      "worker_record_answer_check",
+      "worker_leader_print",
+      "worker_pending_leader_jobs",
+      "worker_save_leader_ai_score",
+      "worker_fail_leader_job",
+      "worker_leader_ai_alerts",
       "ping",
     ]);
     // The only things someone who is not signed in may do: open a referee or guardian link and
@@ -788,6 +809,13 @@ describe("locked-down defaults", () => {
       "worker_opt_out",
       "worker_pending_summaries",
       "worker_set_summary",
+      "worker_leader_check_state",
+      "worker_record_answer_check",
+      "worker_leader_print",
+      "worker_pending_leader_jobs",
+      "worker_save_leader_ai_score",
+      "worker_fail_leader_job",
+      "worker_leader_ai_alerts",
       "ping",
     ]);
     const { rows } = await db.admin.query(`

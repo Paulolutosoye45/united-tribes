@@ -4,7 +4,7 @@ import { ReviewQueue } from "@/components/leaders/ReviewQueue";
 import { REVIEW_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { plural } from "@/lib/dates";
-import type { LeaderStats, QueueItem } from "@/lib/leaders/review-types";
+import type { LeaderStats, QueueAi, QueueItem } from "@/lib/leaders/review-types";
 import { loadLeaderCatalogue } from "@/lib/leaders/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,11 +13,18 @@ export const metadata: Metadata = { title: "Review leaders" };
 export default async function ReviewPage() {
   await requireRole(REVIEW_ROLES, "/review");
   const supabase = await createClient();
-  const [queue, stats, catalogue] = await Promise.all([
+  const [queue, stats, catalogue, aiQueue, aiConfig] = await Promise.all([
     supabase.rpc("review_queue"),
     supabase.rpc("leader_stats"),
     loadLeaderCatalogue(supabase, { includeRetired: true }),
+    supabase.rpc("leader_ai_queue"),
+    supabase.rpc("leader_ai_public_config"),
   ]);
+
+  // The first check's state for each application. Extra information: if it cannot be read, the queue is as before.
+  const firstCheckOn = (aiConfig.data as { mode?: string } | null)?.mode === "on";
+  const ai: Record<string, QueueAi> = {};
+  for (const row of (aiQueue.data as QueueAi[] | null) ?? []) ai[row.id] = row;
 
   const items = (queue.data as QueueItem[] | null) ?? [];
   const s = stats.data as LeaderStats | null;
@@ -58,7 +65,7 @@ export default async function ReviewPage() {
         </dl>
       ) : null}
 
-      <ReviewQueue items={items} names={names} />
+      <ReviewQueue items={items} names={names} ai={ai} firstCheckOn={firstCheckOn} />
     </div>
   );
 }

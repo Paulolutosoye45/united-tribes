@@ -4,7 +4,7 @@ import { ReviewWorkspace } from "@/components/leaders/ReviewWorkspace";
 import { REVIEW_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { isUuid } from "@/lib/leaders/errors";
-import type { ReviewDetail } from "@/lib/leaders/review-types";
+import type { ReviewDetail, Scorecard } from "@/lib/leaders/review-types";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Review an application" };
@@ -16,5 +16,7 @@ export default async function ReviewApplicationPage({ params }: { params: Promis
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("review_application", { p_id: id });
   if (error || !data) notFound();
-  return <ReviewWorkspace detail={data as ReviewDetail} roles={session.roles} />;
+  // The first check's reading. It is only extra: if it cannot be read, the page works as before.
+  const card = await supabase.rpc("leader_ai_scorecard", { p_id: id });
+  return <ReviewWorkspace detail={data as ReviewDetail} roles={session.roles} scorecard={card.error ? null : (card.data as Scorecard | null)} />;
 }

@@ -64,6 +64,9 @@ export function primaryRole(roles: readonly Role[]): Role {
   return PRECEDENCE.find((role) => roles.includes(role)) ?? "member";
 }
 
+/** Who runs the first check on leader applications: the switch, the thresholds and the held list. The database checks the same. */
+export const LEADER_QUALITY_ROLES: readonly Role[] = ["pastor", "director"];
+
 /** Who reads and scores leader applications. Only a pastor decides. */
 export const REVIEW_ROLES: readonly Role[] = ["pastor", "director", "coach"];
 

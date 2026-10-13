@@ -1,4 +1,5 @@
-import type { AiProvider, ProviderInput, RawSuggestions, RawText, WriteInput } from "../types";
+import { mockRelevance, mockScore } from "@/lib/leaders/quality/mock-judge";
+import type { AiProvider, JudgeInput, ProviderInput, RawJudgement, RawSuggestions, RawText, WriteInput } from "../types";
 
 const STOP = new Set(
   "a an and the of to in on at for with my i me we our is am are was be been it its this that as by from or but not so very just want need like get have has had do does did into about more most some any can will would could should you your they them their there here what when where who how up out over than then also".split(" "),
@@ -49,6 +50,13 @@ export function mockProvider(): AiProvider {
     /** Hands back the plain draft, so tests see the whole path without a network. */
     async write(input: WriteInput): Promise<RawText> {
       return { text: input.draft };
+    },
+    /** Answers the leader application's checks from word patterns, so the whole path runs offline. */
+    async judge(input: JudgeInput): Promise<RawJudgement> {
+      const m = input.mock;
+      if (!m) throw new Error("mock judge needs its data");
+      if (m.kind === "relevance") return { json: mockRelevance(m.data as Parameters<typeof mockRelevance>[0]) };
+      return { json: mockScore(m.data as Parameters<typeof mockScore>[0]) };
     },
   };
 }

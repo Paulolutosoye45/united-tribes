@@ -1,5 +1,5 @@
 import { suggestionSchema } from "../prompts";
-import type { AiProvider, ProviderInput, RawSuggestions, RawText, WriteInput } from "../types";
+import type { AiProvider, JudgeInput, ProviderInput, RawJudgement, RawSuggestions, RawText, WriteInput } from "../types";
 
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 const VERSION = "2023-06-01";
@@ -67,6 +67,28 @@ export function anthropicProvider(apiKey: string, model: string): AiProvider {
         text: (data.content ?? []).filter((b) => b.type === "text").map((b) => b.text ?? "").join(""),
         usage: { inputTokens: data.usage?.input_tokens, outputTokens: data.usage?.output_tokens },
       };
+    },
+    async judge(input: JudgeInput, signal: AbortSignal): Promise<RawJudgement> {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        signal,
+        headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": VERSION },
+        body: JSON.stringify({
+          model,
+          max_tokens: input.maxTokens,
+          system: input.system,
+          tools: [{ name: input.schemaName, description: "Give your judgement in exactly this shape.", input_schema: input.schema }],
+          tool_choice: { type: "tool", name: input.schemaName },
+          messages: [{ role: "user", content: input.user }],
+        }),
+      });
+      if (!res.ok) throw new Error(`anthropic ${res.status}`);
+      const data = (await res.json()) as {
+        content?: { type: string; input?: unknown }[];
+        usage?: { input_tokens?: number; output_tokens?: number };
+      };
+      const block = data.content?.find((b) => b.type === "tool_use");
+      return { json: block?.input ?? null, usage: { inputTokens: data.usage?.input_tokens, outputTokens: data.usage?.output_tokens } };
     },
   };
 }

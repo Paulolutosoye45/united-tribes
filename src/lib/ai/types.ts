@@ -34,7 +34,28 @@ export interface AiProvider {
   suggest(input: ProviderInput, signal: AbortSignal): Promise<RawSuggestions>;
   /** Plain writing, for short summaries and drafts. See write.ts for the rules around it. */
   write(input: WriteInput, signal: AbortSignal): Promise<RawText>;
+  /**
+   * A structured judgement: the model must answer in the JSON shape given. Optional, so a provider that cannot
+   * do it simply means the caller carries on without the AI. See judge.ts for the rules around it.
+   */
+  judge?(input: JudgeInput, signal: AbortSignal): Promise<RawJudgement>;
 }
+
+export type JudgeInput = {
+  system: string;
+  user: string;
+  /** JSON Schema for the answer: an object, every key required, no extra keys. */
+  schema: Record<string, unknown>;
+  schemaName: string;
+  maxTokens: number;
+  /**
+   * For the mock provider only: the same facts as data, so it can answer without a network or a key.
+   * Real providers ignore it.
+   */
+  mock?: { kind: "relevance" | "score"; data: unknown };
+};
+
+export type RawJudgement = { json: unknown; usage?: RawSuggestions["usage"] };
 
 export type WriteInput = {
   system: string;

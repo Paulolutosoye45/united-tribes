@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FlowFrame, type SaveState } from "@/components/flow/FlowFrame";
 import { createClient } from "@/lib/supabase/browser";
 import {
+  aiConsentAction,
+  checkAnswerAction,
   checkEligibilityAction,
   restartApplicationAction,
   saveRefereeAction,
@@ -28,6 +30,7 @@ import {
 } from "@/lib/leaders/steps";
 import { Ineligible, Submitted } from "./ApplyEnds";
 import {
+  AiConsentStep,
   ContactStep,
   EligibilityStep,
   GoalStep,
@@ -41,22 +44,45 @@ import {
   CommunityStep,
   WalkStep,
   WrittenStep,
+  type AnswerNote,
   type Patch,
 } from "./ApplySteps";
 
 export type View = "welcome" | StepId | "ineligible" | "done";
+
+/** What the first check on written answers asks of this applicant. "off" means nothing is different from before. */
+export type ApplyAi = {
+  mode: "off" | "shadow" | "on";
+  minWords: number;
+  /** The sentence on the first screen, for the wording that applies now. */
+  consentText: string;
+  /** The draft started under the old wording and the first check is on: one new sentence to agree to. */
+  needsConsent: boolean;
+  /** The sentence to agree to when the wording has changed. */
+  updatedConsentText: string;
+};
 
 export type ApplyProps = {
   personId: string;
   applicationId: string | null;
   catalogue: LeaderCatalogue;
   applicantName: string;
+  ai: ApplyAi;
   initial: { view: View; answers: LeaderAnswers; referees: Referees; failed: string[] };
+};
+
+/** The written steps that get a quick check, and the saved answer each one checks. */
+const CHECKED: Partial<Record<StepId, string>> = {
+  "goal-story": "goalStory",
+  why: "why",
+  walked: "walked",
+  walk: "walkNote",
+  obstacles: "obstacles",
 };
 
 const trimmed = (r: RefereeInput) => JSON.stringify({ n: r.name.trim(), r: r.relationship.trim(), c: r.contact.trim(), h: r.head });
 
-export function ApplyFlow({ personId, applicationId, catalogue, applicantName, initial }: ApplyProps) {
+export function ApplyFlow({ personId, applicationId, catalogue, applicantName, ai, initial }: ApplyProps) {
   const router = useRouter();
   const [appId, setAppId] = useState(applicationId);
   const [view, setView] = useState<View>(initial.view);
@@ -69,6 +95,12 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
+  // What the quick check last said about the answer on screen. Cleared when the person edits or leaves.
+  const [feedback, setFeedback] = useState<(AnswerNote & { step: StepId }) | null>(null);
+  const [consentPending, setConsentPending] = useState(ai.needsConsent);
+  const [consentAgreed, setConsentAgreed] = useState(false);
+
+  const showConsent = ai.mode === "on" && consentPending && (view === "review" || view in CHECKED);
 
   const answersRef = useRef(answers);
   const appIdRef = useRef(applicationId);
@@ -82,6 +114,7 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
     const next = { ...answersRef.current, [section]: { ...answersRef.current[section], ...value } } as LeaderAnswers;
     answersRef.current = next;
     setAnswers(next);
+    setFeedback(null);
   }, []);
 
   // Keep the same order of responses for the same person on every visit.
@@ -109,6 +142,7 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
 
   function go(target: View, direction: "forward" | "back") {
     setProblem(null);
+    setFeedback(null);
     setDir(direction);
     setView(target);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -182,6 +216,12 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
     setBusy(false);
     if (!result.ok) {
       setProblem(result.message);
+      if (result.step === "ai-consent") {
+        setProblem(null);
+        setConsentAgreed(false);
+        setConsentPending(true);
+        return;
+      }
       if (result.step && (STEP_IDS as readonly string[]).includes(result.step)) {
         setReviewMode(true);
         go(result.step as StepId, "back");
@@ -194,15 +234,45 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
+  /** The quick check on the written answer on screen. Returns true when the person may go on. */
+  async function checkWritten(step: StepId, field: string): Promise<boolean> {
+    setBusy(true);
+    setProblem(null);
+    await persist(step);
+    const result = await checkAnswerAction(appIdRef.current!, field);
+    setBusy(false);
+    if (!result.ok) {
+      setProblem(result.message);
+      return false;
+    }
+    if (result.skipped || result.passes) return true;
+    setFeedback({ step, note: result.note ?? "Tell us a little more here, in your own words.", triesLeft: result.triesLeft ?? 0 });
+    return false;
+  }
+
+  async function agreeToNewWording() {
+    setBusy(true);
+    setProblem(null);
+    const result = await aiConsentAction(appIdRef.current!);
+    setBusy(false);
+    if (!result.ok) return setProblem(result.message);
+    setConsentPending(false);
+    // They were sent here from Send my application: go back and send it.
+    if (view === "review") void submit();
+  }
+
   async function onContinue() {
     if (busy) return;
     if (view === "welcome") return void begin();
     if (view === "done" || view === "ineligible") return;
+    if (showConsent) return void agreeToNewWording();
     if (view === "review") return void submit();
     if (view === "eligibility") return void checkEligibility();
     if (view === "ref1" || view === "ref2") {
       if (!(await saveReferee(view === "ref1" ? 1 : 2))) return;
     }
+    const field = CHECKED[view as StepId];
+    if (field && ai.mode === "on" && !(await checkWritten(view as StepId, field))) return;
     // Changing the community from the review means the goal must be chosen again.
     if (reviewMode && view === "community" && !canContinue("goal", answers, referees, agreed)) return go("goal", "forward");
     if (reviewMode) return go("review", "forward");
@@ -226,16 +296,17 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
     router.push("/lead");
   }
 
-  if (view === "done") return <Submitted name={applicantName} />;
+  if (view === "done") return <Submitted name={applicantName} firstCheck={ai.mode === "on"} />;
   if (view === "ineligible") return <Ineligible failed={failed} onRestart={() => void restart()} restarting={busy} error={problem} />;
 
   const onWelcome = view === "welcome";
   const fills = shieldFills(view);
   const section = onWelcome || view === "review" ? -1 : sectionOf(view);
   const stepNo = onWelcome ? 0 : STEP_IDS.indexOf(view) + 1;
-  const canGo = onWelcome ? agreed : canContinue(view, answers, referees, true);
-  const label = onWelcome ? "I agree, start my application" : view === "review" ? "Send my application" : "Continue";
+  const canGo = showConsent ? consentAgreed : onWelcome ? agreed : canContinue(view, answers, referees, true);
+  const label = showConsent ? "I agree, carry on" : onWelcome ? "I agree, start my application" : view === "review" ? "Send my application" : "Continue";
   const caption = onWelcome ? "About fifteen minutes" : view === "review" ? "Last step" : `${SECTIONS[section]?.label ?? ""} · ${timeLeftLabel(view).toLowerCase()}`;
+  const minWords = ai.mode === "on" ? ai.minWords : undefined;
   const c = answers.calling;
   const goalTitle = catalogue.communities.find((t) => t.slug === c.community)?.goals.find((g) => g.slug === c.goal)?.title ?? c.goalOther?.trim() ?? null;
 
@@ -265,16 +336,24 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
       busy={busy}
       problem={problem && view !== "review" && view !== "ref1" && view !== "ref2" ? problem : null}
     >
-      {view === "welcome" ? <LeaderWelcome agreed={agreed} onAgree={setAgreed} /> : null}
+      {showConsent ? <AiConsentStep text={ai.updatedConsentText} agreed={consentAgreed} onAgree={setConsentAgreed} /> : null}
+      {view === "welcome" ? <LeaderWelcome agreed={agreed} onAgree={setAgreed} consentText={ai.consentText} /> : null}
       {view === "eligibility" ? <EligibilityStep answers={answers} patch={patch} /> : null}
       {view === "contact" ? <ContactStep answers={answers} patch={patch} /> : null}
       {view === "track" ? <TrackStep answers={answers} patch={patch} tracks={catalogue.tracks} /> : null}
       {view === "community" ? <CommunityStep answers={answers} patch={patch} communities={catalogue.communities} /> : null}
       {view === "goal" ? <GoalStep answers={answers} patch={patch} communities={catalogue.communities} /> : null}
-      {view === "goal-story" || view === "why" || view === "walked" || view === "obstacles" ? (
-        <WrittenStep step={view} answers={answers} patch={patch} goalTitle={goalTitle} />
+      {!showConsent && (view === "goal-story" || view === "why" || view === "walked" || view === "obstacles") ? (
+        <WrittenStep
+          step={view}
+          answers={answers}
+          patch={patch}
+          goalTitle={goalTitle}
+          minWords={minWords}
+          feedback={feedback?.step === view ? feedback : null}
+        />
       ) : null}
-      {view === "walk" ? <WalkStep answers={answers} patch={patch} /> : null}
+      {!showConsent && view === "walk" ? <WalkStep answers={answers} patch={patch} minWords={minWords} feedback={feedback?.step === view ? feedback : null} /> : null}
       {isScenarioId(view) ? <ScenarioStep id={view} answers={answers} patch={patch} seed={seed} /> : null}
       {view === "style" ? <StyleStep answers={answers} patch={patch} /> : null}
       {view === "lead-best" ? <LeadBestStep answers={answers} patch={patch} /> : null}
@@ -284,7 +363,7 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
       {view === "ref2" ? (
         <RefereeStep slot={2} value={referees[2] ?? EMPTY_REFEREE} onChange={setReferee(2)} headNeeded={!(referees[1]?.head)} error={problem} />
       ) : null}
-      {view === "review" ? <ReviewStep answers={answers} referees={referees} catalogue={catalogue} onEdit={onEdit} error={problem} /> : null}
+      {!showConsent && view === "review" ? <ReviewStep answers={answers} referees={referees} catalogue={catalogue} onEdit={onEdit} error={problem} /> : null}
     </FlowFrame>
   );
 }

@@ -24,7 +24,10 @@ export async function unlockAction(_prev: UnlockState, formData: FormData): Prom
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("god_unlock", { p_phrase: phrase });
-  if (error) return { status: "error", message: "That did not work. Try again in a moment." };
+  if (error) {
+    console.error("god_unlock failed", error);
+    return { status: "error", message: "That did not work. Try again in a moment." };
+  }
   const answer = data as { ok?: boolean; message?: string; tries_left?: number } | null;
   if (!answer?.ok) {
     const left = typeof answer?.tries_left === "number" && answer.tries_left > 0 ? ` ${answer.tries_left} ${answer.tries_left === 1 ? "try" : "tries"} left.` : "";

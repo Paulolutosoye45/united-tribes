@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Choice } from "@/components/ui/Choice";
 import { Textarea } from "@/components/ui/Input";
+import { AiScorecard } from "./AiScorecard";
 import { ScaleInput } from "@/components/intake/ui";
 import type { Role } from "@/lib/auth/roles";
 import { cn } from "@/lib/cn";
@@ -30,13 +31,13 @@ import {
   WALK_LABELS,
   type RubricQuestion,
 } from "@/lib/leaders/options";
-import type { ReferenceView, Readiness, ReviewDetail } from "@/lib/leaders/review-types";
+import type { ReferenceView, Readiness, ReviewDetail, Scorecard } from "@/lib/leaders/review-types";
 import { isDecided } from "@/lib/leaders/status";
 
 type Json = Record<string, unknown>;
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 
-export function ReviewWorkspace({ detail, roles }: { detail: ReviewDetail; roles: Role[] }) {
+export function ReviewWorkspace({ detail, roles, scorecard = null }: { detail: ReviewDetail; roles: Role[]; scorecard?: Scorecard | null }) {
   const answers = detail.answers as { calling?: Json; style?: Json };
   const calling = (answers.calling ?? {}) as Json;
   const style = (answers.style ?? {}) as Json;
@@ -130,6 +131,8 @@ export function ReviewWorkspace({ detail, roles }: { detail: ReviewDetail; roles
 
         <div className="flex flex-col gap-8">
           {detail.can_invite || (detail.status === "submitted" && detail.readiness) ? <InvitePanel detail={detail} /> : null}
+
+          {scorecard ? <AiScorecard appId={detail.id} card={scorecard} /> : null}
 
           <RubricPanel
             appId={detail.id}
@@ -436,7 +439,9 @@ function InvitePanel({ detail }: { detail: ReviewDetail }) {
   const [error, setError] = useState<string | null>(null);
   const refsIn = detail.references.filter((r) => r.answered).length;
   const callingBy = detail.readiness?.calling_reviews ?? 0;
-  const ready = refsIn >= 2 && callingBy >= 2;
+  // When the first check passed the application, its score stands in for the two reviewers' calling scores.
+  const byFirstCheck = detail.readiness?.calling_source === "ai";
+  const ready = refsIn >= 2 && (byFirstCheck || callingBy >= 2);
 
   async function invite() {
     setBusy(true);
@@ -449,7 +454,9 @@ function InvitePanel({ detail }: { detail: ReviewDetail }) {
 
   const checks = [
     { ok: refsIn >= 2, text: `Both references in (${refsIn} of 2)` },
-    { ok: callingBy >= 2, text: `Two reviewers have scored (${callingBy} of 2)` },
+    byFirstCheck
+      ? { ok: true, text: "The first check has scored it" }
+      : { ok: callingBy >= 2, text: `Two reviewers have scored (${callingBy} of 2)` },
   ];
 
   return (
@@ -528,7 +535,12 @@ function ReadinessCard({ readiness: r }: { readiness: Readiness }) {
         </div>
       </div>
       <ul className="flex flex-col gap-4">
-        <Bar label="Calling and goal fit" weight={30} value={r.calling} note={`${r.calling_reviews} of 2 reviewers`} />
+        <Bar
+          label="Calling and goal fit"
+          weight={30}
+          value={r.calling}
+          note={r.calling_source === "ai" ? `From the first check${r.calling_reviews > 0 ? `, ${r.calling_reviews} ${r.calling_reviews === 1 ? "reviewer" : "reviewers"} also scored` : ""}` : `${r.calling_reviews} of 2 reviewers`}
+        />
         <Bar label="Situations" weight={25} value={r.scenarios} />
         <Bar label="References" weight={25} value={r.references} note={`${r.references_received} of 2 answered`} />
         <Bar label="Interview" weight={20} value={r.interview} note={`${r.interview_reviews} of 2 panelists`} />
