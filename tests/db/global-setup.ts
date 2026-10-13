@@ -6,6 +6,9 @@ import type { TestProject } from "vitest/node";
 
 const ROOT = path.resolve(__dirname, "../..");
 const TEMPLATE = "ut_template";
+/** The database as it stood just before the tribes rename migration; tribes-naming.test.ts upgrades copies of it. */
+const BEFORE_RENAME = "ut_before_tribes";
+const RENAME_MIGRATION = "_tribes_naming.sql";
 
 declare module "vitest" {
   export interface ProvidedContext {
@@ -38,12 +41,34 @@ export default async function setup(project: TestProject) {
 
   await pg.initialise();
   await pg.start();
-  await pg.createDatabase(TEMPLATE);
+  // Build the schema in two stages: everything up to the rename, then the rename itself. The state between the two is kept
+  // as its own template so the upgrade can be tested against it.
+  const files = migrationFiles();
+  const before = files.filter((f) => !f.endsWith(RENAME_MIGRATION));
+  const rename = files.filter((f) => f.endsWith(RENAME_MIGRATION));
+
+  await pg.createDatabase(BEFORE_RENAME);
+  const first = pg.getPgClient(BEFORE_RENAME);
+  await first.connect();
+  await first.query(fs.readFileSync(path.join(__dirname, "shim.sql"), "utf8"));
+  for (const file of before) {
+    try {
+      await first.query(fs.readFileSync(file, "utf8"));
+    } catch (error) {
+      throw new Error(`Migration failed: ${path.basename(file)}\n${(error as Error).message}`);
+    }
+  }
+  await first.end();
+
+  // A template cannot be copied while anyone is connected to it; the client above is closed, so this is safe.
+  const admin = pg.getPgClient("postgres");
+  await admin.connect();
+  await admin.query(`create database ${TEMPLATE} template ${BEFORE_RENAME}`);
+  await admin.end();
 
   const client = pg.getPgClient(TEMPLATE);
   await client.connect();
-  await client.query(fs.readFileSync(path.join(__dirname, "shim.sql"), "utf8"));
-  for (const file of migrationFiles()) {
+  for (const file of rename) {
     try {
       await client.query(fs.readFileSync(file, "utf8"));
     } catch (error) {

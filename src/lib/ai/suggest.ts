@@ -6,7 +6,7 @@ import { openaiProvider } from "./providers/openai";
 import { isAiEligible, scrubPersonalDetails } from "./sensitive";
 import type { AiProvider, FallbackReason, SuggestRequest, SuggestResult, Suggestion } from "./types";
 
-export const DEFAULT_TIMEOUT_MS = 4500;
+export const DEFAULT_TIMEOUT_MS = 6000;
 const MIN_STORY_CHARS = 12;
 const MAX_STORY_CHARS = 1500;
 const MAX_REASON_CHARS = 120;
@@ -15,11 +15,12 @@ const requestSchema = z.object({
   field: z.string().min(1),
   question: z.string().min(3).max(300),
   options: z
-    .array(z.object({ id: z.string().regex(/^[a-z0-9-]+$/), label: z.string().min(1).max(120) }))
+    .array(z.object({ id: z.string().regex(/^[a-z0-9_-]+$/), label: z.string().min(1).max(260) }))
     .min(1)
     .max(40)
     .refine((opts) => new Set(opts.map((o) => o.id)).size === opts.length, "Option ids must be unique"),
   story: z.string(),
+  known: z.array(z.string().min(1).max(100)).max(8).optional(),
   max: z.number().int().min(1).max(5).optional(),
 });
 
@@ -105,7 +106,9 @@ export async function suggestOptions(
   if (!provider) return empty(null, started, "no_provider");
 
   const story = scrubPersonalDetails(req.story).trim().slice(0, MAX_STORY_CHARS);
-  if (story.length < MIN_STORY_CHARS) return empty(provider, started, "too_short");
+  const known = (req.known ?? []).map((k) => scrubPersonalDetails(k).trim()).filter(Boolean);
+  // Enough to go on: a sentence or two of their own words, or at least two things they have confirmed.
+  if (story.length < MIN_STORY_CHARS && known.length < 2) return empty(provider, started, "too_short");
 
   const max = Math.min(req.max ?? 3, req.options.length);
   const controller = new AbortController();
@@ -115,7 +118,7 @@ export async function suggestOptions(
     const raw = await provider.suggest(
       {
         system: SYSTEM_PROMPT,
-        user: userPrompt({ question: req.question, options: req.options, story, max }),
+        user: userPrompt({ question: req.question, options: req.options, story, max, known }),
         optionIds: req.options.map((o) => o.id),
         max,
       },

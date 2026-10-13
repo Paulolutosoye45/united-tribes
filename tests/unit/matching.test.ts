@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { AGREEMENT_VERSION, COVENANT_PROMISES, labelFor, reasonsFor, reasonText, seatsLine, welcomeMessage, whenLine, whereLine } from "@/lib/matching/wording";
-import type { CircleCardForMember } from "@/lib/matching/types";
+import type { TribeCardForMember } from "@/lib/matching/types";
 
-const card: CircleCardForMember = {
+const card: TribeCardForMember = {
   id: "c1",
-  name: "Tola’s Professionals circle",
-  tribe: "Professionals",
+  name: "Tola’s Professionals tribe",
+  community: "Professionals",
   track: "Builders",
   goal: "Step into a leadership role",
-  circle_type: "mixed",
+  tribe_type: "mixed",
   story: "My story.",
+  leader_photo_id: null,
   leader_first_name: "Tola",
   meeting_day: 3,
   meeting_time: "20:00",
@@ -37,7 +38,7 @@ describe("matching wording", () => {
   });
 
   it("writes one plain sentence for every reason the engine can store", () => {
-    const keys = ["goal_same", "goal_family", "stage_same", "tribe_same", "tribe_related", "place_same", "place_near", "place_online", "rhythm_fit", "style_leader", "style_balance", "faith_needed", "seats_open"];
+    const keys = ["goal_same", "goal_family", "stage_same", "community_same", "community_related", "community_second", "stage_near", "place_same", "place_near", "place_online", "rhythm_fit", "style_leader", "style_balance", "faith_needed", "seats_open"];
     for (const key of keys) {
       const text = reasonText(key, card);
       expect(text, key).toBeTruthy();
@@ -50,7 +51,7 @@ describe("matching wording", () => {
 
   it("drops a key it does not know, and never shows more than three", () => {
     expect(reasonText("made_up", card)).toBeNull();
-    expect(reasonsFor(["goal_same", "made_up", "stage_same", "tribe_same", "rhythm_fit"], card)).toHaveLength(3);
+    expect(reasonsFor(["goal_same", "made_up", "stage_same", "community_same", "rhythm_fit"], card)).toHaveLength(3);
   });
 
   it("describes when, where and how many seats", () => {
@@ -68,9 +69,9 @@ describe("matching wording", () => {
   });
 
   it("writes a short welcome a leader can send", () => {
-    const text = welcomeMessage({ memberFirst: "Ada", leaderFirst: "Tola", circle: "Tola’s Professionals Tribe", when: "Wednesday 18 Feb" });
+    const text = welcomeMessage({ memberFirst: "Ada", leaderFirst: "Tola", tribe: "Tola’s Professionals tribe", when: "Wednesday 18 Feb" });
     expect(text).toContain("Hello Ada");
     expect(text).toContain("Wednesday 18 Feb");
-    expect(welcomeMessage({ memberFirst: "Ada", leaderFirst: "Tola", circle: "X", when: null })).not.toContain("first time on");
+    expect(welcomeMessage({ memberFirst: "Ada", leaderFirst: "Tola", tribe: "X", when: null })).not.toContain("first time on");
   });
 });

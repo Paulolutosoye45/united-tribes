@@ -14,8 +14,8 @@ const options = [
 ];
 
 const base: SuggestRequest = {
-  field: "tribe",
-  question: "Which tribe do you feel you belong to?",
+  field: "community",
+  question: "Which community do you feel you belong to?",
   options,
   story: "I am a nurse at a teaching hospital and the night shifts are heavy on me.",
 };
@@ -23,12 +23,12 @@ const base: SuggestRequest = {
 afterEach(() => vi.unstubAllGlobals());
 
 function fake(handler: AiProvider["suggest"]): AiProvider {
-  return { name: "fake", model: "fake-1", suggest: handler };
+  return { name: "fake", model: "fake-1", suggest: handler, write: async () => ({ text: "" }) };
 }
 
 describe("what the assistant may see", () => {
   it("allows only listed fields", () => {
-    expect(isAiEligible("tribe")).toBe(true);
+    expect(isAiEligible("community")).toBe(true);
     expect(isAiEligible("support_needs")).toBe(false);
     expect(isAiEligible("notes_to_leader")).toBe(false);
     expect(isAiEligible("anything_new")).toBe(false);
@@ -229,5 +229,48 @@ describe("provider requests", () => {
     await expect(anthropicProvider("key", "m").suggest(input, new AbortController().signal)).rejects.toThrow(/429/);
     const res = await suggestOptions(base, { provider: anthropicProvider("key", "m") });
     expect(res).toMatchObject({ fallback: true, reason: "error" });
+  });
+});
+
+describe("what the assistant is told besides the story", () => {
+  it("writes the confirmed facts as short lines, and leaves out anything painful or vague", async () => {
+    const { knownLines } = await import("@/lib/intake/heard");
+    expect(knownLines({ workStatus: "employed", workField: "finance", relationship: "married", children: ["under_12", "teens"] })).toEqual([
+      "Work: Employed",
+      "Field: Banking and finance",
+      "Relationship: Married",
+      "Children: Children under 12, Teenagers",
+    ]);
+    expect(knownLines({ relationship: "widowed" })).toEqual([]);
+    expect(knownLines({ relationship: "separated", workField: "other" })).toEqual([]);
+    expect(knownLines({})).toEqual([]);
+  });
+
+  it("puts the facts between <known> tags, as data", async () => {
+    let seen = "";
+    await suggestOptions(
+      { ...base, known: ["Work: Employed", "Relationship: Married"] },
+      { provider: fake(async (input) => ((seen = input.user), { suggestions: [] })) },
+    );
+    expect(seen).toMatch(/<known>\n- Work: Employed\n- Relationship: Married\n<\/known>/);
+    expect(SYSTEM_PROMPT).toMatch(/<known>/);
+  });
+
+  it("can work with two confirmed facts and no story, but not with one", async () => {
+    const spy = vi.fn(async () => ({ suggestions: [{ id: "professionals", reason: "You work for an employer" }] }));
+    const some = await suggestOptions({ ...base, story: "", known: ["Work: Employed", "Field: Banking and finance"] }, { provider: fake(spy) });
+    expect(some.fallback).toBe(false);
+    expect(some.suggestions[0].id).toBe("professionals");
+    const none = await suggestOptions({ ...base, story: "", known: ["Work: Employed"] }, { provider: fake(spy) });
+    expect(none).toMatchObject({ fallback: true, reason: "too_short" });
+  });
+
+  it("removes contact details from the facts too", async () => {
+    let seen = "";
+    await suggestOptions(
+      { ...base, known: ["Work: ring 08031234567"] },
+      { provider: fake(async (input) => ((seen = input.user), { suggestions: [] })) },
+    );
+    expect(seen).not.toMatch(/08031234567/);
   });
 });

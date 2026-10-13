@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { CodeInput } from "@/components/ui/CodeInput";
+import { useTurnstile } from "@/components/security/Turnstile";
 import { Input } from "@/components/ui/Input";
 import { displayPhone, isUnknownAccount, maskPhone, normalisePhone, whatsappErrorMessage } from "@/lib/auth/phone";
 import { createClient } from "@/lib/supabase/browser";
@@ -14,7 +15,7 @@ type Busy = null | "send" | "verify";
 /**
  * Sign in with a six-digit code sent on WhatsApp. Only for people who have
  * already added their number to their account, so one person never ends up
- * with two accounts and loses their circle.
+ * with two accounts and loses their tribe.
  */
 export function WhatsAppSignIn({ next, onBack }: { next: string; onBack: () => void }) {
   const [step, setStep] = useState<"number" | "code">("number");
@@ -25,6 +26,7 @@ export function WhatsAppSignIn({ next, onBack }: { next: string; onBack: () => v
   const [error, setError] = useState<string | null>(null);
   const [numberError, setNumberError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const bot = useTurnstile();
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -40,11 +42,16 @@ export function WhatsAppSignIn({ next, onBack }: { next: string; onBack: () => v
       setNumberError("That number doesn't look right. Include your network code, like 0803 123 4567.");
       return;
     }
+    if (!bot.ready) {
+      setError("One moment: we are checking that you are a person. Try again in a few seconds.");
+      return;
+    }
     setBusy("send");
     const { error: failure } = await createClient().auth.signInWithOtp({
       phone: e164,
-      options: { channel: "whatsapp", shouldCreateUser: false },
+      options: { channel: "whatsapp", shouldCreateUser: false, captchaToken: bot.token ?? undefined },
     });
+    bot.spent();
     setBusy(null);
     if (failure && !isUnknownAccount(failure)) {
       setError(whatsappErrorMessage(failure));
@@ -118,12 +125,14 @@ export function WhatsAppSignIn({ next, onBack }: { next: string; onBack: () => v
           then add it under <strong className="font-semibold text-ink">Privacy and my data</strong>.
         </p>
 
+        {bot.widget}
+
         <div className="flex flex-col items-start gap-1">
           <Button
             variant="ghost"
             size="md"
             className="-ml-4"
-            disabled={cooldown > 0 || busy === "send"}
+            disabled={cooldown > 0 || busy === "send" || !bot.ready}
             loading={busy === "send"}
             onClick={sendCode}
           >
@@ -178,7 +187,8 @@ export function WhatsAppSignIn({ next, onBack }: { next: string; onBack: () => v
           }}
           autoFocus
         />
-        <Button type="submit" size="lg" fullWidth loading={busy === "send"}>
+        {bot.widget}
+        <Button type="submit" size="lg" fullWidth loading={busy === "send"} disabled={!bot.ready}>
           Send me a code
         </Button>
         <div aria-live="polite" className="min-h-5">

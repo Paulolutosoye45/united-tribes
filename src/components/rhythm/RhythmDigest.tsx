@@ -4,9 +4,9 @@ import { formatDate, plural } from "@/lib/dates";
 import type { Digest } from "@/lib/rhythm/types";
 import { STATUS_LABELS, percent } from "@/lib/rhythm/wording";
 
-/** The pastorate's weekly report: every circle's week on one screen, worst first. */
+/** The pastorate's weekly report: every tribe's week on one screen, worst first. */
 export function RhythmDigest({ digest, canOpen }: { digest: Digest; canOpen: boolean }) {
-  if (digest.state === "none" || !digest.circles || !digest.totals) {
+  if (digest.state === "none" || !digest.tribes || !digest.totals) {
     return (
       <p className="t-body measure text-soft">No season has started yet, so there is no weekly report. It appears the day the first season begins.</p>
     );
@@ -14,12 +14,12 @@ export function RhythmDigest({ digest, canOpen }: { digest: Digest; canOpen: boo
   const t = digest.totals;
   const week = digest.week ?? 1;
   const order = { needs_attention: 0, no_log: 1, watch: 2, on_track: 3, upcoming: 4 } as const;
-  const circles = [...digest.circles].sort((a, b) => order[a.report.status] - order[b.report.status] || a.name.localeCompare(b.name));
+  const tribes = [...digest.tribes].sort((a, b) => order[a.report.status] - order[b.report.status] || a.name.localeCompare(b.name));
   const rate = t.members > 0 ? t.present / t.members : null;
 
   const tiles = [
-    { label: "Attendance", value: percent(rate), note: t.members > 0 ? `${t.present} of ${t.members} in Tribes that met` : "no meetings logged yet" },
-    { label: "Logged", value: `${t.logged} of ${t.circles}`, note: t.not_logged > 0 ? `${t.not_logged} not logged yet` : "all logged" },
+    { label: "Attendance", value: percent(rate), note: t.members > 0 ? `${t.present} of ${t.members} in tribes that met` : "no meetings logged yet" },
+    { label: "Logged", value: `${t.logged} of ${t.tribes}`, note: t.not_logged > 0 ? `${t.not_logged} not logged yet` : "all logged" },
     { label: "Need attention", value: `${t.needs_attention}`, note: `${t.watch} more to keep an eye on` },
     { label: "People to call", value: `${t.follow_ups}`, note: "follow-ups open" },
   ];
@@ -54,11 +54,11 @@ export function RhythmDigest({ digest, canOpen }: { digest: Digest; canOpen: boo
         ))}
       </dl>
 
-      {circles.length === 0 ? (
-        <p className="t-body text-soft">No Tribes with members yet this season.</p>
+      {tribes.length === 0 ? (
+        <p className="t-body text-soft">No tribes with members yet this season.</p>
       ) : (
         <ul className="stagger flex flex-col gap-3">
-          {circles.map((c, i) => {
+          {tribes.map((c, i) => {
             const r = c.report;
             const s = STATUS_LABELS[r.status];
             const inner = (
@@ -77,7 +77,7 @@ export function RhythmDigest({ digest, canOpen }: { digest: Digest; canOpen: boo
                   {r.logged
                     ? r.held
                       ? `${r.present} of ${plural(r.members, "member")} came (${percent(r.attendance_rate)}). ${r.steps_done + r.steps_partly} finished their step.`
-                      : "The Tribe did not meet."
+                      : "The tribe did not meet."
                     : r.status === "no_log"
                       ? "No log saved for this week."
                       : "Not met yet this week."}
@@ -88,9 +88,9 @@ export function RhythmDigest({ digest, canOpen }: { digest: Digest; canOpen: boo
               </div>
             );
             return (
-              <li key={c.circle_id} style={{ ["--i" as string]: Math.min(i, 8) }}>
+              <li key={c.tribe_id} style={{ ["--i" as string]: Math.min(i, 8) }}>
                 {canOpen ? (
-                  <Link href={`/lead/week?circle=${c.circle_id}&week=${week}`} className="card press block p-4 transition-shadow hover:shadow-md sm:p-5">
+                  <Link href={`/lead/week?tribe=${c.tribe_id}&week=${week}`} className="card press block p-4 transition-shadow hover:shadow-md sm:p-5">
                     {inner}
                   </Link>
                 ) : (

@@ -64,7 +64,7 @@ export function ReviewWorkspace({ detail, roles }: { detail: ReviewDetail; roles
           <Badge tone={st.tone}>{st.label}</Badge>
         </div>
         <p className="t-body text-soft">
-          {[detail.tribe_name, goal && `Goal: ${goal}`, relation && relation.toLowerCase()].filter(Boolean).join(" · ")}
+          {[detail.community_name, goal && `Goal: ${goal}`, relation && relation.toLowerCase()].filter(Boolean).join(" · ")}
           {detail.submitted_at ? ` · Sent ${formatShortDate(detail.submitted_at)}` : ""}
         </p>
         {phone ? (

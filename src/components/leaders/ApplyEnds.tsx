@@ -60,7 +60,7 @@ export function Ineligible({
 
       <div className="rise-in flex w-full max-w-lg flex-col gap-3" style={{ animationDelay: "450ms" }}>
         <Link href="/join" className={buttonClasses({ fullWidth: true })}>
-          <span className="relative">Find my Tribe as a member</span>
+          <span className="relative">Find my tribe as a member</span>
         </Link>
         <Button variant="night" size="md" fullWidth loading={restarting} onClick={onRestart}>
           I answered by mistake. Start again

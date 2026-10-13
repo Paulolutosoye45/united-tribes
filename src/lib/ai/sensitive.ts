@@ -4,8 +4,13 @@
  * otherwise. Support needs and anything written for a leader's eyes never go.
  */
 export const AI_ELIGIBLE_FIELDS = [
-  "tribe",
+  "community",
   "season_goal",
+  "relationship",
+  "children",
+  "work_status",
+  "work_field",
+  "group_roles",
   "life_stage_note",
   "faith_journey",
   "meeting_preference",
@@ -14,7 +19,9 @@ export const AI_ELIGIBLE_FIELDS = [
 /** Named so a reader can see what is deliberately kept out. */
 export const NEVER_SENT_FIELDS = [
   "support_needs",
+  "support_chips",
   "notes_to_leader",
+  "leader_note",
   "health",
   "family_situation",
   "safeguarding",

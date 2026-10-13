@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
-import type { Attendance, CircleWeek } from "@/lib/rhythm/types";
+import type { Attendance, TribeWeek, LogExtras } from "@/lib/rhythm/types";
 import { ATTENDANCE_LABELS, OUTCOME_LABELS, percent } from "@/lib/rhythm/wording";
+import { ExtrasFields, extrasToInput, initialExtras, type ExtrasState } from "./LogExtrasFields";
 
 const CHOICES: Attendance[] = ["present", "absent", "excused"];
 
-/** The two-minute log: did we meet, who came, one line about the week. */
-export function LogForm({ week }: { week: CircleWeek }) {
+/** The two-minute log: did we meet, who came, one line about the week, and the few things a coach needs to know. */
+export function LogForm({ week, extras }: { week: TribeWeek; extras: LogExtras | null }) {
   const router = useRouter();
   const office = week.log_open && !week.can_edit;
   const [held, setHeld] = useState<boolean>(week.log?.held ?? true);
@@ -21,6 +22,7 @@ export function LogForm({ week }: { week: CircleWeek }) {
     Object.fromEntries(week.members.map((m) => [m.person_id, m.attendance ?? "present"])),
   );
   const [highlight, setHighlight] = useState(week.log?.highlight ?? "");
+  const [more, setMore] = useState<ExtrasState>(() => initialExtras(extras));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -33,11 +35,12 @@ export function LogForm({ week }: { week: CircleWeek }) {
     setError(null);
     setSaved(false);
     const result = await saveLogAction(
-      week.circle.id,
+      week.tribe.id,
       week.week,
       held,
       highlight,
       week.members.map((m) => ({ person: m.person_id, status: marks[m.person_id] ?? "present" })),
+      extrasToInput(more, held),
     );
     setBusy(false);
     if (!result.ok) return setError(result.message);
@@ -52,7 +55,7 @@ export function LogForm({ week }: { week: CircleWeek }) {
           <h2 id="log-heading" className="t-heading">
             {week.log ? "Your log for this week" : "Log this week’s meeting"}
           </h2>
-          <p className="t-small text-soft">Two minutes. Who came, and one line about the week.</p>
+          <p className="t-small text-soft">Two minutes. Who came, how it felt, and anything your coach should know.</p>
         </div>
         {week.log ? <Badge tone="gold">Logged</Badge> : null}
       </div>
@@ -77,7 +80,7 @@ export function LogForm({ week }: { week: CircleWeek }) {
           }}
         >
           {office ? <p className="t-small rounded-[var(--radius-control)] bg-surface-strong p-3 text-soft">You are correcting this log as a pastor or director.</p> : null}
-          <div role="radiogroup" aria-label="Did the Tribe meet?" className="segmented">
+          <div role="radiogroup" aria-label="Did the tribe meet?" className="segmented">
             <label>
               <input type="radio" name="held" checked={held} onChange={() => setHeld(true)} className="sr-only" />
               We met
@@ -131,7 +134,7 @@ export function LogForm({ week }: { week: CircleWeek }) {
               </ul>
             </fieldset>
           ) : (
-            <p className="t-body text-soft">No attendance is counted for a week the Tribe did not meet. A line below helps your coach understand what happened.</p>
+            <p className="t-body text-soft">No attendance is counted for a week the tribe did not meet. A line below helps your coach understand what happened.</p>
           )}
 
           <Textarea
@@ -144,6 +147,13 @@ export function LogForm({ week }: { week: CircleWeek }) {
             onChange={(e) => setHighlight(e.target.value)}
             hint="Your coach and the pastorate can read this. Leave out private details."
             className="!min-h-24"
+          />
+          <ExtrasFields
+            state={more}
+            onChange={setMore}
+            members={week.members.map((m) => ({ person_id: m.person_id, name: m.name }))}
+            held={held}
+            hasCoach={extras?.has_coach ?? true}
           />
           {error ? (
             <p role="alert" className="t-small text-danger">

@@ -5,10 +5,10 @@ import { useState } from "react";
 import { refinePictureAction } from "@/app/(app)/rhythm/actions";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
-import type { CircleWeek } from "@/lib/rhythm/types";
+import type { TribeWeek } from "@/lib/rhythm/types";
 
-/** Week 1 work: the circle settles the words of its Success Picture together, and the leader saves the final version. */
-export function PictureForm({ week }: { week: CircleWeek }) {
+/** Week 1 work: the tribe settles the words of its Success Picture together, and the leader saves the final version. */
+export function PictureForm({ week }: { week: TribeWeek }) {
   const router = useRouter();
   const [god, setGod] = useState(week.picture.god);
   const [others, setOthers] = useState(week.picture.others);
@@ -21,7 +21,7 @@ export function PictureForm({ week }: { week: CircleWeek }) {
     setBusy(true);
     setError(null);
     setSaved(false);
-    const result = await refinePictureAction(week.circle.id, god, others, life);
+    const result = await refinePictureAction(week.tribe.id, god, others, life);
     setBusy(false);
     if (!result.ok) return setError(result.message);
     setSaved(true);
@@ -35,7 +35,7 @@ export function PictureForm({ week }: { week: CircleWeek }) {
           Settle your Success Picture
         </h2>
         <p className="t-small text-soft">
-          Change the words with your Tribe until everyone can say each line. Save the final version in the first two weeks. Members see it on their page, and answer the halfway and final check-ins against it.
+          Change the words with your tribe until everyone can say each line. Save the final version in the first two weeks. Members see it on their page, and answer the halfway and final check-ins against it.
         </p>
       </div>
       <form

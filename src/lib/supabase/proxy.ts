@@ -7,9 +7,11 @@ import { getSupabaseEnv } from "@/lib/env";
  * is signed in. getClaims() checks the token's signature, so a forged cookie
  * does not count as signed in.
  */
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest, requestHeaders?: Headers) {
   const env = getSupabaseEnv();
-  let response = NextResponse.next({ request });
+  // `requestHeaders` carries what the proxy adds for the page to read (the CSP nonce).
+  const forward = () => NextResponse.next({ request: requestHeaders ? { headers: requestHeaders } : request });
+  let response = forward();
   if (!env) return { response, signedIn: false, configured: false as const };
 
   const supabase = createServerClient(env.url, env.key, {
@@ -19,7 +21,7 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        response = forward();
         for (const { name, value, options } of cookiesToSet) {
           response.cookies.set(name, value, options);
         }

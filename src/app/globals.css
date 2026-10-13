@@ -453,6 +453,92 @@ body {
     outline: 3px solid var(--focus);
     outline-offset: 3px;
   }
+
+  /* ---------------------------------------------------------------- */
+  /* The Companion: what it picked up, and what it picked for you      */
+  /* ---------------------------------------------------------------- */
+  .cmp-card {
+    position: relative;
+    padding: 1rem 1.125rem;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-control);
+    background:
+      linear-gradient(var(--raised), var(--raised)) padding-box,
+      linear-gradient(135deg, var(--crest-gold), var(--crest-flame)) border-box;
+  }
+  .cmp-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.125rem 0.6rem 0.125rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--crest-gold) 30%, var(--raised));
+    border: 1px solid color-mix(in srgb, var(--crest-gold) 60%, var(--line));
+  }
+  .cmp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2.5rem;
+    padding: 0 0.25rem 0 0.9rem;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    font-weight: 560;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--crest-gold) 20%, var(--raised));
+    border: 1.5px solid color-mix(in srgb, var(--crest-gold) 65%, var(--line));
+  }
+  .cmp-chip button {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    color: var(--soft);
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+  .cmp-chip button:hover { background: color-mix(in srgb, var(--crest-flame) 18%, transparent); color: var(--ink); }
+  .cmp-chip button:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+  .cmp-link {
+    min-height: 2.75rem;
+    padding: 0 0.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    border-radius: 8px;
+  }
+  .cmp-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .cmp-starter {
+    padding: 0.55rem 0.9rem;
+    border-radius: var(--radius-control);
+    border: 1px dashed color-mix(in srgb, var(--crest-flame) 45%, var(--line));
+    background: color-mix(in srgb, var(--crest-gold) 8%, var(--raised));
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: left;
+    color: var(--ink);
+    transition: border-color 160ms ease, background-color 160ms ease;
+  }
+  @media (hover: hover) {
+    .cmp-starter:hover { border-style: solid; border-color: var(--crest-flame); background: color-mix(in srgb, var(--crest-gold) 18%, var(--raised)); }
+  }
+  /* Three pips that fill as the Companion learns more about the person */
+  .cmp-pips { display: inline-flex; gap: 4px; }
+  .cmp-pips i {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--line);
+    transition: background-color 400ms ease, transform 400ms var(--ease-spring);
+  }
+  .cmp-pips i.on { background: linear-gradient(135deg, var(--crest-gold), var(--crest-flame)); transform: scale(1.2); }
 }
 
 /* ------------------------------------------------------------------ */
@@ -571,4 +657,20 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Printing: a report becomes a clean A4 page. Screen furniture goes; cards lose their shadows. */
+.print-only { display: none; }
+@media print {
+  @page { size: A4; margin: 14mm; }
+  html, body { background: #fff !important; color: #000 !important; }
+  header.glass, nav, .no-print { display: none !important; }
+  .print-only { display: block; }
+  main#content { max-width: none !important; padding: 0 !important; }
+  .card { box-shadow: none !important; border: 1px solid #cfcdc6 !important; background: #fff !important; }
+  .report-block { break-inside: avoid; }
+  .report section { break-inside: auto; }
+  .report h2 { break-after: avoid; }
+  * { animation: none !important; transition: none !important; }
+  a { color: inherit !important; text-decoration: none !important; }
 }

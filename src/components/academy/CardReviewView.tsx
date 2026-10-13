@@ -10,7 +10,7 @@ import { Select, Textarea } from "@/components/ui/Input";
 import { valuesFromCard } from "@/lib/academy/card";
 import { CARD_STATUS } from "@/lib/academy/options";
 import type { AssistantSuggestion, CardReview } from "@/lib/academy/types";
-import { CirclePreview } from "./CirclePreview";
+import { TribePreview } from "./TribePreview";
 
 export function CardReviewView({ card, suggestions, canPair }: { card: CardReview; suggestions: AssistantSuggestion[]; canPair: boolean }) {
   const router = useRouter();
@@ -46,9 +46,9 @@ export function CardReviewView({ card, suggestions, canPair }: { card: CardRevie
           <h2 className="t-heading">The card</h2>
           <Badge tone={status.tone}>{status.label}</Badge>
         </div>
-        <CirclePreview values={valuesFromCard(card)} tribe={card.tribe?.name ?? null} track={card.track?.name ?? null} goal={card.goal?.title ?? null} leader={card.leader.name} />
+        <TribePreview values={valuesFromCard(card)} community={card.community?.name ?? null} track={card.track?.name ?? null} goal={card.goal?.title ?? null} leader={card.leader.name} />
         <p className="t-small text-soft">
-          {card.season.name}. {card.circle_type === "mixed" ? "Mixed Tribe" : card.circle_type === "women" ? "Women only" : "Men only"}.
+          {card.season.name}. {card.tribe_type === "mixed" ? "Mixed tribe" : card.tribe_type === "women" ? "Women only" : "Men only"}.
           {card.place_note ? ` Area: ${card.place_note}.` : ""}
         </p>
       </div>
@@ -148,7 +148,7 @@ export function CardReviewView({ card, suggestions, canPair }: { card: CardRevie
               Coach
             </h2>
             <Select
-              label="Who looks after this Tribe"
+              label="Who looks after this tribe"
               name="coach"
               value={card.coach?.id ?? ""}
               disabled={busy === "coach"}
@@ -157,11 +157,11 @@ export function CardReviewView({ card, suggestions, canPair }: { card: CardRevie
               <option value="">No coach yet</option>
               {card.coaches.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} ({c.circles} {c.circles === 1 ? "Tribe" : "Tribes"})
+                  {c.name} ({c.tribes} {c.tribes === 1 ? "tribe" : "tribes"})
                 </option>
               ))}
             </Select>
-            <p className="t-small -mt-2 text-soft">A coach looks after about five Tribes. They see this card and their Tribes’ health once the season starts.</p>
+            <p className="t-small -mt-2 text-soft">A coach looks after about five tribes. They see this card and their tribes’ health once the season starts.</p>
           </section>
         ) : card.coach ? (
           <p className="t-small text-soft">Coach: {card.coach.name}</p>

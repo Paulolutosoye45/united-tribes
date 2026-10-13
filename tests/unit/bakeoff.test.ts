@@ -9,7 +9,7 @@ const stories: Story[] = JSON.parse(fs.readFileSync(path.join(__dirname, "../../
 
 const story = (over: Partial<Story>): Story => ({
   id: "s",
-  field: "tribe",
+  field: "community",
   question: "q",
   options: [],
   story: "",

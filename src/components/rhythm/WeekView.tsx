@@ -4,24 +4,27 @@ import { Badge } from "@/components/ui/Badge";
 import { buttonClasses } from "@/components/ui/Button";
 import { clockLabel, dayName } from "@/lib/academy/options";
 import { formatDate, plural } from "@/lib/dates";
-import type { MyWeekPlaced } from "@/lib/rhythm/types";
+import type { MyWeekPlaced, WeekLayer } from "@/lib/rhythm/types";
 import { THEME_LABELS, meetingDay, nudgeLine, weekRange } from "@/lib/rhythm/wording";
 import { GuideCard, PictureCard } from "./GuideCard";
 import { PulseSlot } from "./PulseForm";
 import { StepCard } from "./StepCard";
 import { WeekStrip } from "./WeekStrip";
+import { WordDaysCard } from "./WordDaysCard";
+import { ConfessionCard } from "./WeekLayerCards";
 import { MyProgressCard } from "@/components/dashboard/MyProgressCard";
 import type { MyProgress } from "@/lib/dashboard/types";
+import type { WordDays } from "@/lib/dashboard/insight";
 
-const ANCHOR: Record<string, string> = { set_step: "#step", check_in: "#check-in", pulse: "#pulse", testimony: "/circle/testimony" };
+const ANCHOR: Record<string, string> = { set_step: "#step", check_in: "#check-in", pulse: "#pulse", testimony: "/tribe/testimony" };
 
 /** The member's home once the season has begun: this week's guide, step, check-in and pulse, and the twelve weeks. */
-export function WeekView({ week, progress }: { week: MyWeekPlaced; progress?: MyProgress }) {
+export function WeekView({ week, progress, layer, words }: { week: MyWeekPlaced; progress?: MyProgress; layer?: WeekLayer | null; words?: WordDays }) {
   const running = week.state === "running";
   const viewing = week.viewing ?? week.week ?? 1;
   const isCurrent = viewing === week.week;
   const guide = week.guide;
-  const c = week.circle;
+  const c = week.tribe;
   const startOfViewing = running ? addDays(week.starts_on, (viewing - 1) * 7) : week.starts_on;
   // The shield fills as the season goes: three weeks to a quarter
   const done = running ? Math.max(0, (week.week ?? 1) - 1) : week.weeks;
@@ -47,10 +50,10 @@ export function WeekView({ week, progress }: { week: MyWeekPlaced; progress?: My
               {running && guide ? (
                 <>
                   {THEME_LABELS[guide.theme]} · {guide.passage}.{" "}
-                  {isCurrent && c.meeting_date ? `Your Tribe meets on ${meetingDay(c.meeting_date)} at ${clockLabel(c.meeting_time)}.` : null}
+                  {isCurrent && c.meeting_date ? `Your tribe meets on ${meetingDay(c.meeting_date)} at ${clockLabel(c.meeting_time)}.` : null}
                 </>
               ) : (
-                `You came to ${week.attended} of ${plural(week.logged, "meeting")}. Thank you for walking with ${c.leader_first_name} and your Tribe.`
+                `You came to ${week.attended} of ${plural(week.logged, "meeting")}. Thank you for walking with ${c.leader_first_name} and your tribe.`
               )}
             </p>
           </div>
@@ -60,14 +63,14 @@ export function WeekView({ week, progress }: { week: MyWeekPlaced; progress?: My
         </div>
         {running && !isCurrent ? (
           <div>
-            <Link href="/circle" className={buttonClasses({ variant: "night", size: "md" })}>
+            <Link href="/tribe" className={buttonClasses({ variant: "night", size: "md" })}>
               <span className="relative">Back to this week</span>
             </Link>
           </div>
         ) : null}
         {!running ? (
           <div>
-            <Link href="/circle/testimony" className={buttonClasses({ size: "md" })}>
+            <Link href="/tribe/testimony" className={buttonClasses({ size: "md" })}>
               <span className="relative">Share a testimony</span>
             </Link>
           </div>
@@ -97,14 +100,16 @@ export function WeekView({ week, progress }: { week: MyWeekPlaced; progress?: My
 
       <PulseSlot pulseWeek={week.pulse_week ?? null} weeks={week.weeks} picture={week.picture} />
       {running ? <StepCard key={`${viewing}-${week.step?.outcome ?? "x"}-${week.step?.when ?? ""}`} week={week} /> : null}
+      {running && isCurrent && words?.placed ? <WordDaysCard key={`${viewing}-${words.weeks.length}`} week={viewing} words={words} /> : null}
       {running && guide ? <GuideCard guide={guide} /> : null}
+      {running ? <ConfessionCard layer={layer ?? null} /> : null}
       <PictureCard picture={week.picture} />
       <WeekStrip rows={week.rows} viewing={viewing} attended={week.attended} logged={week.logged} />
       {progress ? <MyProgressCard progress={progress} /> : null}
 
-      <section aria-labelledby="circle-heading" className="card flex flex-col gap-4 p-5 sm:p-7">
+      <section aria-labelledby="tribe-heading" className="card flex flex-col gap-4 p-5 sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="circle-heading" className="t-heading">
+          <h2 id="tribe-heading" className="t-heading">
             {c.name}
           </h2>
           <Badge tone="outline">Led by {c.leader_first_name}</Badge>
@@ -118,8 +123,11 @@ export function WeekView({ week, progress }: { week: MyWeekPlaced; progress?: My
               <span className="relative">Open the WhatsApp group</span>
             </a>
           ) : null}
-          <Link href="/circle/testimony" className={buttonClasses({ variant: "quiet", size: "md" })}>
+          <Link href="/tribe/testimony" className={buttonClasses({ variant: "quiet", size: "md" })}>
             <span className="relative">Testimonies</span>
+          </Link>
+          <Link href="/testimonies" className={buttonClasses({ variant: "quiet", size: "md" })}>
+            <span className="relative">What God is doing</span>
           </Link>
         </div>
       </section>

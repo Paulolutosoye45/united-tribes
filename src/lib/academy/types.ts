@@ -1,9 +1,9 @@
-/** Shapes returned by the Academy and Circle Card functions in the Phase 3 migration. */
+/** Shapes returned by the Academy and Tribe Card functions in the Phase 3 migration. */
 
 export type SessionKind = "practice_workshop" | "commissioning_workshop";
-export type CircleStatus = "draft" | "submitted" | "changes_requested" | "approved" | "closed";
-export type CircleMode = "online" | "in_person";
-export type CircleType = "mixed" | "women" | "men";
+export type TribeStatus = "draft" | "submitted" | "changes_requested" | "approved" | "closed";
+export type TribeMode = "online" | "in_person";
+export type TribeType = "mixed" | "women" | "men";
 
 export type ModuleSummary = {
   slug: string;
@@ -23,7 +23,7 @@ export type SessionSummary = {
   kind: SessionKind;
   starts_at: string;
   minutes: number;
-  mode: CircleMode;
+  mode: TribeMode;
   /** The place or link, shown only to people who have booked. */
   place: string | null;
   seats_left: number;
@@ -50,7 +50,7 @@ export type MyAcademy = {
   attended: Record<SessionKind, boolean>;
   declaration: { version: string; signed_at: string } | null;
   practice: { ready: boolean; format: "co_lead" | "recorded"; note: string | null; assessed_at: string } | null;
-  card: { id: string; status: CircleStatus; role: "leader" | "assistant" } | null;
+  card: { id: string; status: TribeStatus; role: "leader" | "assistant" } | null;
   state: CertState;
   certified_at: string | null;
 };
@@ -86,22 +86,22 @@ export type QuizResult = {
 
 export type Named = { id: string; name: string };
 
-export type CircleCard = {
+export type TribeCard = {
   id: string;
-  status: CircleStatus;
+  status: TribeStatus;
   name: string | null;
   season: { id: string; name: string; starts_on: string };
   track: { slug: string; name: string } | null;
-  tribe: { slug: string; name: string } | null;
+  community: { slug: string; name: string } | null;
   goal: { slug: string; title: string } | null;
-  fixed: ("track" | "tribe" | "goal")[];
-  circle_type: CircleType;
+  fixed: ("track" | "community" | "goal")[];
+  tribe_type: TribeType;
   story: string | null;
   meeting_day: number | null;
   meeting_time: string | null;
   slot: string | null;
   duration_minutes: number;
-  mode: CircleMode | null;
+  mode: TribeMode | null;
   zone: string | null;
   place_note: string | null;
   capacity: number;
@@ -117,12 +117,14 @@ export type CircleCard = {
   coach: Named | null;
 };
 
-export type MyCircle = CircleCard & {
+export type MyTribe = TribeCard & {
   role: "leader" | "assistant";
   missing: string[];
   module_ok: boolean;
   editable: boolean;
   certified: boolean;
+  /** The link an online tribe meets on, set by the leader once the card is approved. */
+  meeting_link?: string | null;
 };
 
 export type CohortRow = {
@@ -131,7 +133,7 @@ export type CohortRow = {
   role: "leader" | "assistant_leader";
   state: CertState;
   practice: { ready: boolean; format: "co_lead" | "recorded"; note: string | null; assessed_at: string } | null;
-  card: { id: string; status: CircleStatus } | null;
+  card: { id: string; status: TribeStatus } | null;
   workshops: Record<SessionKind, "attended" | "booked" | "missed" | "to_mark" | null>;
 };
 
@@ -140,7 +142,7 @@ export type SessionAdmin = {
   kind: SessionKind;
   starts_at: string;
   minutes: number;
-  mode: CircleMode;
+  mode: TribeMode;
   place: string;
   capacity: number;
   booked: number;
@@ -150,12 +152,12 @@ export type SessionAdmin = {
 
 export type CardQueueItem = {
   id: string;
-  status: CircleStatus;
+  status: TribeStatus;
   name: string | null;
   leader: string;
   assistant: string | null;
   coach: string | null;
-  tribe: string | null;
+  community: string | null;
   track: string | null;
   goal: string | null;
   submitted_at: string | null;
@@ -163,10 +165,10 @@ export type CardQueueItem = {
   certified: boolean;
 };
 
-export type CardReview = CircleCard & {
+export type CardReview = TribeCard & {
   leader_state: CertState;
   can_decide: boolean;
-  coaches: { id: string; name: string; circles: number }[];
+  coaches: { id: string; name: string; tribes: number }[];
 };
 
 export type AssistantSuggestion = {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Crest } from "@/components/brand/Crest";
+import { canSwitchCentre, getMyCentres } from "@/lib/auth/centres";
 import { ROLE_LABELS, navFor, primaryRole } from "@/lib/auth/roles";
 import type { Session } from "@/lib/auth/session";
 import { AccountMenu } from "./AccountMenu";
@@ -10,8 +11,12 @@ export function displayName(person: Session["person"]) {
   return person.preferredName ?? person.fullName ?? person.email.split("@")[0];
 }
 
-export function AppShell({ session, children }: { session: Session; children: ReactNode }) {
-  const items = navFor(session.roles);
+export async function AppShell({ session, children }: { session: Session; children: ReactNode }) {
+  const owner = session.god === "open";
+  const items = navFor(session.roles, owner);
+  // Only staff with a role in more than one centre, and only once the church has switched this on, ever see a choice
+  const mine = session.roles.some((r) => r !== "member") ? await getMyCentres() : null;
+  const centres = canSwitchCentre(mine) ? { current: mine.current?.id ?? null, list: mine.centres.filter((c) => c.active) } : null;
   const name = session.person.fullName ?? displayName(session.person);
 
   return (
@@ -36,7 +41,8 @@ export function AppShell({ session, children }: { session: Session; children: Re
             <AccountMenu
               name={name}
               email={session.person.email}
-              roleLabel={ROLE_LABELS[primaryRole(session.roles)]}
+              roleLabel={owner ? "Platform owner" : ROLE_LABELS[primaryRole(session.roles)]}
+              centres={centres}
             />
           </div>
         </div>

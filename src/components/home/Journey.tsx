@@ -6,7 +6,7 @@ export type JourneyStep = {
   state: "done" | "current" | "later";
 };
 
-/** Where the person is on the way to a circle, in four steps. */
+/** Where the person is on the way to a tribe, in four steps. */
 export function Journey({ steps }: { steps: JourneyStep[] }) {
   return (
     <ol className="card stagger flex flex-col p-2 sm:p-3" aria-label="Your journey">

@@ -1,14 +1,23 @@
 import { z } from "zod";
 import {
   BASELINES,
-  CIRCLE_MIXES,
+  CHANNELS,
+  CHILDREN,
+  TRIBE_MIXES,
   DAYS_IN_MONTH,
   FAITH_JOURNEYS,
   GENDERS,
+  GROUP_ROLES,
+  MAX_GROUP_ROLES,
   MEETING_MODES,
   MEETING_TIMES,
+  RELATIONSHIPS,
   SERVING_OPTIONS,
+  SUPPORT_CHIPS,
+  WORK_FIELDS,
+  WORK_STATUSES,
   ZONES,
+  type Channel,
 } from "./options";
 
 const ids = <T extends readonly { id: string }[]>(list: T) =>
@@ -28,12 +37,19 @@ const fields = {
   preferredName: z.string().trim().min(1).max(40).regex(NAME_PATTERN),
   fullName: z.string().trim().min(1).max(80).regex(NAME_PATTERN),
   gender: z.enum(ids(GENDERS)),
-  circleMix: z.enum(ids(CIRCLE_MIXES)),
+  tribeMix: z.enum(ids(TRIBE_MIXES)),
   zone: z.enum(ids(ZONES)),
   areaNote: z.string().trim().max(80),
+  areaSlug: z.string().regex(/^[a-z0-9-]{1,48}$/),
+  openToAdjacent: z.boolean(),
   story: z.string().trim().max(1500),
-  tribe: z.string().regex(/^[a-z0-9-]{1,64}$/),
-  tribeOther: z.string().trim().max(120),
+  community: z.string().regex(/^[a-z0-9-]{1,64}$/),
+  communityOther: z.string().trim().max(120),
+  secondCommunity: z.string().regex(/^[a-z0-9-]{1,64}$/),
+  relationship: z.enum(ids(RELATIONSHIPS)),
+  children: z.array(z.enum(ids(CHILDREN))).max(CHILDREN.length),
+  workStatus: z.enum(ids(WORK_STATUSES)),
+  workField: z.enum(ids(WORK_FIELDS)),
   faith: z.enum(ids(FAITH_JOURNEYS)),
   goal: z.string().regex(/^[a-z0-9-]{1,96}$/),
   goalOther: z.string().trim().max(160),
@@ -47,16 +63,30 @@ const fields = {
   styleDirectness: lean,
   styleDisclosure: lean,
   styleLearning: lean,
+  groupRoles: z.array(z.enum(ids(GROUP_ROLES))).max(MAX_GROUP_ROLES),
   openToServing: z.enum(ids(SERVING_OPTIONS)),
-  supportNeeds: z.string().trim().max(600),
-  whatsapp: z.string().trim().max(24),
+  /** Private. Never saved with a browser draft; sealed by the server (see sealing in src/lib/crypto). */
+  supportChips: z.array(z.enum(ids(SUPPORT_CHIPS))).max(SUPPORT_CHIPS.length),
+  supportNote: z.string().trim().max(600),
+  leaderNote: z.string().trim().max(600),
+  /** The phone number for WhatsApp and text messages, as the person typed it. */
+  phone: z.string().trim().max(24),
   whatsappOk: z.boolean(),
+  smsOk: z.boolean(),
+  emailOk: z.boolean(),
+  channel: z.enum(ids(CHANNELS)),
   /** What the assistant proposed and what the person picked: ids only. */
   assist: z.record(
     z.string().regex(/^[a-z_]{1,32}$/),
     z.object({
-      shown: z.array(z.string().regex(/^[a-z0-9-]{1,96}$/)).max(5),
-      chosen: z.string().regex(/^[a-z0-9-]{1,96}$/).nullable().optional(),
+      shown: z.array(z.string().regex(/^[a-z0-9_-]{1,96}$/)).max(8),
+      chosen: z.string().regex(/^[a-z0-9_-]{1,96}$/).nullable().optional(),
+      /** For questions that take several answers: which of the suggestions were kept. */
+      kept: z.array(z.string().regex(/^[a-z0-9_-]{1,96}$/)).max(5).optional(),
+      /** Where the suggestions came from: the Companion's own reading, the AI service, or both agreeing. */
+      via: z.enum(["engine", "ai", "both"]).optional(),
+      /** The Companion filled this answer in before the person touched it. */
+      auto: z.boolean().optional(),
     }),
   ),
 };
@@ -115,32 +145,65 @@ export type Problem = { step: string; message: string };
  * Checks a finished form. Returns the first problem, naming the step to send
  * the person back to, or null when everything needed is present.
  */
-export function firstProblem(a: Answers): Problem | null {
+export function firstProblem(a: Answers, opts: { teensOpen?: boolean } = {}): Problem | null {
   if (!a.ageRange) return { step: "age", message: "Choose your age range." };
-  if (a.ageRange === TEENS) return { step: "age", message: "Tribes for teens open in a later release." };
+  if (a.ageRange === TEENS && opts.teensOpen !== true) return { step: "age", message: "Tribes for teens are not open yet." };
   if (a.birthdayDay !== undefined || a.birthdayMonth !== undefined) {
     if (a.birthdayDay === undefined || a.birthdayMonth === undefined || !isValidBirthday(a.birthdayDay, a.birthdayMonth)) {
       return { step: "age", message: "That birthday is not a real date. Check the day and month, or remove it." };
     }
   }
   if (!a.preferredName) return { step: "name", message: "Tell us what to call you." };
-  if (!a.gender || !a.circleMix) return { step: "gender", message: "Answer both questions on this screen." };
+  if (!a.gender || !a.tribeMix) return { step: "gender", message: "Answer both questions on this screen." };
   if (!a.zone) return { step: "where", message: "Choose where you are based." };
-  if (!a.tribe && !a.tribeOther?.trim()) return { step: "tribe", message: "Choose the tribe that fits you best, or describe your own." };
+  if (!a.community && !a.communityOther?.trim()) return { step: "community", message: "Choose the community that fits you best, or describe your own." };
   if (!a.faith) return { step: "faith", message: "Choose where you are on your walk with God." };
   if (!a.goal && !a.goalOther?.trim()) return { step: "goal", message: "Choose a goal, or write your own." };
-  if (a.goal && !a.tribe) return { step: "tribe", message: "Choose a tribe so we can show its goals." };
+  if (a.goal && !a.community) return { step: "community", message: "Choose a community so we can show its goals." };
   if (!a.baseline || !BASELINES.some((b) => b.value === a.baseline)) return { step: "success", message: "Say where you are on this goal today." };
   if (!a.meetingMode) return { step: "rhythm", message: "Choose how you would like to meet." };
   if (!a.times || a.times.length === 0) return { step: "rhythm", message: "Choose at least one time that could work." };
-  if (a.whatsapp?.trim()) {
-    if (!normaliseWhatsapp(a.whatsapp)) return { step: "extras", message: "That WhatsApp number doesn't look right. Include your network code, like 0803 123 4567." };
-    if (!a.whatsappOk) return { step: "extras", message: "Tick the box to allow WhatsApp messages, or remove the number." };
-  }
+  if (a.secondCommunity && a.secondCommunity === a.community) return { step: "community", message: "Your second choice has to be a different community from your first." };
+  if (a.groupRoles && a.groupRoles.length > MAX_GROUP_ROLES) return { step: "style", message: `Choose up to ${MAX_GROUP_ROLES} roles.` };
+  const contact = contactProblem(a);
+  if (contact) return { step: "contact", message: contact };
   return null;
 }
 
-/** A person's own words for a tribe or goal count only if they say something. */
+/** A person's own words for a community or goal count only if they say something. */
 export function hasWords(value: string | undefined, min = 3): boolean {
   return (value?.trim().length ?? 0) >= min;
 }
+
+/** What is wrong with how the person asked to be reached, in words they can act on, or null. */
+export function contactProblem(a: Pick<Answers, "phone" | "whatsappOk" | "smsOk" | "channel" | "emailOk">): string | null {
+  const phone = a.phone?.trim();
+  if (phone && !normaliseWhatsapp(phone)) return "That phone number doesn't look right. Include your network code, like 0803 123 4567.";
+  if ((a.whatsappOk || a.smsOk) && !phone) return "Add your phone number to be reached on WhatsApp or by text message, or untick them.";
+  if (a.emailOk === false && !a.whatsappOk && !a.smsOk) return "Choose at least one way for us to reach you, or we won't be able to send your meeting reminders.";
+  return null;
+}
+
+/** The channels the person said yes to, best first: the one they prefer, then WhatsApp, email, text message. */
+export function enabledChannels(a: Pick<Answers, "whatsappOk" | "smsOk" | "emailOk" | "phone" | "channel">): Channel[] {
+  const hasPhone = Boolean(a.phone?.trim() && normaliseWhatsapp(a.phone));
+  const on: Channel[] = [];
+  if (a.whatsappOk && hasPhone) on.push("whatsapp");
+  if (a.emailOk !== false) on.push("email");
+  if (a.smsOk && hasPhone) on.push("sms");
+  return a.channel && on.includes(a.channel) ? [a.channel, ...on.filter((c) => c !== a.channel)] : on;
+}
+
+/**
+ * The one thing the matching engine learns about a private support note: 0 nothing, 1 something a tribe can
+ * simply arrange, 2 a hard season. A tribe takes at most two members carrying a hard season.
+ */
+export function supportLoad(chips: readonly string[] | undefined, note: string | undefined): 0 | 1 | 2 {
+  const picked = chips ?? [];
+  if (picked.some((id) => SUPPORT_CHIPS.find((c) => c.id === id)?.heavy)) return 2;
+  if (picked.length > 0 || hasWords(note)) return 1;
+  return 0;
+}
+
+/** The answers that are sealed rather than saved as they are. They never go into a browser draft or the assistant. */
+export const PRIVATE_ANSWER_KEYS = ["supportChips", "supportNote", "leaderNote"] as const;

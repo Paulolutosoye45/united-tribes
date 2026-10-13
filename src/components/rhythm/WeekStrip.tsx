@@ -44,7 +44,7 @@ export function WeekStrip({ rows, viewing, attended, logged }: { rows: WeekRow[]
           return (
             <li key={r.week}>
               {started ? (
-                <Link href={r.state === "now" ? "/circle" : `/circle?week=${r.week}`} aria-current={viewing === r.week ? "true" : undefined} className="press block rounded-xl">
+                <Link href={r.state === "now" ? "/tribe" : `/tribe?week=${r.week}`} aria-current={viewing === r.week ? "true" : undefined} className="press block rounded-xl">
                   {cell}
                 </Link>
               ) : (

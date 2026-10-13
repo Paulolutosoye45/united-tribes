@@ -12,11 +12,26 @@ export function NavIcon({ name, size = 22 }: { name: NavItem["icon"]; size?: num
     strokeLinejoin: "round" as const,
     "aria-hidden": true,
   };
+  if (name === "eye") {
+    return (
+      <svg {...common}>
+        <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+        <circle cx="12" cy="12" r="2.8" />
+      </svg>
+    );
+  }
   if (name === "admin") {
     return (
       <svg {...common}>
         <path d="M12 3 4.5 6v5.5c0 4.4 3.1 8.1 7.5 9.5 4.4-1.4 7.5-5.1 7.5-9.5V6L12 3Z" />
         <path d="m9 12 2.2 2.2L15.5 10" />
+      </svg>
+    );
+  }
+  if (name === "care") {
+    return (
+      <svg {...common}>
+        <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />
       </svg>
     );
   }

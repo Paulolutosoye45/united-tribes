@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { releaseSeatAction } from "@/app/(app)/circle/actions";
+import { releaseSeatAction } from "@/app/(app)/tribe/actions";
 import { ShieldBurst } from "@/components/flow/Celebration";
+import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
@@ -11,14 +12,14 @@ import { clockLabel } from "@/lib/academy/options";
 import { cn } from "@/lib/cn";
 import { daysUntil, formatDate } from "@/lib/dates";
 import type { Placement } from "@/lib/matching/types";
-import { CIRCLE_TYPE_LINE, COVENANT_PROMISES, LABELS, whenLine, whereLine } from "@/lib/matching/wording";
+import { TRIBE_TYPE_LINE, COVENANT_PROMISES, LABELS, whenLine, whereLine } from "@/lib/matching/wording";
 import { SuccessPicture } from "./SuccessPicture";
 
-/** Where a member lands after choosing: the circle, what happens next, and a way to change their mind before the season. */
+/** Where a member lands after choosing: the tribe, what happens next, and a way to change their mind before the season. */
 export function PlacementView({ placement, justJoined }: { placement: Placement; justJoined: boolean }) {
   const router = useRouter();
   const p = placement;
-  const c = p.circle;
+  const c = p.tribe;
   const [asking, setAsking] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +35,7 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
     {
       title: "Join the WhatsApp group",
       done: false,
-      note: p.group_url ? "Tap the button to join. Everyone in your Tribe is there." : `${c.leader_first_name} will put the invite link here soon.`,
+      note: p.group_url ? "Tap the button to join. Everyone in your tribe is there." : `${c.leader_first_name} will put the invite link here soon.`,
       action: p.group_url ? (
         <a href={p.group_url} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "solid", size: "md", className: "w-fit" })}>
           <span className="relative">Join the group</span>
@@ -56,7 +57,7 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
     const result = await releaseSeatAction(reason);
     setBusy(false);
     if (!result.ok) return setError(result.message);
-    router.replace("/circle");
+    router.replace("/tribe");
     router.refresh();
   }
 
@@ -65,14 +66,12 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
       <section className="night rise-in flex flex-col gap-5 rounded-[var(--radius-sheet)] p-6 sm:p-10" aria-labelledby="in-heading">
         <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:gap-8 sm:text-left">
           {justJoined ? (
-            <ShieldBurst label="You have joined your Tribe" />
+            <ShieldBurst label="You have joined your tribe" />
           ) : (
-            <span aria-hidden="true" className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-white/10 text-3xl font-bold">
-              {c.leader_first_name.slice(0, 1).toUpperCase()}
-            </span>
+            <Avatar name={c.leader_first_name} photoId={c.leader_photo_id} size={80} />
           )}
           <div className="flex flex-col gap-2.5">
-            <p className="t-small text-white/70">{justJoined ? "Your seat is confirmed" : "Your Tribe"}</p>
+            <p className="t-small text-white/70">{justJoined ? "Your seat is confirmed" : "Your tribe"}</p>
             <h1 id="in-heading" className="t-title">
               {justJoined ? `You’re in, ${c.name}.` : c.name}
             </h1>
@@ -113,10 +112,10 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
       </section>
 
       <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
-        <section aria-labelledby="Tribe-heading" className="card flex flex-col gap-4 p-5 sm:p-6">
+        <section aria-labelledby="tribe-heading" className="card flex flex-col gap-4 p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 id="Tribe-heading" className="t-heading">
-              Your Tribe
+            <h2 id="tribe-heading" className="t-heading">
+              Your tribe
             </h2>
             {p.degree !== null && p.label ? <Badge tone="gold">{p.degree}% · {LABELS[p.label].text}</Badge> : null}
           </div>
@@ -134,7 +133,7 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
             <dt className="text-soft">Where</dt>
             <dd className="font-medium">{whereLine(c)}</dd>
             <dt className="text-soft">Who</dt>
-            <dd className="font-medium">{CIRCLE_TYPE_LINE[c.circle_type]}</dd>
+            <dd className="font-medium">{TRIBE_TYPE_LINE[c.tribe_type]}</dd>
             <dt className="text-soft">Goal</dt>
             <dd className="font-medium">{c.goal}</dd>
           </dl>
@@ -145,7 +144,7 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
             <h2 id="covenant-heading" className="t-heading">
               What you agreed to
             </h2>
-            <p className="t-small text-soft">On {formatDate(p.agreed_at.slice(0, 10))}. You will refine this with your Tribe in week 1.</p>
+            <p className="t-small text-soft">On {formatDate(p.agreed_at.slice(0, 10))}. You will refine this with your tribe in week 1.</p>
           </div>
           <SuccessPicture god={p.covenant.god} others={p.covenant.others} life={p.covenant.life} />
           <details className="group border-t border-line pt-2">
@@ -171,7 +170,7 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
 
       <section aria-labelledby="change-heading" className="flex flex-col gap-3">
         <h2 id="change-heading" className="t-heading">
-          Need a different Tribe?
+          Need a different tribe?
         </h2>
         {p.can_release ? (
           asking ? (
@@ -183,8 +182,8 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
                 void release();
               }}
             >
-              <p className="t-body">You can give up your seat until the season starts. Your seat goes back to the Tribe and you will see your Tribes again.</p>
-              <Textarea label="Why? This helps us find better Tribes." name="reason" optional rows={3} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
+              <p className="t-body">You can give up your seat until the season starts. Your seat goes back to the tribe and you will see your tribes again.</p>
+              <Textarea label="Why? This helps us find better tribes." name="reason" optional rows={3} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
               {error ? (
                 <p role="alert" className="t-small text-danger">
                   {error}
@@ -204,13 +203,13 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
               <p className="t-body measure text-soft">You can change your mind until {formatDate(p.season_starts_on)}, when the season starts.</p>
               <div>
                 <Button variant="quiet" size="md" onClick={() => setAsking(true)}>
-                  Choose a different Tribe
+                  Choose a different tribe
                 </Button>
               </div>
             </div>
           )
         ) : (
-          <p className="t-body measure text-soft">The season has started. If this Tribe is not working for you, tell {c.leader_first_name} or ask your coach to help you move.</p>
+          <p className="t-body measure text-soft">The season has started. If this tribe is not working for you, tell {c.leader_first_name} or ask your coach to help you move.</p>
         )}
       </section>
     </div>

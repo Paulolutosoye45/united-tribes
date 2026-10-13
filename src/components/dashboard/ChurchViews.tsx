@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
-import type { Accuracy, CareStats, FunnelStep, Supply, Targets, TestimonyStats, TribeRow } from "@/lib/dashboard/types";
+import type { Accuracy, CareStats, FunnelStep, Supply, Targets, TestimonyStats, CommunityRow } from "@/lib/dashboard/types";
 import { pct, signed } from "@/lib/dashboard/wording";
 
 /** From a started form to a thriving member: where people fall away. */
@@ -38,11 +38,11 @@ export function Funnel({ steps }: { steps: FunnelStep[] }) {
   );
 }
 
-/** Who asked for a circle, against the seats there are, tribe by life stage. Red means short of seats. */
+/** Who asked for a tribe, against the seats there are, community by life stage. Red means short of seats. */
 export function SupplyMap({ supply }: { supply: Supply }) {
-  const cell = new Map(supply.cells.map((c) => [`${c.tribe}|${c.track}`, c]));
-  const active = supply.tribes.filter((t) => supply.cells.some((c) => c.tribe === t));
-  const quiet = supply.tribes.length - active.length;
+  const cell = new Map(supply.cells.map((c) => [`${c.community}|${c.track}`, c]));
+  const active = supply.communities.filter((t) => supply.cells.some((c) => c.community === t));
+  const quiet = supply.communities.length - active.length;
   const tracks = supply.tracks.filter((t) => supply.cells.some((c) => c.track === t));
   const worst = Math.max(1, ...supply.cells.map((c) => c.wants - c.seats));
   const short = supply.cells.filter((c) => c.wants > c.seats).reduce((a, c) => a + (c.wants - c.seats), 0);
@@ -54,21 +54,21 @@ export function SupplyMap({ supply }: { supply: Supply }) {
           Seats and demand
         </h2>
         <p className="t-small text-soft">
-          {supply.wants} members asked for a Tribe and there are {supply.seats} seats in approved Tribes with a certified leader.{" "}
+          {supply.wants} members asked for a tribe and there are {supply.seats} seats in approved tribes with a certified leader.{" "}
           {short > 0 ? `${short} more seats are needed where the map is red. ` : "Every group has enough seats. "}
-          {supply.unmet > 0 ? `${supply.unmet} members could not be shown three good Tribes.` : ""}
+          {supply.unmet > 0 ? `${supply.unmet} members could not be shown three good tribes.` : ""}
         </p>
       </div>
       {active.length === 0 ? (
-        <p className="t-body text-soft">No member has finished the form yet, and no Tribe has been approved.</p>
+        <p className="t-body text-soft">No member has finished the form yet, and no tribe has been approved.</p>
       ) : (
         <div className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
           <table className={`w-full ${tracks.length > 2 ? "min-w-[34rem]" : ""} border-separate border-spacing-1.5 text-left`}>
-            <caption className="sr-only">Members who asked for a Tribe and seats available, by tribe and life stage</caption>
+            <caption className="sr-only">Members who asked for a tribe and seats available, by community and life stage</caption>
             <thead>
               <tr>
                 <th scope="col" className="t-small w-[30%] pb-1 font-medium text-soft">
-                  Tribe
+                  Community
                 </th>
                 {tracks.map((t) => (
                   <th key={t} scope="col" className="t-small pb-1 text-center font-medium text-soft">
@@ -78,13 +78,13 @@ export function SupplyMap({ supply }: { supply: Supply }) {
               </tr>
             </thead>
             <tbody>
-              {active.map((tribe) => (
-                <tr key={tribe}>
+              {active.map((community) => (
+                <tr key={community}>
                   <th scope="row" className="t-small py-1 pr-2 font-medium leading-tight">
-                    {tribe}
+                    {community}
                   </th>
                   {tracks.map((track) => {
-                    const c = cell.get(`${tribe}|${track}`);
+                    const c = cell.get(`${community}|${track}`);
                     if (!c) {
                       return (
                         <td key={track} className="rounded-lg bg-surface text-center text-soft">
@@ -114,27 +114,27 @@ export function SupplyMap({ supply }: { supply: Supply }) {
         </div>
       )}
       <p className="t-small text-soft">
-        Each box: members who asked, seats, and the difference.{quiet > 0 ? ` ${quiet} tribes${supply.tracks.length - tracks.length > 0 ? ` and ${supply.tracks.length - tracks.length} life stages` : ""} have no members or Tribes yet.` : ""} Seats count Tribes with a certified leader; the Starter Tribe is not counted.
+        Each box: members who asked, seats, and the difference.{quiet > 0 ? ` ${quiet} communities${supply.tracks.length - tracks.length > 0 ? ` and ${supply.tracks.length - tracks.length} life stages` : ""} have no members or tribes yet.` : ""} Seats count tribes with a certified leader; the Starter Tribe is not counted.
       </p>
     </section>
   );
 }
 
-export function Tribes({ rows, minCell }: { rows: TribeRow[]; minCell: number }) {
+export function Communities({ rows, minCell }: { rows: CommunityRow[]; minCell: number }) {
   if (rows.length === 0) return null;
   return (
-    <section aria-labelledby="tribes-heading" className="card flex flex-col gap-4 p-5 sm:p-7">
+    <section aria-labelledby="communities-heading" className="card flex flex-col gap-4 p-5 sm:p-7">
       <div className="flex flex-col gap-1">
-        <h2 id="tribes-heading" className="t-heading">
-          By tribe
+        <h2 id="communities-heading" className="t-heading">
+          By community
         </h2>
-        <p className="t-small text-soft">A rate is shown only for tribes with at least {minCell} members placed, so nobody can be picked out.</p>
+        <p className="t-small text-soft">A rate is shown only for communities with at least {minCell} members placed, so nobody can be picked out.</p>
       </div>
       <ul className="flex flex-col gap-3">
         {rows.map((r, i) => (
-          <li key={r.tribe} className="flex flex-col gap-1.5">
+          <li key={r.community} className="flex flex-col gap-1.5">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="font-medium">{r.tribe}</span>
+              <span className="font-medium">{r.community}</span>
               <span className="t-small text-soft [font-variant-numeric:tabular-nums]">
                 {r.members} placed · {r.thriving_rate === null ? "too few to show a rate" : `${pct(r.thriving_rate)} thriving`}
                 {r.gain_avg !== null ? ` · ${signed(r.gain_avg)} Success Picture` : ""}
@@ -225,7 +225,7 @@ export function CareAndTestimonies({ care, testimonies }: { care: CareStats; tes
     { label: "Follow-ups open", value: care.open + care.escalated, note: care.escalated > 0 ? `${care.escalated} with the care team` : "none with the care team" },
     { label: "Longest wait", value: care.oldest_open_days === null ? "–" : `${care.oldest_open_days} d`, note: "oldest open follow-up" },
     { label: "Typical time to close", value: care.median_days_to_close === null ? "–" : `${care.median_days_to_close} d`, note: `${care.closed_7d} closed this week` },
-    { label: "Testimonies", value: testimonies.circle + testimonies.church, note: `${testimonies.waiting} waiting for a leader or pastor` },
+    { label: "Testimonies", value: testimonies.tribe + testimonies.church, note: `${testimonies.waiting} waiting for a leader or pastor` },
   ];
   return (
     <section aria-labelledby="care-heading" className="flex flex-col gap-3">

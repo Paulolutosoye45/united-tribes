@@ -1,5 +1,5 @@
 import { ZONES } from "@/lib/intake/options";
-import type { CertState, CircleType, MyAcademy, SessionKind } from "./types";
+import type { CertState, TribeType, MyAcademy, SessionKind } from "./types";
 
 export const SESSION_KINDS: Record<SessionKind, { label: string; short: string; blurb: string; order: number }> = {
   practice_workshop: {
@@ -21,7 +21,7 @@ export const PRACTICE_FORMATS = [
   { id: "recorded", label: "Recorded simulation" },
 ] as const;
 
-export const CIRCLE_TYPES: { id: CircleType; label: string; description: string }[] = [
+export const TRIBE_TYPES: { id: TribeType; label: string; description: string }[] = [
   { id: "mixed", label: "Mixed", description: "Women and men together" },
   { id: "women", label: "Women only", description: "Only women are matched to it" },
   { id: "men", label: "Men only", description: "Only men are matched to it" },
@@ -97,9 +97,9 @@ export const CARD_STATUS: Record<string, { label: string; tone: "neutral" | "fla
 };
 
 export const CARD_MISSING: Record<string, string> = {
-  name: "Name your Tribe",
+  name: "Name your tribe",
   track: "Choose your life-stage track",
-  tribe: "Choose your tribe",
+  community: "Choose your community",
   goal: "Choose your Season Goal",
   story: "Tell your story in a couple of sentences",
   time: "Choose a day and time",
@@ -144,7 +144,7 @@ export function checklist(my: Pick<MyAcademy, "state" | "practice" | "card">): C
       label: "Tribe Card published and approved",
       detail: my.card ? (CARD_STATUS[my.card.status]?.label ?? "") : "Not started",
       done: s.card,
-      href: "/lead/circle",
+      href: "/lead/tribe",
     });
   }
   return rows;
@@ -166,7 +166,7 @@ export function nextAction(my: MyAcademy): { title: string; body: string; cta: s
   const s = my.state;
   if (s.certified) {
     return my.state.card_required && my.card?.status !== "approved"
-      ? { title: "You are certified.", body: "Your Tribe Card is the last thing members wait for.", cta: "Open my Tribe Card", href: "/lead/circle" }
+      ? { title: "You are certified.", body: "Your Tribe Card is the last thing members wait for.", cta: "Open my Tribe Card", href: "/lead/tribe" }
       : { title: "You are certified.", body: "Thank you for the work. Your coach will be in touch about the season ahead.", cta: "See my training", href: "/lead/academy" };
   }
   const nextModule = my.modules.find((m) => !m.passed);
@@ -189,7 +189,7 @@ export function nextAction(my: MyAcademy): { title: string; body: string; cta: s
       : { title: "Book your workshops", body: "Two live workshops, then a practice session with a coach.", cta: "Choose a date", href: "/lead/academy#workshops" };
   }
   if (s.card_required && !s.card) {
-    return { title: "Finish your Tribe Card", body: "It is the page members choose your Tribe from.", cta: "Open my Tribe Card", href: "/lead/circle" };
+    return { title: "Finish your Tribe Card", body: "It is the page members choose your tribe from.", cta: "Open my Tribe Card", href: "/lead/tribe" };
   }
   return { title: "Nearly there", body: "The pastorate will confirm your certification shortly.", cta: "See my training", href: "/lead/academy" };
 }

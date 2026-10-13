@@ -6,8 +6,8 @@ export function MatchStatsPanel({ stats }: { stats: MatchStats }) {
   const seatsLeft = Math.max(0, stats.seats_total - stats.seats_taken);
   const tiles = [
     { label: "Placed", value: String(stats.placed), note: `${stats.profiled} have filled the form` },
-    { label: "Waiting", value: String(stats.waiting), note: `${stats.ran} have seen their Tribes` },
-    { label: "Seats open", value: String(seatsLeft), note: `${stats.circles_open} Tribes, ${stats.seats_total} seats` },
+    { label: "Waiting", value: String(stats.waiting), note: `${stats.ran} have seen their tribes` },
+    { label: "Seats open", value: String(seatsLeft), note: `${stats.tribes_open} tribes, ${stats.seats_total} seats` },
     { label: "Need a leader", value: String(stats.unmet), note: `${stats.starter_list} asked for a Starter Tribe` },
   ];
   const picks = [
@@ -52,7 +52,7 @@ export function MatchStatsPanel({ stats }: { stats: MatchStats }) {
         <div className="card flex flex-col gap-3 p-5">
           <div>
             <h3 className="font-semibold">Where leaders are needed</h3>
-            <p className="t-small text-soft">Members who could not be shown three good Tribes, grouped by what they asked for.</p>
+            <p className="t-small text-soft">Members who could not be shown three good tribes, grouped by what they asked for.</p>
           </div>
           {stats.gaps.length === 0 ? (
             <p className="t-body text-soft">No gaps yet.</p>
@@ -61,9 +61,9 @@ export function MatchStatsPanel({ stats }: { stats: MatchStats }) {
               {stats.gaps.map((g, i) => (
                 <li key={i} className="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
                   <div className="min-w-0">
-                    <p className="t-small font-semibold">{g.goal ?? g.tribe ?? "No goal chosen"}</p>
+                    <p className="t-small font-semibold">{g.goal ?? g.community ?? "No goal chosen"}</p>
                     <p className="t-small text-soft">
-                      {[g.tribe, g.track, KIND_WORDS[g.kind]].filter(Boolean).join(" · ")}
+                      {[g.community, g.track, KIND_WORDS[g.kind]].filter(Boolean).join(" · ")}
                     </p>
                   </div>
                   <span className="t-small shrink-0 font-semibold">{g.members}</span>

@@ -30,6 +30,7 @@ export async function inviteAction(_prev: ActionState, formData: FormData): Prom
   const { data, error } = await supabase.rpc("invite_person", { p_email: email, p_role: role });
   if (error) return { status: "error", message: adminErrorMessage(error) };
 
+  revalidatePath("/admin/people");
   revalidatePath("/admin");
   const label = ROLE_LABELS[role];
   const grantedNow = Boolean((data as { granted_now?: boolean } | null)?.granted_now);
@@ -50,6 +51,7 @@ export async function revokeInvitationAction(formData: FormData): Promise<void> 
 
   const supabase = await createClient();
   await supabase.rpc("revoke_invitation", { p_invitation: parsed.data.id });
+  revalidatePath("/admin/people");
   revalidatePath("/admin");
 }
 
@@ -65,5 +67,6 @@ export async function removeRoleAction(formData: FormData): Promise<void> {
 
   const supabase = await createClient();
   await supabase.rpc("revoke_role", { p_person: parsed.data.person, p_role: parsed.data.role });
+  revalidatePath("/admin/people");
   revalidatePath("/admin");
 }

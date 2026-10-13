@@ -1,5 +1,5 @@
 import { suggestionSchema } from "../prompts";
-import type { AiProvider, ProviderInput, RawSuggestions } from "../types";
+import type { AiProvider, ProviderInput, RawSuggestions, RawText, WriteInput } from "../types";
 
 const ENDPOINT = "https://api.openai.com/v1/chat/completions";
 
@@ -48,6 +48,30 @@ export function openaiProvider(apiKey: string, model: string): AiProvider {
       }
       return {
         suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+        usage: { inputTokens: data.usage?.prompt_tokens, outputTokens: data.usage?.completion_tokens },
+      };
+    },
+    async write(input: WriteInput, signal: AbortSignal): Promise<RawText> {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        signal,
+        headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model,
+          max_completion_tokens: input.maxTokens,
+          messages: [
+            { role: "system", content: input.system },
+            { role: "user", content: input.user },
+          ],
+        }),
+      });
+      if (!res.ok) throw new Error(`openai ${res.status}`);
+      const data = (await res.json()) as {
+        choices?: { message?: { content?: string | null } }[];
+        usage?: { prompt_tokens?: number; completion_tokens?: number };
+      };
+      return {
+        text: data.choices?.[0]?.message?.content ?? "",
         usage: { inputTokens: data.usage?.prompt_tokens, outputTokens: data.usage?.completion_tokens },
       };
     },

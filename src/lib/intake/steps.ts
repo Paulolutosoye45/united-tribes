@@ -1,4 +1,4 @@
-import { isValidBirthday, hasWords, normaliseWhatsapp, TEENS, type Answers } from "./answers";
+import { contactProblem, isValidBirthday, hasWords, TEENS, type Answers } from "./answers";
 
 export const STEP_IDS = [
   "age",
@@ -6,13 +6,15 @@ export const STEP_IDS = [
   "gender",
   "where",
   "story",
-  "tribe",
+  "heard",
+  "community",
   "faith",
   "goal",
   "success",
   "rhythm",
   "style",
-  "extras",
+  "care",
+  "contact",
   "review",
 ] as const;
 export type StepId = (typeof STEP_IDS)[number];
@@ -20,13 +22,19 @@ export type StepId = (typeof STEP_IDS)[number];
 /** The four quarters of the shield. Each section is one quarter. */
 export const SECTIONS = [
   { id: "you", label: "About you", steps: ["age", "name", "gender", "where"] },
-  { id: "season", label: "Your season", steps: ["story", "tribe", "faith"] },
+  { id: "season", label: "Your season", steps: ["story", "heard", "community", "faith"] },
   { id: "goal", label: "Your goal", steps: ["goal", "success"] },
-  { id: "rhythm", label: "Your rhythm", steps: ["rhythm", "style", "extras"] },
+  { id: "rhythm", label: "Your rhythm", steps: ["rhythm", "style", "care", "contact"] },
 ] as const satisfies readonly { id: string; label: string; steps: readonly StepId[] }[];
 
 export function isStepId(value: unknown): value is StepId {
   return typeof value === "string" && (STEP_IDS as readonly string[]).includes(value);
+}
+
+/** Drafts saved before "extras" was split into "care" and "contact" resume at the first of the two. */
+export function resumeStep(value: unknown): StepId | null {
+  if (value === "extras") return "care";
+  return isStepId(value) ? value : null;
 }
 
 /** Which quarter a step belongs to; the review belongs to none. */
@@ -69,7 +77,7 @@ export function stepsLeft(step: StepId): number {
 }
 
 /** Seconds the average person takes on one screen. Used only for the estimate shown. */
-export const SECONDS_PER_STEP = 18;
+export const SECONDS_PER_STEP = 16;
 
 /** A calm estimate, shown as whole minutes. */
 export function timeLeftLabel(step: StepId): string {
@@ -79,24 +87,26 @@ export function timeLeftLabel(step: StepId): string {
 }
 
 /** Whether Continue is allowed on this step. Optional steps are always allowed. */
-export function canContinue(step: StepId, a: Answers): boolean {
+export function canContinue(step: StepId, a: Answers, opts: { teensOpen?: boolean } = {}): boolean {
   switch (step) {
     case "age":
-      if (!a.ageRange || a.ageRange === TEENS) return false;
+      if (!a.ageRange || (a.ageRange === TEENS && opts.teensOpen !== true)) return false;
       if (a.birthdayDay === undefined && a.birthdayMonth === undefined) return true;
       return a.birthdayDay !== undefined && a.birthdayMonth !== undefined && isValidBirthday(a.birthdayDay, a.birthdayMonth);
     case "name":
       return Boolean(a.preferredName?.trim());
     case "gender":
-      return Boolean(a.gender && a.circleMix);
+      return Boolean(a.gender && a.tribeMix);
     case "where":
       return Boolean(a.zone);
     case "story":
+    case "heard":
     case "style":
+    case "care":
     case "review":
       return true;
-    case "tribe":
-      return Boolean(a.tribe) || hasWords(a.tribeOther);
+    case "community":
+      return Boolean(a.community) || hasWords(a.communityOther);
     case "faith":
       return Boolean(a.faith);
     case "goal":
@@ -105,16 +115,13 @@ export function canContinue(step: StepId, a: Answers): boolean {
       return Boolean(a.baseline);
     case "rhythm":
       return Boolean(a.meetingMode && a.times && a.times.length > 0);
-    case "extras": {
-      const number = a.whatsapp?.trim();
-      if (!number) return true;
-      return Boolean(normaliseWhatsapp(number)) && Boolean(a.whatsappOk);
-    }
+    case "contact":
+      return contactProblem(a) === null;
   }
 }
 
 /** Steps a person can skip outright. */
-export const SKIPPABLE: readonly StepId[] = ["story", "style", "extras"];
+export const SKIPPABLE: readonly StepId[] = ["story", "heard", "style", "care", "contact"];
 
 /** Seconds counted per screen at most, so a phone left open does not inflate the time. */
 export const MAX_SECONDS_PER_STEP = 90;

@@ -6,22 +6,24 @@ import { reviewTestimonyAction } from "@/app/(app)/rhythm/actions";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import type { PendingTestimony } from "@/lib/rhythm/types";
+import type { PendingTestimony, TestimonyTheme } from "@/lib/rhythm/types";
+import { ThemePicker } from "./ThemePicker";
 
 const CREDIT = { full_name: "full name", first_name: "first name", anonymous: "no name" } as const;
 
-/** Testimonies waiting to be read. A leader approves for the circle; a pastor approves for the church. */
-export function TestimonyReview({ items, scope, emptyText }: { items: PendingTestimony[]; scope: "Tribe" | "church"; emptyText: string }) {
+/** Testimonies waiting to be read. A leader approves for the tribe; a pastor approves for the church. */
+export function TestimonyReview({ items, scope, emptyText }: { items: PendingTestimony[]; scope: "tribe" | "church"; emptyText: string }) {
   const router = useRouter();
   const [declining, setDeclining] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [working, setWorking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [themes, setThemes] = useState<Record<string, TestimonyTheme[]>>({});
 
   async function decide(id: string, decision: "approve" | "decline") {
     setWorking(id);
     setError(null);
-    const result = await reviewTestimonyAction(id, decision, decision === "decline" ? note : "");
+    const result = await reviewTestimonyAction(id, decision, decision === "decline" ? note : "", themes[id]);
     setWorking(null);
     if (!result.ok) return setError(result.message);
     setDeclining(null);
@@ -39,12 +41,13 @@ export function TestimonyReview({ items, scope, emptyText }: { items: PendingTes
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-semibold">{t.by}</p>
               <div className="flex flex-wrap gap-1.5">
-                <Badge tone="outline">{t.circle}</Badge>
-                <Badge tone="neutral">{t.share_with === "church" ? "For the church" : "For the Tribe"}</Badge>
+                <Badge tone="outline">{t.tribe}</Badge>
+                <Badge tone="neutral">{t.share_with === "church" ? "For the church" : "For the tribe"}</Badge>
               </div>
             </div>
             <p className="t-body whitespace-pre-line">{t.body}</p>
-            <p className="t-small text-soft">They would like to be shown with {CREDIT[t.credit]}.{scope === "church" && t.status === "Tribe_approved" ? " The leader has approved it for the Tribe." : ""}</p>
+            <p className="t-small text-soft">They would like to be shown with {CREDIT[t.credit]}.{scope === "church" && t.status === "tribe_approved" ? " The leader has approved it for the tribe." : ""}</p>
+            <ThemePicker value={themes[t.id] ?? []} onChange={(next) => setThemes({ ...themes, [t.id]: next })} label="Tag it so it can be found later. Choose up to three." />
             <div className="flex flex-wrap items-center gap-2.5">
               <Button size="sm" variant="solid" loading={working === t.id && declining !== t.id} onClick={() => void decide(t.id, "approve")}>
                 {scope === "church" ? "Approve for the church" : "Approve"}

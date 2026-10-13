@@ -1,6 +1,6 @@
 export const KIND_WORDS: Record<string, string> = {
-  mixed: "Mixed Tribe",
-  women: "Women’s Tribe",
-  men: "Men’s Tribe",
-  any: "Any Tribe",
+  mixed: "Mixed tribe",
+  women: "Women’s tribe",
+  men: "Men’s tribe",
+  any: "Any tribe",
 };

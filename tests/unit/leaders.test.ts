@@ -37,7 +37,7 @@ function complete(): LeaderAnswers {
     contact: { whatsapp: "0803 123 4567" },
     calling: {
       track: "builders",
-      tribe: "professionals",
+      community: "professionals",
       goal: "step-into-a-leadership-role",
       goalRelation: "pursuing",
       goalStory: ok,
@@ -128,7 +128,7 @@ describe("reading a saved draft", () => {
   it("keeps good fields and drops bad ones one by one", () => {
     const got = parseLeaderAnswers({
       eligibility: { member6: true, foundation: "yes", nonsense: true },
-      calling: { track: "builders", walkRating: 9, goalRelation: "pursuing", why: 42, tribe: "Not A Slug" },
+      calling: { track: "builders", walkRating: 9, goalRelation: "pursuing", why: 42, community: "Not A Slug" },
       scenarios: { s1: { best: "b", worst: "z" }, s9: { best: "a" } },
       style: { styleSocial: 1, styleStructure: 7, leadBest: "doing" },
       contact: { whatsapp: "  0803 123 4567 " },

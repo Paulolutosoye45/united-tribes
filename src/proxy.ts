@@ -1,19 +1,45 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { buildCsp, cspHeaderName, makeNonce } from "@/lib/security/csp";
+import { turnstileScriptUrl, turnstileSiteKey } from "@/lib/security/turnstile";
 import { updateSession } from "@/lib/supabase/proxy";
 
 /** Pages anyone can open without signing in. */
-const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/design", "/brand", "/icon", "/apple-icon", "/privacy", "/reference"];
+const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/design", "/brand", "/icon", "/apple-icon", "/privacy", "/reference", "/r", "/guardian", "/manifest.webmanifest", "/sw.js", "/offline"];
 
-/** Called by the sign-in service, not by a person. It proves itself with a signature instead. */
-const HOOK_PATHS = ["/api/auth/send-code"];
+/** Called by a service, not a person: the sign-in hook, the scheduler, the monitor, the message providers. Each proves itself with a signature or secret instead. */
+const HOOK_PATHS = ["/api/auth/send-code", "/api/cron/tick", "/api/health", "/api/webhooks/whatsapp", "/api/webhooks/email"];
 
 function isPublic(pathname: string) {
   return HOOK_PATHS.includes(pathname) || PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+/**
+ * The security policy for a page, made fresh for this request. The nonce travels to the page in the request headers (the
+ * framework reads it from the policy and stamps its own scripts) and the policy goes back to the browser in the response.
+ */
+function withPolicy(request: NextRequest) {
+  const nonce = makeNonce();
+  const policy = buildCsp({
+    nonce,
+    dev: process.env.NODE_ENV === "development",
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    turnstileScriptUrl: turnstileSiteKey() ? turnstileScriptUrl() : null,
+    upgradeInsecure: process.env.NODE_ENV === "production" && request.nextUrl.protocol === "https:",
+  });
+  const reportOnly = (process.env.CSP_REPORT_ONLY ?? "").trim().toLowerCase() === "true";
+  const name = cspHeaderName(reportOnly);
+  const headers = new Headers(request.headers);
+  headers.set("x-nonce", nonce);
+  headers.set(name, policy);
+  return { headers, name, policy };
+}
+
 export async function proxy(request: NextRequest) {
-  const { response, signedIn, configured } = await updateSession(request);
   const { pathname, search } = request.nextUrl;
+  // Pages get a policy; the JSON endpoints that services call do not need one.
+  const policy = pathname.startsWith("/api/") ? null : withPolicy(request);
+  const { response, signedIn, configured } = await updateSession(request, policy?.headers);
+  if (policy) response.headers.set(policy.name, policy.policy);
 
   // Not set up yet: let pages explain what is missing rather than failing.
   if (!configured) return response;

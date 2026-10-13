@@ -187,7 +187,7 @@ function Rail({
     <aside className="night hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:justify-between lg:p-10" aria-label="Your progress">
       <div
         aria-hidden="true"
-        className="glow-breathe pointer-events-none absolute -right-20 top-1/3 -z-10 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgb(244_196_67/0.2),transparent_70%)] blur-2xl"
+        className="glow-breathe pointer-events-none absolute -right-20 top-1/3 -z-10 h-80 w-80 rounded-full bg-[radial-gradient(tribe,rgb(244_196_67/0.2),transparent_70%)] blur-2xl"
       />
       <div className="flex items-center gap-3">
         <Crest size={30} tone="light" />

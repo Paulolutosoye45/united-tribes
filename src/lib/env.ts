@@ -32,3 +32,12 @@ export function requireSupabaseEnv(): { url: string; key: string } {
 export function whatsappSignInEnabled(): boolean {
   return (process.env.WHATSAPP_SIGNIN ?? "").trim().toLowerCase() === "on";
 }
+
+/**
+ * The address of The Covenant Nation's own testimony form, where the pastorate sends the testimonies the
+ * church wants to keep. Optional: when unset, the page still hands over the words to copy.
+ */
+export function testimonyFormUrl(): string | null {
+  const url = (process.env.TESTIMONY_FORM_URL ?? "").trim();
+  return /^https:\/\//.test(url) ? url : null;
+}

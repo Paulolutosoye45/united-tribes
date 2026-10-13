@@ -6,7 +6,7 @@ const LINES = [
   { key: "life", label: "Loving Life", color: "var(--crest-gold)" },
 ] as const;
 
-/** The three lines a circle agrees to reach by week 12. */
+/** The three lines a tribe agrees to reach by week 12. */
 export function SuccessPicture({ god, others, life, tone = "light" }: { god: string; others: string; life: string; tone?: "light" | "night" }) {
   const text = { god, others, life };
   return (

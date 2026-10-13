@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { submitReferenceAction } from "@/app/(public)/reference/[token]/actions";
 import { ShieldBurst } from "@/components/flow/Celebration";
+import { useTurnstile } from "@/components/security/Turnstile";
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Choice";
 import { Textarea } from "@/components/ui/Input";
@@ -21,6 +22,7 @@ export function ReferenceForm({ token, applicant, referee, relationship }: { tok
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const bot = useTurnstile();
 
   const complete =
     REFEREE_QUESTIONS.every((q) => ratings[q.id]) && concern !== null && (concern === "no" || note.trim().length >= 3);
@@ -39,7 +41,9 @@ export function ReferenceForm({ token, applicant, referee, relationship }: { tok
       },
       concern === "yes",
       note,
+      bot.token ?? "",
     );
+    bot.spent();
     setBusy(false);
     if (!result.ok) return setError(result.message);
     setSent(true);
@@ -133,7 +137,8 @@ export function ReferenceForm({ token, applicant, referee, relationship }: { tok
           {error}
         </p>
       ) : null}
-      <Button type="submit" size="lg" fullWidth loading={busy} disabled={!complete}>
+      {bot.widget}
+      <Button type="submit" size="lg" fullWidth loading={busy} disabled={!complete || !bot.ready}>
         Send my reference
       </Button>
       <p className="t-small text-center text-soft">You can only send this once.</p>

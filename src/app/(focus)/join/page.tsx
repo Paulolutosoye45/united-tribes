@@ -2,15 +2,18 @@ import type { Metadata } from "next";
 import { IntakeFlow, type View } from "@/components/intake/IntakeFlow";
 import { JoinedView } from "@/components/intake/JoinedView";
 import { AppShell } from "@/components/shell/AppShell";
+import { speechFromEnv } from "@/lib/ai/stt";
 import { providerFromEnv } from "@/lib/ai/suggest";
 import { requireSession } from "@/lib/auth/session";
 import { formatDate } from "@/lib/dates";
 import { parseDraftAnswers, type Answers } from "@/lib/intake/answers";
-import { loadCatalogue, profileToAnswers } from "@/lib/intake/server";
-import { isStepId } from "@/lib/intake/steps";
+import { loadCatalogue, openSealedDraft, profileToAnswers } from "@/lib/intake/server";
+import { resumeStep } from "@/lib/intake/steps";
+import { readContact } from "@/lib/messaging/contact";
+import { loadMyGuardian } from "@/lib/growth/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Find my circle" };
+export const metadata: Metadata = { title: "Find my tribe" };
 
 type SearchParams = Promise<{ edit?: string }>;
 
@@ -19,10 +22,11 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
   const { edit } = await searchParams;
   const supabase = await createClient();
 
-  const [{ catalogue, ids }, profile, draft, matching, aiConsent, season] = await Promise.all([
-    loadCatalogue(supabase),
-    supabase.from("member_profiles").select("*").eq("person_id", session.person.id).maybeSingle(),
-    supabase.from("intake_drafts").select("step, answers, active_seconds").eq("person_id", session.person.id).maybeSingle(),
+  // Their own answers first: a community or goal they chose that has since been retired is still shown to them.
+  const profile = await supabase.from("member_profiles").select("*").eq("person_id", session.person.id).maybeSingle();
+  const [{ catalogue, ids }, draft, matching, aiConsent, season, contactRaw] = await Promise.all([
+    loadCatalogue(supabase, { keep: [profile.data?.community_id, profile.data?.second_community_id, profile.data?.season_goal_id] }),
+    supabase.from("intake_drafts").select("step, answers, active_seconds, sealed").eq("person_id", session.person.id).maybeSingle(),
     supabase.rpc("has_consent", { p_purpose: "matching" }),
     supabase.rpc("has_consent", { p_purpose: "ai_assist" }),
     supabase
@@ -32,9 +36,12 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
       .order("starts_on", { ascending: true })
       .limit(1)
       .maybeSingle(),
+    supabase.rpc("my_contact"),
   ]);
 
+  const contact = readContact(contactRaw.data);
   const aiAvailable = providerFromEnv() !== null;
+  const voiceAvailable = speechFromEnv() !== null;
   const hasMatchingConsent = matching.data === true;
   const seasonName = season.data?.name ?? null;
   const seasonStarts = season.data?.starts_on ? formatDate(season.data.starts_on) : null;
@@ -45,10 +52,17 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
     const answers = profileToAnswers(profile.data, ids, {
       preferredName: session.person.preferredName,
       fullName: session.person.fullName,
-    });
+    }, contact);
+    const guardian = await loadMyGuardian(supabase);
     return (
       <AppShell session={session}>
-        <JoinedView answers={answers} catalogue={catalogue} seasonName={seasonName} seasonStarts={seasonStarts} />
+        <JoinedView
+          answers={answers}
+          catalogue={catalogue}
+          seasonName={seasonName}
+          seasonStarts={seasonStarts}
+          teen={guardian.needed && guardian.state !== "ready"}
+        />
       </AppShell>
     );
   }
@@ -62,10 +76,10 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
     answers = profileToAnswers(profile.data, ids, {
       preferredName: session.person.preferredName,
       fullName: session.person.fullName,
-    });
+    }, contact);
   } else if (draft.data && hasMatchingConsent) {
-    answers = parseDraftAnswers(draft.data.answers);
-    view = isStepId(draft.data.step) ? draft.data.step : "age";
+    answers = { ...parseDraftAnswers(draft.data.answers), ...openSealedDraft(draft.data.sealed as string | null, session.person.id) };
+    view = resumeStep(draft.data.step) ?? "age";
     activeSeconds = Number(draft.data.active_seconds) || 0;
   } else {
     answers = {};
@@ -75,12 +89,20 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
   // Start from how the person is already known.
   if (!answers.preferredName && session.person.preferredName) answers.preferredName = session.person.preferredName;
   if (!answers.fullName && session.person.fullName) answers.fullName = session.person.fullName;
+  // Someone who is already reached on a number (a leader, say) does not type it twice.
+  if (!editing) {
+    if (!answers.phone && contact.phone) answers.phone = contact.phone;
+    if (answers.whatsappOk === undefined && contact.whatsapp) answers.whatsappOk = true;
+    if (answers.smsOk === undefined && contact.sms) answers.smsOk = true;
+  }
 
   return (
     <IntakeFlow
       personId={session.person.id}
       catalogue={catalogue}
       aiAvailable={aiAvailable}
+      voiceAvailable={voiceAvailable}
+      email={session.person.email ?? null}
       seasonName={seasonName}
       seasonStarts={seasonStarts}
       initial={{ view, answers, activeSeconds, ai: aiConsent.data === true, isEdit: editing }}

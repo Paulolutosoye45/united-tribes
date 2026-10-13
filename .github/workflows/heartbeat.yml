@@ -1,0 +1,42 @@
+# An alternative heartbeat, for when the site is not on a Vercel plan that allows a schedule every few minutes
+# (Vercel's free Hobby plan allows one run a day, and refuses to deploy a schedule that is more frequent).
+#
+# Does nothing until the repository has a *variable* named SITE_URL (Settings > Secrets and variables > Actions >
+# Variables), for example https://unitedtribes.example.org, and a *secret* named CRON_SECRET (the same value the site
+# has). If you use this, delete the "crons" block from vercel.json so the two do not both run.
+#
+# GitHub starts scheduled runs when it can, usually within a few minutes but sometimes later at busy times. That is
+# good enough for weekly messages; it is not a substitute for an uptime monitor on /api/health.
+name: Heartbeat
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  tick:
+    name: Send what is due
+    if: ${{ vars.SITE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call the heartbeat
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl --fail --silent --show-error --max-time 90 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${SITE_URL%/}/api/cron/tick" | tee /dev/stderr | grep -q '"problems":\[\]'
+      - name: Say if sending is stuck
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          # 503 when the database is down, or a message has been stuck for over an hour. A failed run emails the repository's watchers.
+          curl --fail --silent --show-error --max-time 30 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${SITE_URL%/}/api/health"

@@ -10,6 +10,8 @@ export type SuggestRequest = {
   options: Option[];
   /** What the member has written so far, in their own words. */
   story: string;
+  /** Facts the member has already confirmed about themselves, one short line each ("Work: Employed"). Nothing painful or private. */
+  known?: string[];
   /** How many suggestions to return at most. */
   max?: number;
 };
@@ -30,7 +32,19 @@ export interface AiProvider {
   readonly name: string;
   readonly model: string;
   suggest(input: ProviderInput, signal: AbortSignal): Promise<RawSuggestions>;
+  /** Plain writing, for short summaries and drafts. See write.ts for the rules around it. */
+  write(input: WriteInput, signal: AbortSignal): Promise<RawText>;
 }
+
+export type WriteInput = {
+  system: string;
+  user: string;
+  /** A plain draft written without AI. The mock provider returns it; real ones may only reword it. */
+  draft: string;
+  maxTokens: number;
+};
+
+export type RawText = { text: string; usage?: RawSuggestions["usage"] };
 
 export type ProviderInput = {
   system: string;

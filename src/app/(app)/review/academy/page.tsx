@@ -22,7 +22,7 @@ export default async function ReviewAcademyPage() {
 
   const tiles = [
     { label: "In training", value: String(rows.filter((r) => !r.state.certified).length), note: `${rows.length} approved in all` },
-    { label: "Certified", value: String(rows.filter((r) => r.state.certified).length), note: `${rows.filter((r) => r.state.certified && r.role === "leader").length} Tribe leaders` },
+    { label: "Certified", value: String(rows.filter((r) => r.state.certified).length), note: `${rows.filter((r) => r.state.certified && r.role === "leader").length} tribe leaders` },
     { label: "Ready for practice", value: String(rows.filter((r) => r.state.modules_done && !r.state.practice && !r.state.certified).length), note: "modules done, no practice yet" },
     { label: "Workshops ahead", value: String(upcoming.length), note: plural(upcoming.reduce((n, s) => n + s.booked, 0), "booking") },
   ];

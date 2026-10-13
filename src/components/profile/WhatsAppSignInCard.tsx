@@ -107,7 +107,7 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
               {shown && (step === "done" || linked)
                 ? `You can sign in with a code sent to ${shown} on WhatsApp.`
                 : "Add your number to sign in with a code sent on WhatsApp."}{" "}
-              Only the sign-in service holds it. It is never shown to your leader or your Tribe.
+              Only the sign-in service holds it. It is never shown to your leader or your tribe.
             </p>
           </div>
         </div>

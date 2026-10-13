@@ -6,6 +6,10 @@ export function signInErrorMessage(error: { code?: string; message?: string; sta
   const code = error?.code ?? "";
   const message = (error?.message ?? "").toLowerCase();
 
+  if (code === "captcha_failed" || message.includes("captcha")) {
+    return "We couldn't confirm you are a person. Reload the page and try again.";
+  }
+
   // The auth server answers a wrong code and an expired code the same way,
   // so the message covers both and points to the fix.
   if (code === "otp_expired" || message.includes("expired")) {

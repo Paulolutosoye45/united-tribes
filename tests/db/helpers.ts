@@ -8,8 +8,11 @@ export type Q = (sql: string, params?: unknown[]) => Promise<{ rows: Row[]; rowC
 export interface TestDb {
   admin: Client;
   name: string;
-  /** Run SQL as a signed-in person (role "authenticated"), in one transaction. */
-  asUser<T>(userId: string, fn: (q: Q) => Promise<T>): Promise<T>;
+  /**
+   * Run SQL as a signed-in person (role "authenticated"), in one transaction. `session` is the sign-in session the
+   * token belongs to (Supabase puts it in every token); only the platform owner's unlock looks at it.
+   */
+  asUser<T>(userId: string, fn: (q: Q) => Promise<T>, opts?: { session?: string }): Promise<T>;
   /** Run SQL as a visitor who is not signed in (role "anon"). */
   asAnon<T>(fn: (q: Q) => Promise<T>): Promise<T>;
   createUser(opts?: { email?: string; confirmed?: boolean; meta?: Record<string, unknown> }): Promise<{ id: string; email: string }>;
@@ -34,11 +37,13 @@ export async function createTestDb(): Promise<TestDb> {
   const admin = connect(port, name);
   await admin.connect();
 
-  async function inTransaction<T>(role: string, userId: string | null, fn: (q: Q) => Promise<T>): Promise<T> {
+  async function inTransaction<T>(role: string, userId: string | null, fn: (q: Q) => Promise<T>, session?: string): Promise<T> {
     await admin.query("begin");
     try {
       await admin.query(`set local role ${role}`);
       await admin.query("select set_config('request.jwt.claim.sub', $1, true)", [userId ?? ""]);
+      // The whole token, as the API gives it to the database; empty unless a test names a session.
+      await admin.query("select set_config('request.jwt.claims', $1, true)", [userId && session ? JSON.stringify({ sub: userId, role, session_id: session }) : ""]);
       const result = await fn((sql, params) => admin.query(sql, params));
       await admin.query("commit");
       return result;
@@ -51,7 +56,7 @@ export async function createTestDb(): Promise<TestDb> {
   return {
     admin,
     name,
-    asUser: (userId, fn) => inTransaction("authenticated", userId, fn),
+    asUser: (userId, fn, opts) => inTransaction("authenticated", userId, fn, opts?.session),
     asAnon: (fn) => inTransaction("anon", null, fn),
     async createUser(opts = {}) {
       const email = (opts.email ?? `${randomUUID().slice(0, 8)}@example.org`).toLowerCase();

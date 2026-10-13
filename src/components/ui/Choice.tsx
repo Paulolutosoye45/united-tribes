@@ -14,6 +14,8 @@ type ChoiceProps = {
   suggested?: boolean;
   /** One line quoting or paraphrasing the person, shown when suggested. */
   reason?: string;
+  /** A short tag after the title, such as "Picked for you". */
+  badge?: string;
   leading?: ReactNode;
   disabled?: boolean;
   className?: string;
@@ -34,6 +36,7 @@ export function Choice({
   description,
   suggested = false,
   reason,
+  badge,
   leading,
   disabled,
   className,
@@ -55,6 +58,7 @@ export function Choice({
         <span className="flex items-center gap-2 font-semibold leading-snug">
           {suggested ? <Sparkle size={15} selected={false} /> : null}
           <span>{title}</span>
+          {badge ? <span className="cmp-tag ml-1 shrink-0">{badge}</span> : null}
           {suggested ? <span className="sr-only">(suggested for you)</span> : null}
         </span>
         {description ? <span className="t-small block text-soft">{description}</span> : null}
@@ -108,12 +112,15 @@ export function Pair({
   right,
   value,
   onChange,
+  suggested,
 }: {
   label: string;
   left: string;
   right: string;
   value: -1 | 0 | 1;
   onChange: (value: -1 | 0 | 1) => void;
+  /** The side the Companion thinks fits, marked with a sparkle. Never chosen for the person. */
+  suggested?: -1 | 1;
 }) {
   const side = (v: -1 | 1, text: string) => {
     const on = value === v;
@@ -129,7 +136,13 @@ export function Pair({
             : "border-line bg-raised text-ink hover:border-soft",
         )}
       >
+        {suggested === v ? (
+          <span className="mr-1.5 inline-flex align-[-2px]">
+            <Sparkle size={14} />
+          </span>
+        ) : null}
         {text}
+        {suggested === v ? <span className="sr-only"> (suggested)</span> : null}
       </button>
     );
   };

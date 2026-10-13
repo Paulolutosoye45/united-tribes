@@ -15,9 +15,9 @@ export default async function ReviewCardPage({ params }: { params: Promise<{ id:
   await requireRole(REVIEW_ROLES, `/review/cards/${id}`);
   if (!isUuid(id)) notFound();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("review_circle", { p_id: id });
+  const { data, error } = await supabase.rpc("review_tribe", { p_id: id });
   if (error || !data) notFound();
-  const suggestions = await supabase.rpc("suggest_assistants", { p_circle: id });
+  const suggestions = await supabase.rpc("suggest_assistants", { p_tribe: id });
   const card = data as CardReview;
 
   return (

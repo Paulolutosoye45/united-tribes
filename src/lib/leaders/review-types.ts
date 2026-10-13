@@ -4,7 +4,7 @@ export type QueueItem = {
   status: string;
   applicant: string;
   track: string | null;
-  tribe: string | null;
+  community: string | null;
   submitted_at: string | null;
   references_received: number;
   open_concern: boolean;
@@ -53,7 +53,7 @@ export type ReviewDetail = {
   whatsapp: string | null;
   submitted_at: string | null;
   answers: Record<string, unknown>;
-  tribe_name: string | null;
+  community_name: string | null;
   goal_title: string | null;
   scenario: { pct: number; detail: { scenario: string; best: number; worst: number }[] } | null;
   references: ReferenceView[];

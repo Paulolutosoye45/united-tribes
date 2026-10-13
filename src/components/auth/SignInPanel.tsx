@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { isEmail, normaliseEmail, signInErrorMessage } from "@/lib/auth/errors";
 import { createClient } from "@/lib/supabase/browser";
+import { useTurnstile } from "@/components/security/Turnstile";
 import { WhatsAppSignIn } from "./WhatsAppSignIn";
 
 type Props = {
@@ -30,6 +31,7 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
   const [error, setError] = useState<string | null>(initialError);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const bot = useTurnstile();
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -61,11 +63,16 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
       setEmailError("Enter the email address you check most often.");
       return;
     }
+    if (!bot.ready) {
+      setError("One moment: we are checking that you are a person. Try again in a few seconds.");
+      return;
+    }
     setBusy("email");
     const { error } = await createClient().auth.signInWithOtp({
       email: normaliseEmail(email),
-      options: { shouldCreateUser: true, emailRedirectTo: callback("/auth/confirm") },
+      options: { shouldCreateUser: true, emailRedirectTo: callback("/auth/confirm"), captchaToken: bot.token ?? undefined },
     });
+    bot.spent();
     setBusy(null);
     if (error) {
       setError(signInErrorMessage(error));
@@ -119,7 +126,7 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
 
         <div className="flex flex-col gap-3">
           <CodeInput
-            value={code}  
+            value={code}
             onChange={(v) => {
               setCode(v);
               if (error) setError(null);
@@ -144,12 +151,14 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
           Sign in
         </Button>
 
+        {bot.widget}
+
         <div className="flex flex-col items-start gap-1">
           <Button
             variant="ghost"
             size="md"
             className="-ml-4"
-            disabled={cooldown > 0 || busy === "email"}
+            disabled={cooldown > 0 || busy === "email" || !bot.ready}
             loading={busy === "email"}
             onClick={sendCode}
           >
@@ -236,7 +245,8 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
               if (emailError) setEmailError(null);
             }}
           />
-          <Button type="submit" size="lg" fullWidth loading={busy === "email"}>
+          {bot.widget}
+          <Button type="submit" size="lg" fullWidth loading={busy === "email"} disabled={!bot.ready}>
             Email me a code
           </Button>
         </form>

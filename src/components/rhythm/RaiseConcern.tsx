@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
 
 /** For the person you are worried about even though nothing in the numbers says so. */
-export function RaiseConcern({ circleId, people }: { circleId: string; people: { id: string; name: string }[] }) {
+export function RaiseConcern({ tribeId, people }: { tribeId: string; people: { id: string; name: string }[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [person, setPerson] = useState("");
@@ -22,7 +22,7 @@ export function RaiseConcern({ circleId, people }: { circleId: string; people: {
     if (!person) return setError("Choose who you are worried about.");
     setBusy(true);
     setError(null);
-    const result = await raiseConcernAction(circleId, person, note);
+    const result = await raiseConcernAction(tribeId, person, note);
     setBusy(false);
     if (!result.ok) return setError(result.message);
     setSent(true);

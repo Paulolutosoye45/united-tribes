@@ -21,17 +21,17 @@ export const ELIGIBILITY_IDS = ELIGIBILITY.map((e) => e.id) as readonly Eligibil
 
 /** What to say to someone who answered “not yet”, and where to go instead. Kind, specific, never a dead end. */
 export const ELIGIBILITY_ADVICE: Record<EligibilityId, string> = {
-  member6: "Leaders have been part of the church for six months, so they know it from the inside. Join a Tribe as a member now, and apply once the six months are done.",
+  member6: "Leaders have been part of the church for six months, so they know it from the inside. Join a tribe as a member now, and apply once the six months are done.",
   foundation: "Foundation of Faith is the base every leader stands on. Finish it, then come back and apply. Ask your unit head when the next class starts.",
   serving: "Leaders grow out of serving. Join a unit or fellowship, serve for a season, and apply again.",
-  age21: "Leaders are 21 or older. You can join a Tribe as a member, and serve as a helper in a unit while you grow.",
-  time: "Leading takes about 75 minutes a week for twelve weeks. If this season is too full, join a Tribe as a member, and apply in a lighter season.",
+  age21: "Leaders are 21 or older. You can join a tribe as a member, and serve as a helper in a unit while you grow.",
+  time: "Leading takes about 75 minutes a week for twelve weeks. If this season is too full, join a tribe as a member, and apply in a lighter season.",
   safeguarding: "Safeguarding training and the code of conduct protect every member, so every leader completes them. If you have questions, speak to your unit head first.",
   confidentiality: "People share honestly only when they trust that it stays private. Every leader promises this, except where someone is at risk.",
 };
 
 export const OTHER_WAYS_TO_SERVE = [
-  "Join a Tribe as a member",
+  "Join a tribe as a member",
   "Serve in a unit or fellowship",
   "Ask your unit head about training",
 ] as const;
@@ -136,8 +136,8 @@ export const CALLING_RUBRIC: readonly RubricQuestion[] = [
   },
   {
     id: "q6",
-    title: "Fit with track, tribe and goal",
-    looksAt: "Whether their track, tribe and goal belong together",
+    title: "Fit with track, community and goal",
+    looksAt: "Whether their track, community and goal belong together",
     low: "The choices do not fit each other",
     mid: "A reasonable fit",
     high: "A clear fit; they could speak that group’s language",
@@ -166,12 +166,12 @@ export const INTERVIEW_RUBRIC: readonly (RubricQuestion & { ask: string })[] = [
   },
   {
     id: "q3",
-    ask: "What would you do if half your Tribe stopped coming by week 5?",
+    ask: "What would you do if half your tribe stopped coming by week 5?",
     title: "When people drift",
     looksAt: "Care before pressure, and asking for help",
     low: "Blames people, or does nothing",
     mid: "Reaches out, but alone",
-    high: "Calls with no guilt, listens, tells the coach, adjusts the Tribe",
+    high: "Calls with no guilt, listens, tells the coach, adjusts the tribe",
   },
   {
     id: "q4",

@@ -16,14 +16,14 @@ export default async function ReviewPage() {
   const [queue, stats, catalogue] = await Promise.all([
     supabase.rpc("review_queue"),
     supabase.rpc("leader_stats"),
-    loadLeaderCatalogue(supabase),
+    loadLeaderCatalogue(supabase, { includeRetired: true }),
   ]);
 
   const items = (queue.data as QueueItem[] | null) ?? [];
   const s = stats.data as LeaderStats | null;
   const names: Record<string, string> = {};
   for (const t of catalogue.tracks) names[t.slug] = t.name;
-  for (const t of catalogue.tribes) names[t.slug] = t.name;
+  for (const t of catalogue.communities) names[t.slug] = t.name;
 
   const tiles = s
     ? [

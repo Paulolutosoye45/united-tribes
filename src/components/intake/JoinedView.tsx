@@ -11,14 +11,17 @@ export function JoinedView({
   catalogue,
   seasonName,
   seasonStarts,
+  teen = false,
 }: {
   answers: Answers;
   catalogue: Catalogue;
   seasonName: string | null;
   seasonStarts: string | null;
+  /** Under 18 and not yet cleared: the next step is the parent or guardian, not the tribes. */
+  teen?: boolean;
 }) {
-  const tribe = catalogue.tribes.find((t) => t.slug === answers.tribe);
-  const goal = tribe?.goals.find((g) => g.slug === answers.goal)?.title ?? answers.goalOther;
+  const community = catalogue.communities.find((t) => t.slug === answers.community);
+  const goal = community?.goals.find((g) => g.slug === answers.goal)?.title ?? answers.goalOther;
   const age = catalogue.ageRanges.find((r) => r.slug === answers.ageRange)?.label;
 
   return (
@@ -29,13 +32,15 @@ export function JoinedView({
             <Badge tone="gold" className="self-start">Answers saved</Badge>
             <h1 className="t-title">You’re in{answers.preferredName ? `, ${answers.preferredName}` : ""}.</h1>
             <p className="t-body max-w-[44ch] text-white/80">
-              {seasonName
-                ? `We’ll match you for ${seasonName}${seasonStarts ? `, which starts on ${seasonStarts}` : ""}. See which Tribes fit you, each with its own score.`
-                : "See which Tribes fit you, each with its own score."}
+              {teen
+                ? "Because you are under 18, your parent or guardian needs to say yes before we show you tribes."
+                : seasonName
+                  ? `We’ll match you for ${seasonName}${seasonStarts ? `, which starts on ${seasonStarts}` : ""}. See which tribes fit you, each with its own score.`
+                  : "See which tribes fit you, each with its own score."}
             </p>
             <div className="pt-1">
-              <Link href="/circle" className={buttonClasses({ className: "px-8" })}>
-                <span className="relative">See my Tribes</span>
+              <Link href="/tribe" className={buttonClasses({ className: "px-8" })}>
+                <span className="relative">{teen ? "Ask my parent or guardian" : "See my tribes"}</span>
               </Link>
             </div>
           </div>
@@ -51,7 +56,7 @@ export function JoinedView({
         </h2>
         <dl className="stagger grid gap-3 sm:grid-cols-3">
           {[
-            { label: "Tribe", value: tribe?.name ?? answers.tribeOther },
+            { label: "Community", value: community?.name ?? answers.communityOther },
             { label: "Season goal", value: goal },
             { label: "Age range", value: age },
           ].map((item, i) => (

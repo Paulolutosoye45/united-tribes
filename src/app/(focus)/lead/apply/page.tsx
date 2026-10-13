@@ -7,7 +7,7 @@ import { loadLeaderCatalogue, loadMyApplication } from "@/lib/leaders/server";
 import { isStepId } from "@/lib/leaders/steps";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Lead a circle" };
+export const metadata: Metadata = { title: "Lead a tribe" };
 
 export default async function ApplyPage() {
   const session = await requireSession("/lead/apply");

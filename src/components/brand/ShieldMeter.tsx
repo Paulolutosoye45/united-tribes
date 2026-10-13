@@ -19,7 +19,7 @@ const QUARTERS = [
 /**
  * The Degree of Compatibility shield. Four quarters, one per group of
  * matching factors; each fills from the bottom in proportion to its score.
- * Groups map to the matching weights: Goal 30, Season of life and tribe 35,
+ * Groups map to the matching weights: Goal 30, Season of life and community 35,
  * Place and rhythm 20, Fit and balance 15.
  */
 export function ShieldMeter({

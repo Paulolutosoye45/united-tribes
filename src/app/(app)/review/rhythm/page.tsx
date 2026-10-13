@@ -19,13 +19,13 @@ export default async function RhythmPage({ searchParams }: { searchParams: Searc
   const supabase = await createClient();
   const wk = week && /^\d{1,2}$/.test(week) ? Number(week) : null;
 
-  const seesCircles = hasAnyRole(session.roles, ["pastor", "director", "coach", "admin", "data_lead"]);
+  const seesTribes = hasAnyRole(session.roles, ["pastor", "director", "coach", "admin", "data_lead"]);
   const seesCare = hasAnyRole(session.roles, ["care_lead", "pastor", "director", "admin"]);
   const seesChurch = hasAnyRole(session.roles, ["pastor", "director"]);
   const canOpen = hasAnyRole(session.roles, ["pastor", "director", "coach"]);
 
   const [digest, care, testimonies] = await Promise.all([
-    seesCircles ? loadDigest(supabase, wk) : Promise.resolve(null),
+    seesTribes ? loadDigest(supabase, wk) : Promise.resolve(null),
     seesCare ? loadCareQueue(supabase) : Promise.resolve(null),
     seesChurch ? loadPendingTestimonies(supabase) : Promise.resolve(null),
   ]);
@@ -42,7 +42,7 @@ export default async function RhythmPage({ searchParams }: { searchParams: Searc
     lastOutcome: i.last_outcome,
     note: i.note,
     openedAt: i.opened_at,
-    circle: i.circle,
+    tribe: i.tribe,
     caller,
     leader: i.leader,
   }));
@@ -53,7 +53,7 @@ export default async function RhythmPage({ searchParams }: { searchParams: Searc
         <div className="flex flex-col gap-2">
           <h1 className="t-title">Weekly report</h1>
           <p className="t-body measure text-soft">
-            How every circle’s week went, built from the leaders’ two-minute logs, the members’ steps and the three check-ins. Nothing a member writes privately appears here.
+            How every tribe’s week went, built from the leaders’ two-minute logs, the members’ steps and the three check-ins. Nothing a member writes privately appears here.
           </p>
         </div>
         {hasAnyRole(session.roles, REVIEW_ROLES) ? <PanelTabs /> : null}
@@ -68,7 +68,7 @@ export default async function RhythmPage({ searchParams }: { searchParams: Searc
               Care queue
             </h2>
             <p className="t-small text-soft">
-              {care ? `${plural(care.open_total, "follow-up")} open across all circles. Here are the ones a leader passed to the care team, and any that have waited more than three days.` : "Not available."}
+              {care ? `${plural(care.open_total, "follow-up")} open across all tribes. Here are the ones a leader passed to the care team, and any that have waited more than three days.` : "Not available."}
             </p>
           </div>
           <FollowUpList rows={rows} canAct emptyText="Nothing is waiting for the care team." />

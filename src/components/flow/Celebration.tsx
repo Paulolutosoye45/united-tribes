@@ -21,7 +21,7 @@ export function ShieldBurst({ label }: { label: string }) {
     <div className="relative grid place-items-center">
       <div
         aria-hidden="true"
-        className="glow-breathe absolute h-64 w-64 rounded-full bg-[radial-gradient(circle,rgb(244_196_67/0.45),transparent_68%)] blur-xl"
+        className="glow-breathe absolute h-64 w-64 rounded-full bg-[radial-gradient(tribe,rgb(244_196_67/0.45),transparent_68%)] blur-xl"
       />
       <div aria-hidden="true" className="burst pointer-events-none absolute left-1/2 top-1/2">
         {BURST.map((b, i) => (

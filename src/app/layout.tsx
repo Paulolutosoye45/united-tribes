@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
+import { ServiceWorker } from "@/components/system/ServiceWorker";
 import { ToastProvider } from "@/components/ui/Toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "United Tribes", template: "%s · United Tribes" },
-  description: "Find your people. Grow together. Small Tribes at The Covenant Nation, built around your season of life.",
+  description: "Find your people. Grow together. Small tribes at The Covenant Nation, built around your season of life.",
   applicationName: "United Tribes",
-  verification: {
-    google: 'google-site-verification: google7d689d94de0f9315.html',
-  },
+  appleWebApp: { capable: true, title: "United Tribes", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
@@ -21,11 +22,15 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Every page is made fresh for each request. The security policy gives each request its own secret, which the pages
+  // can only carry if they are not prepared in advance (see src/proxy.ts).
+  await connection();
   return (
     <html lang="en-NG">
       <body>
         <ToastProvider>{children}</ToastProvider>
+        <ServiceWorker />
       </body>
     </html>
   );

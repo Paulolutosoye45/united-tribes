@@ -1,5 +1,5 @@
 import { suggestionSchema } from "../prompts";
-import type { AiProvider, ProviderInput, RawSuggestions } from "../types";
+import type { AiProvider, ProviderInput, RawSuggestions, RawText, WriteInput } from "../types";
 
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 const VERSION = "2023-06-01";
@@ -43,6 +43,28 @@ export function anthropicProvider(apiKey: string, model: string): AiProvider {
       const parsed = block?.input as { suggestions?: { id: string; reason?: string }[] } | undefined;
       return {
         suggestions: Array.isArray(parsed?.suggestions) ? parsed.suggestions : [],
+        usage: { inputTokens: data.usage?.input_tokens, outputTokens: data.usage?.output_tokens },
+      };
+    },
+    async write(input: WriteInput, signal: AbortSignal): Promise<RawText> {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        signal,
+        headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": VERSION },
+        body: JSON.stringify({
+          model,
+          max_tokens: input.maxTokens,
+          system: input.system,
+          messages: [{ role: "user", content: input.user }],
+        }),
+      });
+      if (!res.ok) throw new Error(`anthropic ${res.status}`);
+      const data = (await res.json()) as {
+        content?: { type: string; text?: string }[];
+        usage?: { input_tokens?: number; output_tokens?: number };
+      };
+      return {
+        text: (data.content ?? []).filter((b) => b.type === "text").map((b) => b.text ?? "").join(""),
         usage: { inputTokens: data.usage?.input_tokens, outputTokens: data.usage?.output_tokens },
       };
     },

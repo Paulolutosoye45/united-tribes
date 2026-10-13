@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { friendly } from "@/lib/leaders/errors";
+import { verifyTurnstile } from "@/lib/security/turnstile";
 import { createClient } from "@/lib/supabase/server";
 
 export type ReferenceResult = { ok: true } | { ok: false; message: string };
@@ -16,6 +18,7 @@ export async function submitReferenceAction(
   ratings: { reliability: number; warmth: number; confidentiality: number; maturity: number },
   concern: boolean,
   note: string,
+  captcha = "",
 ): Promise<ReferenceResult> {
   if (!/^[a-f0-9]{64}$/.test(token)) return { ok: false, message: "This link is not valid." };
   if (![ratings.reliability, ratings.warmth, ratings.confidentiality, ratings.maturity].every(rating)) {
@@ -23,6 +26,11 @@ export async function submitReferenceAction(
   }
   const text = String(note ?? "").trim().slice(0, 600);
   if (concern && text.length < 3) return { ok: false, message: "Please say a little about your concern." };
+
+  // When the bot check is switched on, the link alone is not enough: the visitor must have passed it too.
+  const forwarded = (await headers()).get("x-forwarded-for");
+  const human = await verifyTurnstile(captcha, { ip: forwarded?.split(",")[0]?.trim() ?? null });
+  if (!human.ok) return { ok: false, message: human.message };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("submit_reference", {

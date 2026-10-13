@@ -45,3 +45,4 @@ next-env.d.ts
 
 # local test database
 /.tmp-pg
+.e2e/

@@ -63,7 +63,7 @@ export interface MyWeekPlaced {
   ends_on: string;
   days_to_start: number | null;
   season_name: string;
-  circle: {
+  tribe: {
     id: string;
     name: string;
     leader_first_name: string;
@@ -91,9 +91,9 @@ export interface RhythmTestimony {
   id: string;
   week: number;
   body: string;
-  share_with: "Tribe" | "church";
+  share_with: "tribe" | "church";
   credit: "full_name" | "first_name" | "anonymous";
-  status: "submitted" | "Tribe_approved" | "church_approved" | "declined" | "withdrawn";
+  status: "submitted" | "tribe_approved" | "church_approved" | "declined" | "withdrawn";
   mine: boolean;
   decline_note: string | null;
   by: string;
@@ -121,6 +121,9 @@ export interface WeekReport {
   follow_ups_open: number;
   follow_ups_escalated: number;
   testimonies: number;
+  /** How the meeting felt, 1 to 5, when the leader said. */
+  energy: number | null;
+  care_open: number;
   status: ReportStatus;
 }
 
@@ -157,8 +160,8 @@ export interface Celebration {
   on?: string;
 }
 
-export interface CircleWeek {
-  circle: { id: string; name: string; status: string; capacity: number; meeting_day: number; meeting_time: string };
+export interface TribeWeek {
+  tribe: { id: string; name: string; status: string; capacity: number; meeting_day: number; meeting_time: string };
   state: "before" | "running" | "complete";
   season_name: string;
   starts_on: string;
@@ -185,12 +188,128 @@ export interface PendingTestimony {
   id: string;
   week: number;
   body: string;
-  share_with: "Tribe" | "church";
+  share_with: "tribe" | "church";
   credit: "full_name" | "first_name" | "anonymous";
   by: string;
-  circle: string;
-  status?: "submitted" | "Tribe_approved";
+  tribe: string;
+  status?: "submitted" | "tribe_approved";
   created_at: string;
+}
+
+// --------------------------------------------------------------- the season engine
+
+export const TESTIMONY_THEMES = [
+  "healing", "provision", "breakthrough", "family", "salvation", "direction", "peace", "answered_prayer", "community", "growth",
+] as const;
+export type TestimonyTheme = (typeof TESTIMONY_THEMES)[number];
+
+/** The confession, sermon link, community skill-share prompt and goal idea that sit on top of a weekly guide. */
+export interface WeekLayer {
+  week: number;
+  phase: 1 | 2 | 3;
+  confession: string | null;
+  sermon_series: string | null;
+  sermon_title: string | null;
+  community: string | null;
+  goal: string | null;
+  skill_share: string | null;
+  goal_idea: string | null;
+}
+
+export type CareLevel = "none" | "practical" | "pastoral" | "urgent";
+export type CelebrationKind = "anniversary" | "new_baby" | "promotion" | "milestone" | "other" | "answered_prayer";
+
+export interface LogExtras {
+  week: number;
+  energy: number | null;
+  need_coach: boolean;
+  need_coach_note: string | null;
+  has_coach: boolean;
+  prayers_this_week: { id: string; body: string }[];
+  prayer_list: { id: string; body: string; week: number; created_at: string }[];
+  answered: { id: string; body: string; note: string | null; answered_at: string }[];
+  celebrations: { id: string; kind: CelebrationKind; person_id: string | null; first_name: string | null; note: string | null; week: number }[];
+  care: { id: string; person_id: string | null; name: string | null; level: "practical" | "pastoral" | "urgent"; note: string | null; status: string; due_on: string; week: number | null }[];
+  energy_trend: { week: number; energy: number }[];
+}
+
+/** What the leader sends along with the attendance when saving the log. */
+export interface LogExtrasInput {
+  energy: number | null;
+  prayers: { id?: string; body: string }[];
+  care: { person: string; level: CareLevel; note: string }[];
+  needCoach: boolean;
+  needCoachNote: string;
+  celebrations: { kind: CelebrationKind; person?: string | null; note: string }[];
+}
+
+export type CareTaskKind = "practical" | "pastoral" | "urgent" | "missed_three" | "low_pulse" | "coach_help";
+
+export interface CareTask {
+  id: string;
+  kind: CareTaskKind;
+  status: "open" | "done" | "dismissed";
+  note: string | null;
+  week: number | null;
+  due_on: string;
+  overdue: boolean;
+  days_left: number;
+  member: string | null;
+  first_name: string | null;
+  tribe: { id: string; name: string };
+  leader: string | null;
+  raised_by: string | null;
+  assignee_role: "assistant" | "coach" | "leader" | "care_lead";
+  assigned_to: string | null;
+  created_at: string;
+  closed_at: string | null;
+  closed_note: string | null;
+}
+
+export interface MyCareTasks {
+  today: string;
+  mine: CareTask[];
+  queue: CareTask[];
+  others: CareTask[];
+  raised: CareTask[];
+}
+
+export interface CareTaskOption {
+  id: string;
+  name: string;
+  role: "coach" | "assistant" | "leader" | "care_lead";
+}
+
+export interface WallItem {
+  id: string;
+  body: string;
+  themes: TestimonyTheme[];
+  community: string | null;
+  community_id: string | null;
+  goal: string | null;
+  goal_id: string | null;
+  by: string;
+  at: string;
+  /** Only the pastorate sees this; everyone else gets null. */
+  forwarded: boolean | null;
+}
+
+export interface TestimonyWall {
+  items: WallItem[];
+  total: number;
+  has_more: boolean;
+  facets: { communities: { id: string; name: string; n: number }[]; themes: { theme: TestimonyTheme; n: number }[] };
+}
+
+export interface ForwardedTestimony {
+  id: string;
+  body: string;
+  by: string;
+  community: string | null;
+  goal: string | null;
+  themes: TestimonyTheme[];
+  already: boolean;
+  forwarded_at: string;
 }
 
 export interface Digest {
@@ -200,9 +319,9 @@ export interface Digest {
   weeks?: number;
   current_week?: number | null;
   week?: number;
-  circles?: { circle_id: string; name: string; leader: string; coach: string | null; report: WeekReport }[];
+  tribes?: { tribe_id: string; name: string; leader: string; coach: string | null; report: WeekReport }[];
   totals?: {
-    circles: number;
+    tribes: number;
     logged: number;
     not_logged: number;
     needs_attention: number;
@@ -217,7 +336,7 @@ export interface CareItem {
   id: string;
   name: string;
   whatsapp: string | null;
-  circle: string;
+  tribe: string;
   leader: string;
   kind: FlagKind;
   status: FlagStatus;
@@ -226,4 +345,17 @@ export interface CareItem {
   note: string | null;
   opened_at: string;
   last_called_at: string | null;
+}
+
+export interface CareStats {
+  opened: number;
+  closed: number;
+  resolved: number;
+  resolved_in_7_days: number;
+  open: number;
+  overdue: number;
+  urgent: number;
+  urgent_same_day: number;
+  median_days_to_resolve: number | null;
+  by_kind: Partial<Record<CareTaskKind, number>>;
 }

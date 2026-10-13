@@ -2,14 +2,16 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { clockLabel } from "@/lib/academy/options";
 import { formatDate, plural } from "@/lib/dates";
-import type { CircleWeek, PendingTestimony } from "@/lib/rhythm/types";
+import type { TribeWeek, LogExtras, PendingTestimony, WeekLayer } from "@/lib/rhythm/types";
 import { STATUS_LABELS, meetingDay, weekRange } from "@/lib/rhythm/wording";
 import { FollowUpList, type FollowUpRow } from "./FollowUpList";
 import { LogForm } from "./LogForm";
 import { PictureForm } from "./PictureForm";
+import { PrayerList } from "./PrayerList";
 import { PrepPack } from "./PrepPack";
 import { RaiseConcern } from "./RaiseConcern";
 import { TestimonyReview } from "./TestimonyReview";
+import { ConfessionCard, CommunityLayerCard } from "./WeekLayerCards";
 
 /** The leader's week: who to call, the two-minute log, the Success Picture, the prep pack and testimonies to read. */
 export function LeaderWeek({
@@ -17,11 +19,18 @@ export function LeaderWeek({
   callerFirst,
   pending,
   base,
+  layer,
+  extras,
+  careOpen,
 }: {
-  week: CircleWeek;
+  week: TribeWeek;
   callerFirst: string;
   pending: PendingTestimony[];
-  /** The path and query to keep when moving between weeks, such as `/lead/week?circle=…`. */
+  layer: WeekLayer | null;
+  extras: LogExtras | null;
+  /** How many care tasks are open for this person, to link to the care page. */
+  careOpen: number;
+  /** The path and query to keep when moving between weeks, such as `/lead/week?tribe=…`. */
   base: string;
 }) {
   const r = week.report;
@@ -39,7 +48,7 @@ export function LeaderWeek({
     lastOutcome: f.last_outcome,
     note: f.note,
     openedAt: f.opened_at,
-    circle: week.circle.name,
+    tribe: week.tribe.name,
     caller: callerFirst,
   }));
   const running = week.state === "running";
@@ -49,13 +58,13 @@ export function LeaderWeek({
     <div className="flex flex-col gap-8">
       <section className="night rise-in flex flex-col gap-4 rounded-[var(--radius-sheet)] p-6 sm:p-10" aria-labelledby="lw-heading">
         <p className="t-small text-white/70">
-          {week.circle.name} · {running ? (week.week === week.current_week ? "This week" : "Week") : week.state === "before" ? "Preparing" : "Season complete"} · Week {week.week} of {week.weeks} · {weekRange(week.week_starts_on)}
+          {week.tribe.name} · {running ? (week.week === week.current_week ? "This week" : "Week") : week.state === "before" ? "Preparing" : "Season complete"} · Week {week.week} of {week.weeks} · {weekRange(week.week_starts_on)}
         </p>
         <h1 id="lw-heading" className="t-title">
           {week.state === "before" ? `Your season starts on ${formatDate(week.starts_on)}.` : week.guide.title}
         </h1>
         <p className="t-body text-white/80">
-          Your Tribe meets on {meetingDay(week.meeting_date)} at {clockLabel(week.circle.meeting_time)}.
+          Your tribe meets on {meetingDay(week.meeting_date)} at {clockLabel(week.tribe.meeting_time)}.
           {week.state === "before" ? " Read the first week now so you are ready." : ""}
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -97,7 +106,7 @@ export function LeaderWeek({
 
       <dl className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
-          { label: "Members", value: `${r.members}`, note: `of ${week.circle.capacity} seats` },
+          { label: "Members", value: `${r.members}`, note: `of ${week.tribe.capacity} seats` },
           { label: "Steps chosen", value: `${stepsChosen}`, note: `${r.steps_done + r.steps_partly} finished` },
           { label: "To call", value: `${week.follow_ups.length}`, note: week.follow_ups.length === 0 ? "nobody right now" : "see below" },
           { label: "Testimonies", value: `${week.testimonies_waiting}`, note: "waiting for you" },
@@ -110,6 +119,17 @@ export function LeaderWeek({
         ))}
       </dl>
 
+      {careOpen > 0 ? (
+        <p className="card t-body flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+          <span>
+            {careOpen === 1 ? "One care task is" : `${careOpen} care tasks are`} waiting for you.
+          </span>
+          <Link href="/care" className="btn btn-solid inline-flex h-10 items-center rounded-[var(--radius-control)] px-4 text-[0.9rem] font-semibold">
+            Open care tasks
+          </Link>
+        </p>
+      ) : null}
+
       {rows.length > 0 || week.can_edit ? (
         <section id="calls" aria-labelledby="calls-heading" className="flex scroll-mt-24 flex-col gap-4">
           <div className="flex flex-col gap-1">
@@ -118,19 +138,22 @@ export function LeaderWeek({
             </h2>
             <p className="t-small text-soft">Nobody misses twice without a call. A short, warm message counts.</p>
           </div>
-          <FollowUpList rows={rows} canAct={week.can_edit} emptyText="Nobody needs a call right now. Thank you for staying close to your Tribe." />
+          <FollowUpList rows={rows} canAct={week.can_edit} emptyText="Nobody needs a call right now. Thank you for staying close to your tribe." />
           {week.can_edit ? (
             <RaiseConcern
-              circleId={week.circle.id}
+              tribeId={week.tribe.id}
               people={week.members.filter((m) => !m.open_follow_up).map((m) => ({ id: m.person_id, name: m.name }))}
             />
           ) : null}
         </section>
       ) : null}
 
-      {week.state !== "before" ? <LogForm key={`${week.circle.id}-${week.week}`} week={week} /> : null}
+      {week.state !== "before" ? <LogForm key={`${week.tribe.id}-${week.week}`} week={week} extras={extras} /> : null}
       {week.picture.can_refine ? <PictureForm week={week} /> : null}
       <PrepPack week={week} />
+      <ConfessionCard layer={layer} />
+      <CommunityLayerCard layer={layer} />
+      {extras ? <PrayerList extras={extras} canEdit={week.can_edit} /> : null}
 
       {week.can_edit ? (
         <section id="testimonies" aria-labelledby="t-heading" className="flex scroll-mt-24 flex-col gap-4">
@@ -139,10 +162,10 @@ export function LeaderWeek({
               Testimonies to read
             </h2>
             <p className="t-small text-soft">
-              {plural(pending.length, "testimony", "testimonies")} waiting. Nothing is shown to the Tribe until you approve it.
+              {plural(pending.length, "testimony", "testimonies")} waiting. Nothing is shown to the tribe until you approve it.
             </p>
           </div>
-          <TestimonyReview items={pending} scope="Tribe" emptyText="No testimonies are waiting." />
+          <TestimonyReview items={pending} scope="tribe" emptyText="No testimonies are waiting." />
         </section>
       ) : null}
     </div>

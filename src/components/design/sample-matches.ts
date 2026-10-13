@@ -3,8 +3,8 @@ import type { MatchCardData } from "@/components/ui/MatchCard";
 /** Invented sample data for the style page and the phone preview. Not real people. */
 export const SAMPLE_MATCHES: MatchCardData[] = [
   {
-    circleName: "Surulere Wednesday Tribe",
-    tribe: "Professionals",
+    tribeName: "Surulere Wednesday Tribe",
+    community: "Professionals",
     track: "Builders",
     goal: "Step into a leadership role",
     leaderFirstName: "Funmi",
@@ -25,8 +25,8 @@ export const SAMPLE_MATCHES: MatchCardData[] = [
     ],
   },
   {
-    circleName: "Lekki Career Shift Tribe",
-    tribe: "Professionals",
+    tribeName: "Lekki Career Shift Tribe",
+    community: "Professionals",
     track: "Builders",
     goal: "Change career direction with confidence",
     leaderFirstName: "Tunde",
@@ -34,7 +34,7 @@ export const SAMPLE_MATCHES: MatchCardData[] = [
     meeting: "Thu 8:00pm, online",
     seatsLeft: 5,
     degree: 78,
-    reasons: ["Close goal: you said you were weighing a move", "Same tribe and life stage", "Meets online, so no travel"],
+    reasons: ["Close goal: you said you were weighing a move", "Same community and life stage", "Meets online, so no travel"],
     parts: [
       { key: "goal", label: "Goal", score: 0.7 },
       { key: "season", label: "Season of life", score: 0.9 },
@@ -43,8 +43,8 @@ export const SAMPLE_MATCHES: MatchCardData[] = [
     ],
   },
   {
-    circleName: "Yaba Marriage Foundations",
-    tribe: "Marriage & Relationships",
+    tribeName: "Yaba Marriage Foundations",
+    community: "Marriage & Relationships",
     track: "Builders",
     goal: "Prepare well for marriage",
     leaderFirstName: "Ada",
@@ -52,7 +52,7 @@ export const SAMPLE_MATCHES: MatchCardData[] = [
     meeting: "Sat 4:00pm, in person",
     seatsLeft: 2,
     degree: 64,
-    reasons: ["Your second tribe choice", "Same life stage", "Close to home in Yaba"],
+    reasons: ["Your second community choice", "Same life stage", "Close to home in Yaba"],
     parts: [
       { key: "goal", label: "Goal", score: 0.45 },
       { key: "season", label: "Season of life", score: 0.8 },

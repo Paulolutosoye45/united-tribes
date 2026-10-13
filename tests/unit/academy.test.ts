@@ -45,10 +45,10 @@ const academy = (over: Partial<MyAcademy> = {}): MyAcademy => ({
 });
 
 const card = (over: Partial<CardValues> = {}): CardValues => ({
-  name: "Tola’s Tribe",
-  circle_type: "mixed",
+  name: "Tola’s tribe",
+  tribe_type: "mixed",
   track: "builders",
-  tribe: "professionals",
+  community: "professionals",
   goal: "step-into-a-leadership-role",
   story: "I was passed over twice before I learned to lead by serving, and I want to help you.",
   meeting_day: 3,
@@ -138,7 +138,7 @@ describe("what to do next", () => {
     const signed = { ...done, state: { ...done.state, declaration: true } };
     expect(nextAction(academy(signed)).href).toBe("/lead/academy#workshops");
     const practised = { ...signed, state: { ...signed.state, practice: true } };
-    expect(nextAction(academy(practised)).href).toBe("/lead/circle");
+    expect(nextAction(academy(practised)).href).toBe("/lead/tribe");
     // An assistant has no card to finish.
     const assistant = { ...practised, state: { ...practised.state, card_required: false } };
     expect(nextAction(academy(assistant)).title).toBe("Nearly there");
@@ -158,7 +158,7 @@ describe("what to do next", () => {
   it("thanks a certified leader, and points a leader without a published card to it", () => {
     const certified = state({ modules_passed: 6, modules_done: true, declaration: true, practice: true, card: true, certified: true });
     expect(nextAction(academy({ state: certified, card: { id: "x", status: "approved", role: "leader" } })).title).toBe("You are certified.");
-    expect(nextAction(academy({ state: { ...certified, card: false }, card: { id: "x", status: "changes_requested", role: "leader" } })).href).toBe("/lead/circle");
+    expect(nextAction(academy({ state: { ...certified, card: false }, card: { id: "x", status: "changes_requested", role: "leader" } })).href).toBe("/lead/tribe");
   });
 });
 
@@ -168,10 +168,10 @@ describe("the Tribe Card", () => {
   });
 
   it("names what is missing, in the order the page asks for it", () => {
-    expect(missingFields(card({ name: "ab", track: "", tribe: "", goal: "", story: "short", meeting_day: null, meeting_time: "", mode: "", zone: "", god: "", others: "", life: "" }))).toEqual([
+    expect(missingFields(card({ name: "ab", track: "", community: "", goal: "", story: "short", meeting_day: null, meeting_time: "", mode: "", zone: "", god: "", others: "", life: "" }))).toEqual([
       "name",
       "track",
-      "tribe",
+      "community",
       "goal",
       "story",
       "time",

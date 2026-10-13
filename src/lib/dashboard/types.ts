@@ -29,7 +29,7 @@ export type SeasonInfo = {
 
 export type Headline = {
   members: number;
-  circles: number;
+  tribes: number;
   /** False until three weeks have passed: no rate is shown before then. */
   measured: boolean;
   thriving: number;
@@ -60,12 +60,12 @@ export type DashWeek = {
   steps_checked: number;
 };
 
-export type DashCircle = {
-  circle_id: string;
+export type DashTribe = {
+  tribe_id: string;
   name: string;
   leader: string;
   coach: string | null;
-  tribe: string | null;
+  community: string | null;
   track: string | null;
   members: number;
   capacity: number;
@@ -82,10 +82,10 @@ export type DashCircle = {
 
 export type FunnelStep = { key: string; label: string; count: number };
 
-export type SupplyCell = { tribe: string; track: string; wants: number; seats: number; placed: number };
+export type SupplyCell = { community: string; track: string; wants: number; seats: number; placed: number };
 
 export type Supply = {
-  tribes: string[];
+  communities: string[];
   tracks: string[];
   cells: SupplyCell[];
   wants: number;
@@ -94,7 +94,7 @@ export type Supply = {
   unmet: number;
 };
 
-export type TribeRow = { tribe: string; members: number; thriving_rate: number | null; gain_avg: number | null };
+export type CommunityRow = { community: string; members: number; thriving_rate: number | null; gain_avg: number | null };
 
 export type BandRow = { key: string; label: string; n: number; thriving_rate: number | null; attendance_rate: number | null };
 export type RankRow = { rank: number; label: string; n: number; thriving_rate: number | null; attendance_rate: number | null };
@@ -115,7 +115,7 @@ export type CareStats = {
   median_days_to_close: number | null;
 };
 
-export type TestimonyStats = { waiting: number; circle: number; church: number; declined: number };
+export type TestimonyStats = { waiting: number; tribe: number; church: number; declined: number };
 
 export type Dashboard = {
   state: "none" | "before" | "running" | "complete";
@@ -125,11 +125,11 @@ export type Dashboard = {
   seasons?: { id: string; name: string; starts_on: string; weeks: number }[];
   headline?: Headline;
   weeks?: DashWeek[];
-  circles?: DashCircle[];
+  tribes?: DashTribe[];
   // Church only
   funnel?: FunnelStep[];
   supply?: Supply;
-  tribes?: TribeRow[];
+  communities?: CommunityRow[];
   accuracy?: Accuracy;
   care?: CareStats;
   testimonies?: TestimonyStats;
@@ -155,10 +155,10 @@ export type ProgressWeek = {
   steps_checked: number;
 };
 
-export type CircleProgress = {
+export type TribeProgress = {
   state: "before" | "running" | "complete";
   targets: Targets;
-  circle: { id: string; name: string; capacity: number };
+  tribe: { id: string; name: string; capacity: number };
   season: Omit<SeasonInfo, "id" | "starts_on"> & { name: string };
   members: number;
   attendance_rate: number | null;

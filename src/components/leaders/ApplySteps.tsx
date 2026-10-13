@@ -44,7 +44,7 @@ export function LeaderWelcome({ agreed, onAgree }: { agreed: boolean; onAgree: (
   return (
     <>
       <StepHeading
-        title="Lead a Tribe."
+        title="Lead a tribe."
         hint="Leaders are chosen for character and reliability, not for title or talent. Here is how it works, and how we look after what you share."
       />
       <ol className="card rise-in mb-6 divide-y divide-line overflow-hidden">
@@ -61,7 +61,7 @@ export function LeaderWelcome({ agreed, onAgree }: { agreed: boolean; onAgree: (
         ))}
       </ol>
       <p className="t-small mb-6 rounded-[var(--radius-control)] bg-gold/20 px-4 py-3 text-ink">
-        What it asks of you: 75 minutes a week for 12 weeks, plus about 10 hours of training before your Tribe begins.
+        What it asks of you: 75 minutes a week for 12 weeks, plus about 10 hours of training before your tribe begins.
       </p>
       <fieldset className="flex flex-col gap-3">
         <legend className="t-heading mb-3">Your agreement</legend>
@@ -169,19 +169,19 @@ export function TrackStep({ answers, patch, tracks }: Base & { tracks: LeaderCat
   );
 }
 
-export function TribeStep({ answers, patch, tribes }: Base & { tribes: LeaderCatalogue["tribes"] }) {
+export function CommunityStep({ answers, patch, communities }: Base & { communities: LeaderCatalogue["communities"] }) {
   return (
     <>
-      <StepHeading title="Which tribe is home for you?" hint="Your tribe is the group of people in a similar field or season. Pick the closest one." />
-      <div role="radiogroup" aria-label="Tribes" className="flex flex-col gap-3">
-        {tribes.map((t) => (
+      <StepHeading title="Which community is home for you?" hint="Your community is the group of people in a similar field or season. Pick the closest one." />
+      <div role="radiogroup" aria-label="Communities" className="flex flex-col gap-3">
+        {communities.map((t) => (
           <Choice
             key={t.slug}
-            name="tribe"
+            name="community"
             value={t.slug}
-            checked={answers.calling.tribe === t.slug}
+            checked={answers.calling.community === t.slug}
             onChange={() =>
-              patch("calling", { tribe: t.slug, goal: answers.calling.tribe === t.slug ? answers.calling.goal : undefined })
+              patch("calling", { community: t.slug, goal: answers.calling.community === t.slug ? answers.calling.goal : undefined })
             }
             title={t.name}
             description={t.description}
@@ -192,16 +192,16 @@ export function TribeStep({ answers, patch, tribes }: Base & { tribes: LeaderCat
   );
 }
 
-export function GoalStep({ answers, patch, tribes }: Base & { tribes: LeaderCatalogue["tribes"] }) {
-  const tribe = tribes.find((t) => t.slug === answers.calling.tribe);
-  const [other, setOther] = useState(Boolean(answers.calling.goalOther) || !tribe);
-  const goals = tribe?.goals ?? [];
+export function GoalStep({ answers, patch, communities }: Base & { communities: LeaderCatalogue["communities"] }) {
+  const community = communities.find((t) => t.slug === answers.calling.community);
+  const [other, setOther] = useState(Boolean(answers.calling.goalOther) || !community);
+  const goals = community?.goals ?? [];
 
   return (
     <>
       <StepHeading
-        title="Which Season Goal could you lead a Tribe toward?"
-        hint="Your Tribe will work on this goal together. Choose one you have lived: you have reached it, or you are honestly in it now."
+        title="Which Season Goal could you lead a tribe toward?"
+        hint="Your tribe will work on this goal together. Choose one you have lived: you have reached it, or you are honestly in it now."
       />
       <div role="radiogroup" aria-label="Season Goals" className="flex flex-col gap-3">
         {goals.map((g) => (
@@ -316,7 +316,7 @@ const WRITTEN = {
     field: "goalStory",
   },
   why: {
-    title: "Why do you want to lead a Tribe?",
+    title: "Why do you want to lead a tribe?",
     hint: "Tell us what you hope for the people in it. There is no right answer, but we read for who it is about.",
     label: "Why you want to lead",
     placeholder: "e.g. When I was struggling, someone sat with me. I want to do that for others…",
@@ -627,8 +627,8 @@ export function ReviewStep({
 }) {
   const c = answers.calling;
   const track = catalogue.tracks.find((t) => t.slug === c.track);
-  const tribe = catalogue.tribes.find((t) => t.slug === c.tribe);
-  const goal = tribe?.goals.find((g) => g.slug === c.goal)?.title ?? c.goalOther?.trim() ?? null;
+  const community = catalogue.communities.find((t) => t.slug === c.community);
+  const goal = community?.goals.find((g) => g.slug === c.goal)?.title ?? c.goalOther?.trim() ?? null;
   const relation = GOAL_RELATIONS.find((r) => r.id === c.goalRelation)?.label;
   const answered = SCENARIO_IDS.filter((id) => answers.scenarios[id]?.best && answers.scenarios[id]?.worst).length;
   const styled = STYLE_PAIRS.filter((p) => answers.style[p.key]).length;
@@ -647,7 +647,7 @@ export function ReviewStep({
       color: "var(--crest-flame)",
       rows: [
         { step: "track", label: "Stage of life", value: track ? `${track.name}, ${track.ages}` : null },
-        { step: "tribe", label: "Tribe", value: tribe?.name ?? null },
+        { step: "community", label: "Community", value: community?.name ?? null },
         { step: "goal", label: "Season Goal", value: goal ? `${goal}${relation ? ` (${relation.toLowerCase()})` : ""}` : null },
         { step: "goal-story", label: "Your story", value: excerpt(c.goalStory) },
         { step: "why", label: "Why you want to lead", value: excerpt(c.why) },

@@ -38,7 +38,7 @@ import {
   ScenarioStep,
   StyleStep,
   TrackStep,
-  TribeStep,
+  CommunityStep,
   WalkStep,
   WrittenStep,
   type Patch,
@@ -203,8 +203,8 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
     if (view === "ref1" || view === "ref2") {
       if (!(await saveReferee(view === "ref1" ? 1 : 2))) return;
     }
-    // Changing the tribe from the review means the goal must be chosen again.
-    if (reviewMode && view === "tribe" && !canContinue("goal", answers, referees, agreed)) return go("goal", "forward");
+    // Changing the community from the review means the goal must be chosen again.
+    if (reviewMode && view === "community" && !canContinue("goal", answers, referees, agreed)) return go("goal", "forward");
     if (reviewMode) return go("review", "forward");
     go(nextStep(view), "forward");
   }
@@ -237,7 +237,7 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
   const label = onWelcome ? "I agree, start my application" : view === "review" ? "Send my application" : "Continue";
   const caption = onWelcome ? "About fifteen minutes" : view === "review" ? "Last step" : `${SECTIONS[section]?.label ?? ""} · ${timeLeftLabel(view).toLowerCase()}`;
   const c = answers.calling;
-  const goalTitle = catalogue.tribes.find((t) => t.slug === c.tribe)?.goals.find((g) => g.slug === c.goal)?.title ?? c.goalOther?.trim() ?? null;
+  const goalTitle = catalogue.communities.find((t) => t.slug === c.community)?.goals.find((g) => g.slug === c.goal)?.title ?? c.goalOther?.trim() ?? null;
 
   const setReferee = (slot: 1 | 2) => (next: RefereeInput) => setReferees((r) => ({ ...r, [slot]: next }));
 
@@ -269,8 +269,8 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, i
       {view === "eligibility" ? <EligibilityStep answers={answers} patch={patch} /> : null}
       {view === "contact" ? <ContactStep answers={answers} patch={patch} /> : null}
       {view === "track" ? <TrackStep answers={answers} patch={patch} tracks={catalogue.tracks} /> : null}
-      {view === "tribe" ? <TribeStep answers={answers} patch={patch} tribes={catalogue.tribes} /> : null}
-      {view === "goal" ? <GoalStep answers={answers} patch={patch} tribes={catalogue.tribes} /> : null}
+      {view === "community" ? <CommunityStep answers={answers} patch={patch} communities={catalogue.communities} /> : null}
+      {view === "goal" ? <GoalStep answers={answers} patch={patch} communities={catalogue.communities} /> : null}
       {view === "goal-story" || view === "why" || view === "walked" || view === "obstacles" ? (
         <WrittenStep step={view} answers={answers} patch={patch} goalTitle={goalTitle} />
       ) : null}

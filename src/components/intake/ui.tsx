@@ -110,19 +110,25 @@ export function MicButton({
   listening,
   onClick,
   label = "Speak your answer",
+  stopLabel = "Stop listening",
+  busy = false,
 }: {
   listening: boolean;
   onClick: () => void;
   label?: string;
+  stopLabel?: string;
+  /** Working on a recording: the button waits. */
+  busy?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={busy}
       aria-pressed={listening}
-      aria-label={listening ? "Stop listening" : label}
+      aria-label={listening ? stopLabel : label}
       className={cn(
-        "press absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full border transition-colors",
+        "press absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full border transition-colors disabled:opacity-50",
         listening ? "ring-pulse border-flame bg-flame text-on-flame" : "border-line bg-raised text-ink hover:border-soft",
       )}
     >

@@ -85,7 +85,7 @@ export function ReviewQueue({ items, names }: { items: QueueItem[]; names: Recor
                       </Badge>
                     </span>
                     <span className="t-small block text-soft">
-                      {[i.track && names[i.track], i.tribe && names[i.tribe]].filter(Boolean).join(" · ") || "Track and tribe not set"}
+                      {[i.track && names[i.track], i.community && names[i.community]].filter(Boolean).join(" · ") || "Track and community not set"}
                     </span>
                     <span className="t-small mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <span>References {i.references_received} of 2</span>

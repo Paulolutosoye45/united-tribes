@@ -1,6 +1,6 @@
 import "server-only";
 import type { createClient } from "@/lib/supabase/server";
-import type { MyAcademy, MyCircle } from "./types";
+import type { MyAcademy, MyTribe } from "./types";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -11,8 +11,8 @@ export async function loadMyAcademy(supabase: Supabase): Promise<MyAcademy | nul
   return data as MyAcademy;
 }
 
-export async function loadMyCircle(supabase: Supabase): Promise<MyCircle | null> {
-  const { data, error } = await supabase.rpc("my_circle");
+export async function loadMyTribe(supabase: Supabase): Promise<MyTribe | null> {
+  const { data, error } = await supabase.rpc("my_tribe");
   if (error || !data) return null;
-  return data as MyCircle;
+  return data as MyTribe;
 }

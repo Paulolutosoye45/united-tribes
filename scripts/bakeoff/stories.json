@@ -1,8 +1,8 @@
 [
  {
   "id": "t01",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -61,8 +61,8 @@
  },
  {
   "id": "t02",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -120,8 +120,8 @@
  },
  {
   "id": "t03",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -181,8 +181,8 @@
  },
  {
   "id": "t04",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -240,8 +240,8 @@
  },
  {
   "id": "t05",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -300,8 +300,8 @@
  },
  {
   "id": "t06",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -360,8 +360,8 @@
  },
  {
   "id": "t07",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -419,8 +419,8 @@
  },
  {
   "id": "t08",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -478,8 +478,8 @@
  },
  {
   "id": "t09",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -537,8 +537,8 @@
  },
  {
   "id": "t10",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -596,8 +596,8 @@
  },
  {
   "id": "t11",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -655,8 +655,8 @@
  },
  {
   "id": "t12",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -715,8 +715,8 @@
  },
  {
   "id": "t13",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -775,8 +775,8 @@
  },
  {
   "id": "t14",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -834,8 +834,8 @@
  },
  {
   "id": "t15",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -1179,8 +1179,8 @@
  },
  {
   "id": "n01",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -1235,8 +1235,8 @@
  },
  {
   "id": "n02",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",
@@ -1291,8 +1291,8 @@
  },
  {
   "id": "n03",
-  "field": "tribe",
-  "question": "Which tribe do you feel you belong to?",
+  "field": "community",
+  "question": "Which community do you feel you belong to?",
   "options": [
    {
     "id": "business-entrepreneurship",

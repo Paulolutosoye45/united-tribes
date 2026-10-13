@@ -13,7 +13,7 @@ import { isDecided, isInReview, stageStates } from "@/lib/leaders/status";
 import { isStepId, minutesLeft, shieldFills } from "@/lib/leaders/steps";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Lead a circle" };
+export const metadata: Metadata = { title: "Lead a tribe" };
 
 export default async function LeadPage() {
   const session = await requireSession("/lead");
@@ -30,7 +30,7 @@ export default async function LeadPage() {
     return (
       <div className="flex flex-col gap-8">
         <Hero
-          title={isLeader ? "Lead another circle." : "Lead a circle."}
+          title={isLeader ? "Lead another tribe." : "Lead a tribe."}
           body="Leaders are chosen for character and reliability, not for title or talent. If you have lived through a Season Goal, you could walk with others through it."
           cta="Start my application"
           note="About fifteen minutes. Save and come back."
@@ -44,7 +44,7 @@ export default async function LeadPage() {
             </h2>
             <ul className="t-body flex flex-col gap-2 text-soft">
               <li>75 minutes a week, for 12 weeks.</li>
-              <li>About 10 hours of training before your Tribe begins, with a safeguarding course.</li>
+              <li>About 10 hours of training before your tribe begins, with a safeguarding course.</li>
               <li>Keeping what members share private, unless someone is at risk.</li>
               <li>Six months in the church, Foundation of Faith done, and serving somewhere now.</li>
             </ul>
@@ -101,7 +101,7 @@ export default async function LeadPage() {
         </section>
         <div className="flex flex-wrap gap-3">
           <Link href="/join" className={buttonClasses({ size: "md" })}>
-            <span className="relative">Find my Tribe as a member</span>
+            <span className="relative">Find my tribe as a member</span>
           </Link>
           <Link href="/lead/apply" className={buttonClasses({ variant: "quiet", size: "md" })}>
             <span className="relative">I answered by mistake. Start again</span>
@@ -134,7 +134,7 @@ export default async function LeadPage() {
                   <span className="relative">Open my training</span>
                 </Link>
                 {application.status === "approved_leader" ? (
-                  <Link href="/lead/circle" className={buttonClasses({ variant: "night", className: "px-6" })}>
+                  <Link href="/lead/tribe" className={buttonClasses({ variant: "night", className: "px-6" })}>
                     <span className="relative">My Tribe Card</span>
                   </Link>
                 ) : null}
@@ -202,7 +202,7 @@ function approvedFills(states: { id: string; state: string }[]): [number, number
 
 function Hero({ title, body, cta, note, fills }: { title: string; body: string; cta: string; note: string; fills: [number, number, number, number] }) {
   return (
-    <section aria-label="Lead a circle" className="night rise-in rounded-[var(--radius-sheet)] p-6 sm:p-10">
+    <section aria-label="Lead a tribe" className="night rise-in rounded-[var(--radius-sheet)] p-6 sm:p-10">
       <div className="flex flex-col gap-7 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex max-w-[34rem] flex-col gap-4">
           <h1 className="t-title min-h-14 pr-14 sm:min-h-0 sm:pr-0">{title}</h1>

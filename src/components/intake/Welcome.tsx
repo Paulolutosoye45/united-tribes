@@ -7,7 +7,14 @@ import { StepHeading } from "./ui";
 
 const POINTS = [
   { title: "What we ask", body: "Your season of life, your goal and when you could meet. No test, no wrong answers." },
-  { title: "Who sees it", body: "Private. Used to match you. Your leader sees only what helps them welcome you." },
+  {
+    title: "Who sees it",
+    body: "Your answers match you to a tribe. Once you join, your leader sees your name, your goal, the part you play in a group and any note you write to them. They see your number only if you choose WhatsApp. What you say about needing extra care is locked so only you can read it.",
+  },
+  {
+    title: "Your Companion",
+    body: "As you answer, a helper on your phone suggests the next answers and says why, so you type less. It never decides for you: every answer is yours to change, and you can turn it off.",
+  },
   { title: "Your control", body: "Change or delete your answers any time. Stop halfway and pick up later." },
 ];
 
@@ -29,7 +36,7 @@ export function Welcome({
   return (
     <>
       <StepHeading
-        title="Let’s find your Tribe."
+        title="Let’s find your tribe."
         hint={`It takes about four minutes.${seasonName ? ` These answers place you for ${seasonName}.` : ""} Here is how we look after what you share.`}
       />
       <ul className="card rise-in mb-8 divide-y divide-line overflow-hidden">
@@ -60,7 +67,7 @@ export function Welcome({
             checked={ai}
             onChange={(e) => onAi(e.target.checked)}
             title={AI_CONSENT}
-            description="Optional. Say no and you simply tap your answers."
+            description="Optional. Say no and the Companion still suggests answers on your phone. Nothing you write goes to an AI service."
           />
         ) : null}
       </fieldset>

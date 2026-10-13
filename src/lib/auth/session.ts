@@ -15,12 +15,25 @@ export type Person = {
   centreId: string;
 };
 
+/**
+ * The platform owner's state for this sign-in. Everyone else is always "none", and there is no way for them to tell
+ * "none" from a page that does not exist. "locked" is the owner before the passphrase; "open" is after it.
+ */
+export type GodState = "none" | "locked" | "open";
+
 export type Session = {
   person: Person;
   roles: Role[];
+  god: GodState;
   /** The WhatsApp number added for signing in, as the sign-in service holds it (digits only), or null. */
   signInPhone: string | null;
 };
+
+/**
+ * Set when a request carries a valid sign-in for a person who is no longer here (their account was deleted), so that
+ * `requireSession` can sign them out instead of sending them round in a tribe.
+ */
+const accountGone = cache(() => ({ value: false }));
 
 /**
  * The signed-in person and their roles, read once per request.
@@ -39,15 +52,19 @@ export const getSession = cache(async (): Promise<Session | null> => {
   if (!id) return null;
   const phoneClaim = typeof data?.claims?.phone === "string" ? data.claims.phone.replace(/\D/g, "") : "";
 
-  const [{ data: row }, { data: roles }] = await Promise.all([
+  const [{ data: row }, { data: roles }, { data: god }] = await Promise.all([
     supabase
       .from("people")
       .select("id, email, full_name, preferred_name, avatar_url, centre_id")
       .eq("id", id)
       .maybeSingle(),
     supabase.rpc("my_roles"),
+    supabase.rpc("god_state"),
   ]);
-  if (!row) return null;
+  if (!row) {
+    accountGone().value = true;
+    return null;
+  }
 
   return {
     person: {
@@ -59,6 +76,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
       centreId: row.centre_id,
     },
     roles: parseRoles(roles),
+    god: god === "open" || god === "locked" ? god : "none",
     signInPhone: phoneClaim || null,
   };
 });
@@ -66,7 +84,11 @@ export const getSession = cache(async (): Promise<Session | null> => {
 /** Sends visitors to sign in, then back to where they were going. */
 export async function requireSession(returnTo = "/home"): Promise<Session> {
   const session = await getSession();
-  if (!session) redirect(`/sign-in?next=${encodeURIComponent(returnTo)}`);
+  if (!session) {
+    // A valid sign-in for someone who is gone: clear it. Sending them to the sign-in page would only be sent straight back.
+    if (accountGone().value) redirect("/auth/ended");
+    redirect(`/sign-in?next=${encodeURIComponent(returnTo)}`);
+  }
   return session;
 }
 

@@ -1,167 +1,135 @@
 import type { Metadata } from "next";
-import { InviteForm } from "@/components/admin/InviteForm";
+import Link from "next/link";
+import { Checklist } from "@/components/admin/Checklist";
 import { IntakeStats, type Stats } from "@/components/admin/IntakeStats";
 import { AcademyStatsPanel } from "@/components/admin/AcademyStats";
-import { MatchStatsPanel } from "@/components/matching/MatchStats";
-import type { MatchStats } from "@/lib/matching/types";
 import { LeaderStatsPanel } from "@/components/admin/LeaderStats";
-import { PeopleList, type PersonRow } from "@/components/admin/PeopleList";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { daysUntil, formatShortDate } from "@/lib/dates";
-import { ROLE_LABELS, grantableRoles, parseRoles, type Role } from "@/lib/auth/roles";
-import { requireRole } from "@/lib/auth/session";
+import { MatchStatsPanel } from "@/components/matching/MatchStats";
+import { loadChecklist } from "@/lib/admin/server";
 import type { AcademyStats } from "@/lib/academy/types";
+import { DATA_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PRIVACY_ROLES, PROGRAMME_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole, type Role } from "@/lib/auth/roles";
+import { requireRole } from "@/lib/auth/session";
 import type { LeaderStats } from "@/lib/leaders/review-types";
+import type { MatchStats } from "@/lib/matching/types";
 import { createClient } from "@/lib/supabase/server";
-import { revokeInvitationAction } from "./actions";
 
 export const metadata: Metadata = { title: "Admin" };
 
-const PEOPLE_LIMIT = 200;
+type Tile = { href: string; title: string; body: string; roles: readonly Role[] };
+
+const GROUPS: { title: string; tiles: Tile[] }[] = [
+  {
+    title: "Run the season",
+    tiles: [
+      { href: "/admin/seasons", title: "Seasons", body: "Plan the next season, open it, run it and close it.", roles: OFFICE_ROLES },
+      { href: "/admin/guides", title: "Weekly guides", body: "The twelve guides: passages, questions, the sermon link and the confession.", roles: OFFICE_ROLES },
+      { href: "/growth/swaps", title: "Tribe changes", body: "Members asking for a different tribe in the first weeks.", roles: SWAP_ROLES },
+      { href: "/growth/multiply", title: "Multiply", body: "What happens to each tribe next season.", roles: MULTIPLY_ROLES },
+    ],
+  },
+  {
+    title: "The programme",
+    tiles: [
+      { href: "/admin/catalogue", title: "Communities and goals", body: "The shared list members and leaders choose from, and the goals members write in.", roles: OFFICE_ROLES },
+      { href: "/admin/champions", title: "Community champions", body: "Who looks after each community.", roles: OFFICE_ROLES },
+      { href: "/admin/people", title: "People and roles", body: "Invite the team and see who holds each role.", roles: PROGRAMME_ROLES },
+      { href: "/care/teens", title: "Young people", body: "Parent and guardian permission, and the call that confirms it.", roles: TEEN_ROLES },
+      { href: "/admin/privacy", title: "Data requests", body: "Members who ask for their account and everything in it to be deleted.", roles: PRIVACY_ROLES },
+    ],
+  },
+  {
+    title: "Measure",
+    tiles: [
+      { href: "/admin/targets", title: "Targets", body: "The numbers every dashboard and report is measured against.", roles: OFFICE_ROLES },
+      { href: "/growth/model", title: "Matching model", body: "The weights, and what the results suggest changing.", roles: MODEL_ROLES },
+    ],
+  },
+  {
+    title: "System",
+    tiles: [
+      { href: "/admin/settings", title: "Settings", body: "The church’s vision and mission, the testimony form, and the platform switches.", roles: OFFICE_ROLES },
+      { href: "/admin/system", title: "Sending and reporting", body: "The sending service, and the copy your reporting tool reads.", roles: DATA_ROLES },
+      { href: "/admin/messages", title: "Message log", body: "Every message queued, and what became of it.", roles: DATA_ROLES },
+    ],
+  },
+];
 
 export default async function AdminPage() {
-  const session = await requireRole(["admin", "director"], "/admin");
+  const session = await requireRole(OFFICE_ROLES, "/admin");
   const supabase = await createClient();
-  const grantable = grantableRoles(session.roles);
 
-  const [invitations, people, roleRows, stats, leaderStats, academyStats, matchStats] = await Promise.all([
-    supabase
-      .from("invitations")
-      .select("id, email, role, created_at, expires_at")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("people")
-      .select("id, email, full_name, preferred_name, created_at")
-      .order("created_at", { ascending: false })
-      .limit(PEOPLE_LIMIT),
-    supabase.from("person_roles").select("person_id, role"),
+  const [checklist, stats, leaderStats, academyStats, matchStats] = await Promise.all([
+    loadChecklist(supabase),
     supabase.rpc("intake_stats"),
     supabase.rpc("leader_stats"),
     supabase.rpc("academy_stats"),
     supabase.rpc("match_stats"),
   ]);
 
-  const rolesByPerson = new Map<string, Role[]>();
-  for (const row of roleRows.data ?? []) {
-    const list = rolesByPerson.get(row.person_id) ?? [];
-    list.push(...parseRoles([row.role]));
-    rolesByPerson.set(row.person_id, list);
-  }
-
-  const pending = invitations.data ?? [];
-  const rows: PersonRow[] = (people.data ?? []).map((p) => {
-    const roles = rolesByPerson.get(p.id) ?? [];
-    const named = p.full_name ?? p.preferred_name;
-    return {
-      id: p.id,
-      name: named ?? p.email,
-      email: p.email,
-      hasName: Boolean(named),
-      roles,
-      removable: roles.filter((r) => grantable.includes(r)),
-    };
-  });
+  const groups = GROUPS.map((g) => ({ ...g, tiles: g.tiles.filter((t) => hasAnyRole(session.roles, t.roles)) })).filter((g) => g.tiles.length > 0);
+  const glance = Boolean(stats.data || leaderStats.data || academyStats.data || matchStats.data);
 
   return (
     <div className="flex flex-col gap-12">
       <header className="flex flex-col gap-2">
         <h1 className="t-title">Admin</h1>
-        <p className="t-body measure text-soft">
-          Invite the people who will run United Tribes and see who holds each role. Everyone who signs in is a member
-          automatically.
-        </p>
+        <p className="t-body measure text-soft">Everything the office needs to run United Tribes: the season, the guides, the catalogue, the targets and the system behind them.</p>
       </header>
 
-      {stats.data ? (
-        <section aria-labelledby="stats-heading" className="flex flex-col gap-4">
-          <h2 id="stats-heading" className="t-heading">
-            The form so far
-          </h2>
-          <IntakeStats stats={stats.data as Stats} />
-        </section>
-      ) : null}
+      {checklist ? <Checklist checklist={checklist} roles={session.roles} /> : null}
 
-      {leaderStats.data ? (
-        <section aria-labelledby="leaders-heading" className="flex flex-col gap-4">
-          <h2 id="leaders-heading" className="t-heading">
-            Leader applications
-          </h2>
-          <LeaderStatsPanel stats={leaderStats.data as LeaderStats} />
-        </section>
-      ) : null}
-
-      {academyStats.data ? (
-        <section aria-labelledby="academy-heading" className="flex flex-col gap-4">
-          <h2 id="academy-heading" className="t-heading">
-            Leader Academy
-          </h2>
-          <AcademyStatsPanel stats={academyStats.data as AcademyStats} />
-        </section>
-      ) : null}
-
-      {matchStats.data ? (
-        <section aria-labelledby="matching-heading" className="flex flex-col gap-4">
-          <h2 id="matching-heading" className="t-heading">
-            Matching and placement
-          </h2>
-          <MatchStatsPanel stats={matchStats.data as MatchStats} />
-        </section>
-      ) : null}
-
-      <section aria-labelledby="invite-heading" className="flex flex-col gap-4">
-        <h2 id="invite-heading" className="t-heading">
-          Invite someone
-        </h2>
-        <div className="card p-5 sm:p-7">
-          <InviteForm roles={grantable} />
-        </div>
-      </section>
-
-      <section aria-labelledby="pending-heading" className="flex flex-col gap-4">
-        <h2 id="pending-heading" className="t-heading">
-          Waiting to sign in
-        </h2>
-        {pending.length === 0 ? (
-          <p className="card t-body p-6 text-soft">No pending invitations. Invite someone above and they will appear here.</p>
-        ) : (
-          <ul className="stagger flex flex-col gap-3">
-            {pending.map((inv, i) => {
-              const role = parseRoles([inv.role])[0];
-              const canRevoke = grantable.includes(role);
-              const left = daysUntil(inv.expires_at.slice(0, 10));
-              return (
-                <li key={inv.id} style={{ ["--i" as string]: i }} className="card flex items-center justify-between gap-4 p-4 sm:p-5">
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold">{inv.email}</p>
-                    <p className="t-small mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-soft">
-                      <Badge tone="gold">{ROLE_LABELS[role]}</Badge>
-                      <span>Invited {formatShortDate(inv.created_at)}</span>
-                      <span>{left > 0 ? `${left} ${left === 1 ? "day" : "days"} left` : "Expires today"}</span>
-                    </p>
-                  </div>
-                  {canRevoke ? (
-                    <form action={revokeInvitationAction}>
-                      <input type="hidden" name="id" value={inv.id} />
-                      <Button type="submit" variant="quiet" size="md">
-                        Revoke
-                      </Button>
-                    </form>
-                  ) : null}
+      {groups.map((g) => {
+        const id = `group-${g.title.toLowerCase().replace(/[^a-z]+/g, "-")}`;
+        return (
+          <section key={g.title} aria-labelledby={id} className="flex flex-col gap-4">
+            <h2 id={id} className="t-heading">
+              {g.title}
+            </h2>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {g.tiles.map((t) => (
+                <li key={t.href}>
+                  <Link href={t.href} className="card press flex h-full flex-col gap-0.5 p-4 hover:bg-surface">
+                    <span className="font-semibold">{t.title}</span>
+                    <span className="t-small text-soft">{t.body}</span>
+                  </Link>
                 </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
 
-      <section aria-labelledby="people-heading" className="flex flex-col gap-4">
-        <h2 id="people-heading" className="t-heading">
-          People
-        </h2>
-        <PeopleList people={rows} limit={PEOPLE_LIMIT} />
-      </section>
+      {glance ? (
+        <section aria-labelledby="glance-heading" className="flex flex-col gap-12">
+          <h2 id="glance-heading" className="t-heading">
+            At a glance
+          </h2>
+          {stats.data ? (
+            <div className="flex flex-col gap-4">
+              <h3 className="font-semibold">The form so far</h3>
+              <IntakeStats stats={stats.data as Stats} />
+            </div>
+          ) : null}
+          {leaderStats.data ? (
+            <div className="flex flex-col gap-4">
+              <h3 className="font-semibold">Leader applications</h3>
+              <LeaderStatsPanel stats={leaderStats.data as LeaderStats} />
+            </div>
+          ) : null}
+          {academyStats.data ? (
+            <div className="flex flex-col gap-4">
+              <h3 className="font-semibold">Leader Academy</h3>
+              <AcademyStatsPanel stats={academyStats.data as AcademyStats} />
+            </div>
+          ) : null}
+          {matchStats.data ? (
+            <div className="flex flex-col gap-4">
+              <h3 className="font-semibold">Matching and placement</h3>
+              <MatchStatsPanel stats={matchStats.data as MatchStats} />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   );
 }

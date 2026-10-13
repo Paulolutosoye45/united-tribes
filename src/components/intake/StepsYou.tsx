@@ -3,20 +3,20 @@
 import { useState } from "react";
 import { Choice } from "@/components/ui/Choice";
 import { Input, Select } from "@/components/ui/Input";
-import { cn } from "@/lib/cn";
-import { DAYS_IN_MONTH, GENDERS, CIRCLE_MIXES, MONTHS, ZONES } from "@/lib/intake/options";
+import { DAYS_IN_MONTH, GENDERS, TRIBE_MIXES, MONTHS, ZONES } from "@/lib/intake/options";
 import { TEENS } from "@/lib/intake/answers";
+import { AreaInput } from "./AreaInput";
 import { Note, StepHeading } from "./ui";
 import type { Catalogue, StepProps } from "./types";
 
-export function AgeStep({ answers, set, catalogue }: StepProps & { catalogue: Catalogue }) {
+export function AgeStep({ answers, set, catalogue, teensOpen = false }: StepProps & { catalogue: Catalogue; teensOpen?: boolean }) {
   const [showBirthday, setShowBirthday] = useState(answers.birthdayDay !== undefined);
   const month = answers.birthdayMonth;
   const maxDay = month ? DAYS_IN_MONTH[month - 1] : 31;
 
   return (
     <>
-      <StepHeading title="How old are you?" hint="Helps us place you with people in a similar season of life." />
+      <StepHeading title="How old are you?" hint="A range is plenty. It helps us place you with people in a similar season of life." />
       <div role="radiogroup" aria-label="Age range" className="stagger grid grid-cols-2 gap-3">
         {catalogue.ageRanges.map((r, i) => (
           <Choice
@@ -33,7 +33,7 @@ export function AgeStep({ answers, set, catalogue }: StepProps & { catalogue: Ca
         ))}
       </div>
 
-      {answers.ageRange === TEENS ? (
+      {answers.ageRange === TEENS && !teensOpen ? (
         <div className="pop-in mt-5">
           <Note tone="info">
             Tribes for teens open in a later release, with a parent or guardian&rsquo;s permission. Nothing you have entered
@@ -41,6 +41,15 @@ export function AgeStep({ answers, set, catalogue }: StepProps & { catalogue: Ca
           </Note>
         </div>
       ) : (
+        <>
+        {answers.ageRange === TEENS ? (
+          <div className="pop-in mt-5">
+            <Note tone="info">
+              Because you are under 18, a parent or guardian will need to say yes before we show you tribes. When you finish the form, we will ask for their contact
+              details and send them a private link. You will be placed in a tribe with young people your age, led by two adults.
+            </Note>
+          </div>
+        ) : null}
         <div className="mt-6">
           {showBirthday ? (
             <div className="pop-in card flex flex-col gap-4 p-4">
@@ -104,7 +113,22 @@ export function AgeStep({ answers, set, catalogue }: StepProps & { catalogue: Ca
             </button>
           )}
         </div>
+        </>
       )}
+
+      {answers.ageRange && answers.ageRange !== TEENS ? (
+        <div className="rise-in mt-6">
+          <Choice
+            type="checkbox"
+            name="openToAdjacent"
+            value="yes"
+            checked={Boolean(answers.openToAdjacent)}
+            onChange={(e) => set({ openToAdjacent: e.target.checked })}
+            title="I’d also be happy in a tribe with the age group just before or after mine"
+            description="More tribes to choose from. We’ll still show your own age group first."
+          />
+        </div>
+      ) : null}
     </>
   );
 }
@@ -112,7 +136,7 @@ export function AgeStep({ answers, set, catalogue }: StepProps & { catalogue: Ca
 export function NameStep({ answers, set }: StepProps) {
   return (
     <>
-      <StepHeading title="What should we call you?" hint="Your leader and your Tribe will use this name." />
+      <StepHeading title="What should we call you?" hint="Your leader and your tribe will use this name." />
       <div className="stagger flex flex-col gap-5">
         <div style={{ ["--i" as string]: 0 }}>
           <Input
@@ -145,7 +169,7 @@ export function NameStep({ answers, set }: StepProps) {
 export function GenderStep({ answers, set }: StepProps) {
   return (
     <>
-      <StepHeading title="Which describes you?" hint="Some Tribes are for men or women only, especially when the topics are personal." />
+      <StepHeading title="Which describes you?" hint="Some tribes are for men or women only, especially when the topics are personal." />
       <div role="radiogroup" aria-label="Gender" className="stagger flex flex-col gap-3">
         {GENDERS.map((g, i) => (
           <Choice
@@ -163,16 +187,16 @@ export function GenderStep({ answers, set }: StepProps) {
       {answers.gender ? (
         <section className="rise-in mt-9" aria-labelledby="mix-heading">
           <h2 id="mix-heading" className="t-heading mb-3">
-            What kind of Tribe would feel right?
+            What kind of tribe would feel right?
           </h2>
           <div role="radiogroup" aria-labelledby="mix-heading" className="flex flex-col gap-3">
-            {CIRCLE_MIXES.map((m) => (
+            {TRIBE_MIXES.map((m) => (
               <Choice
                 key={m.id}
-                name="circleMix"
+                name="tribeMix"
                 value={m.id}
-                checked={answers.circleMix === m.id}
-                onChange={() => set({ circleMix: m.id })}
+                checked={answers.tribeMix === m.id}
+                onChange={() => set({ tribeMix: m.id })}
                 title={m.label}
               />
             ))}
@@ -187,8 +211,20 @@ export function WhereStep({ answers, set }: StepProps) {
   const abroad = answers.zone === "abroad";
   return (
     <>
-      <StepHeading title="Where are you based?" hint="This helps us find a Tribe near you, or one that meets at a time that suits your country." />
-      <div role="radiogroup" aria-label="Where you are based" className="stagger flex flex-col gap-3">
+      <StepHeading title="Where are you based?" hint="Start typing your area. This helps us find a tribe near you, or one that meets at a time that suits your country." />
+      <div className="mb-8">
+        <AreaInput
+          value={answers.areaNote ?? ""}
+          slug={answers.areaSlug}
+          abroad={abroad}
+          onType={(text) => set({ areaNote: text, areaSlug: undefined })}
+          onPick={(area) => set({ areaNote: area.name, areaSlug: area.slug, zone: area.zone })}
+        />
+      </div>
+      <h2 id="zone-heading" className="t-heading mb-3">
+        {answers.zone ? "Your part of the world" : "Or choose the nearest"}
+      </h2>
+      <div role="radiogroup" aria-labelledby="zone-heading" className="stagger flex flex-col gap-3">
         {ZONES.map((z, i) => (
           <Choice
             key={z.id}
@@ -202,19 +238,6 @@ export function WhereStep({ answers, set }: StepProps) {
           />
         ))}
       </div>
-      {answers.zone ? (
-        <div className={cn("rise-in mt-6")}>
-          <Input
-            label={abroad ? "Which country?" : "Which area?"}
-            name="areaNote"
-            placeholder={abroad ? "e.g. United Kingdom" : "e.g. Ojodu Berger"}
-            maxLength={80}
-            optional
-            value={answers.areaNote ?? ""}
-            onChange={(e) => set({ areaNote: e.target.value })}
-          />
-        </div>
-      ) : null}
     </>
   );
 }

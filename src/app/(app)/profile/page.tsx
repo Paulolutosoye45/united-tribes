@@ -2,13 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DeleteAnswers } from "@/components/profile/DeleteAnswers";
 import { Button, buttonClasses } from "@/components/ui/Button";
+import { ContactCard } from "@/components/profile/ContactCard";
+import { PhotoCard } from "@/components/profile/PhotoCard";
+import { YourData } from "@/components/profile/YourData";
 import { WhatsAppSignInCard } from "@/components/profile/WhatsAppSignInCard";
 import { providerFromEnv } from "@/lib/ai/suggest";
 import { requireSession } from "@/lib/auth/session";
+import { hasAnyRole } from "@/lib/auth/roles";
 import { formatShortDate } from "@/lib/dates";
 import { whatsappSignInEnabled } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
-import { setAssistantAction, stopWhatsappAction } from "./actions";
+import { readContact } from "@/lib/messaging/contact";
+import { readMyRequest } from "@/lib/privacy/wording";
+import { setAssistantAction } from "./actions";
 
 export const metadata: Metadata = { title: "Privacy and my data" };
 
@@ -17,12 +23,17 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const { deleted } = await searchParams;
   const supabase = await createClient();
 
-  const [profile, draft, ai, whatsapp] = await Promise.all([
-    supabase.from("member_profiles").select("submitted_at, whatsapp").eq("person_id", session.person.id).maybeSingle(),
+  const leads = hasAnyRole(session.roles, ["leader", "assistant_leader", "coach"]);
+  const [profile, draft, ai, contactRow, photoRow, erasure] = await Promise.all([
+    supabase.from("member_profiles").select("submitted_at").eq("person_id", session.person.id).maybeSingle(),
     supabase.from("intake_drafts").select("updated_at").eq("person_id", session.person.id).maybeSingle(),
     supabase.rpc("has_consent", { p_purpose: "ai_assist" }),
-    supabase.rpc("has_consent", { p_purpose: "whatsapp" }),
+    supabase.rpc("my_contact"),
+    leads ? supabase.rpc("my_photo_info") : Promise.resolve({ data: null }),
+    supabase.rpc("my_erasure_request"),
   ]);
+  const photo = (photoRow.data as { has?: boolean; updated_at?: string | null } | null) ?? null;
+  const contact = readContact(contactRow.data);
   const aiOn = ai.data === true;
   const aiAvailable = providerFromEnv() !== null;
 
@@ -72,7 +83,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <>
               <p className="text-soft">We don’t hold any answers from you yet.</p>
               <Link href="/join" className={buttonClasses({ size: "md", className: "w-fit" })}>
-                <span className="relative">Find my circle</span>
+                <span className="relative">Find my tribe</span>
               </Link>
             </>
           )}
@@ -81,46 +92,54 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
       {whatsappSignInEnabled() ? <WhatsAppSignInCard linked={session.signInPhone} /> : null}
 
-      <section aria-labelledby="choices-heading" className="flex flex-col gap-4">
-        <h2 id="choices-heading" className="t-heading">
-          Your choices
+      <section aria-labelledby="contact-heading" className="flex flex-col gap-4">
+        <h2 id="contact-heading" className="t-heading">
+          How we reach you
         </h2>
-        <ul className="card divide-y divide-line">
-          {aiAvailable ? (
-            <li className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-              <div className="max-w-[52ch]">
-                <p className="font-semibold">Suggestions from an AI assistant</p>
-                <p className="t-small text-soft">
-                  When on, a sentence you write about your season is read by an AI service to suggest a tribe and goal.
-                  Contact details are removed first and nothing else is shared. Currently <strong>{aiOn ? "on" : "off"}</strong>.
-                </p>
-              </div>
-              <form action={setAssistantAction}>
-                <input type="hidden" name="granted" value={aiOn ? "no" : "yes"} />
-                <Button type="submit" variant="quiet" size="md">
-                  {aiOn ? "Turn off" : "Turn on"}
-                </Button>
-              </form>
-            </li>
-          ) : null}
-          <li className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-            <div className="max-w-[52ch]">
-              <p className="font-semibold">WhatsApp reminders</p>
-              <p className="t-small text-soft">
-                {whatsapp.data === true && profile.data?.whatsapp
-                  ? "You’ve allowed WhatsApp messages about your circle."
-                  : "You haven’t allowed WhatsApp messages. Add a number in the form if you’d like reminders."}
-              </p>
-            </div>
-            {whatsapp.data === true && profile.data?.whatsapp ? (
-              <form action={stopWhatsappAction}>
-                <Button type="submit" variant="quiet" size="md">
-                  Stop messages
-                </Button>
-              </form>
-            ) : null}
-          </li>
-        </ul>
+        <ContactCard contact={contact} />
+      </section>
+
+      {leads ? (
+        <section aria-labelledby="photo-heading" className="flex flex-col gap-4">
+          <h2 id="photo-heading" className="t-heading">
+            Your photo
+          </h2>
+          <PhotoCard personId={session.person.id} name={session.person.preferredName ?? session.person.fullName ?? "You"} has={Boolean(photo?.has)} updatedAt={photo?.updated_at ?? null} />
+        </section>
+      ) : null}
+
+      <section aria-labelledby="data-heading" className="flex flex-col gap-4">
+        <h2 id="data-heading" className="t-heading">
+          Your data
+        </h2>
+        <YourData request={readMyRequest(erasure.data)} />
+      </section>
+
+      <section aria-labelledby="choices-heading" className="flex flex-col gap-4">
+        {aiAvailable ? (
+          <>
+            <h2 id="choices-heading" className="t-heading">
+              Your choices
+            </h2>
+            <ul className="card divide-y divide-line">
+              <li className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                <div className="max-w-[52ch]">
+                  <p className="font-semibold">Suggestions from an AI assistant</p>
+                  <p className="t-small text-soft">
+                    When on, a sentence you write about your season is read by an AI service to suggest a community and goal.
+                    Contact details are removed first and nothing else is shared. Currently <strong>{aiOn ? "on" : "off"}</strong>.
+                  </p>
+                </div>
+                <form action={setAssistantAction}>
+                  <input type="hidden" name="granted" value={aiOn ? "no" : "yes"} />
+                  <Button type="submit" variant="quiet" size="md">
+                    {aiOn ? "Turn off" : "Turn on"}
+                  </Button>
+                </form>
+              </li>
+            </ul>
+          </>
+        ) : null}
         <p className="t-small text-soft">
           Read the full <Link href="/privacy" className="font-semibold text-ink underline underline-offset-4">privacy notice</Link>.
         </p>

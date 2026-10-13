@@ -1,109 +1,98 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { NO_STORE, guard, logCall, none, refuse } from "@/lib/ai/route";
 import { suggestOptions } from "@/lib/ai/suggest";
-import { getSupabaseEnv } from "@/lib/env";
-import { createClient } from "@/lib/supabase/server";
+import { HEARD_FIELDS, knownLines, specFor, type HeardField } from "@/lib/intake/heard";
+import { CHILDREN, RELATIONSHIPS, WORK_FIELDS, WORK_STATUSES } from "@/lib/intake/options";
+
+const idsOf = (list: readonly { id: string }[]) => list.map((o) => o.id) as [string, ...string[]];
 
 export const dynamic = "force-dynamic";
 
 const body = z.object({
-  field: z.enum(["tribe", "season_goal"]),
+  field: z.enum(["community", "season_goal", "heard", "group_roles"]),
   story: z.string().max(1500),
-  tribe: z.string().regex(/^[a-z0-9-]{1,64}$/).optional(),
+  community: z.string().regex(/^[a-z0-9-]{1,64}$/).optional(),
+  /** What the person has already confirmed, so later questions are asked with more to go on. Checked against the form's own lists. */
+  known: z
+    .object({
+      workStatus: z.enum(idsOf(WORK_STATUSES)).optional(),
+      workField: z.enum(idsOf(WORK_FIELDS)).optional(),
+      relationship: z.enum(idsOf(RELATIONSHIPS)).optional(),
+      children: z.array(z.enum(idsOf(CHILDREN))).max(CHILDREN.length).optional(),
+    })
+    .optional(),
 });
 
-/** At most this many requests per person in ten minutes. A real form needs two or three. */
-const LIMIT = 20;
-const WINDOW_MS = 10 * 60 * 1000;
-
-const NO_STORE = { "cache-control": "no-store" };
-const none = (reason: string) => NextResponse.json({ suggestions: [], fallback: true, reason }, { headers: NO_STORE });
-
 /**
- * Suggests tribes or goals from what a person wrote. Everything is decided
- * here, not by the browser: who is asking, whether they agreed to the
- * assistant, which options exist, and how often they may ask.
+ * Suggests communities, goals, the "We heard…" chips or group roles from what a person wrote. Everything is decided
+ * here, not by the browser: who is asking, whether they agreed to the assistant, which options exist, and how
+ * often they may ask. The options come from the database or from the form's own vocabulary, never from the request.
  */
 export async function POST(request: Request) {
-  // Only our own pages may call this.
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-  const origin = request.headers.get("origin");
-  if (origin) {
-    let sameOrigin = false;
-    try {
-      sameOrigin = new URL(origin).host === host;
-    } catch {
-      sameOrigin = false;
-    }
-    if (!sameOrigin) return NextResponse.json({ error: "forbidden" }, { status: 403, headers: NO_STORE });
-  } else if (!["same-origin", "none", null].includes(request.headers.get("sec-fetch-site"))) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403, headers: NO_STORE });
-  }
-  if (!request.headers.get("content-type")?.includes("application/json")) {
-    return NextResponse.json({ error: "unsupported" }, { status: 415, headers: NO_STORE });
-  }
+  const checked = await guard(request, "json");
+  if (!checked.ok) return checked.response;
+  const { supabase, personId } = checked;
 
   const text = await request.text();
-  if (text.length > 8000) return NextResponse.json({ error: "too large" }, { status: 413, headers: NO_STORE });
+  if (text.length > 8000) return refuse("too large", 413);
   let parsed: z.infer<typeof body>;
   try {
     parsed = body.parse(JSON.parse(text));
   } catch {
-    return NextResponse.json({ error: "bad request" }, { status: 400, headers: NO_STORE });
+    return refuse("bad request", 400);
   }
 
-  if (!getSupabaseEnv()) return none("error");
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const personId = data?.claims?.sub;
-  if (!personId) return NextResponse.json({ error: "sign in" }, { status: 401, headers: NO_STORE });
+  const known = parsed.known ? knownLines(parsed.known) : [];
 
-  const { data: agreed } = await supabase.rpc("has_consent", { p_purpose: "ai_assist" });
-  if (agreed !== true) return none("no_consent");
+  async function ask(field: string, question: string, options: { id: string; label: string }[], max: number) {
+    const result = await suggestOptions({ field, question, options, story: parsed.story, known, max });
+    await logCall(supabase, personId, field, { ...result, suggested: result.suggestions.length });
+    return result;
+  }
 
-  const since = new Date(Date.now() - WINDOW_MS).toISOString();
-  const { count } = await supabase
-    .from("ai_calls")
-    .select("id", { count: "exact", head: true })
-    .eq("person_id", personId)
-    .gte("at", since);
-  if ((count ?? 0) >= LIMIT) return none("rate_limited");
+  // Several small questions about the same story, asked together.
+  if (parsed.field === "heard") {
+    const answers = await Promise.all(
+      HEARD_FIELDS.map(async (field: HeardField) => {
+        const spec = specFor(field);
+        return [field, await ask(field, spec.question, spec.options, spec.max)] as const;
+      }),
+    );
+    const fields = Object.fromEntries(answers.map(([field, r]) => [field, r.suggestions]));
+    const allFell = answers.every(([, r]) => r.fallback);
+    return NextResponse.json({ fields, fallback: allFell, reason: allFell ? (answers[0][1].reason ?? "error") : null }, { headers: NO_STORE });
+  }
+
+  if (parsed.field === "group_roles") {
+    const spec = specFor("group_roles");
+    const result = await ask("group_roles", spec.question, spec.options, spec.max);
+    return NextResponse.json({ suggestions: result.suggestions, fallback: result.fallback, reason: result.reason ?? null }, { headers: NO_STORE });
+  }
 
   // Options come from the database, never from the browser.
   let question: string;
   let options: { id: string; label: string }[];
-  if (parsed.field === "tribe") {
-    const { data: tribes } = await supabase.from("tribes").select("slug, name, description, sort").order("sort");
-    options = (tribes ?? []).map((t) => ({ id: t.slug, label: `${t.name} (${t.description})` }));
-    question = "Which tribe, meaning a group of people in a similar field or stage of life, fits this person best right now?";
+  if (parsed.field === "community") {
+    const { data: communities } = await supabase.from("communities").select("slug, name, description, sort").eq("active", true).order("sort");
+    options = (communities ?? []).map((t) => ({ id: t.slug, label: `${t.name} (${t.description})` }));
+    question = "Which community, meaning a group of people in a similar field or stage of life, fits this person best right now? Give the best fit first and a second choice if one clearly fits.";
   } else {
-    if (!parsed.tribe) return NextResponse.json({ error: "bad request" }, { status: 400, headers: NO_STORE });
-    const { data: tribe } = await supabase
-      .from("tribes")
-      .select("name, season_goals(slug, title, sort)")
-      .eq("slug", parsed.tribe)
+    if (!parsed.community) return refuse("bad request", 400);
+    const { data: community } = await supabase
+      .from("communities")
+      .select("name, season_goals(slug, title, sort, active)")
+      .eq("slug", parsed.community)
       .maybeSingle();
-    const goals = [...((tribe?.season_goals as { slug: string; title: string; sort: number }[] | undefined) ?? [])].sort((a, b) => a.sort - b.sort);
+    const goals = [...((community?.season_goals as { slug: string; title: string; sort: number; active: boolean }[] | undefined) ?? [])]
+      .filter((g) => g.active)
+      .sort((a, b) => a.sort - b.sort);
     options = goals.map((g) => ({ id: g.slug, label: g.title }));
-    question = `This person belongs to the ${tribe?.name ?? "chosen"} tribe. Which goal would they most want to work on with a small group over twelve weeks?`;
+    question = `This person belongs to the ${community?.name ?? "chosen"} community. Which goal would they most want to work on with a small group over twelve weeks?`;
   }
   if (options.length === 0) return none("error");
 
-  const result = await suggestOptions({ field: parsed.field, question, options, story: parsed.story, max: 3 });
-
-  // Counts and timings only. The text never goes in the log.
-  await supabase.from("ai_calls").insert({
-    person_id: personId,
-    field: parsed.field,
-    provider: result.provider.slice(0, 24),
-    model: result.model.slice(0, 64),
-    latency_ms: result.latencyMs,
-    fallback: result.fallback,
-    reason: result.reason ?? null,
-    suggested: result.suggestions.length,
-    dropped: Math.min(result.dropped, 100),
-  });
-
+  const result = await ask(parsed.field, question, options, 3);
   return NextResponse.json(
     { suggestions: result.suggestions, fallback: result.fallback, reason: result.reason ?? null },
     { headers: NO_STORE },

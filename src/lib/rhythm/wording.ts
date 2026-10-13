@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/dates";
-import type { Attendance, CallOutcome, FlagKind, NudgeKind, Outcome, ReportStatus, Theme } from "./types";
+import type { Attendance, CallOutcome, CareLevel, CareTaskKind, CelebrationKind, FlagKind, NudgeKind, Outcome, ReportStatus, TestimonyTheme, Theme } from "./types";
 
 export const THEME_LABELS: Record<Theme, string> = {
   begin: "Beginning",
@@ -46,8 +46,8 @@ export function nudgeLine(kind: NudgeKind, week: number, weeks: number): { title
 }
 
 export const PULSE_QUESTIONS = {
-  belonging: "I belong in this Tribe.",
-  intro: "Five quick questions. Your answers help your leader care for the Tribe. Nothing you write here is shown to the Tribe.",
+  belonging: "I belong in this tribe.",
+  intro: "Five quick questions. Your answers help your leader care for the tribe. Nothing you write here is shown to the tribe.",
 } as const;
 
 export const SCALE_LABELS = ["Not at all", "A little", "Somewhat", "Mostly", "Completely"] as const;
@@ -65,7 +65,7 @@ export const FLAG_LABELS: Record<FlagKind, string> = {
 export const FLAG_ADVICE: Record<FlagKind, string> = {
   missed_twice: "Nobody misses twice without a call. A short, warm call or voice note is best.",
   not_yet_twice: "Ask what is getting in the way and whether the step can be smaller.",
-  low_belonging: "Listen first. Ask what would help them feel part of the Tribe.",
+  low_belonging: "Listen first. Ask what would help them feel part of the tribe.",
   leader_concern: "Follow up the way you planned, and tell your coach if you need support.",
 };
 
@@ -84,7 +84,7 @@ export const STATUS_LABELS: Record<ReportStatus, { text: string; tone: "gold" | 
 };
 
 export const SHARE_OPTIONS = [
-  { value: "Tribe", title: "My Tribe", description: "After your leader has read it." },
+  { value: "tribe", title: "My tribe", description: "After your leader has read it." },
   { value: "church", title: "The whole church", description: "After your leader and a pastor have read it." },
 ] as const;
 
@@ -96,7 +96,7 @@ export const CREDIT_OPTIONS = [
 
 export const TESTIMONY_STATUS: Record<string, string> = {
   submitted: "Waiting for your leader",
-  circle_approved: "Shared with your Tribe",
+  tribe_approved: "Shared with your tribe",
   church_approved: "Shared with the church",
   declined: "Not shared",
 };
@@ -108,24 +108,24 @@ export function celebrationLine(c: { kind: string; first_name: string; on?: stri
     case "every_meeting":
       return `${c.first_name} has been to every meeting so far. Thank them.`;
     case "steps_streak":
-      return `${c.first_name} has finished their step three weeks running. Say so in the Tribe.`;
+      return `${c.first_name} has finished their step three weeks running. Say so in the tribe.`;
     default:
       return "";
   }
 }
 
 /** What a leader sends someone they are following up. */
-export function followUpMessage(opts: { memberFirst: string; leaderFirst: string; circle: string; kind: FlagKind }): string {
-  const { memberFirst, leaderFirst, circle } = opts;
+export function followUpMessage(opts: { memberFirst: string; leaderFirst: string; tribe: string; kind: FlagKind }): string {
+  const { memberFirst, leaderFirst, tribe } = opts;
   switch (opts.kind) {
     case "missed_twice":
-      return `Hello ${memberFirst}, it is ${leaderFirst} from ${circle}. We have missed you these past two weeks and wanted to check that you are okay. Is there anything we can do to help? No pressure to reply quickly.`;
+      return `Hello ${memberFirst}, it is ${leaderFirst} from ${tribe}. We have missed you these past two weeks and wanted to check that you are okay. Is there anything we can do to help? No pressure to reply quickly.`;
     case "not_yet_twice":
-      return `Hello ${memberFirst}, it is ${leaderFirst} from ${circle}. I wanted to ask how your week has been and whether this week’s step feels too big. We can make it smaller together.`;
+      return `Hello ${memberFirst}, it is ${leaderFirst} from ${tribe}. I wanted to ask how your week has been and whether this week’s step feels too big. We can make it smaller together.`;
     case "low_belonging":
-      return `Hello ${memberFirst}, it is ${leaderFirst} from ${circle}. I would love to hear how you are finding the Tribe and what would make it feel more like home. Could we talk this week?`;
+      return `Hello ${memberFirst}, it is ${leaderFirst} from ${tribe}. I would love to hear how you are finding the tribe and what would make it feel more like home. Could we talk this week?`;
     default:
-      return `Hello ${memberFirst}, it is ${leaderFirst} from ${circle}. I was thinking of you and wanted to check how you are doing.`;
+      return `Hello ${memberFirst}, it is ${leaderFirst} from ${tribe}. I was thinking of you and wanted to check how you are doing.`;
   }
 }
 
@@ -166,4 +166,62 @@ export function tidyWill(value: string): string {
 /** “When I wake up, I will pray for ten minutes.” */
 export function stepSentence(when: string, will: string): string {
   return `When ${tidyWhen(when)}, I will ${tidyWill(will)}.`;
+}
+
+// --------------------------------------------------------------- the season engine
+
+export const ENERGY_LABELS = ["Heavy", "Low", "Steady", "Good", "Alive"] as const;
+
+export const CARE_LEVELS: { value: CareLevel; label: string; hint: string }[] = [
+  { value: "none", label: "None", hint: "Nothing to flag." },
+  { value: "practical", label: "Practical", hint: "A meal, a lift, help with a form or a job lead. Goes to your assistant." },
+  { value: "pastoral", label: "Pastoral", hint: "A conversation and prayer. Goes to your coach." },
+  { value: "urgent", label: "Urgent", hint: "Needs a person today. The Care Lead is alerted at once." },
+];
+
+export const CELEBRATION_KINDS: { value: Exclude<CelebrationKind, "answered_prayer">; label: string; placeholder: string }[] = [
+  { value: "new_baby", label: "New baby", placeholder: "A baby girl, Tuesday morning" },
+  { value: "anniversary", label: "Anniversary", placeholder: "Ten years of marriage" },
+  { value: "promotion", label: "Promotion or new job", placeholder: "Made a manager" },
+  { value: "milestone", label: "Milestone", placeholder: "Finished the first draft" },
+  { value: "other", label: "Something else", placeholder: "Tell us in a few words" },
+];
+
+export const CELEBRATION_LABELS: Record<CelebrationKind, string> = {
+  new_baby: "New baby",
+  anniversary: "Anniversary",
+  promotion: "Promotion",
+  milestone: "Milestone",
+  other: "Celebration",
+  answered_prayer: "Answered prayer",
+};
+
+export const TASK_LABELS: Record<CareTaskKind, { title: string; advice: string }> = {
+  practical: { title: "Practical need", advice: "Help in a real, small way: a meal, a lift, a form, a job lead. Then tell the leader it is done." },
+  pastoral: { title: "Pastoral need", advice: "Have a personal conversation and pray with them. A call is better than a message." },
+  urgent: { title: "Urgent need", advice: "A person should reach them today. Call them, or ask the leader to put you in touch." },
+  missed_three: { title: "Missed three meetings", advice: "Speak with the leader about how to reach them, and take it to the Care Lead if they cannot be reached." },
+  low_pulse: { title: "Low sense of belonging", advice: "Talk with the leader about how to include them more, and whether a personal conversation would help." },
+  coach_help: { title: "The leader asked for you", advice: "Call the leader this week. They asked for your help." },
+};
+
+export const THEME_NAMES: Record<TestimonyTheme, string> = {
+  healing: "Healing",
+  provision: "Provision",
+  breakthrough: "Breakthrough",
+  family: "Family",
+  salvation: "Salvation",
+  direction: "Direction",
+  peace: "Peace",
+  answered_prayer: "Answered prayer",
+  community: "Community",
+  growth: "Growth",
+};
+
+/** “in 3 days”, “today”, “1 day late” for a care task's deadline. */
+export function dueLine(daysLeft: number): string {
+  if (daysLeft === 0) return "Due today";
+  if (daysLeft === 1) return "Due tomorrow";
+  if (daysLeft > 1) return `Due in ${daysLeft} days`;
+  return `${-daysLeft} ${daysLeft === -1 ? "day" : "days"} late`;
 }

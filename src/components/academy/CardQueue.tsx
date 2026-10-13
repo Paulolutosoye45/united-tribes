@@ -20,10 +20,10 @@ export function CardQueue({ items }: { items: CardQueueItem[] }) {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="font-semibold leading-snug">{c.name ?? "Unnamed Tribe"}</h3>
+                  <h3 className="font-semibold leading-snug">{c.name ?? "Unnamed tribe"}</h3>
                   <p className="t-small text-soft">
                     {c.leader}
-                    {c.tribe ? ` · ${c.tribe}` : ""}
+                    {c.community ? ` · ${c.community}` : ""}
                     {c.track ? ` · ${c.track}` : ""}
                   </p>
                 </div>

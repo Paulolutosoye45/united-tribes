@@ -2,6 +2,9 @@
   "name": "united-tribes",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +14,11 @@
     "test": "npm run test:unit && npm run test:db",
     "test:unit": "vitest run",
     "test:db": "vitest run --config vitest.db.config.mts",
-    "bakeoff": "tsx scripts/bakeoff/run.ts"
+    "bakeoff": "tsx scripts/bakeoff/run.ts",
+    "standin": "tsx scripts/standin/run.ts",
+    "e2e": "bash e2e/run.sh",
+    "templates": "tsx scripts/templates.ts",
+    "reseal": "tsx --conditions=react-server scripts/reseal.ts"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
@@ -33,6 +40,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "pg": "^8.23.1",
+    "playwright-core": "1.56.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",

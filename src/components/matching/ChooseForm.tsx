@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { chooseCircleAction } from "@/app/(app)/circle/actions";
+import { chooseTribeAction } from "@/app/(app)/tribe/actions";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
-import type { ShownCircle } from "@/lib/matching/types";
+import type { ShownTribe } from "@/lib/matching/types";
 import { AGREEMENT_SENTENCE, COVENANT_PROMISES, LABELS, whenLine, whereLine } from "@/lib/matching/wording";
 import { SuccessPicture } from "./SuccessPicture";
 
 /** The last step: read the Success Picture and the Covenant, agree, and the seat is yours. */
-export function ChooseForm({ shown }: { shown: ShownCircle }) {
+export function ChooseForm({ shown }: { shown: ShownTribe }) {
   const router = useRouter();
-  const c = shown.circle;
+  const c = shown.tribe;
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,19 +21,19 @@ export function ChooseForm({ shown }: { shown: ShownCircle }) {
   async function join() {
     setBusy(true);
     setError(null);
-    const result = await chooseCircleAction(c.id, agreed);
+    const result = await chooseTribeAction(c.id, agreed);
     if (!result.ok) {
       setBusy(false);
       return setError(result.message);
     }
-    router.replace("/circle?joined=1");
+    router.replace("/tribe?joined=1");
   }
 
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
-        <Link href="/circle" className="press -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
-          ← Your Tribes
+        <Link href="/tribe" className="press -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
+          ← Your tribes
         </Link>
         <h1 className="t-title">Join {c.name}</h1>
         <p className="t-body measure text-soft">
@@ -46,7 +46,7 @@ export function ChooseForm({ shown }: { shown: ShownCircle }) {
           <h2 id="picture-heading" className="t-heading">
             The Success Picture
           </h2>
-          <p className="t-small text-soft">What this Tribe is working toward by week 12. In week 1 you will refine it together.</p>
+          <p className="t-small text-soft">What this tribe is working toward by week 12. In week 1 you will refine it together.</p>
         </div>
         <SuccessPicture god={c.god} others={c.others} life={c.life} />
       </section>
@@ -82,17 +82,17 @@ export function ChooseForm({ shown }: { shown: ShownCircle }) {
         {error ? (
           <p role="alert" className="rounded-[var(--radius-control)] bg-danger/10 px-4 py-3 text-[0.95rem] text-danger">
             {error}{" "}
-            <Link href="/circle" className="font-semibold underline underline-offset-4">
-              See your Tribes again
+            <Link href="/tribe" className="font-semibold underline underline-offset-4">
+              See your tribes again
             </Link>
           </p>
         ) : null}
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button type="submit" size="lg" loading={busy} disabled={!agreed} className="sm:px-10">
-            Join this Tribe
+            Join this tribe
           </Button>
-          <Link href="/circle" className="btn-quiet inline-flex h-14 items-center justify-center rounded-[var(--radius-control)] px-6 font-medium">
-            Back to my Tribes
+          <Link href="/tribe" className="btn-quiet inline-flex h-14 items-center justify-center rounded-[var(--radius-control)] px-6 font-medium">
+            Back to my tribes
           </Link>
         </div>
       </form>

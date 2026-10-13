@@ -29,7 +29,7 @@ export default function DesignPage() {
         <h1 className="t-display">Style guide</h1>
         <p className="t-body measure text-soft">
           Colours from the Covenant Nation crest, one typeface, and a quartered shield that carries the match score. All
-          people and Tribes on this page are invented.
+          people and tribes on this page are invented.
         </p>
       </header>
 
@@ -56,10 +56,10 @@ export default function DesignPage() {
       <section className="flex flex-col gap-6" aria-labelledby="type">
         <h2 id="type" className="t-heading">Type</h2>
         <p className="t-display">Find your people.</p>
-        <p className="t-title">Strong Tribes start with a shared goal</p>
-        <p className="t-heading">Your three best-fitting Tribes</p>
+        <p className="t-title">Strong tribes start with a shared goal</p>
+        <p className="t-heading">Your three best-fitting tribes</p>
         <p className="t-body measure">
-          Everyone in a Tribe is working toward the same goal for twelve weeks, so the conversation always has somewhere
+          Everyone in a tribe is working toward the same goal for twelve weeks, so the conversation always has somewhere
           to go.
         </p>
         <p className="t-small text-soft">Supporting detail sits here, at 14 pixels.</p>
@@ -74,7 +74,7 @@ export default function DesignPage() {
         </p>
         <div className="grid gap-5 lg:grid-cols-3">
           {SAMPLE_MATCHES.map((m, i) => (
-            <MatchCard key={m.circleName} data={m} rank={i + 1} onChoose={undefined} />
+            <MatchCard key={m.tribeName} data={m} rank={i + 1} onChoose={undefined} />
           ))}
         </div>
       </section>

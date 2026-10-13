@@ -23,7 +23,7 @@ export interface FollowUpRow {
   lastOutcome: CallOutcome | null;
   note: string | null;
   openedAt: string;
-  circle: string;
+  tribe: string;
   /** Who is making the call: the leader's first name, or the care team's. */
   caller: string;
   /** Shown on the care queue, where the leader is somebody else. */
@@ -65,7 +65,7 @@ export function FollowUpList({ rows, canAct = true, emptyText }: { rows: FollowU
               <p className="font-semibold leading-snug">{r.name}</p>
               <p className="t-small text-soft">
                 {FLAG_LABELS[r.kind]}
-                {r.leader ? ` · ${r.circle}, led by ${r.leader}` : ""}
+                {r.leader ? ` · ${r.tribe}, led by ${r.leader}` : ""}
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -82,7 +82,7 @@ export function FollowUpList({ rows, canAct = true, emptyText }: { rows: FollowU
               {r.whatsapp ? (
                 <>
                   <a
-                    href={whatsappLink(r.whatsapp, followUpMessage({ memberFirst: r.firstName, leaderFirst: r.caller, circle: r.circle, kind: r.kind }))}
+                    href={whatsappLink(r.whatsapp, followUpMessage({ memberFirst: r.firstName, leaderFirst: r.caller, tribe: r.tribe, kind: r.kind }))}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-solid inline-flex h-10 items-center justify-center rounded-[var(--radius-control)] px-4 text-[0.9rem] font-semibold"

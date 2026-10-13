@@ -4,12 +4,12 @@
  * Have a lawyer review the full text against the Nigeria Data Protection Act
  * before real members use it.
  */
-export const CONSENT_VERSION = "2026-10-v1";
+export const CONSENT_VERSION = "2026-12-v3";
 
 export const MATCHING_CONSENT =
-  "I agree that The Covenant Nation may use my answers, including my faith journey, to match me to a Tribe and to contact me about it.";
+  "I agree that The Covenant Nation may use my answers, including my faith journey, to match me to a tribe and to contact me about it.";
 
 export const AI_CONSENT =
-  "I agree that the part of my story I type for suggestions may be read by an AI service so it can suggest options. Contact details are removed first, and nothing else from my profile is shared.";
+  "I agree that what I write or say about my season may be read by an AI service so it can suggest options and draft a sentence for me. A voice note is turned into words and the recording is deleted straight away. Contact details are removed first, and my private notes and the rest of my profile stay out of it.";
 
-export const WHATSAPP_CONSENT = "You may message me on WhatsApp about my Tribe.";
+export const WHATSAPP_CONSENT = "You may message me on WhatsApp about my tribe.";

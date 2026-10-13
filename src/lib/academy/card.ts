@@ -1,17 +1,17 @@
 import { timesFor } from "./options";
-import type { CircleCard, CircleMode, CircleType } from "./types";
+import type { TribeCard, TribeMode, TribeType } from "./types";
 
-/** What a leader types on the Circle Card. Strings are empty, not null, so inputs stay controlled. */
+/** What a leader types on the Tribe Card. Strings are empty, not null, so inputs stay controlled. */
 export type CardValues = {
   name: string;
-  circle_type: CircleType;
+  tribe_type: TribeType;
   track: string;
-  tribe: string;
+  community: string;
   goal: string;
   story: string;
   meeting_day: number | null;
   meeting_time: string;
-  mode: CircleMode | "";
+  mode: TribeMode | "";
   zone: string;
   place_note: string;
   capacity: number;
@@ -27,12 +27,12 @@ export const LIMITS = {
   place: { max: 120 },
 } as const;
 
-export function valuesFromCard(card: CircleCard): CardValues {
+export function valuesFromCard(card: TribeCard): CardValues {
   return {
     name: card.name ?? "",
-    circle_type: card.circle_type,
+    tribe_type: card.tribe_type,
     track: card.track?.slug ?? "",
-    tribe: card.tribe?.slug ?? "",
+    community: card.community?.slug ?? "",
     goal: card.goal?.slug ?? "",
     story: card.story ?? "",
     meeting_day: card.meeting_day,
@@ -53,7 +53,7 @@ export function missingFields(v: CardValues): string[] {
   const len = (s: string) => s.trim().length;
   if (len(v.name) < LIMITS.name.min) out.push("name");
   if (!v.track) out.push("track");
-  if (!v.tribe) out.push("tribe");
+  if (!v.community) out.push("community");
   if (!v.goal) out.push("goal");
   if (len(v.story) < LIMITS.story.min) out.push("story");
   if (v.meeting_day === null || !timesFor(v.meeting_day).includes(v.meeting_time)) out.push("time");

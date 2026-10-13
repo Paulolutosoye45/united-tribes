@@ -19,7 +19,7 @@ const eligibility = section(Object.fromEntries(ELIGIBILITY_IDS.map((id) => [id, 
 
 const calling = section({
   track: slug,
-  tribe: slug,
+  community: slug,
   goal: slug,
   goalOther: z.string().max(160),
   goalRelation: z.enum(ids(GOAL_RELATIONS)),
@@ -47,7 +47,7 @@ export type LeaderAnswers = {
   eligibility: Partial<Record<(typeof ELIGIBILITY_IDS)[number], boolean>>;
   calling: {
     track?: string;
-    tribe?: string;
+    community?: string;
     goal?: string;
     goalOther?: string;
     goalRelation?: (typeof GOAL_RELATIONS)[number]["id"];
@@ -144,7 +144,7 @@ export function firstProblem(a: LeaderAnswers, referees: { 1?: RefereeInput; 2?:
   if (!normaliseWhatsapp(a.contact.whatsapp ?? "")) return { step: "contact", message: "Add a WhatsApp number so the panel can reach you." };
   const c = a.calling;
   if (!c.track) return { step: "track", message: "Choose your stage of life." };
-  if (!c.tribe) return { step: "tribe", message: "Choose your tribe." };
+  if (!c.community) return { step: "community", message: "Choose your community." };
   if (!c.goal && !hasWords(c.goalOther)) return { step: "goal", message: "Choose the Season Goal you could lead." };
   if (!c.goalRelation) return { step: "goal", message: "Say whether you have reached this goal or are working on it." };
   if (!hasText(c.goalStory)) return { step: "goal-story", message: "Tell your story in a few sentences." };

@@ -5,6 +5,7 @@ import { ModuleGrid } from "@/components/academy/ModuleGrid";
 import { PracticeCard } from "@/components/academy/PracticeCard";
 import { TrainingHero } from "@/components/academy/TrainingHero";
 import { Workshops } from "@/components/academy/Workshops";
+import { loadChurchSettings } from "@/lib/admin/server";
 import { requireRole } from "@/lib/auth/session";
 import { loadMyAcademy } from "@/lib/academy/server";
 import { createClient } from "@/lib/supabase/server";
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "Leader Academy" };
 export default async function AcademyPage() {
   await requireRole(["leader", "assistant_leader"], "/lead/academy");
   const supabase = await createClient();
-  const my = await loadMyAcademy(supabase);
+  const [my, words] = await Promise.all([loadMyAcademy(supabase), loadChurchSettings(supabase)]);
   if (!my) {
     return (
       <div className="flex flex-col gap-4">
@@ -27,9 +28,30 @@ export default async function AcademyPage() {
   return (
     <div className="flex flex-col gap-8">
       <Link href="/lead" className="press -mb-4 -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
-        ← Lead a Tribe
+        ← Lead a tribe
       </Link>
       <TrainingHero my={my} />
+      {words?.vision || words?.mission ? (
+        <section aria-labelledby="church-words" className="card flex flex-col gap-4 p-5 sm:p-6">
+          <h2 id="church-words" className="t-heading">
+            In the church’s own words
+          </h2>
+          <dl className="grid gap-5 sm:grid-cols-2">
+            {words.vision ? (
+              <div className="flex flex-col gap-1">
+                <dt className="t-small font-semibold text-soft">Vision</dt>
+                <dd className="t-body measure whitespace-pre-line">{words.vision}</dd>
+              </div>
+            ) : null}
+            {words.mission ? (
+              <div className="flex flex-col gap-1">
+                <dt className="t-small font-semibold text-soft">Mission</dt>
+                <dd className="t-body measure whitespace-pre-line">{words.mission}</dd>
+              </div>
+            ) : null}
+          </dl>
+        </section>
+      ) : null}
       <div className="grid gap-8 lg:grid-cols-[1fr_1.15fr] lg:items-start">
         <Checklist my={my} />
         <PracticeCard my={my} />

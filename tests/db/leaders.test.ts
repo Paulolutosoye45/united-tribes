@@ -32,7 +32,7 @@ function validAnswers(overrides: Record<string, unknown> = {}) {
     eligibility: ELIGIBLE,
     calling: {
       track: "builders",
-      tribe: "professionals",
+      community: "professionals",
       goal: "step-into-a-leadership-role",
       goalRelation: "pursuing",
       goalStory: "I have been stepping into leadership at work this year and I am still learning how.",
@@ -430,7 +430,7 @@ describe("the review panel", () => {
     const view = (await db.asUser(reviewer.id, (q) => q("select public.review_application($1) as r", [appId]))).rows[0].r;
     expect(view.answers.calling.goalStory).toContain("stepping into leadership");
     expect(view.answers.eligibility).toBeUndefined();
-    expect(view.tribe_name).toBe("Professionals");
+    expect(view.community_name).toBe("Professionals");
     expect(view.goal_title).toBe("Step into a leadership role");
     expect(view.references[0]).toMatchObject({ name: "Pastor Ife", answered: true, reliability: 4, concern: true });
     // Only decision-makers see the combined score

@@ -1,0 +1,10 @@
+node_modules
+.next
+.e2e
+.git
+.github
+.env*
+!.env.example
+*.tsbuildinfo
+coverage
+.tmp-pg

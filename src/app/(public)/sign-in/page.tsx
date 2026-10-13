@@ -7,11 +7,11 @@ import { getSupabaseEnv, whatsappSignInEnabled } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-type SearchParams = Promise<{ next?: string; error?: string }>;
+type SearchParams = Promise<{ next?: string; error?: string; ended?: string }>;
 
 const PROMISES = [
   "Tell us your season in about five minutes",
-  "See your three best-fit circles, each with its own score",
+  "See your three best-fit tribes, each with its own score",
   "Grow with up to eleven others for twelve weeks",
 ];
 
@@ -28,7 +28,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
       <section className="night safe-top flex flex-col justify-between gap-12 px-6 pb-16 [--safe-pt:2.5rem] sm:px-12 lg:min-h-dvh lg:px-16 lg:pb-16 lg:[--safe-pt:3.5rem]">
         <div
           aria-hidden="true"
-          className="glow-breathe pointer-events-none absolute -right-24 -top-24 -z-10 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle,rgb(244_196_67/0.28),rgb(232_104_56/0.18)_45%,transparent_70%)] blur-2xl"
+          className="glow-breathe pointer-events-none absolute -right-24 -top-24 -z-10 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(tribe,rgb(244_196_67/0.28),rgb(232_104_56/0.18)_45%,transparent_70%)] blur-2xl"
         />
 
         <div className="flex items-center justify-between">
@@ -45,7 +45,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
             <span className="text-gold">Grow together.</span>
           </h1>
           <p className="t-body max-w-[38ch] text-white/75 rise-in" style={{ animationDelay: "120ms" }}>
-            Small Tribes of up to twelve, built around the season you are in and the goal you are after.
+            Small tribes of up to twelve, built around the season you are in and the goal you are after.
           </p>
 
           <ul className="stagger mt-2 hidden flex-col gap-3 lg:flex">
@@ -62,14 +62,19 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
       </section>
 
       <section className="relative -mt-8 flex flex-col justify-between gap-10 rounded-t-[var(--radius-sheet)] bg-page px-6 pb-8 pt-9 shadow-[0_-24px_48px_-24px_rgb(0_0_0/0.5)] sm:px-12 lg:mt-0 lg:min-h-dvh lg:justify-center lg:rounded-none lg:px-16 lg:shadow-none">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto flex w-full max-w-md flex-col gap-5">
+          {params.ended === "1" ? (
+            <p role="status" className="rounded-[var(--radius-control)] bg-gold/25 px-4 py-3 font-medium">
+              That account is no longer here, so you have been signed out. To use United Tribes again, sign in below and start afresh.
+            </p>
+          ) : null}
           {getSupabaseEnv() ? <SignInPanel next={next} initialError={linkError} whatsapp={whatsappSignInEnabled()} /> : <SetupNotice />}
         </div>
 
         <footer className="mx-auto flex w-full max-w-md items-center gap-3 text-soft">
           <Image src="/brand/tcn-logo.png" alt="" width={44} height={44} className="h-11 w-11 shrink-0" />
           <p className="t-small">
-            A ministry of The Covenant Nation. We use your email or WhatsApp number only to sign you in and to reach you about your Tribe.
+            A ministry of The Covenant Nation. We use your email or WhatsApp number only to sign you in and to reach you about your tribe.
           </p>
         </footer>
       </section>

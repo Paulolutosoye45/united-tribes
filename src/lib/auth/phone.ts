@@ -36,6 +36,9 @@ export function whatsappErrorMessage(error: AuthLikeError): string {
   const code = error?.code ?? "";
   const message = (error?.message ?? "").toLowerCase();
 
+  if (code === "captcha_failed" || message.includes("captcha")) {
+    return "We couldn't confirm you are a person. Reload the page and try again.";
+  }
   if (code === "otp_expired" || message.includes("expired")) {
     return "That code isn't right or has expired. Check it, or send a new code.";
   }

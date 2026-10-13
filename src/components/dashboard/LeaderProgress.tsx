@@ -2,12 +2,12 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { buttonClasses } from "@/components/ui/Button";
 import { plural } from "@/lib/dates";
-import type { CircleProgress } from "@/lib/dashboard/types";
+import type { TribeProgress } from "@/lib/dashboard/types";
 import { VERDICTS, pct, signed } from "@/lib/dashboard/wording";
 import { WeekBars } from "./WeekBars";
 
-/** A leader's view of their own circle's season: who came, who stepped, and how the circle is doing as a whole. */
-export function LeaderProgress({ p, weekHref }: { p: CircleProgress; weekHref: string }) {
+/** A leader's view of their own tribe's season: who came, who stepped, and how the tribe is doing as a whole. */
+export function LeaderProgress({ p, weekHref }: { p: TribeProgress; weekHref: string }) {
   const s = p.season;
   const verdict = p.verdict ? VERDICTS[p.verdict] : null;
   const bars = p.weeks.map((w) => ({
@@ -35,10 +35,10 @@ export function LeaderProgress({ p, weekHref }: { p: CircleProgress; weekHref: s
     <div className="flex flex-col gap-8">
       <header className="night flex flex-col gap-3 rounded-[var(--radius-card)] p-6 sm:p-8">
         <p className="t-small text-white/70">
-          {p.circle.name} · {s.name}
+          {p.tribe.name} · {s.name}
           {s.current_week ? ` · week ${s.current_week} of ${s.weeks}` : p.state === "complete" ? " · season ended" : " · starts soon"}
         </p>
-        <h1 className="t-title">Your Tribe’s season</h1>
+        <h1 className="t-title">Your tribe’s season</h1>
         {verdict ? (
           <div className="flex flex-wrap items-center gap-3">
             <Badge tone={verdict.tone}>{verdict.text}</Badge>
@@ -51,8 +51,8 @@ export function LeaderProgress({ p, weekHref }: { p: CircleProgress; weekHref: s
         ) : (
           <p className="t-small max-w-prose text-white/80">
             {p.members < p.targets.min_cell
-              ? `With ${plural(p.members, "member")}, the Tribe-wide thriving figure is kept private: it could give away one person’s answer. You still see who came and who took their step.`
-              : "The Tribe-wide figure appears after three weeks."}
+              ? `With ${plural(p.members, "member")}, the tribe-wide thriving figure is kept private: it could give away one person’s answer. You still see who came and who took their step.`
+              : "The tribe-wide figure appears after three weeks."}
           </p>
         )}
       </header>
@@ -75,7 +75,7 @@ export function LeaderProgress({ p, weekHref }: { p: CircleProgress; weekHref: s
             Your people
           </h2>
           <p className="t-small text-soft">
-            {s.meetings_needed} of {s.weeks} meetings is the bar. “On pace” looks at meetings only. How someone feels about the Tribe stays private: if a member says they do not belong, they appear on your call list.
+            {s.meetings_needed} of {s.weeks} meetings is the bar. “On pace” looks at meetings only. How someone feels about the tribe stays private: if a member says they do not belong, they appear on your call list.
           </p>
         </div>
         {p.member_rows.length === 0 ? (

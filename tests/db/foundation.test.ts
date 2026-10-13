@@ -25,7 +25,7 @@ describe("reference data", () => {
   it("loads the blueprint catalogue", async () => {
     const q = (sql: string) => db.admin.query(sql).then((r) => r.rows);
 
-    expect(await q("select count(*)::int as n from public.tribes")).toEqual([{ n: 11 }]);
+    expect(await q("select count(*)::int as n from public.communities")).toEqual([{ n: 11 }]);
     expect(await q("select count(*)::int as n from public.goal_families")).toEqual([{ n: 6 }]);
     expect(await q("select count(*)::int as n from public.season_goals")).toEqual([{ n: 23 }]);
     expect(await q("select count(*)::int as n from public.age_ranges")).toEqual([{ n: 7 }]);
@@ -36,10 +36,10 @@ describe("reference data", () => {
     expect(tracks.find((t) => t.slug === "teens")?.active).toBe(false);
   });
 
-  it("gives every tribe at least two goals, each in a family", async () => {
+  it("gives every community at least two goals, each in a family", async () => {
     const { rows } = await db.admin.query(`
       select t.slug, count(g.id)::int as goals
-      from public.tribes t left join public.season_goals g on g.tribe_id = t.id
+      from public.communities t left join public.season_goals g on g.community_id = t.id
       group by t.slug order by t.slug`);
     expect(rows).toHaveLength(11);
     for (const row of rows) expect(row.goals, row.slug).toBeGreaterThanOrEqual(2);
@@ -106,7 +106,7 @@ describe("sign-up", () => {
 
 describe("what a visitor who is not signed in can do", () => {
   it("can read nothing and call nothing", async () => {
-    for (const table of ["people", "person_roles", "invitations", "event_log", "tribes", "seasons"]) {
+    for (const table of ["people", "person_roles", "invitations", "event_log", "communities", "seasons"]) {
       await expectCode(db.asAnon((q) => q(`select * from public.${table}`)), "42501");
     }
     await expectCode(db.asAnon((q) => q("select public.my_roles()")), "42501");
@@ -130,14 +130,14 @@ describe("what an ordinary member can do", () => {
 
   it("can read the catalogues but not change them", async () => {
     const me = await person();
-    const { rows } = await db.asUser(me.id, (q) => q("select count(*)::int as n from public.tribes"));
+    const { rows } = await db.asUser(me.id, (q) => q("select count(*)::int as n from public.communities"));
     expect(rows[0].n).toBe(11);
 
     await expectCode(
-      db.asUser(me.id, (q) => q("insert into public.tribes (slug, name) values ('sneaky', 'Sneaky')")),
+      db.asUser(me.id, (q) => q("insert into public.communities (slug, name) values ('sneaky', 'Sneaky')")),
       "42501",
     );
-    const update = await db.asUser(me.id, (q) => q("update public.tribes set name = 'Hacked'"));
+    const update = await db.asUser(me.id, (q) => q("update public.communities set name = 'Hacked'"));
     expect(update.rowCount).toBe(0);
     const del = await db.asUser(me.id, (q) => q("delete from public.season_goals"));
     expect(del.rowCount).toBe(0);
@@ -547,7 +547,7 @@ describe("locked-down defaults", () => {
     await expectCode(db.asAnon((q) => q("select * from public.future_table")), "42501");
   });
 
-  it("exposes only the functions the app calls, and to visitors only the referee link", async () => {
+  it("exposes only the functions the app calls, and to visitors only the referee and guardian links and the sending service", async () => {
     const allowed = new Set([
       "has_role",
       "has_any_role",
@@ -579,7 +579,7 @@ describe("locked-down defaults", () => {
       "leader_stats",
       "get_reference_request",
       "submit_reference",
-      // Phase 3: the Leader Academy and Circle Cards
+      // Phase 3: the Leader Academy and Tribe Cards
       "my_academy",
       "academy_module",
       "submit_quiz",
@@ -592,14 +592,14 @@ describe("locked-down defaults", () => {
       "academy_sessions_admin",
       "record_practice",
       "academy_cohort",
-      "start_circle_card",
-      "my_circle",
-      "save_circle_card",
-      "submit_circle_card",
-      "circle_queue",
+      "start_tribe_card",
+      "my_tribe",
+      "save_tribe_card",
+      "submit_tribe_card",
+      "tribe_queue",
       "suggest_assistants",
-      "review_circle",
-      "decide_circle_card",
+      "review_tribe",
+      "decide_tribe_card",
       "pair_assistant",
       "unpair_assistant",
       "assign_coach",
@@ -608,10 +608,10 @@ describe("locked-down defaults", () => {
       "my_match",
       "match_me",
       "join_starter_list",
-      "choose_circle",
+      "choose_tribe",
       "release_my_seat",
-      "circle_roster",
-      "save_circle_onboarding",
+      "tribe_roster",
+      "save_tribe_onboarding",
       "mark_member_called",
       "match_stats",
       // Phase 5: the weekly rhythm
@@ -621,11 +621,11 @@ describe("locked-down defaults", () => {
       "save_pulse",
       "submit_testimony",
       "withdraw_testimony",
-      "circle_testimonies",
+      "tribe_testimonies",
       "review_testimony",
       "pending_testimonies",
-      "circle_week",
-      "save_circle_log",
+      "tribe_week",
+      "save_tribe_log",
       "record_call",
       "raise_concern",
       "refine_success_picture",
@@ -633,12 +633,163 @@ describe("locked-down defaults", () => {
       "care_queue",
       // Phase 6: dashboards and KPIs
       "dashboard",
-      "circle_progress",
+      "tribe_progress",
       "my_progress",
+      // Stage 2: messaging
+      "my_contact",
+      "save_contact",
+      "save_checkin",
+      "send_referee_link",
+      "create_worker_token",
+      "list_worker_tokens",
+      "revoke_worker_token",
+      "message_log",
+      "message_stats",
+      "retry_message",
+      "save_tribe_meeting",
+      // Stage 3: the season engine
+      "tribe_log_extras",
+      "answer_prayer",
+      "remove_prayer",
+      "my_care_tasks",
+      "complete_care_task",
+      "reassign_care_task",
+      "care_task_stats",
+      "care_task_options",
+      "testimony_wall",
+      "forward_testimony",
+      "week_layer",
+      // Stage 4: portraits
+      "set_my_photo",
+      "remove_my_photo",
+      "my_photo_info",
+      "photo_of",
+      // Stage 5: insight
+      "set_kpi_target",
+      "reset_kpi_target",
+      "kpi_target_list",
+      "my_word_days",
+      "save_word_days",
+      "assign_community_champion",
+      "remove_community_champion",
+      "community_champion_list",
+      "insight",
+      "community_dashboard",
+      "list_reports",
+      "get_report",
+      "generate_report",
+      "set_report_summary",
+      "bi_refresh",
+      "bi_status",
+      // Stage 6: the centres
+      "my_centres",
+      "switch_centre",
+      "create_centre",
+      // Stage 6: learning and scaling
+      "retrain_preview",
+      "list_models",
+      "retrain_model",
+      "activate_model",
+      "discard_model",
+      "my_swap",
+      "request_swap",
+      "start_swap_for",
+      "cancel_swap",
+      "swap_queue",
+      "swap_members",
+      "offer_swap",
+      "decline_swap",
+      "answer_swap",
+      "multiplication_board",
+      "plan_multiplication",
+      "clear_multiplication_plan",
+      "teen_track_open",
+      "my_guardian",
+      "request_guardian_consent",
+      "guardian_overview",
+      "verify_guardian",
+      "reopen_guardian_request",
+      // the office's own controls (Stage 7)
+      "church_settings",
+      "save_church_settings",
+      "admin_seasons",
+      "save_season",
+      "set_season_status",
+      "admin_catalogue",
+      "save_community",
+      "save_goal_family",
+      "save_goal",
+      "set_goal_active",
+      "set_track_active",
+      "goal_write_ins",
+      "adopt_write_in",
+      "dismiss_write_in",
+      "admin_guides",
+      "admin_guide",
+      "save_week_guide",
+      "mark_guide_reviewed",
+      "admin_layers",
+      "save_community_prompt",
+      "save_goal_idea",
+      "find_people",
+      "platform_status",
+      "launch_checklist",
+      // a member's own copy of their data, and asking for erasure; the office answers (Stage 8)
+      "export_my_data",
+      "my_erasure_request",
+      "request_erasure",
+      "withdraw_erasure_request",
+      "erasure_queue",
+      "record_erasure_request",
+      "decline_erasure",
+      "erase_person",
+      // the platform owner: every one of these refuses anyone who is not the owner and unlocked (Stage 9)
+      "god_state",
+      "god_unlock",
+      "god_lock",
+      "god_set_phrase",
+      "god_overview",
+      "god_feed",
+      "god_people",
+      "god_person",
+      "god_tribes",
+      "god_tribe",
+      "god_log_list",
+      // a parent or guardian answers by private link (the visitors below)
+      "get_guardian_request",
+      "answer_guardian_request",
+      // The sending service has no account: its token is the credential (the visitors below)
+      "worker_claim",
+      "worker_report",
+      "worker_provider_event",
+      "worker_reply_info",
+      "worker_checkin_reply",
+      "worker_tick",
+      "worker_status",
+      "worker_opt_out",
+      "worker_pending_summaries",
+      "worker_set_summary",
+      "ping",
     ]);
-    // The only two things someone who is not signed in may do: open a referee
-    // link and answer it. Each needs the secret in the link.
-    const visitors = new Set(["get_reference_request", "submit_reference"]);
+    // The only things someone who is not signed in may do: open a referee or guardian link and
+    // answer it, and the sending service's calls. Each needs a secret: the link's, or the sending token.
+    const visitors = new Set([
+      "get_reference_request",
+      "submit_reference",
+      "get_guardian_request",
+      "answer_guardian_request",
+      "worker_claim",
+      "worker_report",
+      "worker_provider_event",
+      "worker_reply_info",
+      "worker_checkin_reply",
+      "worker_tick",
+      "worker_status",
+      "worker_opt_out",
+      "worker_pending_summaries",
+      "worker_set_summary",
+      "ping",
+    ]);
     const { rows } = await db.admin.query(`
       select p.proname,
              has_function_privilege('anon', p.oid, 'execute') as anon,

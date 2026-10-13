@@ -8,7 +8,7 @@ export const STEP_IDS = [
   "eligibility",
   "contact",
   "track",
-  "tribe",
+  "community",
   "goal",
   "goal-story",
   "why",
@@ -27,7 +27,7 @@ export type StepId = (typeof STEP_IDS)[number];
 /** The four quarters of the shield, as on the member form. */
 export const SECTIONS = [
   { id: "start", label: "Getting started", steps: ["eligibility", "contact"] },
-  { id: "calling", label: "Your calling", steps: ["track", "tribe", "goal", "goal-story", "why", "walked", "walk", "obstacles"] },
+  { id: "calling", label: "Your calling", steps: ["track", "community", "goal", "goal-story", "why", "walked", "walk", "obstacles"] },
   { id: "judgement", label: "Your judgement", steps: [...SCENARIO_IDS, "style", "lead-best"] },
   { id: "people", label: "People who know you", steps: ["ref1", "ref2", "review"] },
 ] as const satisfies readonly { id: string; label: string; steps: readonly StepId[] }[];
@@ -68,7 +68,7 @@ const SECONDS: Record<StepId, number> = {
   eligibility: 40,
   contact: 20,
   track: 10,
-  tribe: 15,
+  community: 15,
   goal: 25,
   "goal-story": 90,
   why: 60,
@@ -114,8 +114,8 @@ export function canContinue(step: StepId, a: LeaderAnswers, referees: Referees, 
       return normaliseWhatsapp(a.contact.whatsapp ?? "") !== null;
     case "track":
       return Boolean(c.track);
-    case "tribe":
-      return Boolean(c.tribe);
+    case "community":
+      return Boolean(c.community);
     case "goal":
       return Boolean(c.goal || hasWords(c.goalOther)) && Boolean(c.goalRelation);
     case "goal-story":

@@ -3,8 +3,8 @@ import type { MeterPart } from "@/components/brand/ShieldMeter";
 import { Button } from "./Button";
 
 export type MatchCardData = {
-  circleName: string;
-  tribe: string;
+  tribeName: string;
+  community: string;
   track: string;
   goal: string;
   leaderFirstName: string;
@@ -35,14 +35,14 @@ export function MatchCard({
   return (
     <article
       className="rounded-[var(--radius-sheet)] border border-line bg-page p-5 sm:p-6"
-      aria-label={`${data.circleName}, ${data.degree}% compatible`}
+      aria-label={`${data.tribeName}, ${data.degree}% compatible`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="t-small text-soft">
-            {rank ? `Match ${rank}` : data.tribe} · {data.track}
+            {rank ? `Match ${rank}` : data.community} · {data.track}
           </p>
-          <h3 className="t-heading mt-1">{data.circleName}</h3>
+          <h3 className="t-heading mt-1">{data.tribeName}</h3>
           <p className="t-small mt-1 text-soft">Season goal: {data.goal}</p>
         </div>
         <ShieldMeter parts={data.parts} size={64} />
@@ -86,7 +86,7 @@ export function MatchCard({
 
       {onChoose ? (
         <Button className="mt-5" fullWidth onClick={onChoose}>
-          Join this Tribe
+          Join this tribe
         </Button>
       ) : null}
     </article>

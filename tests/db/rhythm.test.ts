@@ -5,7 +5,7 @@ let db: TestDb;
 let seasonId: string;
 let centreId: string;
 let trackId: string;
-let tribeId: string;
+let communityId: string;
 let goalId: string;
 let n = 0;
 
@@ -15,7 +15,7 @@ beforeAll(async () => {
   seasonId = season.id;
   centreId = season.centre_id;
   trackId = (await db.admin.query("select id from public.tracks where slug = 'builders'")).rows[0].id;
-  tribeId = (await db.admin.query("select id from public.tribes where slug = 'professionals'")).rows[0].id;
+  communityId = (await db.admin.query("select id from public.communities where slug = 'professionals'")).rows[0].id;
   goalId = (await db.admin.query("select id from public.season_goals where slug = 'step-into-a-leadership-role'")).rows[0].id;
 });
 
@@ -37,26 +37,26 @@ async function person(name: string) {
   return u;
 }
 
-async function makeCircle(o: { season?: string; coach?: string; assistant?: string; name?: string } = {}) {
+async function makeTribe(o: { season?: string; coach?: string; assistant?: string; name?: string } = {}) {
   const leader = await person(`Leader${++n}`);
   await db.grant(leader.id, "leader");
   const { rows } = await db.admin.query(
-    `insert into public.circles (season_id, leader_id, assistant_id, coach_id, status, name, track_id, tribe_id, season_goal_id, fixed, circle_type, story,
+    `insert into public.tribes (season_id, leader_id, assistant_id, coach_id, status, name, track_id, community_id, season_goal_id, fixed, tribe_type, story,
         meeting_day, meeting_time, slot, meeting_mode, zone, place_note, capacity, loving_god, loving_others, loving_life, published_at)
      values ($1, $2, $3, $4, 'approved', $5, $6, $7, $8, '{}', 'mixed', 'My story.', 3, '20:00', 'weeknight-evening', 'online', 'mainland',
              'Online', 12, 'Pray daily.', 'Call each other.', 'Take one step a week.', now())
      returning id`,
-    [o.season ?? seasonId, leader.id, o.assistant ?? null, o.coach ?? null, o.name ?? `Circle ${n}`, trackId, tribeId, goalId],
+    [o.season ?? seasonId, leader.id, o.assistant ?? null, o.coach ?? null, o.name ?? `Tribe ${n}`, trackId, communityId, goalId],
   );
-  return { leader, circle: rows[0].id as string };
+  return { leader, tribe: rows[0].id as string };
 }
 
-async function join(circle: string, name: string, season = seasonId) {
+async function join(tribe: string, name: string, season = seasonId) {
   const u = await person(name);
   await db.admin.query(
-    `insert into public.circle_members (circle_id, person_id, season_id, chosen_rank, degree, agreement_version, covenant, first_meeting_by)
+    `insert into public.tribe_members (tribe_id, person_id, season_id, chosen_rank, degree, agreement_version, covenant, first_meeting_by)
      values ($1, $2, $3, 1, 90, 'test', '{}'::jsonb, current_date + 14)`,
-    [circle, u.id, season],
+    [tribe, u.id, season],
   );
   return u;
 }
@@ -66,12 +66,12 @@ const call = async (userId: string, sql: string, params: unknown[] = []) =>
 const week = (userId: string) => call(userId, "select public.my_week() as r");
 const kinds = (w: { nudges: { kind: string }[] }) => w.nudges.map((x) => x.kind);
 type Att = [string, "present" | "absent" | "excused"];
-const log = (leaderId: string, circle: string, wk: number, held: boolean, att: Att[], highlight: string | null = null) =>
-  call(leaderId, "select public.save_circle_log($1, $2, $3, $4, $5::jsonb) as r", [
-    circle, wk, held, highlight, JSON.stringify(att.map(([person, status]) => ({ person, status }))),
+const log = (leaderId: string, tribe: string, wk: number, held: boolean, att: Att[], highlight: string | null = null) =>
+  call(leaderId, "select public.save_tribe_log($1, $2, $3, $4, $5::jsonb) as r", [
+    tribe, wk, held, highlight, JSON.stringify(att.map(([person, status]) => ({ person, status }))),
   ]);
-const cweek = (userId: string, circle: string, wk: number | null = null) => call(userId, "select public.circle_week($1, $2) as r", [circle, wk]);
-const flags = async (circle: string) => (await db.admin.query("select * from public.care_flags where circle_id = $1 order by opened_at", [circle])).rows;
+const cweek = (userId: string, tribe: string, wk: number | null = null) => call(userId, "select public.tribe_week($1, $2) as r", [tribe, wk]);
+const flags = async (tribe: string) => (await db.admin.query("select * from public.care_flags where tribe_id = $1 order by opened_at", [tribe])).rows;
 
 // ---------------------------------------------------------------------------
 
@@ -105,7 +105,7 @@ describe("the guides and the calendar", () => {
 
   it("keeps the guides and every table out of the app's reach", async () => {
     const u = await person("Nobody");
-    for (const table of ["week_guides", "week_steps", "circle_logs", "circle_attendance", "pulses", "care_flags", "testimonies"]) {
+    for (const table of ["week_guides", "week_steps", "tribe_logs", "tribe_attendance", "pulses", "care_flags", "testimonies"]) {
       await expectCode(db.asUser(u.id, (q) => q(`select * from public.${table}`)), "42501");
       await expectCode(db.asAnon((q) => q(`select * from public.${table}`)), "42501");
     }
@@ -115,25 +115,25 @@ describe("the guides and the calendar", () => {
 });
 
 describe("a member's week", () => {
-  it("says nothing is placed for someone without a circle", async () => {
+  it("says nothing is placed for someone without a tribe", async () => {
     const u = await person("Alone");
     expect((await week(u.id)).placed).toBe(false);
   });
 
   it("counts down before the season, shows no guide yet and offers no steps", async () => {
     await db.admin.query("update public.seasons set starts_on = public.today_lagos() + 9, ends_on = public.today_lagos() + 92 where id = $1", [seasonId]);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     const w = await week(ada.id);
     expect(w).toMatchObject({ placed: true, state: "before", days_to_start: 9, week: null, guide: null });
-    expect(w.circle.leader_first_name).toMatch(/^Leader/);
+    expect(w.tribe.leader_first_name).toMatch(/^Leader/);
     await expectCode(call(ada.id, "select public.save_week_step(1, 'Monday', 'pray') as r"), "22023");
   });
 
   it("shows this week's guide, the draft Success Picture and a nudge to set a step", async () => {
     await at(3, 2);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     const w = await week(ada.id);
     expect(w).toMatchObject({ state: "running", week: 3, weeks: 12 });
     expect(w.guide.title).toBe("Pray with expectation, not performance");
@@ -144,15 +144,15 @@ describe("a member's week", () => {
     expect(w.nudges).toEqual([{ kind: "set_step", week: 3 }]);
     expect(w.rows).toHaveLength(12);
     expect(w.rows[2].state).toBe("now");
-    expect(w.circle.meeting_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(w.tribe.meeting_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it("lets a member read the guide and step of an earlier week, never a later one", async () => {
     await at(4, 1);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await db.admin.query(
-      "insert into public.week_steps (person_id, circle_id, week, when_text, will_text, outcome) values ($1, $2, 2, 'When I wake', 'I will pray', 'done')", [ada.id, circle]);
+      "insert into public.week_steps (person_id, tribe_id, week, when_text, will_text, outcome) values ($1, $2, 2, 'When I wake', 'I will pray', 'done')", [ada.id, tribe]);
     const back = await call(ada.id, "select public.my_week(2) as r");
     expect(back).toMatchObject({ week: 4, viewing: 2 });
     expect(back.guide.title).toBe("Hear Him every day");
@@ -164,19 +164,19 @@ describe("a member's week", () => {
 
   it("works out the meeting day from the season start", async () => {
     await at(2, 0);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     const w = await week(ada.id);
     const start = (await db.admin.query("select starts_on::text as d, extract(dow from starts_on)::int as dow from public.seasons where id = $1", [seasonId])).rows[0];
     const offset = (3 - start.dow + 7) % 7;
     const expected = (await db.admin.query("select (($1::date) + 7 + $2::int)::text as d", [start.d, offset])).rows[0].d;
-    expect(w.circle.meeting_date).toBe(expected);
+    expect(w.tribe.meeting_date).toBe(expected);
   });
 
   it("is complete after the last week and then asks for a testimony", async () => {
     await db.admin.query("update public.seasons set starts_on = public.today_lagos() - 120, ends_on = public.today_lagos() - 37 where id = $1", [seasonId]);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     const w = await week(ada.id);
     expect(w.state).toBe("complete");
     expect(w.guide).toBeNull();
@@ -185,10 +185,10 @@ describe("a member's week", () => {
 
   it("keeps the last check-in and the last pulse open for a few days after the final week", async () => {
     await db.admin.query("update public.seasons set starts_on = public.today_lagos() - 85, ends_on = public.today_lagos() - 2 where id = $1", [seasonId]);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await db.admin.query(
-      "insert into public.week_steps (person_id, circle_id, week, when_text, will_text) values ($1, $2, 12, 'When I wake', 'I will pray')", [ada.id, circle]);
+      "insert into public.week_steps (person_id, tribe_id, week, when_text, will_text) values ($1, $2, 12, 'When I wake', 'I will pray')", [ada.id, tribe]);
     const w = await week(ada.id);
     expect(w.state).toBe("complete");
     expect(w.nudges).toEqual(expect.arrayContaining([{ kind: "check_in", week: 12 }, { kind: "pulse", week: 12 }, { kind: "testimony", week: 12 }]));
@@ -201,8 +201,8 @@ describe("a member's week", () => {
 describe("the step and the Friday check-in", () => {
   it("saves a step for the current week only, and can be rewritten before the check-in", async () => {
     await at(2, 1);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await call(ada.id, "select public.save_week_step(2, 'When I wake up', 'I will pray for ten minutes') as r");
     await call(ada.id, "select public.save_week_step(2, 'When I get into the car', 'I will read a psalm') as r");
     const w = await week(ada.id);
@@ -215,8 +215,8 @@ describe("the step and the Friday check-in", () => {
 
   it("refuses empty or over-long steps", async () => {
     await at(2, 1);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await expectCode(call(ada.id, "select public.save_week_step(2, '', 'I will pray') as r"), "22023");
     await expectCode(call(ada.id, "select public.save_week_step(2, 'When I wake', '  ') as r"), "22023");
     await expectCode(call(ada.id, "select public.save_week_step(2, $1, 'I will pray') as r", ["x".repeat(141)]), "22023");
@@ -224,8 +224,8 @@ describe("the step and the Friday check-in", () => {
 
   it("opens the check-in on Friday, offers it as a nudge, and closes it on the Tuesday after", async () => {
     await at(2, 2);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await call(ada.id, "select public.save_week_step(2, 'When I wake', 'I will pray') as r");
     await expectCode(call(ada.id, "select public.save_checkin(2, 'done', null) as r"), "22023");
     expect((await week(ada.id)).check_in.week).toBeNull();
@@ -246,8 +246,8 @@ describe("the step and the Friday check-in", () => {
 
   it("needs a step to check in on, and a real outcome", async () => {
     await at(2, 5);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await expectCode(call(ada.id, "select public.save_checkin(2, 'done', null) as r"), "22023");
     await call(ada.id, "select public.save_week_step(2, 'When I wake', 'I will pray') as r");
     await expectCode(call(ada.id, "select public.save_checkin(2, 'great', null) as r"), "22023");
@@ -255,9 +255,9 @@ describe("the step and the Friday check-in", () => {
   });
 
   it("opens a follow-up after two 'not yet' weeks in a row, and not after one or after a 'done' in between", async () => {
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
-    const bisi = await join(circle, "Bisi");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
+    const bisi = await join(tribe, "Bisi");
     for (const [wk, who, outcome] of [
       [1, ada, "not_yet"], [2, ada, "not_yet"],
       [1, bisi, "not_yet"], [2, bisi, "done"], [3, bisi, "not_yet"],
@@ -266,18 +266,18 @@ describe("the step and the Friday check-in", () => {
       await call(who.id, "select public.save_week_step($1, 'When I wake', 'I will pray') as r", [wk]);
       await call(who.id, "select public.save_checkin($1, $2, null) as r", [wk, outcome]);
     }
-    const open = await flags(circle);
+    const open = await flags(tribe);
     expect(open).toHaveLength(1);
     expect(open[0]).toMatchObject({ person_id: ada.id, kind: "not_yet_twice", status: "open" });
   });
 
   it("keeps a member's step text to themselves: the leader sees only whether it was done", async () => {
     await at(2, 5);
-    const { leader, circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { leader, tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await call(ada.id, "select public.save_week_step(2, 'When I wake', 'I will forgive my brother') as r");
     await call(ada.id, "select public.save_checkin(2, 'done', 'It was hard') as r");
-    const w = await cweek(leader.id, circle);
+    const w = await cweek(leader.id, tribe);
     expect(JSON.stringify(w)).not.toContain("forgive my brother");
     expect(JSON.stringify(w)).not.toContain("It was hard");
     expect(w.members[0].step).toBe("done");
@@ -286,8 +286,8 @@ describe("the step and the Friday check-in", () => {
 
 describe("the three pulses", () => {
   it("opens in weeks 1, 6 and 12, for two weeks, with each answer from 1 to 5", async () => {
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await at(1, 0);
     expect((await week(ada.id)).pulse_week).toBe(1);
     await call(ada.id, "select public.save_pulse(1, 4, 3, 4, 5, 'Glad to be here') as r");
@@ -310,41 +310,41 @@ describe("the three pulses", () => {
 
   it("opens a follow-up for a belonging of 1 or 2, and only then", async () => {
     await at(1, 1);
-    const { circle } = await makeCircle();
-    const low = await join(circle, "Low");
-    const ok = await join(circle, "Ok");
+    const { tribe } = await makeTribe();
+    const low = await join(tribe, "Low");
+    const ok = await join(tribe, "Ok");
     await call(low.id, "select public.save_pulse(1, 2, 4, 4, 4, null) as r");
     await call(ok.id, "select public.save_pulse(1, 3, 4, 4, 4, null) as r");
-    const open = await flags(circle);
+    const open = await flags(tribe);
     expect(open).toHaveLength(1);
     expect(open[0]).toMatchObject({ person_id: low.id, kind: "low_belonging" });
   });
 
   it("shows the belonging average only when at least three people answered", async () => {
     await at(1, 1);
-    const { leader, circle } = await makeCircle();
-    const a = await join(circle, "A");
-    const b = await join(circle, "B");
-    const c = await join(circle, "C");
+    const { leader, tribe } = await makeTribe();
+    const a = await join(tribe, "A");
+    const b = await join(tribe, "B");
+    const c = await join(tribe, "C");
     await call(a.id, "select public.save_pulse(1, 5, 4, 4, 4, null) as r");
     await call(b.id, "select public.save_pulse(1, 3, 4, 4, 4, null) as r");
-    expect((await cweek(leader.id, circle)).report).toMatchObject({ pulse_week: true, pulse_answers: 2, belonging_average: null });
+    expect((await cweek(leader.id, tribe)).report).toMatchObject({ pulse_week: true, pulse_answers: 2, belonging_average: null });
     await call(c.id, "select public.save_pulse(1, 4, 4, 4, 4, null) as r");
-    expect((await cweek(leader.id, circle)).report).toMatchObject({ pulse_answers: 3, belonging_average: 4 });
+    expect((await cweek(leader.id, tribe)).report).toMatchObject({ pulse_answers: 3, belonging_average: 4 });
   });
 });
 
 describe("the leader's two-minute log", () => {
   it("records who came and gives the week's numbers", async () => {
     await at(2, 4);
-    const { leader, circle } = await makeCircle();
-    const a = await join(circle, "Ada");
-    const b = await join(circle, "Bisi");
-    const c = await join(circle, "Chike");
-    const d = await join(circle, "Dayo");
-    const report = await log(leader.id, circle, 2, true, [[a.id, "present"], [b.id, "present"], [c.id, "absent"], [d.id, "excused"]], "A good talk about prayer");
+    const { leader, tribe } = await makeTribe();
+    const a = await join(tribe, "Ada");
+    const b = await join(tribe, "Bisi");
+    const c = await join(tribe, "Chike");
+    const d = await join(tribe, "Dayo");
+    const report = await log(leader.id, tribe, 2, true, [[a.id, "present"], [b.id, "present"], [c.id, "absent"], [d.id, "excused"]], "A good talk about prayer");
     expect(report).toMatchObject({ week: 2, logged: true, held: true, members: 4, present: 2, absent: 1, excused: 1, attendance_rate: 0.5, highlight: "A good talk about prayer" });
-    const w = await cweek(leader.id, circle, 2);
+    const w = await cweek(leader.id, tribe, 2);
     expect(w.members.find((m: { first_name: string }) => m.first_name === "Ada").attendance).toBe("present");
     expect(w.members.find((m: { first_name: string }) => m.first_name === "Chike").attendance).toBe("absent");
     expect(w.log).toMatchObject({ held: true, highlight: "A good talk about prayer" });
@@ -355,129 +355,129 @@ describe("the leader's two-minute log", () => {
 
   it("can be saved again to correct it, without leaving old rows behind", async () => {
     await at(2, 4);
-    const { leader, circle } = await makeCircle();
-    const a = await join(circle, "Ada");
-    const b = await join(circle, "Bisi");
-    await log(leader.id, circle, 2, true, [[a.id, "present"], [b.id, "absent"]]);
-    const fixed = await log(leader.id, circle, 2, true, [[a.id, "present"], [b.id, "present"]]);
+    const { leader, tribe } = await makeTribe();
+    const a = await join(tribe, "Ada");
+    const b = await join(tribe, "Bisi");
+    await log(leader.id, tribe, 2, true, [[a.id, "present"], [b.id, "absent"]]);
+    const fixed = await log(leader.id, tribe, 2, true, [[a.id, "present"], [b.id, "present"]]);
     expect(fixed).toMatchObject({ present: 2, absent: 0 });
-    expect((await db.admin.query("select count(*)::int as c from public.circle_attendance where circle_id = $1", [circle])).rows[0].c).toBe(2);
+    expect((await db.admin.query("select count(*)::int as c from public.tribe_attendance where tribe_id = $1", [tribe])).rows[0].c).toBe(2);
   });
 
   it("insists everyone is marked, only members are named, and only real statuses are used", async () => {
     await at(2, 4);
-    const { leader, circle } = await makeCircle();
-    const a = await join(circle, "Ada");
-    const b = await join(circle, "Bisi");
+    const { leader, tribe } = await makeTribe();
+    const a = await join(tribe, "Ada");
+    const b = await join(tribe, "Bisi");
     const stranger = await person("Stranger");
-    await expectCode(log(leader.id, circle, 2, true, [[a.id, "present"]]), "22023");
-    await expectCode(log(leader.id, circle, 2, true, [[a.id, "present"], [a.id, "present"]]), "22023");
-    await expectCode(log(leader.id, circle, 2, true, [[a.id, "present"], [stranger.id, "present"]]), "P0002");
-    await expectCode(log(leader.id, circle, 2, true, [[a.id, "present"], [b.id, "late" as "present"]]), "22023");
-    await expectCode(call(leader.id, "select public.save_circle_log($1, 2, true, null, null) as r", [circle]), "22023");
-    await expectCode(call(leader.id, "select public.save_circle_log($1, 2, null, null, '[]') as r", [circle]), "22023");
-    await expectCode(log(leader.id, circle, 2, false, [], "x".repeat(301)), "22023");
+    await expectCode(log(leader.id, tribe, 2, true, [[a.id, "present"]]), "22023");
+    await expectCode(log(leader.id, tribe, 2, true, [[a.id, "present"], [a.id, "present"]]), "22023");
+    await expectCode(log(leader.id, tribe, 2, true, [[a.id, "present"], [stranger.id, "present"]]), "P0002");
+    await expectCode(log(leader.id, tribe, 2, true, [[a.id, "present"], [b.id, "late" as "present"]]), "22023");
+    await expectCode(call(leader.id, "select public.save_tribe_log($1, 2, true, null, null) as r", [tribe]), "22023");
+    await expectCode(call(leader.id, "select public.save_tribe_log($1, 2, null, null, '[]') as r", [tribe]), "22023");
+    await expectCode(log(leader.id, tribe, 2, false, [], "x".repeat(301)), "22023");
   });
 
   it("cannot log a week that has not started or that closed two weeks ago, except by a pastor", async () => {
     await at(2, 0);
-    const { leader, circle } = await makeCircle();
-    const a = await join(circle, "Ada");
-    await expectCode(log(leader.id, circle, 3, true, [[a.id, "present"]]), "22023");
-    await expectCode(log(leader.id, circle, 13, true, [[a.id, "present"]]), "22023");
-    await expectCode(log(leader.id, circle, 0, true, [[a.id, "present"]]), "22023");
-    await log(leader.id, circle, 1, true, [[a.id, "present"]]); // week 1 ended a day ago: still open
+    const { leader, tribe } = await makeTribe();
+    const a = await join(tribe, "Ada");
+    await expectCode(log(leader.id, tribe, 3, true, [[a.id, "present"]]), "22023");
+    await expectCode(log(leader.id, tribe, 13, true, [[a.id, "present"]]), "22023");
+    await expectCode(log(leader.id, tribe, 0, true, [[a.id, "present"]]), "22023");
+    await log(leader.id, tribe, 1, true, [[a.id, "present"]]); // week 1 ended a day ago: still open
     await at(3, 0);
-    await expectCode(log(leader.id, circle, 1, true, [[a.id, "present"]]), "22023");
+    await expectCode(log(leader.id, tribe, 1, true, [[a.id, "present"]]), "22023");
     const pastor = await person("Pastor");
     await db.grant(pastor.id, "pastor");
-    expect(await log(pastor.id, circle, 1, true, [[a.id, "absent"]])).toMatchObject({ absent: 1 });
-    expect((await cweek(leader.id, circle, 1)).log_open).toBe(false);
-    expect((await cweek(pastor.id, circle, 1)).log_open).toBe(true);
+    expect(await log(pastor.id, tribe, 1, true, [[a.id, "absent"]])).toMatchObject({ absent: 1 });
+    expect((await cweek(leader.id, tribe, 1)).log_open).toBe(false);
+    expect((await cweek(pastor.id, tribe, 1)).log_open).toBe(true);
   });
 
   it("is open to the assistant leader and closed to everyone else", async () => {
     await at(2, 4);
     const assistant = await person("Assistant");
     await db.grant(assistant.id, "assistant_leader");
-    const { leader, circle } = await makeCircle({ assistant: assistant.id });
-    const a = await join(circle, "Ada");
-    const other = await makeCircle();
+    const { leader, tribe } = await makeTribe({ assistant: assistant.id });
+    const a = await join(tribe, "Ada");
+    const other = await makeTribe();
     const coach = await person("Coach");
     await db.grant(coach.id, "coach");
-    await expect(log(assistant.id, circle, 2, true, [[a.id, "present"]])).resolves.toMatchObject({ present: 1 });
-    await expectCode(log(other.leader.id, circle, 2, true, [[a.id, "present"]]), "42501");
-    await expectCode(log(a.id, circle, 2, true, [[a.id, "present"]]), "42501");
-    await expectCode(log(coach.id, circle, 2, true, [[a.id, "present"]]), "42501");
+    await expect(log(assistant.id, tribe, 2, true, [[a.id, "present"]])).resolves.toMatchObject({ present: 1 });
+    await expectCode(log(other.leader.id, tribe, 2, true, [[a.id, "present"]]), "42501");
+    await expectCode(log(a.id, tribe, 2, true, [[a.id, "present"]]), "42501");
+    await expectCode(log(coach.id, tribe, 2, true, [[a.id, "present"]]), "42501");
     void leader;
   });
 
   it("does not count a meeting that was not held", async () => {
-    const { leader, circle } = await makeCircle();
-    const a = await join(circle, "Ada");
+    const { leader, tribe } = await makeTribe();
+    const a = await join(tribe, "Ada");
     await at(1, 5);
-    await log(leader.id, circle, 1, true, [[a.id, "absent"]]);
+    await log(leader.id, tribe, 1, true, [[a.id, "absent"]]);
     await at(2, 5);
-    const report = await log(leader.id, circle, 2, false, [], "Power cut, we moved to next week");
+    const report = await log(leader.id, tribe, 2, false, [], "Power cut, we moved to next week");
     expect(report).toMatchObject({ held: false, present: 0, absent: 0, status: "needs_attention" });
     await at(3, 5);
-    await log(leader.id, circle, 3, true, [[a.id, "absent"]]);
+    await log(leader.id, tribe, 3, true, [[a.id, "absent"]]);
     // week 1 absent, week 2 not held, week 3 absent: that is two meetings missed in a row
-    expect((await flags(circle)).map((f) => f.kind)).toEqual(["missed_twice"]);
-    expect((await cweek(leader.id, circle, 3)).logged_weeks).toBe(2);
+    expect((await flags(tribe)).map((f) => f.kind)).toEqual(["missed_twice"]);
+    expect((await cweek(leader.id, tribe, 3)).logged_weeks).toBe(2);
   });
 
   it("opens a follow-up for two missed meetings in a row, and not for one, for an excusal, or after coming back", async () => {
-    const { leader, circle } = await makeCircle();
-    const twice = await join(circle, "Twice");
-    const once = await join(circle, "Once");
-    const excused = await join(circle, "Excused");
-    const back = await join(circle, "Back");
+    const { leader, tribe } = await makeTribe();
+    const twice = await join(tribe, "Twice");
+    const once = await join(tribe, "Once");
+    const excused = await join(tribe, "Excused");
+    const back = await join(tribe, "Back");
     await at(1, 5);
-    await log(leader.id, circle, 1, true, [[twice.id, "absent"], [once.id, "present"], [excused.id, "excused"], [back.id, "absent"]]);
+    await log(leader.id, tribe, 1, true, [[twice.id, "absent"], [once.id, "present"], [excused.id, "excused"], [back.id, "absent"]]);
     await at(2, 5);
-    await log(leader.id, circle, 2, true, [[twice.id, "absent"], [once.id, "absent"], [excused.id, "absent"], [back.id, "present"]]);
+    await log(leader.id, tribe, 2, true, [[twice.id, "absent"], [once.id, "absent"], [excused.id, "absent"], [back.id, "present"]]);
     await at(3, 5);
-    await log(leader.id, circle, 3, true, [[twice.id, "absent"], [once.id, "present"], [excused.id, "excused"], [back.id, "absent"]]);
-    const open = await flags(circle);
+    await log(leader.id, tribe, 3, true, [[twice.id, "absent"], [once.id, "present"], [excused.id, "excused"], [back.id, "absent"]]);
+    const open = await flags(tribe);
     expect(open.map((f) => f.person_id).sort()).toEqual([twice.id].sort());
     // saving the same log again does not open a second one
-    await log(leader.id, circle, 3, true, [[twice.id, "absent"], [once.id, "present"], [excused.id, "excused"], [back.id, "absent"]]);
-    expect(await flags(circle)).toHaveLength(1);
-    const w = await cweek(leader.id, circle, 3);
+    await log(leader.id, tribe, 3, true, [[twice.id, "absent"], [once.id, "present"], [excused.id, "excused"], [back.id, "absent"]]);
+    expect(await flags(tribe)).toHaveLength(1);
+    const w = await cweek(leader.id, tribe, 3);
     expect(w.follow_ups).toHaveLength(1);
     expect(w.follow_ups[0]).toMatchObject({ kind: "missed_twice", status: "open", first_name: "Twice" });
     expect(w.members.find((m: { first_name: string }) => m.first_name === "Twice").open_follow_up).toBe(true);
   });
 
   it("judges the week: on track, watch, needs attention, no log, upcoming", async () => {
-    const { leader, circle } = await makeCircle();
+    const { leader, tribe } = await makeTribe();
     const m: { id: string }[] = [];
-    for (const x of ["A", "B", "C", "D", "E"]) m.push(await join(circle, x));
+    for (const x of ["A", "B", "C", "D", "E"]) m.push(await join(tribe, x));
     const came = (k: number): Att[] => m.map((x, i) => [x.id, i < k ? "present" : "absent"]);
     await at(1, 5);
-    expect((await log(leader.id, circle, 1, true, came(5))).status).toBe("on_track");
+    expect((await log(leader.id, tribe, 1, true, came(5))).status).toBe("on_track");
     await at(2, 5);
-    expect((await log(leader.id, circle, 2, true, came(3))).status).toBe("watch"); // 60%
+    expect((await log(leader.id, tribe, 2, true, came(3))).status).toBe("watch"); // 60%
     await at(3, 5);
-    expect((await log(leader.id, circle, 3, true, came(2))).status).toBe("needs_attention"); // 40%
+    expect((await log(leader.id, tribe, 3, true, came(2))).status).toBe("needs_attention"); // 40%
     await at(5, 0);
-    expect((await cweek(leader.id, circle, 4)).report.status).toBe("no_log"); // that week is over and nothing was logged
-    expect((await cweek(leader.id, circle, 5)).report.status).toBe("upcoming"); // today is the first day of the week
-    expect((await cweek(leader.id, circle, 6)).report.status).toBe("upcoming");
+    expect((await cweek(leader.id, tribe, 4)).report.status).toBe("no_log"); // that week is over and nothing was logged
+    expect((await cweek(leader.id, tribe, 5)).report.status).toBe("upcoming"); // today is the first day of the week
+    expect((await cweek(leader.id, tribe, 6)).report.status).toBe("upcoming");
   });
 });
 
 describe("follow-ups and calls", () => {
   async function withFlag() {
-    const { leader, circle } = await makeCircle();
-    const a = await join(circle, "Ada");
+    const { leader, tribe } = await makeTribe();
+    const a = await join(tribe, "Ada");
     await at(1, 5);
-    await log(leader.id, circle, 1, true, [[a.id, "absent"]]);
+    await log(leader.id, tribe, 1, true, [[a.id, "absent"]]);
     await at(2, 5);
-    await log(leader.id, circle, 2, true, [[a.id, "absent"]]);
-    const flag = (await flags(circle))[0];
-    return { leader, circle, ada: a, flag };
+    await log(leader.id, tribe, 2, true, [[a.id, "absent"]]);
+    const flag = (await flags(tribe))[0];
+    return { leader, tribe, ada: a, flag };
   }
 
   it("closes a follow-up when the call reached the person", async () => {
@@ -504,7 +504,7 @@ describe("follow-ups and calls", () => {
 
   it("refuses unknown outcomes, over-long notes, other leaders and members", async () => {
     const { flag, ada } = await withFlag();
-    const other = await makeCircle();
+    const other = await makeTribe();
     await expectCode(call(other.leader.id, "select public.record_call($1, 'reached', null) as r", [flag.id]), "42501");
     await expectCode(call(ada.id, "select public.record_call($1, 'reached', null) as r", [flag.id]), "42501");
     const second = await withFlag();
@@ -513,22 +513,22 @@ describe("follow-ups and calls", () => {
     await expectCode(call(second.leader.id, "select public.record_call(gen_random_uuid(), 'reached', null) as r"), "P0002");
   });
 
-  it("lets a leader raise a concern about someone in their circle, once", async () => {
+  it("lets a leader raise a concern about someone in their tribe, once", async () => {
     await at(3, 1);
-    const { leader, circle } = await makeCircle();
-    const a = await join(circle, "Ada");
+    const { leader, tribe } = await makeTribe();
+    const a = await join(tribe, "Ada");
     const outsider = await person("Outsider");
-    await call(leader.id, "select public.raise_concern($1, $2, 'She said she is struggling') as r", [circle, a.id]);
-    await call(leader.id, "select public.raise_concern($1, $2, 'Again') as r", [circle, a.id]);
-    const open = await flags(circle);
+    await call(leader.id, "select public.raise_concern($1, $2, 'She said she is struggling') as r", [tribe, a.id]);
+    await call(leader.id, "select public.raise_concern($1, $2, 'Again') as r", [tribe, a.id]);
+    const open = await flags(tribe);
     expect(open).toHaveLength(1);
     expect(open[0]).toMatchObject({ kind: "leader_concern", note: "She said she is struggling", opened_by: leader.id });
-    await expectCode(call(leader.id, "select public.raise_concern($1, $2, null) as r", [circle, outsider.id]), "P0002");
-    await expectCode(call(a.id, "select public.raise_concern($1, $2, null) as r", [circle, a.id]), "42501");
+    await expectCode(call(leader.id, "select public.raise_concern($1, $2, null) as r", [tribe, outsider.id]), "P0002");
+    await expectCode(call(a.id, "select public.raise_concern($1, $2, null) as r", [tribe, a.id]), "42501");
   });
 
   it("gives the care team the escalated and the long-waiting follow-ups, and nobody else", async () => {
-    const { leader, circle, flag } = await withFlag();
+    const { leader, tribe, flag } = await withFlag();
     const care = await person("Care");
     await db.grant(care.id, "care_lead");
     const before = (await call(care.id, "select public.care_queue() as r")).items.map((i: { id: string }) => i.id);
@@ -536,12 +536,12 @@ describe("follow-ups and calls", () => {
     await call(leader.id, "select public.record_call($1, 'needs_care_lead', null) as r", [flag.id]);
     const queue = await call(care.id, "select public.care_queue() as r");
     const item = queue.items.find((i: { id: string }) => i.id === flag.id);
-    expect(item).toMatchObject({ status: "escalated", kind: "missed_twice", circle: expect.any(String) });
+    expect(item).toMatchObject({ status: "escalated", kind: "missed_twice", tribe: expect.any(String) });
     expect(item.name).toContain("Ada");
     await call(care.id, "select public.record_call($1, 'reached', 'Spoke on Tuesday') as r", [flag.id]);
     expect((await db.admin.query("select status, closed_by from public.care_flags where id = $1", [flag.id])).rows[0]).toEqual({ status: "closed", closed_by: care.id });
 
-    await db.admin.query("update public.care_flags set opened_at = now() - interval '4 days' where circle_id = $1 and status = 'open'", [circle]);
+    await db.admin.query("update public.care_flags set opened_at = now() - interval '4 days' where tribe_id = $1 and status = 'open'", [tribe]);
     await expectCode(call(leader.id, "select public.care_queue() as r"), "42501");
     const member = await person("Member");
     await expectCode(call(member.id, "select public.care_queue() as r"), "42501");
@@ -551,9 +551,9 @@ describe("follow-ups and calls", () => {
 describe("the prep pack", () => {
   it("gives the leader the whole guide with the 75-minute plan and a tip, which members never get", async () => {
     await at(4, 0);
-    const { leader, circle } = await makeCircle();
-    await join(circle, "Ada");
-    const w = await cweek(leader.id, circle);
+    const { leader, tribe } = await makeTribe();
+    await join(tribe, "Ada");
+    const w = await cweek(leader.id, tribe);
     expect(w).toMatchObject({ state: "running", week: 4, current_week: 4, can_edit: true, weeks: 12 });
     expect(w.guide.title).toBe("Better together");
     expect(w.guide.plan).toHaveLength(5);
@@ -563,34 +563,34 @@ describe("the prep pack", () => {
 
   it("lists a birthday this week, a full attendance record, and a run of finished steps", async () => {
     await at(5, 0);
-    const { leader, circle } = await makeCircle();
-    const bday = await join(circle, "Birthday");
-    const keen = await join(circle, "Keen");
-    const doer = await join(circle, "Doer");
+    const { leader, tribe } = await makeTribe();
+    const bday = await join(tribe, "Birthday");
+    const keen = await join(tribe, "Keen");
+    const doer = await join(tribe, "Doer");
     const wk5 = (await db.admin.query(
       "select extract(day from starts_on + 4 * 7 + 2)::int as d, extract(month from starts_on + 4 * 7 + 2)::int as m from public.seasons where id = $1", [seasonId])).rows[0];
     await db.admin.query(
-      `insert into public.member_profiles (person_id, season_id, age_range_id, gender, circle_mix, zone, tribe_id, faith_journey, season_goal_id,
+      `insert into public.member_profiles (person_id, season_id, age_range_id, gender, tribe_mix, zone, community_id, faith_journey, season_goal_id,
           goal_baseline, meeting_mode, meeting_times, style_social, style_structure, birthday_day, birthday_month, duration_seconds)
        select $1, $2, ar.id, 'female', 'mixed', 'mainland', $3, 'growing', $4, 3, 'either', '{}', 0, 0, $5, $6, 200
          from public.age_ranges ar where ar.slug = '33-40'`,
-      [bday.id, seasonId, tribeId, goalId, wk5.d, wk5.m],
+      [bday.id, seasonId, communityId, goalId, wk5.d, wk5.m],
     );
     for (const wk of [1, 2, 3, 4]) {
       await db.admin.query(
-        `insert into public.circle_logs (circle_id, week, held) values ($1, $2, true)`, [circle, wk]);
+        `insert into public.tribe_logs (tribe_id, week, held) values ($1, $2, true)`, [tribe, wk]);
       for (const m of [bday, keen, doer]) {
         await db.admin.query(
-          `insert into public.circle_attendance (circle_id, week, person_id, status) values ($1, $2, $3, $4)`,
-          [circle, wk, m.id, m === bday && wk === 2 ? "absent" : "present"]);
+          `insert into public.tribe_attendance (tribe_id, week, person_id, status) values ($1, $2, $3, $4)`,
+          [tribe, wk, m.id, m === bday && wk === 2 ? "absent" : "present"]);
       }
     }
     for (const wk of [2, 3, 4]) {
       await db.admin.query(
-        `insert into public.week_steps (person_id, circle_id, week, when_text, will_text, outcome) values ($1, $2, $3, 'When I wake', 'I will pray', 'done')`,
-        [doer.id, circle, wk]);
+        `insert into public.week_steps (person_id, tribe_id, week, when_text, will_text, outcome) values ($1, $2, $3, 'When I wake', 'I will pray', 'done')`,
+        [doer.id, tribe, wk]);
     }
-    const kinds = (await cweek(leader.id, circle)).celebrations.map((c: { kind: string; first_name: string }) => `${c.kind}:${c.first_name}`);
+    const kinds = (await cweek(leader.id, tribe)).celebrations.map((c: { kind: string; first_name: string }) => `${c.kind}:${c.first_name}`);
     expect(kinds).toEqual(expect.arrayContaining(["birthday:Birthday", "every_meeting:Keen", "every_meeting:Doer", "steps_streak:Doer"]));
     expect(kinds).not.toContain("every_meeting:Birthday");
     expect(kinds).not.toContain("steps_streak:Keen");
@@ -600,47 +600,47 @@ describe("the prep pack", () => {
     await at(2, 3);
     const coach = await person("Coach");
     await db.grant(coach.id, "coach");
-    const { leader, circle } = await makeCircle({ coach: coach.id });
-    const ada = await join(circle, "Ada");
+    const { leader, tribe } = await makeTribe({ coach: coach.id });
+    const ada = await join(tribe, "Ada");
     const pastor = await person("Pastor");
     await db.grant(pastor.id, "pastor");
     const otherCoach = await person("Other coach");
     await db.grant(otherCoach.id, "coach");
-    expect((await cweek(coach.id, circle)).can_edit).toBe(false);
-    expect((await cweek(coach.id, circle)).log_open).toBe(false);
-    expect((await cweek(pastor.id, circle)).can_edit).toBe(false);
-    expect((await cweek(leader.id, circle)).can_edit).toBe(true);
-    await expectCode(call(ada.id, "select public.circle_week($1, null) as r", [circle]), "42501");
-    await expectCode(call(otherCoach.id, "select public.circle_week($1, null) as r", [circle]), "42501");
-    await expectCode(call(leader.id, "select public.circle_week($1, 13) as r", [circle]), "P0002");
-    await expectCode(call(leader.id, "select public.circle_week(gen_random_uuid(), null) as r"), "P0002");
+    expect((await cweek(coach.id, tribe)).can_edit).toBe(false);
+    expect((await cweek(coach.id, tribe)).log_open).toBe(false);
+    expect((await cweek(pastor.id, tribe)).can_edit).toBe(false);
+    expect((await cweek(leader.id, tribe)).can_edit).toBe(true);
+    await expectCode(call(ada.id, "select public.tribe_week($1, null) as r", [tribe]), "42501");
+    await expectCode(call(otherCoach.id, "select public.tribe_week($1, null) as r", [tribe]), "42501");
+    await expectCode(call(leader.id, "select public.tribe_week($1, 13) as r", [tribe]), "P0002");
+    await expectCode(call(leader.id, "select public.tribe_week(gen_random_uuid(), null) as r"), "P0002");
   });
 
   it("shows a member's WhatsApp number to the leader only while they still share it", async () => {
     await at(2, 3);
-    const { leader, circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { leader, tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await db.admin.query(
-      `insert into public.member_profiles (person_id, season_id, age_range_id, gender, circle_mix, zone, tribe_id, faith_journey, season_goal_id,
+      `insert into public.member_profiles (person_id, season_id, age_range_id, gender, tribe_mix, zone, community_id, faith_journey, season_goal_id,
           goal_baseline, meeting_mode, meeting_times, style_social, style_structure, whatsapp, duration_seconds)
        select $1, $2, ar.id, 'female', 'mixed', 'mainland', $3, 'growing', $4, 3, 'either', '{}', 0, 0, '+2348031234567', 200
          from public.age_ranges ar where ar.slug = '33-40'`,
-      [ada.id, seasonId, tribeId, goalId],
+      [ada.id, seasonId, communityId, goalId],
     );
-    expect((await cweek(leader.id, circle)).members[0].whatsapp).toBe("+2348031234567");
+    expect((await cweek(leader.id, tribe)).members[0].whatsapp).toBe("+2348031234567");
     await db.admin.query("update public.member_profiles set whatsapp = null where person_id = $1", [ada.id]);
-    expect((await cweek(leader.id, circle)).members[0].whatsapp).toBeNull();
+    expect((await cweek(leader.id, tribe)).members[0].whatsapp).toBeNull();
   });
 });
 
 describe("the Success Picture, refined in week 1 or 2", () => {
   it("lets the leader settle it in the first two weeks and shows it to members", async () => {
     await at(1, 3);
-    const { leader, circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { leader, tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     const refine = (userId: string, g = "We read the Word five days a week.", o = "Every person has two people who check on them.", l = "We each finish the goal we named.") =>
-      call(userId, "select public.refine_success_picture($1, $2, $3, $4) as r", [circle, g, o, l]);
-    expect((await cweek(leader.id, circle)).picture).toMatchObject({ refined: false, can_refine: true });
+      call(userId, "select public.refine_success_picture($1, $2, $3, $4) as r", [tribe, g, o, l]);
+    expect((await cweek(leader.id, tribe)).picture).toMatchObject({ refined: false, can_refine: true });
     await refine(leader.id);
     expect((await week(ada.id)).picture).toEqual({
       god: "We read the Word five days a week.", others: "Every person has two people who check on them.",
@@ -652,59 +652,59 @@ describe("the Success Picture, refined in week 1 or 2", () => {
     await refine(leader.id, "Changed in week two, still fine.");
     await at(3, 0);
     await expectCode(refine(leader.id), "22023");
-    expect((await cweek(leader.id, circle)).picture.can_refine).toBe(false);
-    expect((await db.admin.query("select loving_god from public.circles where id = $1", [circle])).rows[0].loving_god).toBe("Pray daily."); // the card stays as it was
+    expect((await cweek(leader.id, tribe)).picture.can_refine).toBe(false);
+    expect((await db.admin.query("select loving_god from public.tribes where id = $1", [tribe])).rows[0].loving_god).toBe("Pray daily."); // the card stays as it was
   });
 
-  it("keeps what each member agreed to word for word, whatever the circle refines later", async () => {
+  it("keeps what each member agreed to word for word, whatever the tribe refines later", async () => {
     await at(1, 1);
-    const { leader, circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
-    await db.admin.query(`update public.circle_members set covenant = '{"picture":{"god":"As agreed"}}'::jsonb where person_id = $1`, [ada.id]);
-    await call(leader.id, "select public.refine_success_picture($1, 'A new line for God.', 'A new line for others.', 'A new line for life.') as r", [circle]);
-    expect((await db.admin.query("select covenant from public.circle_members where person_id = $1", [ada.id])).rows[0].covenant.picture.god).toBe("As agreed");
+    const { leader, tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
+    await db.admin.query(`update public.tribe_members set covenant = '{"picture":{"god":"As agreed"}}'::jsonb where person_id = $1`, [ada.id]);
+    await call(leader.id, "select public.refine_success_picture($1, 'A new line for God.', 'A new line for others.', 'A new line for life.') as r", [tribe]);
+    expect((await db.admin.query("select covenant from public.tribe_members where person_id = $1", [ada.id])).rows[0].covenant.picture.god).toBe("As agreed");
   });
 });
 
 describe("testimonies", () => {
-  const submit = (userId: string, body = "God opened a door at work that I did not expect.", share = "Tribe", credit = "first_name") =>
+  const submit = (userId: string, body = "God opened a door at work that I did not expect.", share = "tribe", credit = "first_name") =>
     call(userId, "select public.submit_testimony($1, $2, $3) as r", [body, share, credit]);
-  const visible = async (userId: string) => (await call(userId, "select public.circle_testimonies() as r")) as { id: string; by: string; status: string; mine: boolean; body: string }[];
+  const visible = async (userId: string) => (await call(userId, "select public.tribe_testimonies() as r")) as { id: string; by: string; status: string; mine: boolean; body: string }[];
 
   it("is shared only after the leader approves, and then shows the name the author chose", async () => {
     await at(11, 2);
-    const { leader, circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
-    const bisi = await join(circle, "Bisi");
-    const chike = await join(circle, "Chike");
-    const idFirst = await submit(ada.id, "God opened a door at work that I did not expect.", "Tribe", "first_name");
-    const idAnon = await submit(bisi.id, "I forgave my brother this season and we spoke again.", "Tribe", "anonymous");
-    const idFull = await submit(chike.id, "I finished my business registration after years of waiting.", "Tribe", "full_name");
+    const { leader, tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
+    const bisi = await join(tribe, "Bisi");
+    const chike = await join(tribe, "Chike");
+    const idFirst = await submit(ada.id, "God opened a door at work that I did not expect.", "tribe", "first_name");
+    const idAnon = await submit(bisi.id, "I forgave my brother this season and we spoke again.", "tribe", "anonymous");
+    const idFull = await submit(chike.id, "I finished my business registration after years of waiting.", "tribe", "full_name");
     expect((await visible(bisi.id)).map((t) => t.id)).toEqual([idAnon]); // her own only, still waiting
     expect((await visible(bisi.id))[0]).toMatchObject({ mine: true, status: "submitted" });
 
-    expect((await cweek(leader.id, circle)).testimonies_waiting).toBe(3);
+    expect((await cweek(leader.id, tribe)).testimonies_waiting).toBe(3);
     for (const id of [idFirst, idAnon, idFull]) await call(leader.id, "select public.review_testimony($1, 'approve', null) as r", [id]);
     const seen = await visible(chike.id);
     expect(seen).toHaveLength(3);
     expect(seen.find((t) => t.id === idFirst)!.by).toBe("Ada");
-    expect(seen.find((t) => t.id === idAnon)!.by).toBe("A member of the Tribe");
+    expect(seen.find((t) => t.id === idAnon)!.by).toBe("A member of the tribe");
     expect(seen.find((t) => t.id === idFull)!.by).toBe("Chike Test");
     expect(JSON.stringify(seen.find((t) => t.id === idAnon))).not.toContain("Bisi");
-    expect((await cweek(leader.id, circle)).testimonies_waiting).toBe(0);
+    expect((await cweek(leader.id, tribe)).testimonies_waiting).toBe(0);
   });
 
-  it("keeps another circle's testimonies out of view, and removes a withdrawn one", async () => {
+  it("keeps another tribe's testimonies out of view, and removes a withdrawn one", async () => {
     await at(11, 2);
-    const one = await makeCircle();
-    const two = await makeCircle();
-    const ada = await join(one.circle, "Ada");
-    const eze = await join(two.circle, "Eze");
+    const one = await makeTribe();
+    const two = await makeTribe();
+    const ada = await join(one.tribe, "Ada");
+    const eze = await join(two.tribe, "Eze");
     const id = await submit(ada.id);
     await call(one.leader.id, "select public.review_testimony($1, 'approve', null) as r", [id]);
     expect(await visible(eze.id)).toHaveLength(0);
     await call(ada.id, "select public.withdraw_testimony($1) as r", [id]);
-    const bisi = await join(one.circle, "Bisi");
+    const bisi = await join(one.tribe, "Bisi");
     expect(await visible(bisi.id)).toHaveLength(0);
     expect((await visible(ada.id))).toHaveLength(0);
     await expectCode(call(eze.id, "select public.withdraw_testimony($1) as r", [id]), "P0002");
@@ -712,9 +712,9 @@ describe("testimonies", () => {
 
   it("can be declined with a note that only the author reads", async () => {
     await at(11, 2);
-    const { leader, circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
-    const bisi = await join(circle, "Bisi");
+    const { leader, tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
+    const bisi = await join(tribe, "Bisi");
     const id = await submit(ada.id, "My cousin Tunde cheated me and I will name him here.");
     await call(leader.id, "select public.review_testimony($1, 'decline', 'Please leave out names') as r", [id]);
     const mine = await visible(ada.id);
@@ -725,18 +725,18 @@ describe("testimonies", () => {
 
   it("goes to the whole church only when a pastor approves it, after the leader has", async () => {
     await at(11, 2);
-    const { leader, circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { leader, tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     const pastor = await person("Pastor");
     await db.grant(pastor.id, "pastor");
     const id = await submit(ada.id, "I got the job after eight months of praying and applying.", "church", "full_name");
     const queue = await call(pastor.id, "select public.pending_testimonies() as r");
     expect(queue.church.map((t: { id: string }) => t.id)).toContain(id);
     expect((await call(leader.id, "select public.pending_testimonies() as r")).church).toEqual([]);
-    expect((await call(leader.id, "select public.pending_testimonies() as r")).circle.map((t: { id: string }) => t.id)).toContain(id);
+    expect((await call(leader.id, "select public.pending_testimonies() as r")).tribe.map((t: { id: string }) => t.id)).toContain(id);
 
     await call(leader.id, "select public.review_testimony($1, 'approve', null) as r", [id]);
-    expect((await db.admin.query("select status from public.testimonies where id = $1", [id])).rows[0].status).toBe("circle_approved");
+    expect((await db.admin.query("select status from public.testimonies where id = $1", [id])).rows[0].status).toBe("tribe_approved");
     await expectCode(call(leader.id, "select public.review_testimony($1, 'approve', null) as r", [id]), "22023");
     expect((await call(pastor.id, "select public.pending_testimonies() as r")).church.map((t: { id: string }) => t.id)).toContain(id);
 
@@ -747,13 +747,13 @@ describe("testimonies", () => {
 
   it("checks what is written, who may read it and who is reviewing", async () => {
     await at(5, 1);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
-    const other = await makeCircle();
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
+    const other = await makeTribe();
     await expectCode(submit(ada.id, "Too short"), "22023");
     await expectCode(submit(ada.id, "x".repeat(601)), "22023");
     await expectCode(submit(ada.id, "God has been faithful to me this season.", "everyone"), "22023");
-    await expectCode(submit(ada.id, "God has been faithful to me this season.", "circle", "nickname"), "22023");
+    await expectCode(submit(ada.id, "God has been faithful to me this season.", "tribe", "nickname"), "22023");
     const id = await submit(ada.id, "God has been faithful to me this season.");
     await expectCode(call(other.leader.id, "select public.review_testimony($1, 'approve', null) as r", [id]), "42501");
     await expectCode(call(ada.id, "select public.review_testimony($1, 'approve', null) as r", [id]), "42501");
@@ -765,41 +765,41 @@ describe("testimonies", () => {
 
   it("cannot be shared before the season starts", async () => {
     await db.admin.query("update public.seasons set starts_on = public.today_lagos() + 3, ends_on = public.today_lagos() + 86 where id = $1", [seasonId]);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await expectCode(submit(ada.id), "22023");
   });
 });
 
 describe("the weekly report for the office", () => {
-  it("shows each coach their own circles and each pastor all of them, with the week's totals", async () => {
+  it("shows each coach their own tribes and each pastor all of them, with the week's totals", async () => {
     await db.admin.query("update public.seasons set starts_on = public.today_lagos() - 400, ends_on = public.today_lagos() - 317 where id = $1", [seasonId]);
     const season2 = (await db.admin.query(
       `insert into public.seasons (centre_id, name, starts_on, ends_on, weeks, status)
        values ($1, 'Digest season', public.today_lagos() - 10, public.today_lagos() + 73, 12, 'running') returning id`, [centreId])).rows[0].id as string;
     const coach = await person("Coach");
     await db.grant(coach.id, "coach");
-    const mine = await makeCircle({ season: season2, coach: coach.id, name: "Mine" });
-    const theirs = await makeCircle({ season: season2, name: "Theirs" });
-    const a = await join(mine.circle, "Ada", season2);
-    const b = await join(mine.circle, "Bisi", season2);
-    const c = await join(theirs.circle, "Chike", season2);
-    await log(mine.leader.id, mine.circle, 2, true, [[a.id, "present"], [b.id, "absent"]]);
-    await log(theirs.leader.id, theirs.circle, 2, true, [[c.id, "present"]]);
+    const mine = await makeTribe({ season: season2, coach: coach.id, name: "Mine" });
+    const theirs = await makeTribe({ season: season2, name: "Theirs" });
+    const a = await join(mine.tribe, "Ada", season2);
+    const b = await join(mine.tribe, "Bisi", season2);
+    const c = await join(theirs.tribe, "Chike", season2);
+    await log(mine.leader.id, mine.tribe, 2, true, [[a.id, "present"], [b.id, "absent"]]);
+    await log(theirs.leader.id, theirs.tribe, 2, true, [[c.id, "present"]]);
 
     const pastor = await person("Pastor");
     await db.grant(pastor.id, "pastor");
     const all = await call(pastor.id, "select public.rhythm_digest(null) as r");
     expect(all).toMatchObject({ state: "running", season_name: "Digest season", current_week: 2, week: 2 });
-    expect(all.circles.map((x: { name: string }) => x.name)).toEqual(["Mine", "Theirs"]);
-    expect(all.totals).toMatchObject({ circles: 2, logged: 2, present: 2, members: 3, not_logged: 0 });
-    expect(all.circles[0]).toMatchObject({ coach: expect.stringContaining("Coach"), leader: expect.stringContaining("Leader") });
-    expect(all.circles[0].report).toMatchObject({ present: 1, absent: 1, attendance_rate: 0.5, status: "watch" });
+    expect(all.tribes.map((x: { name: string }) => x.name)).toEqual(["Mine", "Theirs"]);
+    expect(all.totals).toMatchObject({ tribes: 2, logged: 2, present: 2, members: 3, not_logged: 0 });
+    expect(all.tribes[0]).toMatchObject({ coach: expect.stringContaining("Coach"), leader: expect.stringContaining("Leader") });
+    expect(all.tribes[0].report).toMatchObject({ present: 1, absent: 1, attendance_rate: 0.5, status: "watch" });
 
     const own = await call(coach.id, "select public.rhythm_digest(2) as r");
-    expect(own.circles.map((x: { name: string }) => x.name)).toEqual(["Mine"]);
+    expect(own.tribes.map((x: { name: string }) => x.name)).toEqual(["Mine"]);
     const week1 = await call(pastor.id, "select public.rhythm_digest(1) as r");
-    expect(week1.circles[0].report).toMatchObject({ week: 1, logged: false, status: "no_log" });
+    expect(week1.tribes[0].report).toMatchObject({ week: 1, logged: false, status: "no_log" });
 
     const member = await person("Member");
     await expectCode(call(member.id, "select public.rhythm_digest(null) as r"), "42501");
@@ -819,13 +819,13 @@ describe("the weekly report for the office", () => {
 describe("erasure", () => {
   it("removes everything a person wrote when their account is deleted", async () => {
     await at(5, 5);
-    const { circle } = await makeCircle();
-    const ada = await join(circle, "Ada");
+    const { tribe } = await makeTribe();
+    const ada = await join(tribe, "Ada");
     await call(ada.id, "select public.save_week_step(5, 'When I wake', 'I will pray') as r");
     await call(ada.id, "select public.save_checkin(5, 'not_yet', null) as r");
-    await call(ada.id, "select public.submit_testimony('God has been faithful to me this season.', 'circle', 'anonymous') as r");
+    await call(ada.id, "select public.submit_testimony('God has been faithful to me this season.', 'tribe', 'anonymous') as r");
     await db.admin.query("delete from auth.users where id = $1", [ada.id]);
-    for (const table of ["week_steps", "pulses", "care_flags", "testimonies", "circle_attendance"]) {
+    for (const table of ["week_steps", "pulses", "care_flags", "testimonies", "tribe_attendance"]) {
       expect((await db.admin.query(`select count(*)::int as c from public.${table} where person_id = $1`, [ada.id])).rows[0].c).toBe(0);
     }
   });

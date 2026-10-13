@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 import { formatDate } from "@/lib/dates";
+import type { Insight } from "@/lib/dashboard/insight";
 import type { Dashboard } from "@/lib/dashboard/types";
-import { AccuracyPanel, CareAndTestimonies, Funnel, SupplyMap, Tribes } from "./ChurchViews";
-import { CircleResults } from "./CircleResults";
+import { AccuracyPanel, CareAndTestimonies, Funnel, SupplyMap, Communities } from "./ChurchViews";
+import { TribeResults } from "./TribeResults";
 import { Headline } from "./Headline";
+import { InsightViews } from "./InsightViews";
 import { WeekBars } from "./WeekBars";
 
-/** The dashboard: the church's numbers for a pastor or director, a coach's own circles for a coach. */
-export function DashboardView({ d, canOpen }: { d: Dashboard; canOpen: boolean }) {
+/** The dashboard: the church's numbers for a pastor or director, a coach's own tribes for a coach. */
+export function DashboardView({ d, canOpen, insight }: { d: Dashboard; canOpen: boolean; insight?: Insight | null }) {
   if (d.state === "none" || !d.season || !d.headline) {
     return <p className="t-body measure text-soft">No season has been set up yet, so there is nothing to measure. The dashboard fills in as soon as one is.</p>;
   }
@@ -29,7 +31,7 @@ export function DashboardView({ d, canOpen }: { d: Dashboard; canOpen: boolean }
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="t-body text-soft">
-          {s.name}: {where}.{church ? "" : " Your Tribes only."}
+          {s.name}: {where}.{church ? "" : " Your tribes only."}
         </p>
         {d.seasons && d.seasons.length > 1 ? (
           <nav aria-label="Seasons" className="flex flex-wrap gap-2">
@@ -47,15 +49,17 @@ export function DashboardView({ d, canOpen }: { d: Dashboard; canOpen: boolean }
         ) : null}
       </div>
 
-      <Headline h={h} season={s} targets={d.targets} scopeLabel={church ? "whole church" : "your Tribes"} state={d.state} />
+      <Headline h={h} season={s} targets={d.targets} scopeLabel={church ? "whole church" : "your tribes"} state={d.state} />
 
       {d.state !== "before" ? <WeekBars weeks={s.weeks} rows={bars} pace={pace} title="Week by week" /> : null}
 
-      <CircleResults circles={d.circles ?? []} verdicts={h.verdicts} canOpen={canOpen} complete={d.state === "complete"} />
+      <TribeResults tribes={d.tribes ?? []} verdicts={h.verdicts} canOpen={canOpen} complete={d.state === "complete"} />
+
+      {church && insight ? <InsightViews insight={insight} /> : null}
 
       {church && d.funnel ? <Funnel steps={d.funnel} /> : null}
       {church && d.supply ? <SupplyMap supply={d.supply} /> : null}
-      {church && d.tribes ? <Tribes rows={d.tribes} minCell={d.targets.min_cell} /> : null}
+      {church && d.communities ? <Communities rows={d.communities} minCell={d.targets.min_cell} /> : null}
       {church && d.accuracy ? <AccuracyPanel a={d.accuracy} targets={d.targets} measured={h.measured} /> : null}
       {church && d.care && d.testimonies ? <CareAndTestimonies care={d.care} testimonies={d.testimonies} /> : null}
 
@@ -63,6 +67,16 @@ export function DashboardView({ d, canOpen }: { d: Dashboard; canOpen: boolean }
         <Link href="/review/rhythm" className={buttonClasses({ variant: "quiet", size: "md" })}>
           <span className="relative">Open the weekly report</span>
         </Link>
+        {church ? (
+          <>
+            <Link href="/reports" className={buttonClasses({ variant: "quiet", size: "md" })}>
+              <span className="relative">Monthly reports</span>
+            </Link>
+            <Link href="/community" className={buttonClasses({ variant: "quiet", size: "md" })}>
+              <span className="relative">Community pages</span>
+            </Link>
+          </>
+        ) : null}
       </div>
     </div>
   );

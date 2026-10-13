@@ -8,21 +8,21 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 type Row = Record<string, unknown>;
 
 export type Track = { slug: string; name: string; description: string; ages: string };
-export type LeaderCatalogue = { tracks: Track[]; tribes: Catalogue["tribes"] };
+export type LeaderCatalogue = { tracks: Track[]; communities: Catalogue["communities"] };
 
 function ages(min: unknown, max: unknown) {
   if (max === null || max === undefined) return `${min}+`;
   return `${min}–${max}`;
 }
 
-/** The life-stage tracks that are open, and the tribes with their goals. */
-export async function loadLeaderCatalogue(supabase: Supabase): Promise<LeaderCatalogue> {
+/** The life-stage tracks that are open, and the communities with their goals. Retired ones only where tribes already made are shown. */
+export async function loadLeaderCatalogue(supabase: Supabase, options: { includeRetired?: boolean } = {}): Promise<LeaderCatalogue> {
   const [{ catalogue }, tracks] = await Promise.all([
-    loadCatalogue(supabase),
+    loadCatalogue(supabase, options),
     supabase.from("tracks").select("slug, name, description, min_age, max_age, sort, active").eq("active", true).order("sort"),
   ]);
   return {
-    tribes: catalogue.tribes,
+    communities: catalogue.communities,
     tracks: ((tracks.data as Row[] | null) ?? []).map((t) => ({
       slug: String(t.slug),
       name: String(t.name),

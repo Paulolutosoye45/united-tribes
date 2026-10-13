@@ -28,7 +28,7 @@ export function SeasonCard({ season }: { season: Season }) {
             {season.name}
           </h2>
           <p className="t-body max-w-[38ch] text-soft">
-            {plural(season.weeks, "week")} of Tribes, starting {formatDate(season.starts_on)}. {STATUS_COPY[season.status]}
+            {plural(season.weeks, "week")} of tribes, starting {formatDate(season.starts_on)}. {STATUS_COPY[season.status]}
           </p>
         </div>
         {days > 0 ? (

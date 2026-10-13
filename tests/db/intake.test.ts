@@ -31,16 +31,16 @@ const consent = (id: string, purpose: string, granted: boolean) =>
 
 /** A complete, valid profile row for this person. */
 async function profile(personId: string, overrides: Record<string, unknown> = {}) {
-  const tribe = await idOf("tribes", "professionals");
+  const community = await idOf("communities", "professionals");
   const goal = await idOf("season_goals", "step-into-a-leadership-role");
   const age = await idOf("age_ranges", "33-40");
   const row: Record<string, unknown> = {
     person_id: personId,
     age_range_id: age,
     gender: "female",
-    circle_mix: "mixed",
+    tribe_mix: "mixed",
     zone: "mainland",
-    tribe_id: tribe,
+    community_id: community,
     faith_journey: "growing",
     season_goal_id: goal,
     goal_baseline: 3,
@@ -166,7 +166,8 @@ describe("member profiles", () => {
       birthday_day: 29,
       birthday_month: 2,
       story: "I just got retrenched and I'm trusting God for the next thing.",
-      support_needs: "Please keep the group small.",
+      support_load: 1,
+      support_enc: "v1.sealed",
       whatsapp: "+2348031234567",
       style_social: 1,
       style_structure: -1,
@@ -194,7 +195,7 @@ describe("member profiles", () => {
       ["an unknown meeting time", { meeting_times: ["monday-3am"] }],
       ["a malformed WhatsApp number", { whatsapp: "08031234567" }],
       ["an over-long story", { story: "x".repeat(1501) }],
-      ["no tribe at all", { tribe_id: null, season_goal_id: null, goal_other: "My own goal" }],
+      ["no community at all", { community_id: null, season_goal_id: null, goal_other: "My own goal" }],
       ["no goal at all", { season_goal_id: null }],
     ];
     for (const [label, override] of bad) {
@@ -207,21 +208,21 @@ describe("member profiles", () => {
     }
   });
 
-  it("only takes a goal that belongs to the chosen tribe", async () => {
+  it("only takes a goal that belongs to the chosen community", async () => {
     const u = await member();
-    const otherTribeGoal = await idOf("season_goals", "launch-or-formalise-a-business");
+    const otherCommunityGoal = await idOf("season_goals", "launch-or-formalise-a-business");
     await expectCode(
-      db.asUser(u.id, async (q) => insertProfile(q, await profile(u.id, { season_goal_id: otherTribeGoal }))),
+      db.asUser(u.id, async (q) => insertProfile(q, await profile(u.id, { season_goal_id: otherCommunityGoal }))),
       "23503",
     );
   });
 
-  it("takes a tribe or goal in the person's own words", async () => {
+  it("takes a community or goal in the person's own words", async () => {
     const u = await member();
     await db.asUser(u.id, async (q) =>
       insertProfile(
         q,
-        await profile(u.id, { tribe_id: null, tribe_other: "Pastors' wives", season_goal_id: null, goal_other: "Start a ministry to young mothers" }),
+        await profile(u.id, { community_id: null, community_other: "Pastors' wives", season_goal_id: null, goal_other: "Start a ministry to young mothers" }),
       ),
     );
   });
@@ -231,14 +232,14 @@ describe("member profiles", () => {
     const b = await member();
     const admin = await member();
     await db.grant(admin.id, "admin");
-    await db.asUser(a.id, async (q) => insertProfile(q, await profile(a.id, { support_needs: "private note" })));
+    await db.asUser(a.id, async (q) => insertProfile(q, await profile(a.id, { support_enc: "v1.private" })));
 
     expect((await db.asUser(b.id, (q) => q("select * from public.member_profiles"))).rows).toHaveLength(0);
     expect((await db.asUser(admin.id, (q) => q("select * from public.member_profiles"))).rows).toHaveLength(0);
     await expectCode(db.asAnon((q) => q("select * from public.member_profiles")), "42501");
 
     // Nobody else can write over it
-    expect((await db.asUser(b.id, (q) => q("update public.member_profiles set support_needs = 'x'"))).rowCount).toBe(0);
+    expect((await db.asUser(b.id, (q) => q("update public.member_profiles set support_enc = 'x'"))).rowCount).toBe(0);
     expect((await db.asUser(admin.id, (q) => q("delete from public.member_profiles"))).rowCount).toBe(0);
     await expectCode(db.asUser(b.id, async (q) => insertProfile(q, await profile(a.id))), "42501");
   });
@@ -289,7 +290,7 @@ describe("assistant usage log", () => {
     q(
       `insert into public.ai_calls (person_id, field, provider, model, latency_ms, fallback, reason, suggested, dropped)
        values ($1, $2, 'mock', 'mock-1', $3, $4, $5, $6, 0)`,
-      [id, extra.field ?? "tribe", extra.latency ?? 900, extra.fallback ?? false, extra.reason ?? null, extra.suggested ?? 2],
+      [id, extra.field ?? "community", extra.latency ?? 900, extra.fallback ?? false, extra.reason ?? null, extra.suggested ?? 2],
     );
 
   it("records counts for the owner, readable by them and the office only", async () => {
@@ -348,7 +349,75 @@ describe("intake totals for the office", () => {
     expect(stats.median_seconds).toBe(300);
     expect(stats.within_six_minutes).toBe(2);
     expect(stats.by_track).toEqual([{ label: "Builders", count: 3 }]);
-    expect(stats.by_tribe).toEqual([{ label: "Professionals", count: 3 }]);
+    expect(stats.by_community).toEqual([{ label: "Professionals", count: 3 }]);
     expect(JSON.stringify(stats)).not.toMatch(/@|secret story/);
+  });
+});
+
+describe("the rest of the smart form", () => {
+  it("stores relationship, children, work, group roles, a second community and the sealed notes", async () => {
+    const u = await member();
+    const second = await idOf("communities", "marriage-relationships");
+    await db.asUser(u.id, async (q) =>
+      insertProfile(
+        q,
+        await profile(u.id, {
+          relationship: "married",
+          children: ["under_12", "teens"],
+          work_status: "employed",
+          work_field: "finance",
+          group_roles: ["host", "peacemaker"],
+          second_community_id: second,
+          open_to_adjacent: true,
+          area_slug: "yaba",
+          support_load: 2,
+          support_enc: "v1.aaaa.bbbb.cccc",
+          leader_note_enc: "v1.dddd.eeee.ffff",
+        }),
+      ),
+    );
+    const { rows } = await db.asUser(u.id, (q) =>
+      q("select relationship, children, work_field, group_roles, open_to_adjacent, support_load from public.member_profiles"),
+    );
+    expect(rows).toEqual([
+      { relationship: "married", children: ["under_12", "teens"], work_field: "finance", group_roles: ["host", "peacemaker"], open_to_adjacent: true, support_load: 2 },
+    ]);
+  });
+
+  it("refuses answers outside the lists, a third role and a second community that repeats the first", async () => {
+    const u = await member();
+    const same = await idOf("communities", "professionals");
+    const bad: Record<string, unknown>[] = [
+      { relationship: "it is complicated" },
+      { children: ["many"] },
+      { work_status: "wizard" },
+      { work_field: "magic" },
+      { group_roles: ["host", "peacemaker", "thinker"] },
+      { group_roles: ["boss"] },
+      { second_community_id: same },
+      { support_load: 3 },
+      { area_slug: "Yaba, Lagos!" },
+    ];
+    for (const override of bad) {
+      await expectCode(db.asUser(u.id, async (q) => insertProfile(q, await profile(u.id, override))), "23514");
+    }
+  });
+
+  it("no longer has anywhere to keep support needs in plain text", async () => {
+    const u = await member();
+    await expectCode(db.asUser(u.id, (q) => q("select support_needs from public.member_profiles")), "42703");
+  });
+
+  it("keeps the sealed draft notes private to their owner", async () => {
+    const a = await member();
+    const b = await member();
+    await db.asUser(a.id, (q) => q("insert into public.intake_drafts (person_id, step, sealed) values ($1, 'care', 'v1.x.y.z')", [a.id]));
+    expect((await db.asUser(a.id, (q) => q("select sealed from public.intake_drafts"))).rows).toEqual([{ sealed: "v1.x.y.z" }]);
+    expect((await db.asUser(b.id, (q) => q("select sealed from public.intake_drafts"))).rows).toHaveLength(0);
+    expect((await db.asUser(b.id, (q) => q("update public.intake_drafts set sealed = null"))).rowCount).toBe(0);
+    await expectCode(
+      db.asUser(a.id, (q) => q("update public.intake_drafts set sealed = $1", ["x".repeat(4001)])),
+      "23514",
+    );
   });
 });

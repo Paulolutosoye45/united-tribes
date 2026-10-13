@@ -21,13 +21,13 @@ async function person(...roles: string[]) {
 }
 
 /** An approved leader or assistant, with the application the pastor approved. */
-async function approved(kind: "leader" | "assistant_leader", opts: { leadBest?: string; tribe?: string; goal?: string; track?: string; goalOnly?: boolean } = {}) {
+async function approved(kind: "leader" | "assistant_leader", opts: { leadBest?: string; community?: string; goal?: string; track?: string; goalOnly?: boolean } = {}) {
   const user = await person(kind);
   await db.admin.query(`update public.people set full_name = $2, preferred_name = $3 where id = $1`, [user.id, `Test ${kind === "leader" ? "Leader" : "Assistant"} ${user.id.slice(0, 4)}`, "Tola"]);
   const answers = {
     calling: {
       track: opts.track ?? "builders",
-      tribe: opts.tribe ?? "professionals",
+      community: opts.community ?? "professionals",
       goal: opts.goalOnly === false ? undefined : (opts.goal ?? "step-into-a-leadership-role"),
     },
     style: { leadBest: opts.leadBest ?? "structure" },
@@ -74,9 +74,9 @@ async function certified(userId: string): Promise<boolean> {
   return rows.length > 0;
 }
 
-/** Fills a card with good values for a Wednesday evening circle. */
+/** Fills a card with good values for a Wednesday evening tribe. */
 const GOOD_CARD = {
-  name: "Tola’s Professionals circle",
+  name: "Tola’s Professionals tribe",
   story: "I was passed over twice before I learned to lead by serving. Now I lead a team of eight and I want to help you do it with your peace intact.",
   meeting_day: 3,
   meeting_time: "20:00",
@@ -90,11 +90,11 @@ const GOOD_CARD = {
 };
 
 async function newCard(leaderId: string) {
-  const { rows } = await db.asUser(leaderId, (q) => q("select public.start_circle_card() as id"));
+  const { rows } = await db.asUser(leaderId, (q) => q("select public.start_tribe_card() as id"));
   return rows[0].id as string;
 }
 async function fillCard(leaderId: string, id: string, fields: Record<string, unknown> = GOOD_CARD) {
-  await db.asUser(leaderId, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify(fields)]));
+  await db.asUser(leaderId, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify(fields)]));
 }
 
 describe("the course", () => {
@@ -419,7 +419,7 @@ describe("certification", () => {
     expect(await certified(noPractice.id)).toBe(true);
   });
 
-  it("asks a circle leader for the fourth condition too: an approved Circle Card", async () => {
+  it("asks a tribe leader for the fourth condition too: an approved Tribe Card", async () => {
     const coach = await person("coach");
     const pastor = await person("pastor");
     const leader = await approved("leader");
@@ -430,10 +430,10 @@ describe("certification", () => {
 
     const card = await newCard(leader.id);
     await fillCard(leader.id, card);
-    await db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [card]));
+    await db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [card]));
     expect(await certified(leader.id), "a submitted card is not an approved one").toBe(false);
 
-    await db.asUser(pastor.id, (q) => q("select public.decide_circle_card($1, 'approve', null)", [card]));
+    await db.asUser(pastor.id, (q) => q("select public.decide_tribe_card($1, 'approve', null)", [card]));
     expect(await certified(leader.id)).toBe(true);
     const { rows } = await db.admin.query("select as_role from public.leader_certifications where person_id = $1", [leader.id]);
     expect(rows[0].as_role).toBe("leader");
@@ -446,59 +446,59 @@ describe("certification", () => {
   });
 });
 
-describe("the Circle Card", () => {
-  it("starts from the approved application, with track, tribe and goal fixed", async () => {
-    const leader = await approved("leader", { tribe: "marriage-relationships", goal: "strengthen-our-marriage", track: "stewards", leadBest: "connection" });
+describe("the Tribe Card", () => {
+  it("starts from the approved application, with track, community and goal fixed", async () => {
+    const leader = await approved("leader", { community: "marriage-relationships", goal: "strengthen-our-marriage", track: "stewards", leadBest: "connection" });
     const id = await newCard(leader.id);
     const again = await newCard(leader.id);
     expect(again, "one card per leader per season").toBe(id);
 
-    const { rows } = await db.asUser(leader.id, (q) => q("select public.my_circle() as c"));
+    const { rows } = await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"));
     const card = rows[0].c;
     expect(card.status).toBe("draft");
     expect(card.track.slug).toBe("stewards");
-    expect(card.tribe.slug).toBe("marriage-relationships");
+    expect(card.community.slug).toBe("marriage-relationships");
     expect(card.goal.slug).toBe("strengthen-our-marriage");
-    expect(card.fixed.sort()).toEqual(["goal", "track", "tribe"]);
+    expect(card.fixed.sort()).toEqual(["community", "goal", "track"]);
     expect(card.name).toMatch(/Tola/);
     expect(card.editable).toBe(true);
     expect(card.missing).toEqual(expect.arrayContaining(["story", "time", "mode", "zone", "god", "others", "life"]));
-    expect(card.missing).not.toContain("tribe");
+    expect(card.missing).not.toContain("community");
 
     // Trying to change the fixed fields changes nothing.
-    await fillCard(leader.id, id, { tribe: "education", goal: "grow-as-an-educator", track: "rising" });
-    const after = await db.asUser(leader.id, (q) => q("select public.my_circle() as c"));
-    expect(after.rows[0].c.tribe.slug).toBe("marriage-relationships");
+    await fillCard(leader.id, id, { community: "education", goal: "grow-as-an-educator", track: "rising" });
+    const after = await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"));
+    expect(after.rows[0].c.community.slug).toBe("marriage-relationships");
     expect(after.rows[0].c.goal.slug).toBe("strengthen-our-marriage");
     expect(after.rows[0].c.track.slug).toBe("stewards");
   });
 
-  it("lets a leader whose goal was in their own words choose one from their tribe's list", async () => {
-    const leader = await approved("leader", { tribe: "education", goalOnly: false, track: "rising" });
+  it("lets a leader whose goal was in their own words choose one from their community's list", async () => {
+    const leader = await approved("leader", { community: "education", goalOnly: false, track: "rising" });
     const id = await newCard(leader.id);
-    let card = (await db.asUser(leader.id, (q) => q("select public.my_circle() as c"))).rows[0].c;
-    expect(card.fixed).toEqual(expect.arrayContaining(["tribe", "track"]));
+    let card = (await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"))).rows[0].c;
+    expect(card.fixed).toEqual(expect.arrayContaining(["community", "track"]));
     expect(card.fixed).not.toContain("goal");
     expect(card.goal).toBeNull();
-    await expectCode(db.asUser(leader.id, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify({ goal: "strengthen-our-marriage" })])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify({ goal: "strengthen-our-marriage" })])), "22023");
     await fillCard(leader.id, id, { goal: "grow-as-an-educator" });
-    card = (await db.asUser(leader.id, (q) => q("select public.my_circle() as c"))).rows[0].c;
+    card = (await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"))).rows[0].c;
     expect(card.goal.slug).toBe("grow-as-an-educator");
   });
 
-  it("is only for approved circle leaders", async () => {
+  it("is only for approved tribe leaders", async () => {
     const assistant = await approved("assistant_leader");
     const member = await person();
-    await expectCode(db.asUser(assistant.id, (q) => q("select public.start_circle_card()")), "42501");
-    await expectCode(db.asUser(member.id, (q) => q("select public.start_circle_card()")), "42501");
-    expect((await db.asUser(member.id, (q) => q("select public.my_circle() as c"))).rows[0].c).toBeNull();
+    await expectCode(db.asUser(assistant.id, (q) => q("select public.start_tribe_card()")), "42501");
+    await expectCode(db.asUser(member.id, (q) => q("select public.start_tribe_card()")), "42501");
+    expect((await db.asUser(member.id, (q) => q("select public.my_tribe() as c"))).rows[0].c).toBeNull();
   });
 
   it("needs an open season", async () => {
     const leader = await approved("leader");
     await db.admin.query("update public.seasons set status = 'closed'");
     try {
-      await expectCode(db.asUser(leader.id, (q) => q("select public.start_circle_card()")), "22023");
+      await expectCode(db.asUser(leader.id, (q) => q("select public.start_tribe_card()")), "22023");
     } finally {
       await db.admin.query("update public.seasons set status = 'planning'");
     }
@@ -509,7 +509,7 @@ describe("the Circle Card", () => {
     const id = await newCard(leader.id);
     const slotAt = async (day: number, time: string) => {
       await fillCard(leader.id, id, { meeting_day: day, meeting_time: time });
-      return (await db.asUser(leader.id, (q) => q("select public.my_circle() as c"))).rows[0].c.slot as string;
+      return (await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"))).rows[0].c.slot as string;
     };
     expect(await slotAt(3, "20:00")).toBe("weeknight-evening");
     expect(await slotAt(1, "19:30")).toBe("weeknight-evening");
@@ -517,18 +517,18 @@ describe("the Circle Card", () => {
     expect(await slotAt(0, "14:00")).toBe("sunday-afternoon");
     expect(await slotAt(0, "19:00")).toBe("sunday-evening");
 
-    await expectCode(db.asUser(leader.id, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_day: 3, meeting_time: "07:00" })])), "22023");
-    await expectCode(db.asUser(leader.id, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_day: 3, meeting_time: "18:00" })])), "22023");
-    await expectCode(db.asUser(leader.id, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_day: 6, meeting_time: "15:00" })])), "22023");
-    await expectCode(db.asUser(leader.id, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_time: "later" })])), "22023");
-    await expectCode(db.asUser(leader.id, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_day: 9 })])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_day: 3, meeting_time: "07:00" })])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_day: 3, meeting_time: "18:00" })])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_day: 6, meeting_time: "15:00" })])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_time: "later" })])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify({ meeting_day: 9 })])), "22023");
   });
 
   it("checks each field and says what is wrong", async () => {
     const leader = await approved("leader");
     const id = await newCard(leader.id);
     const bad = (fields: Record<string, unknown>) =>
-      expectCode(db.asUser(leader.id, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify(fields)])), "22023");
+      expectCode(db.asUser(leader.id, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify(fields)])), "22023");
     await bad({ name: "ab" });
     await bad({ name: "x".repeat(49) });
     await bad({ story: "x".repeat(301) });
@@ -537,11 +537,11 @@ describe("the Circle Card", () => {
     await bad({ capacity: "many" });
     await bad({ mode: "hybrid" });
     await bad({ zone: "moon" });
-    await bad({ circle_type: "kids" });
+    await bad({ tribe_type: "kids" });
     await bad({ god: "x".repeat(201) });
     await bad({ place_note: "x".repeat(121) });
     // Nothing above was saved
-    const card = (await db.asUser(leader.id, (q) => q("select public.my_circle() as c"))).rows[0].c;
+    const card = (await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"))).rows[0].c;
     expect(card.capacity).toBe(12);
     expect(card.mode).toBeNull();
   });
@@ -550,38 +550,38 @@ describe("the Circle Card", () => {
     const owner = await approved("leader");
     const other = await approved("leader");
     const id = await newCard(owner.id);
-    await expectCode(db.asUser(other.id, (q) => q("select public.save_circle_card($1, '{}'::jsonb)", [id])), "P0002");
-    await expectCode(db.asUser(other.id, (q) => q("select public.submit_circle_card($1)", [id])), "P0002");
-    const peek = await db.asUser(other.id, (q) => q("select id from public.circles where id = $1", [id]));
+    await expectCode(db.asUser(other.id, (q) => q("select public.save_tribe_card($1, '{}'::jsonb)", [id])), "P0002");
+    await expectCode(db.asUser(other.id, (q) => q("select public.submit_tribe_card($1)", [id])), "P0002");
+    const peek = await db.asUser(other.id, (q) => q("select id from public.tribes where id = $1", [id]));
     expect(peek.rows).toEqual([]);
-    const own = await db.asUser(owner.id, (q) => q("select id from public.circles where id = $1", [id]));
+    const own = await db.asUser(owner.id, (q) => q("select id from public.tribes where id = $1", [id]));
     expect(own.rows).toHaveLength(1);
     // Direct writes are closed: only the functions change a card.
-    await expectCode(db.asUser(owner.id, (q) => q("update public.circles set status = 'approved' where id = $1", [id])), "42501");
-    await expectCode(db.asUser(owner.id, (q) => q("delete from public.circles where id = $1", [id])), "42501");
+    await expectCode(db.asUser(owner.id, (q) => q("update public.tribes set status = 'approved' where id = $1", [id])), "42501");
+    await expectCode(db.asUser(owner.id, (q) => q("delete from public.tribes where id = $1", [id])), "42501");
   });
 
   it("cannot be sent before the Success Picture module is passed, or while incomplete", async () => {
     const leader = await approved("leader");
     const id = await newCard(leader.id);
     await fillCard(leader.id, id);
-    await expectCode(db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id])), "22023");
     await pass(leader.id, "the-success-picture");
 
     await fillCard(leader.id, id, { story: "Too short." });
-    await expectCode(db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id])), "22023");
     await fillCard(leader.id, id, GOOD_CARD);
     await fillCard(leader.id, id, { life: "" });
-    await expectCode(db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id])), "22023");
     await fillCard(leader.id, id, GOOD_CARD);
 
-    await db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id]));
-    const card = (await db.asUser(leader.id, (q) => q("select public.my_circle() as c"))).rows[0].c;
+    await db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id]));
+    const card = (await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"))).rows[0].c;
     expect(card.status).toBe("submitted");
     expect(card.editable).toBe(false);
     // While it is with the pastorate it is frozen.
-    await expectCode(db.asUser(leader.id, (q) => q("select public.save_circle_card($1, $2::jsonb)", [id, JSON.stringify({ name: "A new name" })])), "22023");
-    await expectCode(db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.save_tribe_card($1, $2::jsonb)", [id, JSON.stringify({ name: "A new name" })])), "22023");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id])), "22023");
   });
 
   it("is approved or sent back by a pastor or director, with a reason, never by its own leader or a coach", async () => {
@@ -592,29 +592,29 @@ describe("the Circle Card", () => {
     await pass(leader.id, "the-success-picture");
     const id = await newCard(leader.id);
     await fillCard(leader.id, id);
-    await db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id]));
+    await db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id]));
 
-    await expectCode(db.asUser(coach.id, (q) => q("select public.decide_circle_card($1, 'approve', null)", [id])), "42501");
-    await expectCode(db.asUser(leader.id, (q) => q("select public.decide_circle_card($1, 'approve', null)", [id])), "42501");
-    await expectCode(db.asUser(pastor.id, (q) => q("select public.decide_circle_card($1, 'changes', '')", [id])), "22023");
-    await expectCode(db.asUser(pastor.id, (q) => q("select public.decide_circle_card($1, 'maybe', 'x')", [id])), "22023");
+    await expectCode(db.asUser(coach.id, (q) => q("select public.decide_tribe_card($1, 'approve', null)", [id])), "42501");
+    await expectCode(db.asUser(leader.id, (q) => q("select public.decide_tribe_card($1, 'approve', null)", [id])), "42501");
+    await expectCode(db.asUser(pastor.id, (q) => q("select public.decide_tribe_card($1, 'changes', '')", [id])), "22023");
+    await expectCode(db.asUser(pastor.id, (q) => q("select public.decide_tribe_card($1, 'maybe', 'x')", [id])), "22023");
 
-    await db.asUser(pastor.id, (q) => q("select public.decide_circle_card($1, 'changes', 'Make the Loving Life line measurable.')", [id]));
-    let card = (await db.asUser(leader.id, (q) => q("select public.my_circle() as c"))).rows[0].c;
+    await db.asUser(pastor.id, (q) => q("select public.decide_tribe_card($1, 'changes', 'Make the Loving Life line measurable.')", [id]));
+    let card = (await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"))).rows[0].c;
     expect(card.status).toBe("changes_requested");
     expect(card.review_note).toBe("Make the Loving Life line measurable.");
     expect(card.editable).toBe(true);
 
     await fillCard(leader.id, id, { life: "Each of us completes 10 of 12 weekly steps and leads one team meeting." });
-    await db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id]));
-    card = (await db.asUser(leader.id, (q) => q("select public.my_circle() as c"))).rows[0].c;
+    await db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id]));
+    card = (await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"))).rows[0].c;
     expect(card.review_note, "the old note goes when the card is sent again").toBeNull();
 
-    await db.asUser(director.id, (q) => q("select public.decide_circle_card($1, 'approve', 'Lovely.')", [id]));
-    card = (await db.asUser(leader.id, (q) => q("select public.my_circle() as c"))).rows[0].c;
+    await db.asUser(director.id, (q) => q("select public.decide_tribe_card($1, 'approve', 'Lovely.')", [id]));
+    card = (await db.asUser(leader.id, (q) => q("select public.my_tribe() as c"))).rows[0].c;
     expect(card.status).toBe("approved");
     expect(card.published_at).not.toBeNull();
-    await expectCode(db.asUser(director.id, (q) => q("select public.decide_circle_card($1, 'approve', null)", [id])), "22023");
+    await expectCode(db.asUser(director.id, (q) => q("select public.decide_tribe_card($1, 'approve', null)", [id])), "22023");
   });
 
   it("can be sent back after approval, which takes it off the shelf", async () => {
@@ -623,15 +623,15 @@ describe("the Circle Card", () => {
     await pass(leader.id, "the-success-picture");
     const id = await newCard(leader.id);
     await fillCard(leader.id, id);
-    await db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id]));
-    await db.asUser(pastor.id, (q) => q("select public.decide_circle_card($1, 'approve', null)", [id]));
-    await db.asUser(pastor.id, (q) => q("select public.decide_circle_card($1, 'changes', 'The meeting time clashes with the midweek service.')", [id]));
-    const { rows } = await db.admin.query("select status, published_at from public.circles where id = $1", [id]);
+    await db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id]));
+    await db.asUser(pastor.id, (q) => q("select public.decide_tribe_card($1, 'approve', null)", [id]));
+    await db.asUser(pastor.id, (q) => q("select public.decide_tribe_card($1, 'changes', 'The meeting time clashes with the midweek service.')", [id]));
+    const { rows } = await db.admin.query("select status, published_at from public.tribes where id = $1", [id]);
     expect(rows[0].status).toBe("changes_requested");
     expect(rows[0].published_at).toBeNull();
   });
 
-  it("is seen by the pastorate, and by a coach only for circles assigned to them", async () => {
+  it("is seen by the pastorate, and by a coach only for tribes assigned to them", async () => {
     const pastor = await person("pastor");
     const coachA = await person("coach");
     const coachB = await person("coach");
@@ -639,26 +639,26 @@ describe("the Circle Card", () => {
     await pass(leader.id, "the-success-picture");
     const id = await newCard(leader.id);
     await fillCard(leader.id, id);
-    await db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id]));
+    await db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id]));
 
     const inQueue = async (userId: string) =>
-      (await db.asUser(userId, (q) => q("select public.circle_queue() as r"))).rows[0].r.some((r: { id: string }) => r.id === id);
+      (await db.asUser(userId, (q) => q("select public.tribe_queue() as r"))).rows[0].r.some((r: { id: string }) => r.id === id);
     expect(await inQueue(pastor.id)).toBe(true);
     expect(await inQueue(coachA.id)).toBe(false);
-    await expectCode(db.asUser(coachA.id, (q) => q("select public.review_circle($1)", [id])), "P0002");
+    await expectCode(db.asUser(coachA.id, (q) => q("select public.review_tribe($1)", [id])), "P0002");
 
     await expectCode(db.asUser(coachA.id, (q) => q("select public.assign_coach($1, $2)", [id, coachA.id])), "42501");
     await expectCode(db.asUser(pastor.id, (q) => q("select public.assign_coach($1, $2)", [id, leader.id])), "22023");
     await db.asUser(pastor.id, (q) => q("select public.assign_coach($1, $2)", [id, coachA.id]));
     expect(await inQueue(coachA.id)).toBe(true);
     expect(await inQueue(coachB.id)).toBe(false);
-    const detail = await db.asUser(coachA.id, (q) => q("select public.review_circle($1) as r", [id]));
+    const detail = await db.asUser(coachA.id, (q) => q("select public.review_tribe($1) as r", [id]));
     expect(detail.rows[0].r.can_decide).toBe(false);
     expect(detail.rows[0].r.coach.id).toBe(coachA.id);
-    // The coach can read their circle row, and not the other coach's.
-    expect((await db.asUser(coachA.id, (q) => q("select id from public.circles where id = $1", [id]))).rows).toHaveLength(1);
-    expect((await db.asUser(coachB.id, (q) => q("select id from public.circles where id = $1", [id]))).rows).toHaveLength(0);
-    await expectCode(db.asUser(leader.id, (q) => q("select public.circle_queue()")), "42501");
+    // The coach can read their tribe row, and not the other coach's.
+    expect((await db.asUser(coachA.id, (q) => q("select id from public.tribes where id = $1", [id]))).rows).toHaveLength(1);
+    expect((await db.asUser(coachB.id, (q) => q("select id from public.tribes where id = $1", [id]))).rows).toHaveLength(0);
+    await expectCode(db.asUser(leader.id, (q) => q("select public.tribe_queue()")), "42501");
   });
 });
 
@@ -668,7 +668,7 @@ describe("pairing a leader with an assistant", () => {
     await pass(leader.id, "the-success-picture");
     const id = await newCard(leader.id);
     await fillCard(leader.id, id);
-    await db.asUser(leader.id, (q) => q("select public.submit_circle_card($1)", [id]));
+    await db.asUser(leader.id, (q) => q("select public.submit_tribe_card($1)", [id]));
     return { leader, id };
   }
 
@@ -688,7 +688,7 @@ describe("pairing a leader with an assistant", () => {
     expect(a.fit).toBeLessThanOrEqual(100);
   });
 
-  it("pairs one assistant to one circle a season, and lets the panel change its mind", async () => {
+  it("pairs one assistant to one tribe a season, and lets the panel change its mind", async () => {
     const pastor = await person("pastor");
     const one = await submittedCard("connection");
     const two = await submittedCard("teaching");
@@ -702,17 +702,17 @@ describe("pairing a leader with an assistant", () => {
     await db.asUser(pastor.id, (q) => q("select public.pair_assistant($1, $2)", [one.id, assistant.id]));
     await expectCode(db.asUser(pastor.id, (q) => q("select public.pair_assistant($1, $2)", [two.id, assistant.id])), "22023");
 
-    // The paired assistant is not offered to the other circle, but is shown as paired on their own.
+    // The paired assistant is not offered to the other tribe, but is shown as paired on their own.
     const others = await db.asUser(pastor.id, (q) => q("select public.suggest_assistants($1) as r", [two.id]));
     expect(others.rows[0].r.map((x: { person_id: string }) => x.person_id)).not.toContain(assistant.id);
     const here = await db.asUser(pastor.id, (q) => q("select public.suggest_assistants($1) as r", [one.id]));
     expect(here.rows[0].r.find((x: { person_id: string }) => x.person_id === assistant.id).paired_here).toBe(true);
 
     // The leader and the assistant both see the pairing.
-    const mine = await db.asUser(assistant.id, (q) => q("select public.my_circle() as c"));
+    const mine = await db.asUser(assistant.id, (q) => q("select public.my_tribe() as c"));
     expect(mine.rows[0].c.role).toBe("assistant");
     expect(mine.rows[0].c.leader.id).toBe(one.leader.id);
-    const lead = await db.asUser(one.leader.id, (q) => q("select public.my_circle() as c"));
+    const lead = await db.asUser(one.leader.id, (q) => q("select public.my_tribe() as c"));
     expect(lead.rows[0].c.assistant.id).toBe(assistant.id);
 
     await db.asUser(pastor.id, (q) => q("select public.unpair_assistant($1)", [one.id]));
@@ -750,16 +750,16 @@ describe("the cohort and the totals", () => {
 });
 
 describe("agreement between the screen and the database", () => {
-  it("accepts every start time the Circle Card screen offers, and nothing just outside", async () => {
+  it("accepts every start time the Tribe Card screen offers, and nothing just outside", async () => {
     for (const day of [0, 1, 2, 3, 4, 5, 6]) {
       for (const time of timesFor(day)) {
-        const { rows } = await db.admin.query("select public.circle_slot_for($1, $2::time) as slot", [day, time]);
+        const { rows } = await db.admin.query("select public.tribe_slot_for($1, $2::time) as slot", [day, time]);
         expect(rows[0].slot, `day ${day} at ${time}`).not.toBeNull();
       }
     }
     // The half hours either side of each window are refused.
     for (const [day, time] of [[3, "19:00"], [3, "22:00"], [6, "06:30"], [6, "12:00"], [0, "12:30"], [0, "22:00"]] as const) {
-      const { rows } = await db.admin.query("select public.circle_slot_for($1, $2::time) as slot", [day, time]);
+      const { rows } = await db.admin.query("select public.tribe_slot_for($1, $2::time) as slot", [day, time]);
       expect(rows[0].slot, `day ${day} at ${time}`).toBeNull();
     }
   });

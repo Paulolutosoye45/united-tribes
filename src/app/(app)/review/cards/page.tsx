@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Review: Tribe Cards" };
 export default async function ReviewCardsPage() {
   await requireRole(REVIEW_ROLES, "/review/cards");
   const supabase = await createClient();
-  const { data } = await supabase.rpc("circle_queue");
+  const { data } = await supabase.rpc("tribe_queue");
   const items = (data as CardQueueItem[] | null) ?? [];
   const waiting = items.filter((c) => c.status === "submitted").length;
 

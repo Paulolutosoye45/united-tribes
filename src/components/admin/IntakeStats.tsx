@@ -7,7 +7,7 @@ export type Stats = {
   median_seconds: number | null;
   within_six_minutes: number;
   by_track: { label: string; count: number }[];
-  by_tribe: { label: string; count: number }[];
+  by_community: { label: string; count: number }[];
   assistant: { calls: number; fallbacks: number; p95_ms: number | null };
 };
 
@@ -69,7 +69,7 @@ export function IntakeStats({ stats }: { stats: Stats }) {
       </dl>
       <div className="grid gap-4 md:grid-cols-2">
         <Bars title="Who is joining, by stage of life" rows={stats.by_track} />
-        <Bars title="Who is joining, by tribe" rows={stats.by_tribe} />
+        <Bars title="Who is joining, by community" rows={stats.by_community} />
       </div>
       {stats.assistant.calls > 0 ? (
         <p className="t-small text-soft">

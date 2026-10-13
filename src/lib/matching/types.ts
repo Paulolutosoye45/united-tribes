@@ -1,16 +1,18 @@
-/** What `my_match()` and `circle_roster()` return. The database is the source of truth. */
+/** What `my_match()` and `tribe_roster()` return. The database is the source of truth. */
 
 export type DegreeLabel = "excellent" | "strong" | "good";
 
-export interface CircleCardForMember {
+export interface TribeCardForMember {
   id: string;
   name: string;
-  tribe: string | null;
+  community: string | null;
   track: string | null;
   goal: string | null;
-  circle_type: "mixed" | "women" | "men";
+  tribe_type: "mixed" | "women" | "men";
   story: string | null;
   leader_first_name: string;
+  /** Set when the leader has added a portrait. Fetch it from /api/photo/<person id>. */
+  leader_photo_id: string | null;
   meeting_day: number;
   meeting_time: string;
   duration_minutes: number;
@@ -26,17 +28,17 @@ export interface CircleCardForMember {
   season_starts_on: string;
 }
 
-export interface ShownCircle {
+export interface ShownTribe {
   rank: 1 | 2 | 3;
   degree: number;
   label: DegreeLabel;
   reasons: string[];
   chosen: boolean;
-  circle: CircleCardForMember;
+  tribe: TribeCardForMember;
 }
 
 export interface Placement {
-  circle: CircleCardForMember;
+  tribe: TribeCardForMember;
   rank: number | null;
   degree: number | null;
   label: DegreeLabel | null;
@@ -60,8 +62,8 @@ export interface MyMatch {
   ran_at: string | null;
   model: string | null;
   candidates: number | null;
-  circles: ShownCircle[];
-  /** Fewer than three circles fit well enough, so a Starter Circle is offered. */
+  tribes: ShownTribe[];
+  /** Fewer than three tribes fit well enough, so a Starter Tribe is offered. */
   short: boolean;
   on_starter_list: boolean;
   placement: Placement | null;
@@ -76,10 +78,21 @@ export interface RosterMember {
   first_meeting_by: string;
   called: boolean;
   called_at: string | null;
+  /** What they chose to be: encourager, host and so on. */
+  roles: string[];
+  /** Their Success Picture sentence for the season. */
+  success: string | null;
+  /** The private note to the leader, opened on the server. Only leaders and assistants ever get one. */
+  note: string | null;
+  /** A note exists but could not be opened (the key is missing or has changed). */
+  note_locked: boolean;
 }
 
+/** What the database returns for a member: the note is still sealed. It never leaves the server in this form. */
+export type RawRosterMember = Omit<RosterMember, "note" | "note_locked"> & { note_enc: string | null };
+
 export interface Roster {
-  circle: {
+  tribe: {
     id: string;
     name: string;
     status: string;
@@ -98,7 +111,7 @@ export interface MatchStats {
   profiled: number;
   placed: number;
   waiting: number;
-  circles_open: number;
+  tribes_open: number;
   seats_total: number;
   seats_taken: number;
   ran: number;
@@ -107,5 +120,5 @@ export interface MatchStats {
   average_degree: number | null;
   starter_list: number;
   unmet: number;
-  gaps: { track: string | null; tribe: string | null; goal: string | null; kind: string; members: number }[];
+  gaps: { track: string | null; community: string | null; goal: string | null; kind: string; members: number }[];
 }
