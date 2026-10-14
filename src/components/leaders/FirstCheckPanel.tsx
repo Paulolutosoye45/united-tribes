@@ -25,7 +25,7 @@ export function FirstCheckPanel({ appId, status, consentText }: { appId: string;
         <h2 id="check-heading" className="t-heading">
           We are reading your application
         </h2>
-        <p className="t-body text-soft">This usually takes a few minutes. You can close this page. We will message you the moment it is done, and your referee links open then.</p>
+        <p className="t-body text-soft">This usually takes a few minutes. You can close this page. We will message you the moment it is done, and you can ask your referees then.</p>
       </section>
     );
   }
@@ -36,7 +36,7 @@ export function FirstCheckPanel({ appId, status, consentText }: { appId: string;
         <h2 id="check-heading" className="t-heading">
           A person is reading your application
         </h2>
-        <p className="t-body text-soft">A pastor or coach reads every application that needs a closer look. It can take a few days. There is nothing for you to do, and we will message you when your referees’ links open.</p>
+        <p className="t-body text-soft">A pastor or coach reads every application that needs a closer look. It can take a few days. There is nothing for you to do, and we will message you when you can ask your referees.</p>
       </section>
     );
   }
@@ -89,7 +89,7 @@ function Strengthen({ status }: { status: FirstCheckStatus }) {
         <h2 id="check-heading" className="t-heading">
           A little more would help
         </h2>
-        <p className="t-small text-soft">Your application is with us. {fields.length === 1 ? "One answer" : "A few answers"} would be stronger with a few more words. Your referees’ links open once this is done.</p>
+        <p className="t-small text-soft">Your application is with us. {fields.length === 1 ? "One answer" : "A few answers"} would be stronger with a few more words. You can ask your referees once this is done.</p>
       </div>
       <ul className="flex flex-col gap-3">
         {fields.map((f) => (

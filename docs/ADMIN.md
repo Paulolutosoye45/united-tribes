@@ -18,6 +18,7 @@ are the screens the signed-in person's role allows, and the numbers ("At a glanc
 | Sending and reporting | admin, director, data lead | admin (tokens), admin, director, data lead (reporting copy) |
 | Message log | admin, director, data lead | admin, director (put a failed message back in the queue) |
 | Data requests (account deletion) | admin, director | admin, director |
+| Pastors and unit heads (the list referees are checked against) | admin, director, pastor | admin, director, pastor |
 
 The database enforces every line of this table; the screens only hide what a person could not use. Someone who opens a
 screen they may not see is sent to Home.
@@ -100,6 +101,13 @@ version.
 - The log records that a deletion happened, who answered, and nothing about who was deleted. Details of what is and is not
   removed, and how long everything else is kept, are in docs/RETENTION.md.
 
+## Pastors and unit heads
+
+The church's own list, used to tell whether a referee is a pastor or unit head. Upload the spreadsheet (Excel or CSV), read what it would
+change, press Add, and upload again whenever it changes. Uploads can be undone. Everything about it, including the settings on the
+same page and the call-backs the care team makes, is in **docs/REFEREES.md**. Set it up before applications open: until the list is in, every
+referee is a "verified contact" and a pastor has to confirm each one by hand.
+
 ## Before the first season (the checklist, in order)
 
 1. A season is planned (Seasons).
@@ -112,5 +120,5 @@ version.
 8. The testimony form address is saved (Settings).
 9. The reporting copy has been refreshed once (Sending and reporting).
 
-Not on the screen's checklist, but needed before launch: the church's privacy notice states how quickly a data request is answered
+Not on the screen's checklist, but needed before launch: the church's list of pastors and unit heads is uploaded (**Admin → Pastors and unit heads**, docs/REFEREES.md), and the church's privacy notice states how quickly a data request is answered
 (the app does not set a deadline, so agree the time the church promises with counsel), and someone is named to watch **Admin → Data requests**. See docs/RETENTION.md.

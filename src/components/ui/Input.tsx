@@ -37,24 +37,37 @@ function Wrap({
   );
 }
 
-export type InputProps = InputHTMLAttributes<HTMLInputElement> & Common;
+/** `prefix` is a few characters drawn inside the box before what is typed, such as "+234". Decoration only: it is not part of the value. */
+export type InputProps = InputHTMLAttributes<HTMLInputElement> & Common & { prefix?: string };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, hint, error, optional, className, id, ...rest },
+  { label, hint, error, optional, className, id, prefix, ...rest },
   ref,
 ) {
   const auto = useId();
   const inputId = id ?? auto;
+  const field = (
+    <input
+      ref={ref}
+      id={inputId}
+      aria-invalid={error ? true : undefined}
+      aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
+      className={cn(FIELD, "h-14", prefix && "pl-[4.5rem]", error ? "border-danger" : "border-line hover:border-soft", className)}
+      {...rest}
+    />
+  );
   return (
     <Wrap id={inputId} label={label} hint={hint} error={error} optional={optional}>
-      <input
-        ref={ref}
-        id={inputId}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
-        className={cn(FIELD, "h-14", error ? "border-danger" : "border-line hover:border-soft", className)}
-        {...rest}
-      />
+      {prefix ? (
+        <div className="relative">
+          <span aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-medium tabular-nums text-soft">
+            {prefix}
+          </span>
+          {field}
+        </div>
+      ) : (
+        field
+      )}
     </Wrap>
   );
 });

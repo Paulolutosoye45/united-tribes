@@ -52,7 +52,14 @@ export type ReferenceRecord = {
   contact: string;
   head: boolean;
   answered: boolean;
-  expired: boolean;
+  /** "email" or "phone": how the request reaches them. Never the link itself: the applicant is not given it. */
+  kind: "email" | "phone" | null;
+  /** Where the request has got to: waiting, sending, sent, opened, verified, answered or unreachable. */
+  stage: string;
+  sentAt: string | null;
+  requests: number;
+  /** Times this person was swapped after a request had gone out. */
+  changes: number;
 };
 
 /** The person’s latest application and the referees they named. RLS shows them only their own. */
@@ -71,7 +78,7 @@ export async function loadMyApplication(
 
   const refs = await supabase
     .from("leader_references")
-    .select("id, slot, referee_name, relationship, contact, is_pastor_or_unit_head, token_expires_at, submitted_at")
+    .select("id, slot, referee_name, relationship, contact, is_pastor_or_unit_head, submitted_at, contact_kind, stage, sent_at, requests, changes")
     .eq("application_id", data.id)
     .order("slot");
 
@@ -95,7 +102,11 @@ export async function loadMyApplication(
       contact: r.contact,
       head: r.is_pastor_or_unit_head,
       answered: r.submitted_at !== null,
-      expired: new Date(r.token_expires_at).getTime() < Date.now(),
+      kind: r.contact_kind === "email" || r.contact_kind === "phone" ? r.contact_kind : null,
+      stage: r.submitted_at !== null ? "answered" : typeof r.stage === "string" ? r.stage : "waiting",
+      sentAt: typeof r.sent_at === "string" ? r.sent_at : null,
+      requests: typeof r.requests === "number" ? r.requests : 0,
+      changes: typeof r.changes === "number" ? r.changes : 0,
     })),
   };
 }

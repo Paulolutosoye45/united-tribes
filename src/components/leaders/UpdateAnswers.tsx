@@ -125,7 +125,7 @@ export function UpdateAnswers({
           Rather have a person read it as it is?
         </h2>
         <p className="t-small text-soft">
-          That is always fine. A pastor or coach will read your application exactly as you wrote it. It can take a few days, and your referees’ links open once they have.
+          That is always fine. A pastor or coach will read your application exactly as you wrote it. It can take a few days, and you can ask your referees once they have.
         </p>
         {asking ? (
           <div className="flex flex-wrap gap-3">

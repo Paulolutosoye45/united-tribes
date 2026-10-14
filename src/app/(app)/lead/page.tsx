@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { ShieldProgress } from "@/components/brand/ShieldProgress";
 import { FirstCheckPanel } from "@/components/leaders/FirstCheckPanel";
@@ -11,6 +12,7 @@ import { requireSession } from "@/lib/auth/session";
 import { ELIGIBILITY, ELIGIBILITY_ADVICE, OTHER_WAYS_TO_SERVE, STATUS_INFO, type EligibilityId } from "@/lib/leaders/options";
 import { LEADER_CONSENT_AI } from "@/lib/leaders/consent";
 import { readFirstCheckStatus } from "@/lib/leaders/quality/status";
+import { BROWSER_COOKIE, traceOf } from "@/lib/leaders/referee/trace";
 import { loadMyApplication } from "@/lib/leaders/server";
 import { isDecided, isInReview, stageStates } from "@/lib/leaders/status";
 import { isStepId, minutesLeft, shieldFills } from "@/lib/leaders/steps";
@@ -22,6 +24,12 @@ export default async function LeadPage() {
   const session = await requireSession("/lead");
   const supabase = await createClient();
   const { application, references } = await loadMyApplication(supabase, session.person.id);
+
+  // Where the applicant is signed in from, as two scrambled codes, so a referee answering from the same phone can be noticed
+  if (application && references.length > 0) {
+    const trace = traceOf(await headers(), (await cookies()).get(BROWSER_COOKIE)?.value);
+    if (trace.net && trace.bid) await supabase.rpc("referee_note_applicant", { p_net: trace.net, p_bid: trace.bid });
+  }
 
   const status = application?.status ?? "none";
   const interviewing = ["interview_invited", "interview_booked", "interviewed"].includes(status);
@@ -189,7 +197,9 @@ export default async function LeadPage() {
       <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
         <StageList states={states} details={{ references: `${answered} of 2 answered` }} />
         <div className="flex flex-col gap-8">
-          {isInReview(application.status) && answered < 2 && refereesOpen ? <RefereeLinks appId={application.id} references={references} /> : null}
+          {isInReview(application.status) && refereesOpen && references.length > 0 ? (
+            <RefereeLinks appId={application.id} applicant={session.person.preferredName ?? session.person.fullName ?? ""} references={references} />
+          ) : null}
           {options ? <InterviewPicker options={options} /> : null}
         </div>
       </div>

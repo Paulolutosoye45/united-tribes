@@ -27,7 +27,9 @@ export class ResendEmailSender implements ChannelProvider {
       html: email.html,
       text: email.text,
       ...(this.o.replyTo ? { reply_to: this.o.replyTo } : {}),
-      ...(msg.urgency === "urgent" ? { headers: { Importance: "high", "X-Priority": "1" } } : {}),
+      ...(msg.urgency === "urgent" || email.headers
+        ? { headers: { ...(msg.urgency === "urgent" ? { Importance: "high", "X-Priority": "1" } : {}), ...(email.headers ?? {}) } }
+        : {}),
     };
   }
 

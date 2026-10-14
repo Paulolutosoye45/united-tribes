@@ -83,14 +83,14 @@ export function Submitted({ name, firstCheck = false }: { name: string; firstChe
           <h1 className="t-title">Sent, {name}.</h1>
           <p className="t-body mx-auto max-w-[38ch] text-white/80">
             {firstCheck
-              ? "Your application is with us. We are reading it now, which takes a few minutes. We will message you when it is done, and your referees’ private links open then. Interview invitations wait until both have answered."
-              : "Your application is with the panel, who can start reading it now. One more step: send each referee their private link. Interview invitations wait until both have answered."}
+              ? "Your application is with us. We are reading it now, which takes a few minutes. We will message you when it is done, and then you can ask your referees. Interview invitations wait until both have answered."
+              : "Your application is with the panel, who can start reading it now. One more step: ask each of your referees. We send them a private link and a code ourselves. Interview invitations wait until both have answered."}
           </p>
         </div>
       </div>
       <div className="rise-in flex w-full max-w-md flex-col gap-3" style={{ animationDelay: "450ms" }}>
         <Link href="/lead" onClick={() => setLeaving(true)} className={buttonClasses({ fullWidth: true })} aria-busy={leaving}>
-          <span className="relative">{firstCheck ? "See where it stands" : "Send my referees their links"}</span>
+          <span className="relative">{firstCheck ? "See where it stands" : "Ask my referees"}</span>
         </Link>
         <Link href="/home" className={buttonClasses({ fullWidth: true, variant: "night", size: "md" })}>
           <span className="relative">Go to home</span>

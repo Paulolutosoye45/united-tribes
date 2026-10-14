@@ -27,7 +27,7 @@ describe("the templates", () => {
     for (const key of [
       "welcome", "week_start", "triad_prompt", "meeting_reminder", "friday_checkin", "member_missed_two", "leader_prep", "leader_log_link",
       "weekly_report", "leader_missed_one", "birthday_today", "coach_digest", "coach_missed_three", "coach_low_pulse", "care_urgent",
-      "application_approved", "application_not_approved", "referee_request",
+      "application_approved", "application_not_approved", "referee_request", "referee_code", "referee_reverify",
     ]) {
       expect(TEMPLATES[key], key).toBeDefined();
     }
@@ -172,7 +172,13 @@ describe("email", () => {
     for (const o of ["done", "partly", "not_yet"]) expect(friday.html).toContain(`${SITE}/r/${"a".repeat(64)}?o=${o}`);
     const referee = renderEmail(message("referee_request"), SITE);
     expect(referee.text).not.toContain("/profile");
-    expect(referee.html).toContain("named you as a referee");
+    expect(referee.html).toContain("has named you as a referee");
+    expect(referee.html).toContain(`${SITE}/reference/${"r".repeat(43)}`);
+    // the code goes in its own message, never in the one that carries the link
+    expect(referee.text).not.toContain("482913");
+    const code = renderEmail(message("referee_code"), SITE);
+    expect(code.text).toContain("482913");
+    expect(code.text).not.toContain("/reference/");
   });
 
   it("is branded, mobile-friendly and declares its language", () => {

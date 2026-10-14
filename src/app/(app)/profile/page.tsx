@@ -5,15 +5,17 @@ import { Button, buttonClasses } from "@/components/ui/Button";
 import { ContactCard } from "@/components/profile/ContactCard";
 import { PhotoCard } from "@/components/profile/PhotoCard";
 import { YourData } from "@/components/profile/YourData";
+import { EmailSwitches } from "@/components/profile/EmailSwitches";
 import { WhatsAppSignInCard } from "@/components/profile/WhatsAppSignInCard";
+import { loadMySwitches } from "@/lib/outreach/server";
 import { providerFromEnv } from "@/lib/ai/suggest";
 import { requireSession } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { formatShortDate } from "@/lib/dates";
-import { whatsappSignInEnabled } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { readContact } from "@/lib/messaging/contact";
 import { readMyRequest } from "@/lib/privacy/wording";
+import { currentChannel } from "@/lib/signin/deps";
 import { setAssistantAction } from "./actions";
 
 export const metadata: Metadata = { title: "Privacy and my data" };
@@ -22,15 +24,17 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const session = await requireSession("/profile");
   const { deleted } = await searchParams;
   const supabase = await createClient();
+  const signInChannel = await currentChannel();
 
   const leads = hasAnyRole(session.roles, ["leader", "assistant_leader", "coach"]);
-  const [profile, draft, ai, contactRow, photoRow, erasure] = await Promise.all([
+  const [profile, draft, ai, contactRow, photoRow, erasure, switches] = await Promise.all([
     supabase.from("member_profiles").select("submitted_at").eq("person_id", session.person.id).maybeSingle(),
     supabase.from("intake_drafts").select("updated_at").eq("person_id", session.person.id).maybeSingle(),
     supabase.rpc("has_consent", { p_purpose: "ai_assist" }),
     supabase.rpc("my_contact"),
     leads ? supabase.rpc("my_photo_info") : Promise.resolve({ data: null }),
     supabase.rpc("my_erasure_request"),
+    loadMySwitches(supabase),
   ]);
   const photo = (photoRow.data as { has?: boolean; updated_at?: string | null } | null) ?? null;
   const contact = readContact(contactRow.data);
@@ -90,7 +94,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         </div>
       </section>
 
-      {whatsappSignInEnabled() ? <WhatsAppSignInCard linked={session.signInPhone} /> : null}
+      {signInChannel.available ? <WhatsAppSignInCard linked={session.signInPhone} /> : null}
 
       <section aria-labelledby="contact-heading" className="flex flex-col gap-4">
         <h2 id="contact-heading" className="t-heading">
@@ -98,6 +102,15 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         </h2>
         <ContactCard contact={contact} />
       </section>
+
+      {switches ? (
+        <section aria-labelledby="email-heading" className="flex flex-col gap-4">
+          <h2 id="email-heading" className="t-heading">
+            Emails from us
+          </h2>
+          <EmailSwitches initial={switches} />
+        </section>
+      ) : null}
 
       {leads ? (
         <section aria-labelledby="photo-heading" className="flex flex-col gap-4">

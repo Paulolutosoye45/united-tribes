@@ -27,4 +27,4 @@ export function leaderConsentFor(mode: "off" | "shadow" | "on" | string | null |
 }
 
 export const REFEREE_NOTICE =
-  "Your answers go only to the pastors and coaches who review leader applications. The person you are speaking about will not see your ratings or your note.";
+  "Your answers go only to the pastors and coaches who review leader applications. The person you are speaking about will not see your ratings or your note. To make sure a reference comes from the person named, we checked your phone number or email with a code, and keep two scrambled codes for the network and browser you answer on, for 45 days.";

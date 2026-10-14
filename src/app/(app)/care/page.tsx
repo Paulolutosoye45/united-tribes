@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CareTaskList } from "@/components/care/CareTaskList";
-import { hasAnyRole } from "@/lib/auth/roles";
+import Link from "next/link";
+import { ASK_ROLES, REFEREE_CARE_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireSession } from "@/lib/auth/session";
 import { plural } from "@/lib/dates";
 import { loadCareStats, loadMyCareTasks } from "@/lib/rhythm/server";
@@ -26,6 +27,20 @@ export default async function CarePage() {
           When a leader flags someone, the right person gets a task and a deadline. Practical needs go to the assistant leader, pastoral ones to the coach, and urgent ones to the Care Lead the same day.
         </p>
       </header>
+
+      {hasAnyRole(session.roles, ASK_ROLES) ? (
+        <Link href="/care/asks" className="card press flex flex-col gap-0.5 p-4 hover:bg-surface">
+          <span className="font-semibold">Asked for a person</span>
+          <span className="t-small text-soft">People who answered a reminder email by asking someone to reach out.</span>
+        </Link>
+      ) : null}
+
+      {hasAnyRole(session.roles, REFEREE_CARE_ROLES) ? (
+        <Link href="/care/referees" className="card press flex flex-col gap-0.5 p-4 hover:bg-surface">
+          <span className="font-semibold">Referee call-backs</span>
+          <span className="t-small text-soft">A short call to a referee whose reference was held back or picked at random.</span>
+        </Link>
+      ) : null}
 
       {stats ? (
         <dl className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="How care is going in the last 90 days">

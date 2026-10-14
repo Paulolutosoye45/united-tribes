@@ -19,6 +19,7 @@ type Options = {
  */
 export class MetaCloudSender implements CodeSender {
   readonly name = "meta";
+  readonly route = "official" as const;
   constructor(private readonly o: Options) {}
 
   /** The request body, exposed so tests can check it without a network. */

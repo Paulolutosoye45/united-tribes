@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { cookies, headers } from "next/headers";
 import { connection } from "next/server";
 import { Crest } from "@/components/brand/Crest";
-import { ReferenceForm } from "@/components/leaders/ReferenceForm";
+import { RefereeFlow } from "@/components/leaders/RefereeFlow";
 import { getSupabaseEnv } from "@/lib/env";
+import { readRefereeOpen } from "@/lib/leaders/referee/read";
+import { readRefereeSession } from "@/lib/leaders/referee/session";
+import { BROWSER_COOKIE, isLinkRobot, traceOf } from "@/lib/leaders/referee/trace";
 import { createClient } from "@/lib/supabase/server";
 
 // The link is a secret: keep it out of search results and out of referrer headers.
@@ -12,20 +16,31 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-type Request = { applicant: string; referee: string; relationship: string; answered: boolean; expired: boolean; closed: boolean };
-
 export default async function ReferencePage({ params }: { params: Promise<{ token: string }> }) {
   await connection();
   const { token } = await params;
+  const valid = /^[a-f0-9]{64}$/.test(token) && getSupabaseEnv();
 
-  let request: Request | null = null;
-  if (/^[a-f0-9]{64}$/.test(token) && getSupabaseEnv()) {
-    const supabase = await createClient();
-    const { data } = await supabase.rpc("get_reference_request", { p_token: token });
-    request = (data as Request | null) ?? null;
-  }
+  const h = await headers();
+  const info = valid
+    ? await (async () => {
+        const supabase = await createClient();
+        const trace = traceOf(h, (await cookies()).get(BROWSER_COOKIE)?.value);
+        // A program drawing a preview of the link (WhatsApp does this when it is sent) is not the referee opening it
+        const { data } = await supabase.rpc("referee_open", {
+          p_token: token,
+          p_session: await readRefereeSession(token),
+          p_net: trace.net,
+          p_bid: trace.bid,
+          p_record: !isLinkRobot(h.get("user-agent")),
+        });
+        return readRefereeOpen(data);
+      })()
+    : ({ state: "invalid" } as const);
 
-  const state = !request ? "invalid" : request.answered ? "answered" : request.closed ? "closed" : request.expired ? "expired" : "open";
+  const live = info.state === "open" ? info : null;
+  const reverify = live?.mode === "reverify";
+  const title = !live ? "A reference." : reverify ? "Was this reference yours?" : `A reference for ${live.applicant}.`;
 
   return (
     <div className="min-h-dvh bg-page">
@@ -38,10 +53,12 @@ export default async function ReferencePage({ params }: { params: Promise<{ toke
             </span>
           </div>
           <div className="rise-in flex flex-col gap-2">
-            <h1 className="t-title">{request && state === "open" ? `A reference for ${request.applicant}.` : "A reference."}</h1>
-            {request && state === "open" ? (
+            <h1 className="t-title">{title}</h1>
+            {live ? (
               <p className="t-body max-w-[44ch] text-white/80">
-                {request.applicant} has asked you to speak for them as they apply to lead a small group at The Covenant Nation. Four short questions, about two minutes.
+                {reverify
+                  ? `You gave a reference for ${live.applicant}, who is applying to lead a small group at The Covenant Nation. We are checking that it was really you who sent it.`
+                  : `${live.applicant} has asked you to speak for them as they apply to lead a small group at The Covenant Nation. Four short questions, about two minutes.`}
               </p>
             ) : null}
           </div>
@@ -49,27 +66,8 @@ export default async function ReferencePage({ params }: { params: Promise<{ toke
       </header>
 
       <main className="mx-auto max-w-xl px-5 pb-16 pt-8 sm:px-8">
-        {state === "open" && request ? (
-          <ReferenceForm token={token} applicant={request.applicant} referee={request.referee} relationship={request.relationship} />
-        ) : state !== "open" ? (
-          <Notice state={state} applicant={request?.applicant ?? null} />
-        ) : null}
+        <RefereeFlow token={token} info={info} />
       </main>
-    </div>
-  );
-}
-
-function Notice({ state, applicant }: { state: "invalid" | "answered" | "closed" | "expired"; applicant: string | null }) {
-  const copy = {
-    invalid: { title: "This link isn’t valid.", body: "Check you copied the whole link. If it still doesn’t open, ask the person who sent it to make you a new one." },
-    answered: { title: "Already sent. Thank you.", body: "Your reference has reached the review panel. You don’t need to do anything else." },
-    closed: { title: "This reference is no longer needed.", body: "The application has been closed. Thank you for being willing to help." },
-    expired: { title: "This link has expired.", body: `Links last 30 days. Ask ${applicant ?? "the applicant"} for a new one.` },
-  }[state];
-  return (
-    <div className="card rise-in flex flex-col gap-2 p-6">
-      <h2 className="t-heading">{copy.title}</h2>
-      <p className="t-body text-soft">{copy.body}</p>
     </div>
   );
 }

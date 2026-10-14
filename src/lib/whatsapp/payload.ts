@@ -13,7 +13,8 @@ const hookSchema = z.object({
   sms: z.object({ otp: z.string().regex(/^\d{4,8}$/) }),
 });
 
-export type HookRequest = { userId: string; to: string; code: string };
+/** sign_in: a code for someone signing in. add_number: a code that proves a new number is theirs (they are already signed in). */
+export type HookRequest = { userId: string; to: string; code: string; flow: "sign_in" | "add_number" };
 
 /**
  * Reads the request and works out which number the code is for.
@@ -29,5 +30,5 @@ export function readHookRequest(raw: unknown): HookRequest | null {
   const { user, sms } = parsed.data;
   const digits = (user.new_phone || user.phone || "").replace(/\D/g, "");
   if (!/^[1-9]\d{7,14}$/.test(digits)) return null;
-  return { userId: user.id, to: digits, code: sms.otp };
+  return { userId: user.id, to: digits, code: sms.otp, flow: user.new_phone ? "add_number" : "sign_in" };
 }

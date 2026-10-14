@@ -76,7 +76,7 @@ export function parseWhatsAppEvents(payload: unknown): WhatsAppEvents {
   return out;
 }
 
-export type EmailEvent = { providerId: string; status: "delivered" | "failed"; error?: string; optOutEmail?: string };
+export type EmailEvent = { providerId: string; status: "delivered" | "failed"; error?: string; optOutEmail?: string; signal?: "hard_bounce" | "complaint" };
 
 /** Reads a Resend webhook event (delivered, bounced, complained). Others are ignored. */
 export function parseEmailEvent(payload: unknown): EmailEvent | null {
@@ -88,11 +88,16 @@ export function parseEmailEvent(payload: unknown): EmailEvent | null {
   if (type === "email.delivered") return { providerId: id, status: "delivered" };
   if (type === "email.bounced" || type === "email.failed") {
     const reason = asString(asObject(data?.bounce)?.type) ?? asString(data?.reason);
-    return { providerId: id, status: "failed", error: `email ${type.replace("email.", "")}${reason ? `: ${reason.slice(0, 80)}` : ""}` };
+    // "Permanent" means the address does not work. A full inbox or a passing fault is not held against it.
+    const permanent = /^permanent$/i.test(asString(asObject(data?.bounce)?.type) ?? "");
+    return {
+      providerId: id, status: "failed", error: `email ${type.replace("email.", "")}${reason ? `: ${reason.slice(0, 80)}` : ""}`,
+      ...(permanent ? { signal: "hard_bounce" as const } : {}),
+    };
   }
   if (type === "email.complained") {
     const to = asArray(data?.to).map(asString).find(Boolean) ?? null;
-    return { providerId: id, status: "failed", error: "email complaint", ...(to ? { optOutEmail: to } : {}) };
+    return { providerId: id, status: "failed", error: "email complaint", signal: "complaint", ...(to ? { optOutEmail: to } : {}) };
   }
   return null;
 }

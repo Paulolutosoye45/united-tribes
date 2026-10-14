@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { submitReferenceAction } from "@/app/(public)/reference/[token]/actions";
 import { ShieldBurst } from "@/components/flow/Celebration";
@@ -23,6 +24,7 @@ export function ReferenceForm({ token, applicant, referee, relationship }: { tok
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const bot = useTurnstile();
+  const router = useRouter();
 
   const complete =
     REFEREE_QUESTIONS.every((q) => ratings[q.id]) && concern !== null && (concern === "no" || note.trim().length >= 3);
@@ -45,7 +47,12 @@ export function ReferenceForm({ token, applicant, referee, relationship }: { tok
     );
     bot.spent();
     setBusy(false);
-    if (!result.ok) return setError(result.message);
+    if (!result.ok) {
+      setError(result.message);
+      // The three hours are up: start again from the code, which the page does by reading the link afresh
+      if (result.restart) router.refresh();
+      return;
+    }
     setSent(true);
     window.scrollTo({ top: 0, behavior: "instant" });
   }

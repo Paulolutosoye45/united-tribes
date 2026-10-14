@@ -7,7 +7,7 @@ import { LeaderStatsPanel } from "@/components/admin/LeaderStats";
 import { MatchStatsPanel } from "@/components/matching/MatchStats";
 import { loadChecklist } from "@/lib/admin/server";
 import type { AcademyStats } from "@/lib/academy/types";
-import { DATA_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PRIVACY_ROLES, PROGRAMME_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole, type Role } from "@/lib/auth/roles";
+import { ANNOUNCE_VIEW_ROLES, ASK_ROLES, DATA_ROLES, REMINDER_ROLES, LEADER_QUALITY_ROLES, REFEREE_MANAGER_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PRIVACY_ROLES, PROGRAMME_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole, type Role } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import type { LeaderStats } from "@/lib/leaders/review-types";
 import type { MatchStats } from "@/lib/matching/types";
@@ -33,9 +33,18 @@ const GROUPS: { title: string; tiles: Tile[] }[] = [
       { href: "/admin/catalogue", title: "Communities and goals", body: "The shared list members and leaders choose from, and the goals members write in.", roles: OFFICE_ROLES },
       { href: "/admin/champions", title: "Community champions", body: "Who looks after each community.", roles: OFFICE_ROLES },
       { href: "/admin/leader-quality", title: "Leader quality", body: "The first check on leader applications: the switch, the thresholds and the applications held for a person.", roles: LEADER_QUALITY_ROLES },
+      { href: "/admin/referees", title: "Pastors and unit heads", body: "The church’s list that checks referees: upload your spreadsheet, keep it up to date, and see which references need a look.", roles: REFEREE_MANAGER_ROLES },
       { href: "/admin/people", title: "People and roles", body: "Invite the team and see who holds each role.", roles: PROGRAMME_ROLES },
       { href: "/care/teens", title: "Young people", body: "Parent and guardian permission, and the call that confirms it.", roles: TEEN_ROLES },
       { href: "/admin/privacy", title: "Data requests", body: "Members who ask for their account and everything in it to be deleted.", roles: PRIVACY_ROLES },
+    ],
+  },
+  {
+    title: "Messages",
+    tiles: [
+      { href: "/admin/announcements", title: "Announcements", body: "Write to members from live records, see it as they will read it, and send it with a second person’s approval.", roles: ANNOUNCE_VIEW_ROLES },
+      { href: "/admin/reminders", title: "Automatic reminders", body: "Four gentle journeys for people who started and went quiet. Rehearse, read, then switch on.", roles: REMINDER_ROLES },
+      { href: "/care/asks", title: "Asked for a person", body: "People who answered a reminder by asking someone to reach out.", roles: ASK_ROLES },
     ],
   },
   {
@@ -50,6 +59,7 @@ const GROUPS: { title: string; tiles: Tile[] }[] = [
     tiles: [
       { href: "/admin/settings", title: "Settings", body: "The church’s vision and mission, the testimony form, and the platform switches.", roles: OFFICE_ROLES },
       { href: "/admin/system", title: "Sending and reporting", body: "The sending service, and the copy your reporting tool reads.", roles: DATA_ROLES },
+      { href: "/admin/signin", title: "WhatsApp sign-in", body: "The switch for WhatsApp codes, how many may go out, and what paused them.", roles: SIGNIN_ROLES },
       { href: "/admin/messages", title: "Message log", body: "Every message queued, and what became of it.", roles: DATA_ROLES },
     ],
   },

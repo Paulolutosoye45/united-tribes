@@ -220,7 +220,9 @@ token_refresh = 150
 # Number of sign up and sign-in requests that can be made in a 5 minute interval per IP address (excludes anonymous users).
 sign_in_sign_ups = 30
 # Number of OTP / Magic link verifications that can be made in a 5 minute interval per IP address.
-token_verifications = 30
+# United Tribes: tighter than the default 30, so a guessed code costs the guesser more. A church hall full of people on one
+# wifi still has room (each sign-in uses one or two). If a big event makes people see "too many tries", raise it for the day.
+token_verifications = 15
 # Number of Web3 logins that can be made in a 5 minute interval per IP address.
 web3 = 30
 
@@ -245,7 +247,8 @@ max_frequency = "10s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+# United Tribes: ten minutes. The sign-in screen tells people "The code lasts 10 minutes", so this must match.
+otp_expiry = 600
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -286,6 +289,10 @@ enable_confirmations = false
 template = "Your code is {{ .Code }}"
 # Controls the minimum amount of time that must pass before sending another sms otp.
 max_frequency = "5s"
+# United Tribes, WhatsApp codes: the code must also last ten minutes, but the CLI has no key for that. The SMS/WhatsApp
+# code lifetime is a hosted setting: Supabase dashboard -> Authentication -> Sign In / Providers -> Phone -> "SMS OTP
+# Expiry" = 600 (seconds). The CLI/hosted default is shorter. See docs/SIGNIN-CHANNELS.md. The app also waits at least a
+# minute between codes to one number on its own (1, then 2, then 5), whatever this says.
 
 # Use pre-defined map of phone number to OTP for testing.
 # [auth.sms.test_otp]

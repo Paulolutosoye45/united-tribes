@@ -35,7 +35,7 @@ const append = (current: string | undefined, add: string, max: number) =>
 
 const STAGES_AT_A_GLANCE = [
   { title: "This application", body: "Eight written answers and six situations. About fifteen minutes, and you can stop and come back." },
-  { title: "Two referees", body: "Two people who have seen you serve answer four questions about you. One is a pastor or unit head." },
+  { title: "Two referees", body: "Two people who have seen you serve answer four questions about you. We send each of them their own private link. One is a pastor or unit head." },
   { title: "Panel and interview", body: "Two reviewers read your answers. If you are invited, you have a 20-minute conversation." },
   { title: "A pastor decides", body: "You see the result here, with a short note. Training follows." },
 ];
@@ -575,7 +575,7 @@ export function RefereeStep({
         title={slot === 1 ? "Who can speak for you?" : "And a second person."}
         hint={
           slot === 1
-            ? "Choose someone who has seen you serve and will be honest. After you apply, you will get a private link to send them. They answer four short questions."
+            ? "Choose someone who has seen you serve and will be honest. After you apply, we send them a private link and a code ourselves. They answer four short questions."
             : "Someone different, who knows you in another setting. One of your two referees must be a pastor or unit head."
         }
       />
@@ -615,7 +615,7 @@ export function RefereeStep({
           placeholder="0803 123 4567 or name@email.com"
           value={value.contact}
           onChange={(e) => onChange({ ...value, contact: e.target.value })}
-          hint="Only the review panel sees this, in case they need to follow up."
+          hint="We send their link and code here, so use the number or email they check themselves, not yours. Only the review panel sees it."
         />
         <Choice
           type="checkbox"
@@ -624,6 +624,7 @@ export function RefereeStep({
           checked={value.head}
           onChange={(e) => onChange({ ...value, head: e.target.checked })}
           title="This person is a pastor or unit head"
+          description="The church’s list confirms this. If they are not on it, a pastor will."
         />
         {slot === 2 && headNeeded && !value.head ? (
           <Note tone="info">Neither referee is marked as a pastor or unit head yet. One of them must be.</Note>
@@ -744,7 +745,7 @@ export function ReviewStep({
         ))}
       </div>
       <p className="t-small mt-5 text-soft">
-        After you send it, you will get a private link for each referee to share by WhatsApp. The panel reads your application while they answer. An interview invitation waits until both have.
+        After you send it, you press “Send request” for each referee and we send them a private link and a code. You never see the link. The panel reads your application while they answer. An interview invitation waits until both have.
       </p>
       {error ? (
         <div className="mt-5" role="alert">

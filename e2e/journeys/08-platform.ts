@@ -170,10 +170,25 @@ async function main() {
     await page.locator("label", { hasText: "No concern" }).first().click();
   };
 
+  // The link alone shows only a page offering a code; the code goes to the referee’s own email, and only then do the questions appear
+  const unlock = async (page: Page, email: string) => {
+    await page.getByTestId("referee-send-code").click();
+    await page.getByTestId("referee-code").waitFor({ timeout: 15000 });
+    await tick();
+    const all = (await (await fetch(`${state().stubUrl}/__sent?channel=email`)).json()) as { body: { to: string[]; subject: string } }[];
+    const mine = all.filter((m) => m.body.to.includes(email)).at(-1);
+    const code = /\b(\d{6})\b/.exec(mine?.body.subject ?? "")?.[1] ?? "";
+    check(/^\d{6}$/.test(code), `the code reached ${email}, not the page`);
+    await page.getByLabel("Six-digit code").fill(code);
+    await page.getByTestId("referee-confirmed").waitFor({ timeout: 20000 });
+  };
+
   const referee = await newPage(browser);
   const before = (await checks()).length;
   await open(referee.page, `/reference/${secrets[0]}`);
   check(await referee.page.getByRole("heading", { name: /A reference for/ }).first().isVisible(), "the referee’s private link opens without signing in");
+  check((await referee.page.getByRole("button", { name: "Send my reference" }).count()) === 0, "…but the questions wait until the code sent to the referee’s own email is typed in");
+  await unlock(referee.page, "referee1@example.org");
   await fill(referee.page);
   const send = referee.page.getByRole("button", { name: "Send my reference" });
   await send.click();
@@ -183,6 +198,7 @@ async function main() {
   check(afterFirst.length === 1 && afterFirst[0].ok && afterFirst[0].token.startsWith(TURNSTILE.tokenPrefix), "…and the server asked the bot-check service about exactly one token, which it accepted");
 
   await open(referee.page, `/reference/${secrets[1]}`);
+  await unlock(referee.page, "referee2@example.org");
   await fill(referee.page);
   await botCheckRefuses(true);
   await referee.page.getByRole("button", { name: "Send my reference" }).click();

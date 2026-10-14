@@ -45,6 +45,12 @@ export async function POST(request: Request) {
   const rpc = workerRpc(token);
   const first = await rpc("worker_provider_event", { p_provider_id: event.providerId, p_status: event.status, p_error: event.error ?? null });
   let failed = Boolean(first.error);
+  // Hard bounces and complaints are kept as signals: two bad addresses are left out of reminders and announcements,
+  // and a complaint ends them for that person and counts toward a journey pausing itself.
+  if (event.signal) {
+    const signal = await rpc("worker_email_signal", { p_provider_id: event.providerId, p_kind: event.signal });
+    failed = failed || Boolean(signal.error);
+  }
   if (event.optOutEmail) {
     const stop = await rpc("worker_opt_out", { p_phone: null, p_email: event.optOutEmail, p_channel: "email" });
     failed = failed || Boolean(stop.error);

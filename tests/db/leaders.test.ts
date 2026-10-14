@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestDb, expectCode, type TestDb } from "./helpers";
+import { answerAs, issueLink, listInDirectory, uniqueEmail, verifyReferee } from "./referee-kit";
 
 let db: TestDb;
 
@@ -68,9 +69,10 @@ async function startDraft(userId: string, answers: Record<string, unknown> = val
   return rows[0].id as string;
 }
 
+// Every referee gets a contact nobody else uses: one contact cannot be a referee for several applicants.
 const setReferee = (userId: string, appId: string, slot: number, head: boolean, name = `Referee ${slot}`) =>
   db.asUser(userId, (q) =>
-    q("select public.set_referee($1, $2, $3, 'Unit head', $4, $5) as id", [appId, slot, name, `referee${slot}@example.org`, head]),
+    q("select public.set_referee($1, $2, $3, 'Unit head', $4, $5) as id", [appId, slot, name, uniqueEmail(`referee${slot}`), head]),
   );
 
 async function submitApplication(answers?: Record<string, unknown>) {
@@ -82,13 +84,12 @@ async function submitApplication(answers?: Record<string, unknown>) {
   return { user, appId };
 }
 
-async function answerReference(owner: string, appId: string, slot: number, rating = 5, concern: string | null = null) {
-  const ref = (await db.admin.query("select id from public.leader_references where application_id = $1 and slot = $2", [appId, slot])).rows[0].id;
-  const secret = (await db.asUser(owner, (q) => q("select public.renew_referee_link($1) as secret", [ref]))).rows[0].secret as string;
-  await db.asAnon((q) =>
-    q("select public.submit_reference($1, $2, $2, $2, $2, $3, $4)", [secret, rating, concern !== null, concern]),
-  );
-  return { ref: ref as string, secret };
+/** A referee goes through the whole of it: a code, then the ratings. A referee the applicant said is a pastor or unit head is on the church's list. */
+async function answerReference(_owner: string, appId: string, slot: number, rating = 5, concern: string | null = null) {
+  const row = (await db.admin.query("select id, contact, is_pastor_or_unit_head as head from public.leader_references where application_id = $1 and slot = $2", [appId, slot])).rows[0];
+  if (row.head) await listInDirectory(db, row.contact, { name: "Pastor Ife", standing: "pastor" });
+  const { link } = await answerAs(db, row.id as string, { rating, concern });
+  return { ref: row.id as string, secret: link };
 }
 
 const scoreOf = (n: number, count: number) => JSON.stringify(Object.fromEntries(Array.from({ length: count }, (_, i) => [`q${i + 1}`, n])));
@@ -285,34 +286,46 @@ describe("submitting an application", () => {
   });
 });
 
-describe("referees answer by private link", () => {
-  it("hands out a link only after submission, and stores only its hash", async () => {
+describe("referees answer by private link and a code", () => {
+  it("never hands the applicant a link, and stores only its hash", async () => {
     const me = await person();
     const id = await startDraft(me.id);
     const ref = (await setReferee(me.id, id, 1, true)).rows[0].id as string;
-    await expect(db.asUser(me.id, (q) => q("select public.renew_referee_link($1)", [ref]))).rejects.toThrow(/submitted/);
+    // The old ways of getting a secret are gone
+    await expectCode(db.asUser(me.id, (q) => q("select public.renew_referee_link($1)", [ref])), "42883");
+    await expectCode(db.asUser(me.id, (q) => q("select public.send_referee_link($1, 'https://x.example/reference/abc')", [ref])), "42883");
+    // Requests go out once the application has been sent
+    await expect(db.asUser(me.id, (q) => q("select public.request_referee_send($1)", [ref]))).rejects.toThrow(/has been sent/);
 
     const { user, appId } = await submitApplication();
     const refId = (await db.admin.query("select id from public.leader_references where application_id = $1 and slot = 1", [appId])).rows[0].id;
-    const secret = (await db.asUser(user.id, (q) => q("select public.renew_referee_link($1) as s", [refId]))).rows[0].s as string;
-    expect(secret).toMatch(/^[0-9a-f]{64}$/);
-    const row = (await db.admin.query("select * from public.leader_references where id = $1", [refId])).rows[0];
-    expect(JSON.stringify(row)).not.toContain(secret);
-    expect(row.token_hash).toMatch(/^[0-9a-f]{64}$/);
+    const sent = (await db.asUser(user.id, (q) => q("select public.request_referee_send($1) as r", [refId]))).rows[0].r;
+    expect(sent).toEqual({ ok: true, kind: "email" });
+    // What the applicant gets back, and what they can read, holds no secret
+    const mine = (await db.asUser(user.id, (q) => q("select stage, requests from public.leader_references where id = $1", [refId]))).rows[0];
+    expect(mine).toEqual({ stage: "sending", requests: 1 });
+    // Not even the hash of the link is readable by the applicant, and a blanket "select *" is refused
+    await expectCode(db.asUser(user.id, (q) => q("select token_hash from public.leader_references where id = $1", [refId])), "42501");
+    await expectCode(db.asUser(user.id, (q) => q("select token_expires_at from public.leader_references where id = $1", [refId])), "42501");
+    await expectCode(db.asUser(user.id, (q) => q("select * from public.leader_references where id = $1", [refId])), "42501");
+    // The message waits in the queue with no link in it: it is made when the message goes out
+    const queued = (await db.admin.query("select params from public.messages where template = 'referee_request' order by created_at desc limit 1")).rows[0];
+    expect(Object.keys(queued.params).sort()).toEqual(["contact", "reference_id"]);
   });
 
   it("shows a visitor only what the referee needs, and nothing for a wrong link", async () => {
-    const { user, appId } = await submitApplication();
+    const { appId } = await submitApplication();
     const refId = (await db.admin.query("select id from public.leader_references where application_id = $1 and slot = 1", [appId])).rows[0].id;
-    const secret = (await db.asUser(user.id, (q) => q("select public.renew_referee_link($1) as s", [refId]))).rows[0].s as string;
+    const secret = await issueLink(db, refId);
 
-    const info = (await db.asAnon((q) => q("select public.get_reference_request($1) as r", [secret]))).rows[0].r;
-    expect(Object.keys(info).sort()).toEqual(["answered", "applicant", "closed", "expired", "referee", "relationship"]);
-    expect(info.referee).toBe("Pastor Ife");
-    expect(info.answered).toBe(false);
+    const info = (await db.asAnon((q) => q("select public.referee_open($1, null, null, null, true) as r", [secret]))).rows[0].r;
+    expect(Object.keys(info).sort()).toEqual(["applicant", "code", "kind", "masked", "mode", "referee", "relationship", "state", "verified", "who"]);
+    expect(info).toMatchObject({ state: "open", referee: "Pastor Ife", verified: false, who: null, mode: "give", kind: "email" });
+    expect(info.masked).toMatch(/^r•••@example\.org$/);
 
-    expect((await db.asAnon((q) => q("select public.get_reference_request($1) as r", ["0".repeat(64)]))).rows[0].r).toBeNull();
-    expect((await db.asAnon((q) => q("select public.get_reference_request($1) as r", [""]))).rows[0].r).toBeNull();
+    for (const wrong of ["0".repeat(64), "", "nope"]) {
+      expect((await db.asAnon((q) => q("select public.referee_open($1, null, null, null, true) as r", [wrong]))).rows[0].r).toEqual({ state: "invalid" });
+    }
     // A visitor can read no table
     await expectCode(db.asAnon((q) => q("select * from public.leader_references")), "42501");
   });
@@ -323,47 +336,51 @@ describe("referees answer by private link", () => {
     const row = (await db.admin.query("select * from public.leader_reference_answers")).rows.find(Boolean);
     expect(row.reliability).toBe(4);
     await expect(
-      db.asAnon((q) => q("select public.submit_reference($1, 5, 5, 5, 5, false, null)", [secret])),
+      db.asAnon((q) => q("select public.submit_reference($1, 'x', 5, 5, 5, 5, false, null)", [secret])),
     ).rejects.toThrow(/already sent/);
-    const info = (await db.asAnon((q) => q("select public.get_reference_request($1) as r", [secret]))).rows[0].r;
-    expect(info.answered).toBe(true);
+    const info = (await db.asAnon((q) => q("select public.referee_open($1, null, null, null, true) as r", [secret]))).rows[0].r;
+    expect(info.state).toBe("answered");
   });
 
   it("refuses a wrong secret, an expired link and out-of-range ratings", async () => {
-    const { user, appId } = await submitApplication();
-    await expectCode(db.asAnon((q) => q("select public.submit_reference('nope', 5, 5, 5, 5, false, null)")), "P0002");
+    const { appId } = await submitApplication();
+    await expectCode(db.asAnon((q) => q("select public.submit_reference('nope', 'x', 5, 5, 5, 5, false, null)")), "P0002");
 
     const refId = (await db.admin.query("select id from public.leader_references where application_id = $1 and slot = 2", [appId])).rows[0].id;
-    const secret = (await db.asUser(user.id, (q) => q("select public.renew_referee_link($1) as s", [refId]))).rows[0].s as string;
-    await expectCode(db.asAnon((q) => q("select public.submit_reference($1, 6, 5, 5, 5, false, null)", [secret])), "23514");
+    const v = await verifyReferee(db, refId);
+    await expectCode(db.asAnon((q) => q("select public.submit_reference($1, $2, 6, 5, 5, 5, false, null)", [v.link, v.session])), "23514");
     await db.admin.query("update public.leader_references set token_expires_at = now() - interval '1 day' where id = $1", [refId]);
-    await expect(db.asAnon((q) => q("select public.submit_reference($1, 5, 5, 5, 5, false, null)", [secret]))).rejects.toThrow(/expired/);
-    const expired = (await db.asAnon((q) => q("select public.get_reference_request($1) as r", [secret]))).rows[0].r;
-    expect(expired.expired).toBe(true);
+    await expect(db.asAnon((q) => q("select public.submit_reference($1, $2, 5, 5, 5, 5, false, null)", [v.link, v.session]))).rejects.toThrow(/expired/);
+    const expired = (await db.asAnon((q) => q("select public.referee_open($1, null, null, null, true) as r", [v.link]))).rows[0].r;
+    expect(expired.state).toBe("expired");
     // A new link replaces the old one
-    const fresh = (await db.asUser(user.id, (q) => q("select public.renew_referee_link($1) as s", [refId]))).rows[0].s as string;
-    expect((await db.asAnon((q) => q("select public.get_reference_request($1) as r", [secret]))).rows[0].r).toBeNull();
-    await db.asAnon((q) => q("select public.submit_reference($1, 5, 5, 5, 5, false, null)", [fresh]));
+    const fresh = await issueLink(db, refId);
+    expect((await db.asAnon((q) => q("select public.referee_open($1, null, null, null, true) as r", [v.link]))).rows[0].r).toEqual({ state: "invalid" });
+    await db.asAnon((q) => q("select public.submit_reference($1, $2, 5, 5, 5, 5, false, null)", [fresh, v.session]));
   });
 
   it("needs a note when a referee raises a concern", async () => {
-    const { user, appId } = await submitApplication();
+    const { appId } = await submitApplication();
     const refId = (await db.admin.query("select id from public.leader_references where application_id = $1 and slot = 1", [appId])).rows[0].id;
-    const secret = (await db.asUser(user.id, (q) => q("select public.renew_referee_link($1) as s", [refId]))).rows[0].s as string;
-    await expectCode(db.asAnon((q) => q("select public.submit_reference($1, 5, 5, 5, 5, true, '')", [secret])), "23514");
+    const v = await verifyReferee(db, refId);
+    await expectCode(db.asAnon((q) => q("select public.submit_reference($1, $2, 5, 5, 5, 5, true, '')", [v.link, v.session])), "23514");
   });
 
   it("never lets the applicant see ratings or concerns", async () => {
     const { user, appId } = await submitApplication();
     await answerReference(user.id, appId, 1, 2, "Late to things and defensive when corrected.");
     await expectCode(db.asUser(user.id, (q) => q("select * from public.leader_reference_answers")), "42501");
-    const mine = (await db.asUser(user.id, (q) => q("select * from public.leader_references where application_id = $1 order by slot", [appId]))).rows;
+    const mine = (await db.asUser(user.id, (q) => q("select id, slot, submitted_at, stage, contact_kind from public.leader_references where application_id = $1 order by slot", [appId]))).rows;
     expect(mine).toHaveLength(2);
     expect(mine[0].submitted_at).not.toBeNull();
     expect(Object.keys(mine[0])).not.toContain("reliability");
+    // ...and nothing about who is on the church's list or what was proved
+    for (const hidden of ["verification", "standing", "directory_entry_id", "session_hash", "code_hash"]) expect(Object.keys(mine[0])).not.toContain(hidden);
+    await expectCode(db.asUser(user.id, (q) => q("select * from public.referee_trust")), "42501");
+    await expectCode(db.asUser(user.id, (q) => q("select * from public.referee_access")), "42501");
     // Nobody else's referees either
     const other = await person();
-    expect((await db.asUser(other.id, (q) => q("select * from public.leader_references"))).rows).toHaveLength(0);
+    expect((await db.asUser(other.id, (q) => q("select id from public.leader_references"))).rows).toHaveLength(0);
   });
 
   it("locks a referee once they have answered", async () => {
@@ -663,7 +680,7 @@ describe("the decision", () => {
   it("needs a referee who is a pastor or unit head to have answered", async () => {
     const f = await interviewed();
     // Pretend the head's answer is missing by marking the answering referees as non-heads
-    await db.admin.query("update public.leader_references set is_pastor_or_unit_head = false where application_id = $1", [f.appId]);
+    await db.admin.query("update public.referee_trust set standing = false where reference_id in (select id from public.leader_references where application_id = $1)", [f.appId]);
     const pastor = await person("pastor");
     await expect(db.asUser(pastor.id, (q) => q("select public.decide_application($1, 'leader', null)", [f.appId]))).rejects.toThrow(/reference check/);
   });

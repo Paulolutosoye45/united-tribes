@@ -2,8 +2,7 @@
 
 import { providerFromEnv } from "@/lib/ai/suggest";
 import { getSession } from "@/lib/auth/session";
-import { normaliseWhatsapp } from "@/lib/intake/answers";
-import { firstProblem, normalisedContact, parseLeaderAnswers, refereeProblem, withNormalisedContact, type RefereeInput } from "@/lib/leaders/answers";
+import { firstProblem, parseLeaderAnswers, refereeProblem, withNormalisedContact, type RefereeInput } from "@/lib/leaders/answers";
 import { leaderConsentFor } from "@/lib/leaders/consent";
 import { SESSION_ENDED, TRY_AGAIN, friendly, isUuid } from "@/lib/leaders/errors";
 import { MAX_ANSWER_LENGTH, isWrittenField } from "@/lib/leaders/quality/fields";
@@ -68,19 +67,9 @@ export async function saveRefereeAction(appId: string, slot: 1 | 2, input: Refer
   const problem = refereeProblem(input);
   if (problem) return { ok: false, message: problem };
 
+  // The database holds the rules (not your own contact, not the other referee, not a throwaway inbox, not another applicant's
+  // referee) and says in words which one a contact breaks.
   const supabase = await createClient();
-  const contact = normalisedContact(input.contact);
-  const own = [normalisedContact(session.person.email)];
-  const { data: me } = await supabase.from("leader_applications").select("answers").eq("id", appId).maybeSingle();
-  const whatsapp = normaliseWhatsapp(parseLeaderAnswers(me?.answers).contact.whatsapp ?? "");
-  if (whatsapp) own.push(whatsapp);
-  if (own.includes(contact)) return { ok: false, message: "A referee has to be someone else, not you." };
-
-  const other = await supabase.from("leader_references").select("contact").eq("application_id", appId).eq("slot", slot === 1 ? 2 : 1).maybeSingle();
-  if (other.data && normalisedContact(other.data.contact) === contact) {
-    return { ok: false, message: "Your two referees must be different people." };
-  }
-
   const { error } = await supabase.rpc("set_referee", {
     p_app: appId,
     p_slot: slot,

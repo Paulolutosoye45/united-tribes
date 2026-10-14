@@ -91,3 +91,9 @@ export async function requestErasureAction(note: string): Promise<Result> {
 export async function withdrawErasureAction(): Promise<Result> {
   return plain(await run("withdraw_erasure_request", undefined, ["/profile"]));
 }
+
+/** The three email switches: reminders, announcements, and everything about my tribe. Each yes or no is written to the consent ledger. */
+export async function saveEmailSwitchesAction(reminders: boolean, announcements: boolean, tribe: boolean): Promise<Result> {
+  if ([reminders, announcements, tribe].some((v) => typeof v !== "boolean")) return { ok: false, message: "Something went wrong. Reload the page and try again." };
+  return plain(await run("save_email_switches", { p_reminders: reminders, p_announcements: announcements, p_tribe: tribe }, ["/profile"]));
+}

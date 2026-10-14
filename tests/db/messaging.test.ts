@@ -268,12 +268,11 @@ describe("choosing the channel", () => {
 
   it("reaches someone with no account at the address given", async () => {
     const id = (await sql(
-      "select public.enqueue_message(null, 'referee_request', '{\"link\":\"https://x.example/reference/abc\"}'::jsonb, null, 'ref:x', null, 'normal', null, 'Ref@Example.org', null, 'Pastor Ref') as id",
+      "select public.enqueue_message(null, 'welcome', '{\"tribe\":\"Builders\"}'::jsonb, null, 'ref:x', null, 'normal', null, 'Ref@Example.org', null, 'Pastor Ref') as id",
     ))[0].id;
     const got = (await claim()).find((x) => x.id === id)!;
     expect(got).toMatchObject({ channel: "email", to: { email: "ref@example.org", name: "Pastor Ref", first_name: "Pastor" } });
     await report(id, "sent", "r1");
-    expect((await status(id)).params).toEqual({ scrubbed: true });
   });
 
   it("will not queue a message for no one", async () => {
@@ -809,31 +808,6 @@ describe("messages that follow what people do", () => {
     // the same stage twice is one message
     await db.admin.query("update public.leader_applications set status = 'approved_leader' where id = $1", [id]);
     expect(await sql("select 1 from public.messages where person_id = $1 and template = 'application_approved'", [u.id])).toHaveLength(1);
-  });
-
-  it("sends a referee's private link for the applicant, by email or by number, a few times a day at most", async () => {
-    const u = await person("Appl2");
-    const app = (await db.admin.query(`insert into public.leader_applications (person_id, status, consent_version) values ($1, 'draft', 'v1') returning id`, [u.id])).rows[0].id;
-    const mail = (await db.admin.query(
-      `insert into public.leader_references (application_id, slot, referee_name, relationship, contact, token_hash, token_expires_at)
-       values ($1, 1, 'Pastor Femi', 'Pastor', 'femi@church.org', 'h1', now() + interval '1 day') returning id`, [app])).rows[0].id;
-    const phone = (await db.admin.query(
-      `insert into public.leader_references (application_id, slot, referee_name, relationship, contact, token_hash, token_expires_at)
-       values ($1, 2, 'Sister Ada', 'Unit head', '0803 555 0001', 'h2', now() + interval '1 day') returning id`, [app])).rows[0].id;
-    const link = "https://unitedtribes.example/reference/abc";
-    await db.asUser(u.id, (q) => q("select public.send_referee_link($1, $2)", [mail, link]));
-    await db.asUser(u.id, (q) => q("select public.send_referee_link($1, $2)", [phone, link]));
-    const rows = await sql("select to_email, to_phone, to_name, params from public.messages where template = 'referee_request' and person_id is null order by created_at");
-    const byName = Object.fromEntries(rows.map((r) => [r.to_name, r]));
-    expect(byName["Pastor Femi"]).toMatchObject({ to_email: "femi@church.org", to_phone: null });
-    expect(byName["Sister Ada"]).toMatchObject({ to_phone: "+2348035550001", to_email: null });
-    expect(byName["Pastor Femi"].params).toMatchObject({ applicant: "Appl2 Test", link });
-
-    for (let i = 0; i < 2; i++) await db.asUser(u.id, (q) => q("select public.send_referee_link($1, $2)", [mail, link]));
-    await expectCode(db.asUser(u.id, (q) => q("select public.send_referee_link($1, $2)", [mail, link])), "22023");
-    const other = await person("Other");
-    await expectCode(db.asUser(other.id, (q) => q("select public.send_referee_link($1, $2)", [mail, link])), "P0002");
-    await expectCode(db.asUser(u.id, (q) => q("select public.send_referee_link($1, 'javascript:alert(1)')", [phone])), "22023");
   });
 
   it("lets a leader set the meeting link, and nobody else", async () => {

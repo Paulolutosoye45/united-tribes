@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { answerAs, listInDirectory, uniqueEmail } from "./referee-kit";
 import { createTestDb, expectCode, type Row, type TestDb } from "./helpers";
 
 // Phase 1: the first check on a leader application. These tests drive the database directly, the way the app does:
@@ -76,9 +77,16 @@ async function draft(userId: string, opts: { consent?: string; over?: Partial<Re
     ),
   );
   const appId = rows[0].id as string;
-  await db.asUser(userId, (q) => q("select public.set_referee($1, 1, 'Pastor Ife', 'Unit head', 'ife@example.org', true)", [appId]));
-  await db.asUser(userId, (q) => q("select public.set_referee($1, 2, 'Sister Bola', 'Friend', 'bola@example.org', false)", [appId]));
+  await db.asUser(userId, (q) => q("select public.set_referee($1, 1, 'Pastor Ife', 'Unit head', $2, true)", [appId, uniqueEmail("ife")]));
+  await db.asUser(userId, (q) => q("select public.set_referee($1, 2, 'Sister Bola', 'Friend', $2, false)", [appId, uniqueEmail("bola")]));
   return appId;
+}
+
+/** A referee goes through the code and answers. The one the applicant called a pastor or unit head is on the church's list. */
+async function referee(appId: string, slot: number) {
+  const row = (await db.admin.query("select id, contact, is_pastor_or_unit_head as head from public.leader_references where application_id = $1 and slot = $2", [appId, slot])).rows[0];
+  if (row.head) await listInDirectory(db, row.contact);
+  await answerAs(db, row.id as string, { rating: 5 });
 }
 
 const worker = (sql: string, params: unknown[] = []) => db.asAnon((q) => q(sql, [token, ...params]));
@@ -402,9 +410,7 @@ describe("the AI's reading", () => {
 
     // Referees answer, then the pastor invites without two reviewers scoring first
     for (const slot of [1, 2]) {
-      const ref = (await db.admin.query("select id from public.leader_references where application_id = $1 and slot = $2", [appId, slot])).rows[0].id;
-      const secret = (await db.asUser(user.id, (q) => q("select public.renew_referee_link($1) as s", [ref]))).rows[0].s;
-      await db.asAnon((q) => q("select public.submit_reference($1, 5, 5, 5, 5, false, null)", [secret]));
+      await referee(appId, slot);
     }
     const pastor = await person("pastor");
     await db.asUser(pastor.id, (q) => q("select public.invite_to_interview($1)", [appId]));
@@ -414,11 +420,11 @@ describe("the AI's reading", () => {
   it("keeps referee links and the invitation closed until the first check is clear", async () => {
     const { user, appId } = await sentOn();
     const ref = (await db.admin.query("select id from public.leader_references where application_id = $1 and slot = 1", [appId])).rows[0].id;
-    await expectCode(db.asUser(user.id, (q) => q("select public.renew_referee_link($1)", [ref])), "22023");
+    await expectCode(db.asUser(user.id, (q) => q("select public.request_referee_send($1)", [ref])), "22023");
     const pastor = await person("pastor");
     await expectCode(db.asUser(pastor.id, (q) => q("select public.invite_to_interview($1)", [appId])), "22023");
     await score(appId);
-    await db.asUser(user.id, (q) => q("select public.renew_referee_link($1)", [ref]));
+    await db.asUser(user.id, (q) => q("select public.request_referee_send($1)", [ref]));
   });
 
   it("asks for more on weak answers, in the AI's words, and tells the applicant only the notes", async () => {
@@ -737,9 +743,7 @@ describe("people stay in charge", () => {
     expect(await messages(user.id, "leader_check_clear")).toHaveLength(1);
 
     for (const slot of [1, 2]) {
-      const ref = (await db.admin.query("select id from public.leader_references where application_id = $1 and slot = $2", [appId, slot])).rows[0].id;
-      const secret = (await db.asUser(user.id, (q) => q("select public.renew_referee_link($1) as s", [ref]))).rows[0].s;
-      await db.asAnon((q) => q("select public.submit_reference($1, 5, 5, 5, 5, false, null)", [secret]));
+      await referee(appId, slot);
     }
     await expectCode(db.asUser(pastor.id, (q) => q("select public.invite_to_interview($1)", [appId])), "22023");
     const director = await person("director");

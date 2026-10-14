@@ -1,13 +1,32 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { BROWSER_COOKIE, BROWSER_COOKIE_SECONDS, isBrowserMarker, newBrowserMarker, wantsMarker } from "@/lib/leaders/referee/marker";
 import { buildCsp, cspHeaderName, makeNonce } from "@/lib/security/csp";
 import { turnstileScriptUrl, turnstileSiteKey } from "@/lib/security/turnstile";
 import { updateSession } from "@/lib/supabase/proxy";
 
 /** Pages anyone can open without signing in. */
-const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/design", "/brand", "/icon", "/apple-icon", "/privacy", "/reference", "/r", "/guardian", "/manifest.webmanifest", "/sw.js", "/offline"];
+const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/design", "/brand", "/icon", "/apple-icon", "/privacy", "/reference", "/r", "/e", "/guardian", "/manifest.webmanifest", "/sw.js", "/offline"];
 
-/** Called by a service, not a person: the sign-in hook, the scheduler, the monitor, the message providers. Each proves itself with a signature or secret instead. */
-const HOOK_PATHS = ["/api/auth/send-code", "/api/cron/tick", "/api/health", "/api/webhooks/whatsapp", "/api/webhooks/email"];
+/**
+ * Called by a service, not a person: the sign-in hook, the scheduler, the monitor, the message providers, and the optional
+ * WhatsApp sender (inbound messages and receipts). Each proves itself with a signature or secret instead.
+ * Two are called by a person who is not signed in yet, because that is what signing in is: asking for a WhatsApp code
+ * (request-code, which checks the bot token and the limits itself) and asking whether WhatsApp is on (channel-status,
+ * which answers on, off or paused and nothing else).
+ */
+const HOOK_PATHS = [
+  "/api/auth/send-code",
+  "/api/auth/request-code",
+  "/api/auth/channel-status",
+  "/api/auth/whatsapp-inbound",
+  "/api/auth/whatsapp-receipt",
+  "/api/cron/tick",
+  "/api/health",
+  "/api/webhooks/whatsapp",
+  "/api/webhooks/email",
+  // The unsubscribe button a mail program shows by itself. It carries the long secret of one email.
+  "/api/email/unsubscribe",
+];
 
 function isPublic(pathname: string) {
   return HOOK_PATHS.includes(pathname) || PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -61,6 +80,18 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/home";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  // A browser marker for the applicant's pages and the referee's link, so an applicant answering as their own referee on the
+  // same browser can be noticed. Random, httpOnly, and only ever hashed before it reaches the database.
+  if (wantsMarker(pathname) && !isBrowserMarker(request.cookies.get(BROWSER_COOKIE)?.value)) {
+    response.cookies.set(BROWSER_COOKIE, newBrowserMarker(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: BROWSER_COOKIE_SECONDS,
+    });
   }
 
   return response;

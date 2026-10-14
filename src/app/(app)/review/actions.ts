@@ -124,3 +124,29 @@ export async function sendBackAction(appId: string, fields: string[], note: stri
   revalidatePath("/admin/leader-quality");
   return { ok: true };
 }
+
+/** A pastor confirms, in one tap, that this referee is a pastor or unit head. Needed for anyone who is not on the church's list. */
+export async function confirmStandingAction(appId: string, referenceId: string, note: string): Promise<Result> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId) || !isUuid(referenceId)) return { ok: false, message: TRY_AGAIN };
+  const { error } = await supabase.rpc("referee_confirm_standing", { p_reference: referenceId, p_note: String(note ?? "").trim().slice(0, 300) || null });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath(`/review/${appId}`);
+  revalidatePath("/review");
+  revalidatePath("/admin/referees");
+  return { ok: true };
+}
+
+/** A pastor says they looked at what held a reference back and it is fine. A note is required, and it is kept. */
+export async function clearFlagsAction(appId: string, referenceId: string, note: string): Promise<Result> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId) || !isUuid(referenceId)) return { ok: false, message: TRY_AGAIN };
+  const { error } = await supabase.rpc("referee_flags_clear", { p_reference: referenceId, p_note: String(note ?? "").trim().slice(0, 300) });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath(`/review/${appId}`);
+  revalidatePath("/review");
+  revalidatePath("/admin/referees");
+  return { ok: true };
+}

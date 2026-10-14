@@ -21,6 +21,10 @@ export function dailyJobFaults(calendar: unknown): string[] {
 export type DispatchSummary = {
   /** What the calendar did this time (how many messages it queued), or why it could not run. */
   calendar: unknown;
+  /** What the reminder journeys and announcements did this time. */
+  reminders?: unknown;
+  /** What the referee check's housekeeping did this time (old hashes and codes forgotten). */
+  referees?: unknown;
   claimed: number;
   sent: number;
   retried: number;
@@ -94,6 +98,22 @@ export async function runDispatch(o: Options): Promise<DispatchSummary> {
     const tick = await o.rpc("worker_tick");
     if (tick.error) summary.problems.push(`calendar: ${tick.error.message}`);
     else summary.calendar = tick.data;
+  }
+
+  // Reminders and announcements: the journeys are advanced and due announcements are released into the outbox here,
+  // so the claim below can write and send them. A fault never stops the rest of the messages.
+  if (o.tick !== false) {
+    const reminders = await o.rpc("worker_reminders_tick");
+    if (reminders.error) summary.problems.push(`reminders: ${reminders.error.message}`);
+    else summary.reminders = reminders.data;
+  }
+
+  // The referee check's housekeeping: old browser and network codes are forgotten, expired codes cleared, and a request that never
+  // found a way out stops saying "sending". Like the others, a fault is reported and never stops a message.
+  if (o.tick !== false) {
+    const referees = await o.rpc("worker_referee_tick");
+    if (referees.error) summary.problems.push(`referees: ${referees.error.message}`);
+    else summary.referees = referees.data;
   }
 
   for (let batch = 0; batch < (o.maxBatches ?? 8); batch++) {

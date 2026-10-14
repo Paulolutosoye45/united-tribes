@@ -26,7 +26,7 @@ import {
   STATUS_INFO,
 } from "@/lib/leaders/options";
 import { OPTION_IDS, SCENARIOS, SCENARIO_IDS, shuffled } from "@/lib/leaders/scenarios";
-import { IN_REVIEW, refereeMessage, salutation, stageStates, whatsappLink } from "@/lib/leaders/status";
+import { IN_REVIEW, refereeHeadsUp, salutation, stageStates, whatsappLink } from "@/lib/leaders/status";
 import { STEP_IDS, SECTIONS, canContinue, minutesLeft, nextStep, previousStep, sectionOf, shieldFills, timeLeftLabel } from "@/lib/leaders/steps";
 
 const ok = "I have been stepping into leadership at work this year and I am still learning how.";
@@ -297,11 +297,12 @@ describe("the applicant's tracker", () => {
 });
 
 describe("what we hand a referee", () => {
-  it("writes a polite message with the link in it", () => {
-    const text = refereeMessage("Pastor Ife Adeyemi", "https://x.test/reference/abc");
+  it("writes a polite heads-up that carries no link", () => {
+    const text = refereeHeadsUp("Pastor Ife Adeyemi", "Ada Obi");
     expect(text).toContain("Hello Pastor Ife,");
-    expect(text).toContain("https://x.test/reference/abc");
-    expect(refereeMessage("", "u")).toContain("Hello there,");
+    expect(text).toContain("(Ada Obi)");
+    expect(text).not.toMatch(/https?:|reference\//i);
+    expect(refereeHeadsUp("")).toContain("Hello there,");
   });
 
   it("greets people the way a Nigerian church would, keeping the title", () => {

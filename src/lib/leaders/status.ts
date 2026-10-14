@@ -41,9 +41,13 @@ export function salutation(fullName: string): string {
   return first;
 }
 
-/** The WhatsApp message an applicant sends a referee along with their private link. */
-export function refereeMessage(refereeName: string, url: string): string {
-  return `Hello ${salutation(refereeName)}, I am applying to lead a small group (a tribe) at The Covenant Nation, and I would be grateful if you would give a short reference for me. It takes about two minutes. This private link works once: ${url}`;
+/**
+ * A friendly heads-up the applicant may send a referee themselves. It has no link in it: the private link and the code come from
+ * the system, to the referee's own phone or email, and the applicant never holds them.
+ */
+export function refereeHeadsUp(refereeName: string, applicantName = ""): string {
+  const me = applicantName.trim() ? ` (${applicantName.trim()})` : "";
+  return `Hello ${salutation(refereeName)}, it's me${me}. I'm applying to lead a small group (a tribe) at The Covenant Nation and I've given your name as a referee. You'll get a message from United Tribes with a private link and a code. It takes about two minutes. Thank you so much!`;
 }
 
 /** wa.me link: opens the referee’s chat when we have their number, otherwise lets the sender choose. */

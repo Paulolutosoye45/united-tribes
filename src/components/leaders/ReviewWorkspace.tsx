@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Choice } from "@/components/ui/Choice";
 import { Textarea } from "@/components/ui/Input";
 import { AiScorecard } from "./AiScorecard";
+import { RefereeTrust } from "./RefereeTrust";
 import { ScaleInput } from "@/components/intake/ui";
 import type { Role } from "@/lib/auth/roles";
 import { cn } from "@/lib/cn";
@@ -31,13 +32,14 @@ import {
   WALK_LABELS,
   type RubricQuestion,
 } from "@/lib/leaders/options";
+import type { ReviewReferee } from "@/lib/leaders/referee/types";
 import type { ReferenceView, Readiness, ReviewDetail, Scorecard } from "@/lib/leaders/review-types";
 import { isDecided } from "@/lib/leaders/status";
 
 type Json = Record<string, unknown>;
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 
-export function ReviewWorkspace({ detail, roles, scorecard = null }: { detail: ReviewDetail; roles: Role[]; scorecard?: Scorecard | null }) {
+export function ReviewWorkspace({ detail, roles, scorecard = null, referees = null }: { detail: ReviewDetail; roles: Role[]; scorecard?: Scorecard | null; referees?: ReviewReferee[] | null }) {
   const answers = detail.answers as { calling?: Json; style?: Json };
   const calling = (answers.calling ?? {}) as Json;
   const style = (answers.style ?? {}) as Json;
@@ -126,7 +128,7 @@ export function ReviewWorkspace({ detail, roles, scorecard = null }: { detail: R
             </p>
           </Section>
 
-          <ReferencesBlock appId={detail.id} references={detail.references} canClear={isPastor && !decided} />
+          <ReferencesBlock appId={detail.id} references={detail.references} canClear={isPastor && !decided} trust={referees} />
         </div>
 
         <div className="flex flex-col gap-8">
@@ -192,7 +194,7 @@ function Answer({ label, text, sub }: { label: string; text: string; sub?: strin
 // References
 // ---------------------------------------------------------------------------
 
-function ReferencesBlock({ appId, references, canClear }: { appId: string; references: ReferenceView[]; canClear: boolean }) {
+function ReferencesBlock({ appId, references, canClear, trust }: { appId: string; references: ReferenceView[]; canClear: boolean; trust: ReviewReferee[] | null }) {
   return (
     <section className="flex flex-col gap-3">
       <div>
@@ -201,18 +203,21 @@ function ReferencesBlock({ appId, references, canClear }: { appId: string; refer
       </div>
       <ul className="flex flex-col gap-3">
         {references.length === 0 ? <li className="card t-body p-5 text-soft">No referees named.</li> : null}
-        {references.map((r) => (
-          <li key={r.id} className="card flex flex-col gap-3 p-5">
+        {references.map((r) => {
+          const t = trust?.find((x) => x.id === r.id) ?? null;
+          return (
+          <li key={r.id} className="card flex flex-col gap-3 p-5" data-testid={`reference-${r.slot}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate font-semibold">{r.name}</p>
                 <p className="t-small text-soft">
                   {r.relationship}
-                  {r.head ? ", pastor or unit head" : ""} · {r.contact}
+                  {r.head ? (t ? ", says pastor or unit head" : ", pastor or unit head") : ""} · {r.contact}
                 </p>
               </div>
               <Badge tone={r.answered ? "gold" : "outline"}>{r.answered ? "Answered" : "Waiting"}</Badge>
             </div>
+            {t ? <RefereeTrust appId={appId} trust={t} answered={r.answered} /> : null}
             {r.answered ? (
               <>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
@@ -240,7 +245,8 @@ function ReferencesBlock({ appId, references, canClear }: { appId: string; refer
               </>
             ) : null}
           </li>
-        ))}
+          );
+        })}
       </ul>
     </section>
   );

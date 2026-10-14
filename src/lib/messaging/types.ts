@@ -1,3 +1,5 @@
+import type { DesignSpec } from "@/lib/outreach/email-design";
+
 export type Channel = "whatsapp" | "email" | "sms";
 export type Params = Record<string, unknown>;
 
@@ -30,6 +32,10 @@ export type EmailContent = {
   cta?: { label: string; url: string };
   /** Extra links below the button, such as the three answers to the Friday question. */
   options?: { label: string; url: string }[];
+  /** A fully designed email (reminders and announcements): used instead of the plain layout, with its own footer. */
+  design?: DesignSpec;
+  /** Extra mail headers, such as the one-click unsubscribe that mail programs show as a button. */
+  headers?: Record<string, string>;
 };
 
 export type WhatsAppContent = {
@@ -57,6 +63,8 @@ export type TemplateDef = {
   audience: "member" | "leader" | "coach" | "care" | "applicant" | "referee" | "office" | "guardian";
   /** What this is, for the list of templates and the message log. */
   title: string;
+  /** Only ever sent by email (a staff alert): it is never put to Meta for approval. The WhatsApp wording still exists so the type is whole. */
+  emailOnly?: boolean;
   email: (p: Params, c: Context) => EmailContent;
   sms: (p: Params, c: Context) => string;
   whatsapp: (p: Params, c: Context) => WhatsAppContent;

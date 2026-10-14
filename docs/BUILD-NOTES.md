@@ -9,7 +9,33 @@ The United Tribes small-group platform at The Covenant Nation, Iganmu. Phase 0 l
 
 Stack: Next.js 16 (App Router), TypeScript, Tailwind CSS 4, Supabase (Postgres, Auth, row level security).
 
+## Round 2, Phase 2: proving the referee is the person named
+
+The applicant no longer holds the referee's link: the system sends it, with a six-digit code to the same contact, and the church's
+own list of pastors and unit heads (uploaded from a spreadsheet on the Admin page, updated by uploading again) decides who counts as
+a pastor or unit head. Judgement calls: a check proves control of a phone or email, not identity, so the answer to a doubt is a
+**hold plus a human look**, never a refusal; "same network" is a note, not a hold (shared wifi); the link and the code are made
+when the message is *picked up for sending* so they are never stored in the queue; link-preview robots do not count as "opened";
+the list matches people by phone or email, never by name; an upload shows what it would do before it does it, can be undone, and a
+"replace" that would take most of the list off needs a tick; a role the reader cannot understand is asked about, not guessed;
+references received before the release stay valid as "not verified" and are re-confirmed by their referees on request; nothing is
+deleted. Current guide: **docs/REFEREES.md**.
+
+## Round 2, Phase 7: messages and reminders
+
+Announcements and four automatic email journeys on one outbox. Judgement calls: audiences are live queries with frozen recipients at
+approval; the condition is re-checked when a message is claimed, not when it is queued; an email more than 3 days late is skipped;
+every journey starts in Rehearsal; links open a page and only a button press records a choice (so scanners cannot unsubscribe
+anyone); no tracking pixel; a 10% hold-out is the default. Current guide: **docs/MESSAGES-REMINDERS.md**.
+
 ## What works in Phase 7: sign-in with a code on WhatsApp
+
+> **Changed in Round 2, Phase 6.** The screen described below is no longer a separate "Continue with WhatsApp" button: it is now
+> one panel with an **Email | WhatsApp** switch, and WhatsApp has limits, a circuit breaker, a kill switch and an office page
+> (`/admin/signin`). Everything about it is in **docs/SIGNIN-CHANNELS.md**, which is the current guide. Set-up **A** below
+> (Twilio *inside* Supabase) can no longer show WhatsApp sign-in, because it never calls our hook and so cannot have the limits;
+> use B (Meta) or the ordinary-number route from that page. The rest of this section (one person, one account; neutral replies;
+> adding a number from the profile) still holds.
 
 **The rule: one person, one account.** A WhatsApp number is *added* to an account that began with Google or an email code. It never makes an account of its own. If it could, someone who signed up by email and later tried WhatsApp would land in a second, empty account and appear to have lost their tribe. So:
 

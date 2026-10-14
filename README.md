@@ -27,6 +27,8 @@ launch.
   Picture and Covenant, then choose and commit. Ask later to swap into a different tribe.
 - *The weekly rhythm*: the week's guide, one small step, the Friday check-in, days in the Word, testimonies, and a private
   progress card.
+- *Messages and reminders*: announcements to live audiences with preview, test and second-person approval, and four automatic
+  email journeys with a button back to the exact step of the form. See `docs/MESSAGES-REMINDERS.md`.
 - *Profile*: change or delete answers, choose how to be reached (WhatsApp, email, text), add a WhatsApp number to sign in with,
   **download a copy of everything held**, **ask for the account to be deleted**, and read the privacy notice.
 - Installable on a phone, with an offline page. Light and dark mode. Built phone-first.
@@ -109,7 +111,7 @@ secrets, backups, and what to do when something is wrong. The short version:
 - **URLs:** Site URL = your address. Redirect URLs: `https://YOUR-DOMAIN/auth/callback` and `https://YOUR-DOMAIN/auth/confirm`.
 - **Rate limits:** raise the hourly limit for sending codes for a Sunday-morning rush.
 - **Bot check (recommended):** see `.env.example` ("Bot check") for the order of the steps.
-- **WhatsApp sign-in codes (optional):** docs/BUILD-NOTES.md, "Phase 7", has the two set-ups.
+- **Sign-in codes on WhatsApp or email (optional for WhatsApp):** docs/SIGNIN-CHANNELS.md has the three ways to send (Meta, an ordinary number, an ordinary number that replies first), the limits, the circuit breaker and the office page at `/admin/signin`.
 
 ## What was checked, and how
 
@@ -140,7 +142,7 @@ retention); **09** data rights (download, request, office answer, erasure, signe
    a day on a staging project before real members: sign in with Google and with an emailed code, send a message on each channel,
    run the heartbeat, switch on the bot check, and walk the member journey.
 2. **WhatsApp:** templates need Meta's approval (`npm run templates -- --submit`). Whether adding or changing a number sends the
-   code on WhatsApp rather than as a text depends on the provider; test it (docs/BUILD-NOTES.md, Phase 7).
+   code on WhatsApp rather than as a text depends on the provider; test it (docs/SIGNIN-CHANNELS.md). Twilio set up *inside* Supabase cannot have the sign-in limits, so WhatsApp sign-in stays off for it.
 3. **The container image has not been built** (there is no Docker here). The Dockerfile follows the standard Next.js standalone
    pattern and the standalone server it runs was started and checked, but build the image once before relying on it. The Supabase
    CLI settings in `supabase/config.toml` were not run either, and the heartbeat workflow has not run on GitHub.
@@ -247,7 +249,7 @@ public/                    Icons, brand, the service worker (sw.js)
 tests/unit, tests/db       Fast tests; database tests against a real Postgres
 e2e/                       Browser journeys, the stand-ins, and the runner
 scripts/                   standin, reseal, templates (WhatsApp wording), bakeoff (assistant comparison)
-docs/                      ADMIN, OPERATIONS, RETENTION, BI, MULTI-CENTRE, TEENS, BUILD-NOTES
+docs/                      ADMIN, OPERATIONS, RETENTION, BI, MULTI-CENTRE, TEENS, SIGNIN-CHANNELS, BUILD-NOTES
 .github/workflows/         CI, and the heartbeat alternative to Vercel's schedule
 Dockerfile, vercel.json    The container; the five-minute schedule
 ```
@@ -265,4 +267,5 @@ To change a question's options edit `src/lib/intake/options.ts` or the catalogue
 | `docs/BI.md` | The data lead | The reporting copy and how to connect Power BI |
 | `docs/MULTI-CENTRE.md` | Whoever opens a second centre | What is done, what remains, and the switch |
 | `docs/TEENS.md` | Pastorate | The 13-to-17 track and its safeguards |
+| `docs/SIGNIN-CHANNELS.md` | Whoever sets up sign-in; the data lead; the director | Sign-in by code on WhatsApp or email: the routes, limits, circuit breaker, `/admin/signin`, set-up, limits of what can be promised |
 | `docs/BUILD-NOTES.md` | Reviewer | How each phase's rules work and which choices were judgement calls (history) |

@@ -18,7 +18,8 @@ docs/RETENTION.md.
 - **The database** is the authority. Every table has row-level security, and the app has no all-powerful key: it never holds
   Supabase's service-role key, so even a bug in the app cannot read what the signed-in person may not. Keep it that way: do not
   add that key to the app's settings.
-- **The heartbeat** (`/api/cron/tick`) runs the season calendar, sends what is due, writes new report summaries and, once a day,
+- **The heartbeat** (`/api/cron/tick`) runs the season calendar, sends what is due, writes new report summaries, tidies the referee
+  checks (forgets spent codes and ended sessions; marks a request that never went out as *Couldn’t reach*) and, once a day,
   refreshes the reporting copy and applies the clean-up rules. If it stops, nothing breaks for members today, but reminders
   and weekly messages stop. Watching it is the one job that matters most (see "Watching it" below).
 - **Providers** are all optional and each is off until its settings are present. With none set, the site works and messages are
@@ -53,7 +54,7 @@ Do these in order. About half a day, most of it waiting for WhatsApp template ap
    With the secret it also shows the message queue:
    `curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR-SITE/api/health`.
 9. **WhatsApp:** `npm run templates -- --submit` sends the message wordings to Meta for approval (minutes to a day), then
-   set up WhatsApp sign-in only if wanted (docs/BUILD-NOTES.md, "Phase 7"). Email: verify the sending domain at Resend first. Text: Termii's sender name needs
+   set up WhatsApp sign-in only if wanted (docs/SIGNIN-CHANNELS.md). Email: verify the sending domain at Resend first. Text: Termii's sender name needs
    approval. Until a channel works, leave it unset.
 10. **Walk through it once** as a real person on a phone: sign in, fill the form, then open Admin and work down the checklist
     ("Before the season opens").
@@ -81,7 +82,8 @@ with the reasons, is in `.env.example`.
 | `WORKER_TOKEN` | required for messages | From step 5. |
 | `CRON_SECRET` | required for messages | Who may call the heartbeat and see the detailed health check. |
 | `WHATSAPP_*`, `EMAIL_*`/`RESEND_*`, `SMS_*`/`TERMII_*`/`TWILIO_*` | per channel | Sending providers. `MESSAGING_MODE=log` writes messages to the log instead of sending, for a rehearsal. |
-| `WHATSAPP_SIGNIN=on` | optional | Shows "sign in with a WhatsApp code" once a sender is working. |
+| `WHATSAPP_SIGNIN=on` | optional | Shows the WhatsApp tab on the sign-in screen once a sender is working. Needs the hook (docs/SIGNIN-CHANNELS.md). |
+| `SIGNIN_WHATSAPP_ROUTE`, `LINKED_SENDER_URL`, `LINKED_SENDER_SECRET`, `WHATSAPP_SIGNIN_NUMBER`, `SIGNIN_HASH_SALT` | optional | Only for sign-in codes from an ordinary WhatsApp number (the `sender/` service). Read docs/SIGNIN-CHANNELS.md first: WhatsApp can restrict such a number. Leave unset for the official (Meta) route. |
 | `AI_PROVIDER`, `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`, `STT_PROVIDER` | optional | Suggestions and voice notes. Off with no key. |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | optional, recommended | The bot check (below). |
 | `CSP_REPORT_ONLY` | emergencies | See the runbook entry "A page is blank or a button does nothing". |
@@ -126,6 +128,7 @@ history) and Admin → Message log (failed messages and why).
 | Supabase publishable key | Rarely needed. Rotate in Supabase, replace both `NEXT_PUBLIC_` values, rebuild. | Sign-in is down until the new build is live. |
 | Turnstile secret | Rotate in Cloudflare, paste into the host **and** Supabase → Attack Protection, deploy. | Sign-in and parents' "yes" are refused in the gap. Do it off-hours. |
 | `DATA_ENCRYPTION_KEYS` | See below. | Nothing, done in order. |
+| `SIGNIN_HASH_SALT` | Make a new one (`openssl rand -hex 32`), put it in the host, deploy. If you never set one, a salt is derived from `WORKER_TOKEN`, so changing that token changes it too. | Older hashes stop matching: referee checks for the *same browser or network as the applicant* forget what they knew before the change (they get weaker for a while, nothing breaks), and so do the sign-in limits that use the same salt. |
 
 ### Changing the key that seals private notes
 
@@ -181,7 +184,7 @@ again), or those notes cannot be recovered. The database password is used only h
 Find the symptom, do the check, apply the fix. Nothing here needs the database password.
 
 **Members say they did not get their sign-in code.**
-1. Is it email, or WhatsApp? WhatsApp codes: is `WHATSAPP_SIGNIN=on` and the sender set up (docs/BUILD-NOTES.md, "Phase 7")?
+1. Is it email, or WhatsApp? WhatsApp codes: is `WHATSAPP_SIGNIN=on` and the sender set up (docs/SIGNIN-CHANNELS.md)? See also the next entry.
 2. Email: Supabase's built-in sender is only for testing and allows a handful an hour. Check Authentication → SMTP Settings has the
    church's own sender, and Authentication → Rate Limits allows enough sign-in emails per hour for a Sunday morning.
 3. Look in the sender's own log (Resend, or Supabase → Authentication → Logs) for bounces and spam-folder rejections; check SPF,
@@ -189,6 +192,28 @@ Find the symptom, do the check, apply the fix. Nothing here needs the database p
 4. If the bot check was recently switched on or its keys changed, it may be failing: the sign-in page then says "We couldn’t check
    that you are a person. Reload the page, or try again in a moment." Check the site key is right and the site was rebuilt after
    setting it, and that the secret matches in both places; or turn the Supabase CAPTCHA switch off while you sort it out.
+
+**Announcements or reminders are not going out, or a journey says "Paused".**
+1. Open **Admin → Automatic reminders** (`/admin/reminders`). A journey that stopped itself says why (unsubscribes above 1% or
+   complaints above 0.1% in a day). Read the emails, fix the cause, then press Restart. It never restarts on its own.
+2. Is the master switch on, and is the journey **On** (not Rehearsal)? Rehearsal sends nothing by design.
+3. Outside the hours (reminders 9am–7pm Lagos, announcements 8am–8pm) mail waits for morning. The heartbeat (`/api/cron/tick`) must be running.
+4. An announcement for 200 or more people waits until a second person approves it: **Admin → Announcements → Approvals**.
+5. Email provider checks as for sign-in codes, plus the Resend webhook (`/api/webhooks/email`) so bounces and complaints reach the self-pause.
+6. The footer address is set in the `reminder_settings` row (`church_address`). See docs/MESSAGES-REMINDERS.md.
+
+**WhatsApp codes stopped, or the sign-in screen says "WhatsApp codes are paused today".**
+1. Open **Admin → WhatsApp sign-in** (`/admin/signin`; the director, a super admin and the data lead can). It says **On**, **Paused**
+   or **Switched off**. If Paused, it says why and what to look at first. Email sign-in is not affected by any of this.
+2. Paused by itself: read the reason (failed sends, refusals, no delivery receipts, people replying STOP, or the sender logged out).
+   Fix that (for an ordinary number: open the phone, check the sender's log, check the number is not restricted), then press
+   **Restart** and write a note. It never restarts on its own.
+3. Switched off: someone pressed the kill switch. The log on the same page says who and when.
+4. Busy event: a hall on one wifi shares one connection. Raise the per-connection and channel limits for the day on the same page.
+5. Nothing at all on the page: the database file `20261212000100_signin_channels.sql` has not been applied.
+6. The WhatsApp tab is missing from the sign-in screen altogether (not greyed): the site is not fully set up for it. It needs
+   `WHATSAPP_SIGNIN=on`, a sender (Meta settings, or `LINKED_SENDER_*`), `WORKER_TOKEN`, and for reply-first a valid
+   `WHATSAPP_SIGNIN_NUMBER`. Twilio set up *inside* Supabase also lands here, on purpose (docs/SIGNIN-CHANNELS.md).
 
 **Messages (reminders, weekly nudges) are not going out.**
 1. `curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR-SITE/api/health`. Look at `queue` and `channels`.

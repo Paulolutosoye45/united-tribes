@@ -109,6 +109,9 @@ export const CONTENT_ROLES: readonly Role[] = ["admin", "director", "pastor"];
 /** Answers members who ask for their account to be deleted. The database refuses anyone else, and refuses an erasure that would leave the church without an admin. */
 export const PRIVACY_ROLES: readonly Role[] = ["admin", "director"];
 
+/** Runs WhatsApp sign-in: the switch, the limits, the breaker and its log. The director, a super admin (the admin role) and the data lead. The database checks the same. */
+export const SIGNIN_ROLES: readonly Role[] = ["admin", "director", "data_lead"];
+
 /** Changes the targets, reads the message log and keeps the reporting copy. */
 export const DATA_ROLES: readonly Role[] = ["admin", "director", "data_lead"];
 
@@ -187,7 +190,32 @@ export const EVERY_AREA: readonly { href: string; label: string; about: string }
   { href: "/lead", label: "Lead a tribe", about: "The leader's side" },
   { href: "/tribe", label: "My tribe", about: "The member's side" },
   { href: "/admin/people", label: "People and roles", about: "Invite, promote, remove" },
+  { href: "/admin/referees", label: "Pastors and unit heads", about: "The church’s list that checks referees, and the call-backs" },
   { href: "/admin/privacy", label: "Data requests", about: "Who asked to be deleted" },
   { href: "/admin/system", label: "Sending and reporting", about: "The message service and the reporting copy" },
   { href: "/admin/settings", label: "Church settings", about: "The church's own words and switches" },
 ];
+
+/** Writes announcements to members. A champion writes only to their own community, and always needs a second person's approval. The database checks the same. */
+export const ANNOUNCE_ROLES: readonly Role[] = ["admin", "director", "pastor", "community_champion"];
+
+/** Reads the announcements and their results (a data lead reads, never writes). */
+export const ANNOUNCE_VIEW_ROLES: readonly Role[] = [...ANNOUNCE_ROLES, "data_lead"];
+
+/** Says yes or no to an announcement, never to their own. */
+export const APPROVE_ROLES: readonly Role[] = ["admin", "director", "pastor"];
+
+/** Sees the reminder journeys and their numbers. An admin or a director changes them; a pastor edits and approves the wording. */
+export const REMINDER_ROLES: readonly Role[] = ["admin", "director", "pastor", "data_lead"];
+
+/** Sees who asked for a person to reach out after a reminder, and can open a WhatsApp chat with them (only those who agreed). */
+export const ASK_ROLES: readonly Role[] = ["admin", "director", "pastor", "care_lead"];
+
+/** Keeps the church's list of pastors and unit heads (uploads it, edits it, changes what counts) and asks for old references to be confirmed. The database checks the same. */
+export const REFEREE_MANAGER_ROLES: readonly Role[] = ["pastor", "director", "admin"];
+
+/** Confirms that a referee is a pastor or unit head, and clears a hold on a reference. Only people who decide, never the office alone. */
+export const REFEREE_DECIDER_ROLES: readonly Role[] = ["pastor", "director"];
+
+/** Makes the call-backs: the short call to a referee who was flagged or picked at random. */
+export const REFEREE_CARE_ROLES: readonly Role[] = ["care_lead", "pastor", "director", "admin"];

@@ -1,4 +1,5 @@
 import { formatLagosDay, formatLagosTime } from "@/lib/dates";
+import { designedHtml, designedText } from "@/lib/outreach/email-design";
 import { flat } from "./format";
 import { TEMPLATES } from "./templates";
 import type { ClaimedMessage, Context, EmailContent, Params, TemplateDef } from "./types";
@@ -43,7 +44,7 @@ export function buildContext(msg: ClaimedMessage, site: string): Context {
 // Email
 // ---------------------------------------------------------------------------
 
-export type RenderedEmail = { subject: string; html: string; text: string };
+export type RenderedEmail = { subject: string; html: string; text: string; headers?: Record<string, string> };
 
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -69,6 +70,7 @@ function footerFor(def: TemplateDef, c: Context): { html: string; text: string }
 }
 
 export function emailBody(def: TemplateDef, content: EmailContent, c: Context): { html: string; text: string } {
+  if (content.design) return { html: designedHtml(content.design), text: designedText(content.design) };
   const footer = footerFor(def, c);
   const paragraphs = content.paragraphs.map((p) => p.trim()).filter(Boolean);
   const cta = content.cta && safeUrl(content.cta.url) ? content.cta : undefined;
@@ -110,7 +112,7 @@ export function renderEmail(msg: ClaimedMessage, site: string): RenderedEmail {
   const content = def.email(prepareParams(msg.params), c);
   const { html, text } = emailBody(def, content, c);
   // A subject is one short line.
-  return { subject: flat(content.subject, "United Tribes").slice(0, 150), html, text };
+  return { subject: flat(content.subject, "United Tribes").slice(0, 150), html, text, ...(content.headers ? { headers: content.headers } : {}) };
 }
 
 // ---------------------------------------------------------------------------

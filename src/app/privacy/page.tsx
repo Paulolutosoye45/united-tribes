@@ -56,6 +56,7 @@ const SECTIONS = [
     body: [
       "When you apply to lead a tribe we collect your answers, your WhatsApp number, the names and contact details of your two referees, and the scores the review gives you. Your referees answer four short questions about you and can raise a concern. A panel of pastors, directors and coaches reads your application, scores it on their own, and a pastor makes the final decision. Nobody else sees it. You never see your referees’ ratings or notes, or the panel’s scores.",
       "You can withdraw and delete your application at any time until you are approved. If you are approved, we keep the record of your application and the decision while you serve, so that members can be kept safe. If you give a reference, we keep your name, your contact details, your ratings and your note only for this review, and your private link works once.",
+      "We check that a reference comes from the person the applicant named. The private link goes only to the phone number or email the applicant gave, and a six-digit code goes to the same place; the ratings cannot be sent until that code is typed in. We compare the contact with the church’s own list of pastors and unit heads, which only the pastors, the director and the admins can see and which the applicant never sees. To notice when someone answers as their own referee, we keep two scrambled codes (they cannot be turned back into an address or a person): one for the network and one for the browser the link was opened on, next to the same codes from the applicant’s own sign-ins. They are deleted after 45 days. Some references are followed up with a short call from the care team to the number or email the applicant gave. Nothing in this check is shown to the applicant except whether the request was sent, opened, confirmed and answered.",
     ],
   },
   {
@@ -100,7 +101,7 @@ const SECTIONS = [
   {
     title: "How long we keep it",
     body: [
-      "We keep your answers while you are part of the programme and delete them when you ask. A form you started but did not finish is deleted after 30 days. The sentence you wrote about your season is removed when that season ends. The wording of messages we sent you is removed after 90 days (we keep only that a message was sent, by which channel, and whether it arrived). Messages sent to someone who is not a member, such as a referee or a parent, are deleted after 90 days.",
+      "We keep your answers while you are part of the programme and delete them when you ask. A form you started but did not finish is deleted after 30 days. The sentence you wrote about your season is removed when that season ends. The wording of messages we sent you is removed after 90 days (we keep only that a message was sent, by which channel, and whether it arrived). Messages sent to someone who is not a member, such as a referee or a parent, are deleted after 90 days. The codes and links for referees are cleared as soon as the message goes out.",
       "When your account is deleted it is removed from the live system straight away. Copies in our database backups disappear when those backups are replaced, and the reporting copy drops you at its next daily refresh.",
     ],
   },

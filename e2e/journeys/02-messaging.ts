@@ -52,7 +52,7 @@ async function main() {
   check(await page.getByRole("heading", { name: "How we reach you" }).isVisible(), "the profile page has a “How we reach you” card");
   await page.getByLabel("Phone number").fill("0803 123 4567");
   await page.locator(`label.choice:has(input[name="whatsapp"])`).click();
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByLabel("How we reach you").getByRole("button", { name: "Save", exact: true }).click();
   await page.getByText("Saved. We’ll use these from now on.").waitFor({ timeout: 10000 });
   check(true, "saving the contact card confirms it");
   const cp = await one("select phone, preferred from public.contact_preferences where person_id = $1", [chidi]);
@@ -62,7 +62,7 @@ async function main() {
 
   // an invalid number is explained, not saved
   await page.getByLabel("Phone number").fill("12");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByLabel("How we reach you").getByRole("button", { name: "Save", exact: true }).click();
   await page.getByText("doesn’t look right").waitFor({ timeout: 10000 });
   check((await one("select phone from public.contact_preferences where person_id = $1", [chidi])).phone === "+2348031234567", "a number that does not look right is explained and nothing changes");
   await noOverflow(page, "profile on a phone");

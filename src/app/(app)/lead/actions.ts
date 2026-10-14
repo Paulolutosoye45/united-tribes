@@ -1,25 +1,30 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies, headers } from "next/headers";
 import { getSession } from "@/lib/auth/session";
 import { SESSION_ENDED, TRY_AGAIN, friendly, isUuid } from "@/lib/leaders/errors";
-import { siteOrigin } from "@/lib/leaders/origin";
+import { BROWSER_COOKIE, traceOf } from "@/lib/leaders/referee/trace";
 import { createClient } from "@/lib/supabase/server";
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; message: string };
 
 /**
- * Makes a new private link for one referee. The secret is returned once and is
- * not stored, so the old link stops working and a lost link is simply replaced.
+ * "Send request": the system makes the private link and sends it to the referee's own phone or email. The applicant is never given
+ * it, so they cannot answer for the referee. This also notes, as scrambled codes only, where the applicant is signed in from.
  */
-export async function makeRefereeLinkAction(referenceId: string): Promise<Result<{ url: string }>> {
+export async function requestRefereeAction(referenceId: string): Promise<Result<{ kind: "email" | "phone" | null }>> {
   const session = await getSession();
   if (!session) return { ok: false, message: SESSION_ENDED };
   if (!isUuid(referenceId)) return { ok: false, message: TRY_AGAIN };
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("renew_referee_link", { p_reference: referenceId });
-  if (error || typeof data !== "string") return { ok: false, message: friendly(error) };
-  return { ok: true, url: `${await siteOrigin()}/reference/${data}` };
+  const trace = traceOf(await headers(), (await cookies()).get(BROWSER_COOKIE)?.value);
+  if (trace.net && trace.bid) await supabase.rpc("referee_note_applicant", { p_net: trace.net, p_bid: trace.bid });
+  const { data, error } = await supabase.rpc("request_referee_send", { p_reference: referenceId });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath("/lead");
+  const kind = (data as { kind?: unknown } | null)?.kind;
+  return { ok: true, kind: kind === "email" || kind === "phone" ? kind : null };
 }
 
 export async function bookInterviewAction(slotId: string): Promise<Result> {

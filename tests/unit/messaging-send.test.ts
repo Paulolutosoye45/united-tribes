@@ -121,6 +121,22 @@ describe("email sender", () => {
     expect(body.text).toContain("Hi Ada,");
   });
 
+  it("sends the one-click unsubscribe headers with a reminder or an announcement, and none with an ordinary message", async () => {
+    const stop = "ab".repeat(32);
+    const reminder = msg("reminder_email", {
+      channel: "email",
+      params: { kind: "reminder", copy: { journey: "member_form", step: 1, tone: "warm", subject: "Hello {first_name}", paragraphs: ["Hi."], button_label: "Go", actions: [] }, data: { first_name: "Ada", step: "story" }, links: { go: "cd".repeat(32), stop, prefs: "ef".repeat(32) }, church: { name: "The Covenant Nation", address: "Ota" } },
+    });
+    const { fetcher, calls } = fakeFetch([json(200, { id: "em_3" }), json(200, { id: "em_4" })]);
+    await make(fetcher).send(reminder, SITE);
+    await make(fetcher).send(msg("welcome", { channel: "email" }), SITE);
+    expect((calls[0].body as { headers: Record<string, string> }).headers).toEqual({
+      "List-Unsubscribe": `<${SITE}/api/email/unsubscribe?t=${stop}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    });
+    expect((calls[1].body as { headers?: unknown }).headers).toBeUndefined();
+  });
+
   it("marks an urgent care alert high priority", async () => {
     const { fetcher, calls } = fakeFetch([json(200, { id: "em_2" })]);
     await make(fetcher).send(msg("care_urgent", { channel: "email", urgency: "urgent" }), SITE);
@@ -250,6 +266,21 @@ describe("the dispatcher", () => {
       { p_id: "b", p_outcome: "retry", p_error: "down", p_retry_minutes: 7 },
       { p_id: "c", p_outcome: "rejected", p_error: "invalid number", p_retry_minutes: undefined },
     ]);
+  });
+
+  it("tidies the referee check each time, and reports a fault without stopping the messages", async () => {
+    const calls: string[] = [];
+    const rpc: WorkerRpc = async (fn) => {
+      calls.push(fn);
+      if (fn === "worker_referee_tick") return { data: null, error: { message: "locked" } };
+      if (fn === "worker_claim") return { data: calls.filter((c) => c === "worker_claim").length === 1 ? [row("a")] : [], error: null };
+      return { data: null, error: null };
+    };
+    const wa = provider("whatsapp", [ok("wamid.9")]);
+    const summary = await runDispatch({ rpc, providers: { whatsapp: wa, email: null, sms: null }, site: SITE });
+    expect(calls).toContain("worker_referee_tick");
+    expect(summary.problems).toEqual(["referees: locked"]);
+    expect(summary.sent).toBe(1);
   });
 
   it("turns a message back when its channel is not set up, so the database tries the next", async () => {

@@ -1,4 +1,6 @@
 import { clock, dayName, flat, list, meetsText, names, num, shortDay, smsLine, str } from "./format";
+import { OUTREACH_TEMPLATES } from "@/lib/outreach/templates";
+import { salutation } from "@/lib/leaders/status";
 import { digestSummary } from "./summary";
 import type { Context, Params, TemplateDef } from "./types";
 
@@ -951,27 +953,134 @@ const leaderCheckClear: TemplateDef = {
 };
 
 // ---------------------------------------------------------------------------
+// Sign-in codes on WhatsApp: alerts for the people who run it. Email only, and never any code or number.
+// ---------------------------------------------------------------------------
+
+export const SIGNIN_REASONS: Record<string, string> = {
+  failed_sends: "too many WhatsApp codes failed to send",
+  rejections: "WhatsApp refused too many codes",
+  no_receipts: "most recent codes show no sign of arriving",
+  stop_spike: "several people replied STOP or “not me”",
+  sender_logged_out: "the sending number was logged out of WhatsApp",
+  sender_restricted: "WhatsApp restricted the sending number",
+  sender_unreachable: "the sending service could not be reached for a while",
+};
+
+const signinPaused: TemplateDef = {
+  key: "signin_paused",
+  audience: "office",
+  emailOnly: true,
+  title: "WhatsApp sign-in codes have paused themselves",
+  email: (p, c) => ({
+    subject: "WhatsApp sign-in codes are paused",
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      `WhatsApp sign-in codes stopped by themselves because ${SIGNIN_REASONS[str(p.reason)] ?? "something looked wrong"}. Everyone can still sign in with Google or a code by email.`,
+      "Nothing turns it back on by itself. When you have looked into it, open the page below and turn WhatsApp codes back on.",
+    ],
+    cta: { label: "Open WhatsApp sign-in", url: c.link("/admin/signin") },
+  }),
+  sms: (_p, c) => smsLine("WhatsApp sign-in codes have paused themselves. Email sign-in still works. Look into it here:", c.link("/admin/signin")),
+  whatsapp: (_p, c) => ({
+    body: "Hi {{1}}, WhatsApp sign-in codes have paused themselves and email sign-in still works. Please look into it and turn them back on here: {{2}}",
+    example: ["Ngozi", "https://unitedtribes.example/admin/signin"],
+    vars: [flat(c.first), flat(c.link("/admin/signin"))],
+  }),
+};
+
+const signinStopAlert: TemplateDef = {
+  key: "signin_stop_alert",
+  audience: "office",
+  emailOnly: true,
+  title: "Someone replied STOP or “not me” to a sign-in code",
+  email: (p, c) => ({
+    subject: "Someone replied to a WhatsApp sign-in code",
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      str(p.kind) === "not_me"
+        ? "Someone replied “not me” to a WhatsApp sign-in code, so a code was sent to a number whose owner did not ask for it."
+        : "Someone replied STOP to a WhatsApp sign-in code.",
+      "No more codes will go to that number for 30 days. If this keeps happening, WhatsApp codes pause themselves and you will be told.",
+    ],
+    cta: { label: "Open WhatsApp sign-in", url: c.link("/admin/signin") },
+  }),
+  sms: (_p, c) => smsLine("Someone replied STOP or “not me” to a WhatsApp sign-in code. Codes to that number are blocked for 30 days:", c.link("/admin/signin")),
+  whatsapp: (_p, c) => ({
+    body: "Hi {{1}}, someone replied STOP or not me to a WhatsApp sign-in code, so codes to that number are blocked for 30 days. See the details here: {{2}}",
+    example: ["Ngozi", "https://unitedtribes.example/admin/signin"],
+    vars: [flat(c.first), flat(c.link("/admin/signin"))],
+  }),
+};
+
+// ---------------------------------------------------------------------------
 // A referee, with no account
 // ---------------------------------------------------------------------------
 
+// The link and the code are made by the database at the moment the message goes out (claim_prepare), so neither is ever stored or shown
+// to the applicant. `secret` is the end of the link; `code` is the six digits.
 const refereeRequest: TemplateDef = {
   key: "referee_request",
   audience: "referee",
   title: "A reference is requested",
   email: (p, c) => ({
-    subject: `${str(p.applicant)} has asked you for a reference`,
-    greeting: `Dear ${c.first},`,
+    subject: `${str(p.applicant)} has asked you to speak for them`,
+    greeting: `Dear ${salutation(str(p.referee))},`,
     paragraphs: [
-      `${str(p.applicant)} is applying to lead a small group at The Covenant Nation and has named you as a referee.`,
-      "It takes about five minutes, needs no sign-in, and your answers are seen only by the pastoral team, never by the applicant. The link works once.",
+      `${str(p.applicant)} is applying to lead a small group at The Covenant Nation and has named you as a referee: someone who knows them well enough to speak for them.`,
+      "It takes about two minutes. First we send a six-digit code to this same address, so we know the reference really comes from you. Then four short questions.",
+      `What you say goes only to the pastoral team. ${str(p.applicant_first) || "The applicant"} never sees it. If this was not expected, you can ignore this message: nothing happens unless you open the link.`,
+      `The link is for you alone, so please do not forward it. It stays open for ${num(p.days, 30)} days.`,
     ],
-    cta: { label: "Give a reference", url: str(p.link) },
+    cta: { label: "Give a reference", url: c.link(`/reference/${str(p.secret)}`) },
   }),
-  sms: (p) => smsLine(`${str(p.applicant)} asked you for a leadership reference at The Covenant Nation (5 minutes, private):`, str(p.link)),
-  whatsapp: (p) => ({
-    body: "Dear {{1}}, {{2}} has asked you for a reference to lead a small group at The Covenant Nation. It takes five minutes and your answers stay private to the pastoral team. Link: {{3}}",
+  sms: (p, c) => smsLine(`${str(p.applicant)} asked you for a leadership reference at The Covenant Nation (2 minutes, private). Link just for you:`, c.link(`/reference/${str(p.secret)}`)),
+  whatsapp: (p, c) => ({
+    body: "Dear {{1}}, {{2}} has asked you for a reference as they apply to lead a small group at The Covenant Nation. It takes two minutes and your answers stay private to the pastoral team. We will send a code to this number to make sure it is you. Your link: {{3}}",
     example: ["Pastor Femi", "Ngozi Okafor", "https://unitedtribes.example/reference/abc"],
-    vars: [flat(str(p.referee) || "friend"), flat(p.applicant), flat(p.link)],
+    vars: [flat(salutation(str(p.referee))), flat(p.applicant), flat(c.link(`/reference/${str(p.secret)}`))],
+  }),
+};
+
+const refereeCode: TemplateDef = {
+  key: "referee_code",
+  audience: "referee",
+  title: "A referee's six-digit code",
+  email: (p) => ({
+    subject: `${str(p.code)} is your code for the reference`,
+    greeting: `Dear ${salutation(str(p.referee))},`,
+    paragraphs: [
+      `Your code is ${str(p.code)}.`,
+      `Type it on the page where you opened your link. It works for ${num(p.minutes, 10)} minutes and only once.`,
+      "If you did not ask for this, ignore it. Nobody can use the code without your private link.",
+    ],
+  }),
+  sms: (p) => `United Tribes code: ${str(p.code)}. It lasts ${num(p.minutes, 10)} minutes. Do not share it.`,
+  whatsapp: (p) => ({
+    body: "Your United Tribes code is {{1}}. It lasts {{2}} minutes. Please do not share it with anyone.",
+    example: ["482913", "10"],
+    vars: [flat(p.code), flat(num(p.minutes, 10))],
+  }),
+};
+
+const refereeReverify: TemplateDef = {
+  key: "referee_reverify",
+  audience: "referee",
+  title: "A referee is asked to confirm a reference they gave",
+  email: (p, c) => ({
+    subject: `Please confirm your reference for ${str(p.applicant)}`,
+    greeting: `Dear ${salutation(str(p.referee))},`,
+    paragraphs: [
+      `Thank you for the reference you gave for ${str(p.applicant)}, who is applying to lead a small group at The Covenant Nation.`,
+      "We now check that every reference really comes from the person named. Could you confirm yours? We send a six-digit code to this same address, and you tell us the reference was yours. It takes one minute, and nothing you wrote changes.",
+      `The link is for you alone and stays open for ${num(p.days, 30)} days.`,
+    ],
+    cta: { label: "Confirm my reference", url: c.link(`/reference/${str(p.secret)}`) },
+  }),
+  sms: (p, c) => smsLine(`Please confirm the reference you gave for ${str(p.applicant)} at The Covenant Nation (1 minute):`, c.link(`/reference/${str(p.secret)}`)),
+  whatsapp: (p, c) => ({
+    body: "Dear {{1}}, thank you for the reference you gave for {{2}} at The Covenant Nation. We now check that each one comes from the person named. Please confirm yours, it takes a minute and nothing you wrote changes: {{3}}",
+    example: ["Pastor Femi", "Ngozi Okafor", "https://unitedtribes.example/reference/abc"],
+    vars: [flat(salutation(str(p.referee))), flat(p.applicant), flat(c.link(`/reference/${str(p.secret)}`))],
   }),
 };
 
@@ -1209,8 +1318,10 @@ export const TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(
     careUrgent, careTask, careTaskReminder, careTaskOverdue, coachHelp, celebrationPrompt,
     applicationReceived, applicationInterviewInvited, applicationInterviewBooked, applicationApproved, applicationNotApproved,
     leaderCheckConsent, leaderCheckStrengthen, leaderCheckClear,
-    refereeRequest, reportReady,
+    signinPaused, signinStopAlert,
+    refereeRequest, refereeCode, refereeReverify, reportReady,
     swapRequested, swapOffered, swapDeclined, swapMoved, guardianRequest, guardianUpdate,
+    ...OUTREACH_TEMPLATES,
   ].map((t) => [t.key, signed(t)]),
 );
 

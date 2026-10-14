@@ -4,6 +4,7 @@ import { ReviewWorkspace } from "@/components/leaders/ReviewWorkspace";
 import { REVIEW_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { isUuid } from "@/lib/leaders/errors";
+import { loadReviewReferees } from "@/lib/leaders/referee/server";
 import type { ReviewDetail, Scorecard } from "@/lib/leaders/review-types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,5 +19,7 @@ export default async function ReviewApplicationPage({ params }: { params: Promis
   if (error || !data) notFound();
   // The first check's reading. It is only extra: if it cannot be read, the page works as before.
   const card = await supabase.rpc("leader_ai_scorecard", { p_id: id });
-  return <ReviewWorkspace detail={data as ReviewDetail} roles={session.roles} scorecard={card.error ? null : (card.data as Scorecard | null)} />;
+  // What has been proved about each referee. It is only extra: if it cannot be read, the references show as before.
+  const referees = await loadReviewReferees(supabase, id);
+  return <ReviewWorkspace detail={data as ReviewDetail} roles={session.roles} scorecard={card.error ? null : (card.data as Scorecard | null)} referees={referees} />;
 }

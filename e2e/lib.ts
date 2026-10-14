@@ -51,13 +51,22 @@ export const checksPassed = () => checks;
 export async function newPage(
   browser: Browser,
   kind: "phone" | "desktop" = "phone",
-  extra: { permissions?: string[] } = {},
+  extra: { permissions?: string[]; /** Answers the journey provokes on purpose (a refusal, a rate limit), which the browser logs as errors */ expectStatuses?: number[] } = {},
 ): Promise<{ ctx: BrowserContext; page: Page }> {
-  const ctx = await browser.newContext({ ...(kind === "phone" ? PHONE : DESKTOP), ...extra });
+  const { expectStatuses = [], ...contextOptions } = extra;
+  // The test browser says "HeadlessChrome", which the app rightly treats as a program rather than a person (a referee's link opened by a
+  // program does not count as opened). A person's browser names itself plainly.
+  const v = browser.version();
+  const userAgent =
+    kind === "phone"
+      ? `Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${v} Mobile Safari/537.36`
+      : `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${v} Safari/537.36`;
+  const ctx = await browser.newContext({ userAgent, ...(kind === "phone" ? PHONE : DESKTOP), ...contextOptions });
   const page = await ctx.newPage();
+  const expected = new RegExp(`Failed to load resource.*(${[401, 403, 404, ...expectStatuses].join("|")})`);
   page.on("pageerror", (e) => fail(`pageerror on ${page.url()}: ${e.message}`));
   page.on("console", (m) => {
-    if (m.type() === "error" && !/Failed to load resource.*(401|403|404)/.test(m.text())) fail(`console error on ${page.url()}: ${m.text().slice(0, 200)}`);
+    if (m.type() === "error" && !expected.test(m.text())) fail(`console error on ${page.url()}: ${m.text().slice(0, 200)}`);
   });
   return { ctx, page };
 }

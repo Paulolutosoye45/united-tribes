@@ -2,6 +2,7 @@ import { z } from "zod";
 import { hasWords, normaliseWhatsapp } from "@/lib/intake/answers";
 import { STYLE_PAIRS } from "@/lib/intake/options";
 import { ELIGIBILITY_IDS, GOAL_RELATIONS, LEAD_BEST, MIN_WRITTEN } from "./options";
+import { contactProblem, normaliseContact } from "./referee/contact";
 import { OPTION_IDS, SCENARIO_IDS } from "./scenarios";
 
 const ids = <T extends readonly { id: string }[]>(list: T) =>
@@ -100,12 +101,9 @@ export function charsToGo(value: string | undefined, min = MIN_WRITTEN): number 
 export type RefereeInput = { name: string; relationship: string; contact: string; head: boolean };
 export const EMPTY_REFEREE: RefereeInput = { name: "", relationship: "", contact: "", head: false };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-/** A referee must be reachable by email or phone, so the panel can follow up. */
+/** A referee must be reachable by email or phone: the system sends them a private link and a code there. Read exactly as the database reads it. */
 export function contactLooksReal(value: string): boolean {
-  const v = value.trim();
-  return EMAIL.test(v) || normaliseWhatsapp(v) !== null || /^\+?\d[\d\s-]{6,18}$/.test(v);
+  return normaliseContact(value) !== null;
 }
 
 export function refereeProblem(r: RefereeInput | undefined): string | null {
@@ -113,7 +111,8 @@ export function refereeProblem(r: RefereeInput | undefined): string | null {
   const name = r.name.trim();
   if (name.length < 2 || name.length > 80) return "Add their name.";
   if (r.relationship.trim().length < 2) return "Say how you know them.";
-  if (!contactLooksReal(r.contact)) return "Add a phone number or email so the panel can reach them.";
+  const contact = contactProblem(r.contact);
+  if (contact) return contact;
   return null;
 }
 
@@ -127,11 +126,9 @@ export function withNormalisedContact(answers: LeaderAnswers): LeaderAnswers {
   return full && full !== answers.contact.whatsapp ? { ...answers, contact: { ...answers.contact, whatsapp: full } } : answers;
 }
 
-/** The same person cannot be both referees, or you. */
+/** The same person cannot be both referees, or you. Both are compared in their normal form (0803… and +234803… are one number). */
 export function normalisedContact(value: string): string {
-  const v = value.trim().toLowerCase();
-  if (v.includes("@")) return v;
-  return normaliseWhatsapp(v) ?? v.replace(/[^\d+]/g, "");
+  return normaliseContact(value)?.norm ?? value.trim().toLowerCase();
 }
 
 export type Problem = { step: string; message: string };
