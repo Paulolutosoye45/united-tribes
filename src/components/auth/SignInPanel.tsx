@@ -206,12 +206,13 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
             size="lg"
             fullWidth
             icon={<WhatsAppIcon />}
+            disabled={true}
             onClick={() => {
               setError(null);
               setStep("whatsapp");
             }}
           >
-            Continue with WhatsApp
+            Continue with WhatsApp (coming soon)
           </Button>
         ) : null}
 
