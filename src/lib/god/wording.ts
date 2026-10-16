@@ -76,6 +76,10 @@ const ACTIONS: Record<string, string> = {
   "worker_token.created": "made a sending token",
   "worker_token.revoked": "revoked a sending token",
   "bi.refreshed": "refreshed the reporting copy",
+  // The owner's own looks at the activity dashboard, shown in the audit trail as "You".
+  "activity.viewed": "looked at a tab of the activity dashboard",
+  "activity.exported": "exported the audit trail",
+  "activity.activity_setting": "changed an activity setting",
 };
 
 export function describeAction(action: string): string {
@@ -103,10 +107,47 @@ const KINDS: Record<string, string> = {
   owner_set: "The owner account was set",
   owner_removed: "The owner account was removed",
   action: "You changed something",
+  viewed: "You looked at a tab of the activity dashboard",
+  exported: "You exported the audit trail",
+  activity_setting: "You changed an activity setting",
 };
 
 export function describeKind(kind: string): string {
   return KINDS[kind] ?? kind.replace(/_/g, " ");
+}
+
+const ACTIVITY_TABS: Record<string, string> = {
+  pulse: "Pulse",
+  funnels: "Funnels",
+  stakeholders: "Stakeholders",
+  integrity: "Quality and integrity",
+  messages: "Messages and sign-in",
+  audit: "Audit trail",
+  settings: "Settings",
+};
+
+const ACTIVITY_SETTINGS: Record<string, string> = {
+  recording: "recording",
+  retention: "how long detail is kept",
+  member_wait_days: "the flag for members waiting for a tribe",
+  application_held_hours: "the flag for held leader applications",
+  referee_unverified_days: "the flag for unverified referees",
+  failed_messages_7d: "the flag for failed messages",
+  care_overdue_days: "the flag for overdue care tasks",
+  signin_fail_pct: "the flag for failing sign-in codes",
+  quiet_days: "the flag for quiet members",
+};
+
+/** The owner's record line for a look at, an export of, or a change to the activity dashboard; null for any other kind. */
+export function activityLine(kind: string, action: string | null, detail: Record<string, unknown> = {}): string | null {
+  if (kind === "viewed") return `You looked at the ${ACTIVITY_TABS[action ?? ""] ?? "activity"} tab of the activity dashboard`;
+  if (kind === "exported") return `You exported the ${ACTIVITY_TABS[action ?? ""]?.toLowerCase() ?? "activity"} as a spreadsheet file`;
+  if (kind === "activity_setting") {
+    const what = ACTIVITY_SETTINGS[action ?? ""] ?? "an activity setting";
+    const change = detail.from !== undefined && detail.to !== undefined ? `, from ${String(detail.from)} to ${String(detail.to)}` : "";
+    return `You changed ${what}${change}`;
+  }
+  return null;
 }
 
 /** Colour for the kind: what needs the owner's eye is flagged. */

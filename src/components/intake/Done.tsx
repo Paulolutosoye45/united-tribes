@@ -18,6 +18,7 @@ export function Done({
   seasonStarts,
   teen = false,
   companion,
+  reEdit,
 }: {
   name: string;
   seconds: number;
@@ -28,6 +29,7 @@ export function Done({
   teen?: boolean;
   /** How much the Companion filled in, and how much of that the person kept. */
   companion?: { filled: number; kept: number };
+  reEdit?: () => void;
 }) {
   const quick = !isEdit && seconds > 0 && seconds <= 360;
   return (
@@ -69,7 +71,7 @@ export function Done({
         <Link href={teen && !isEdit ? "/tribe" : "/home"} className={buttonClasses({ fullWidth: true })}>
           <span className="relative">{teen && !isEdit ? "Ask my parent or guardian" : "Go to home"}</span>
         </Link>
-        <Link href="/join?edit=1" className={buttonClasses({ fullWidth: true, variant: "night", size: "md" })}>
+        <Link href="" onClick={(event) => { event.preventDefault(); reEdit?.(); }} className={buttonClasses({ fullWidth: true, variant: "night", size: "md" })}>
           <span className="relative">Change my answers</span>
         </Link>
       </div>

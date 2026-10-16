@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ScreenBeacon } from "@/components/activity/ScreenBeacon";
 import { requireSession } from "@/lib/auth/session";
 
 /**
@@ -7,5 +8,10 @@ import { requireSession } from "@/lib/auth/session";
  */
 export default async function FocusLayout({ children }: { children: ReactNode }) {
   await requireSession("/home");
-  return <>{children}</>;
+  return (
+    <>
+      <ScreenBeacon />
+      {children}
+    </>
+  );
 }

@@ -8,10 +8,11 @@ const TABS = [
   { href: "/god", label: "Overview", exact: true },
   { href: "/god/people", label: "People" },
   { href: "/god/tribes", label: "Tribes" },
+  { href: "/god/activity", label: "Activity" },
   { href: "/god/record", label: "Your record" },
 ] as const;
 
-/** The four rooms of the console. */
+/** The rooms of the console. */
 export function GodNav() {
   const pathname = usePathname();
   return (

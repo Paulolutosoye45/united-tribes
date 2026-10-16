@@ -300,6 +300,10 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
         name={answers.preferredName ?? ""}
         seconds={doneSeconds}
         isEdit={initial.isEdit}
+        reEdit = {() => {
+          setReviewMode(true);
+          go("review", "back");
+        }}
         seasonName={seasonName}
         seasonStarts={seasonStarts}
         teen={isTeen}

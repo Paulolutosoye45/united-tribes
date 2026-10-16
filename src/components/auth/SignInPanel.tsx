@@ -1,37 +1,69 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
-import { CodeInput } from "@/components/ui/CodeInput";
+import { deviceOf } from "@/lib/activity/screens";
+import { sendTrack } from "@/lib/activity/send";
 import { GoogleIcon } from "@/components/ui/GoogleIcon";
 import { Input } from "@/components/ui/Input";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { displayPhone, whatsappErrorMessage } from "@/lib/auth/phone";
 import { isEmail, normaliseEmail, signInErrorMessage } from "@/lib/auth/errors";
+import { readChoice, writeChoice, type SignInTab } from "@/lib/signin/choice";
+import { resendWaitSeconds } from "@/lib/signin/caps";
+import type { SignInChannel } from "@/lib/signin/channel";
+import { readTypedNumber, showsNigerianPrefix } from "@/lib/signin/typed-number";
+import { BAD_NUMBER_LINE, NOT_ADDED_LINE, PAUSED_LINE, UNAVAILABLE_LINE } from "@/lib/signin/wording";
 import { createClient } from "@/lib/supabase/browser";
 import { useTurnstile } from "@/components/security/Turnstile";
-import { WhatsAppSignIn } from "./WhatsAppSignIn";
+import { ChannelToggle } from "./ChannelToggle";
+import { EmailCodeStep, WhatsAppCodeStep } from "./CodeStep";
 
 type Props = {
   /** Where to go after signing in. Already checked on the server. */
   next: string;
   initialError?: string | null;
-  /** Offer a code on WhatsApp. Off until the sign-in service can send one. */
-  whatsapp?: boolean;
+  /** How WhatsApp codes stand right now. Without it (or when not available) the screen is email only, as it always was. */
+  channel?: SignInChannel;
 };
 
-type Busy = null | "google" | "email" | "verify";
+type Busy = null | "google" | "email" | "whatsapp" | "verify";
 
-const RESEND_SECONDS = 30;
+const EMAIL_RESEND_SECONDS = 30;
+const EMAIL_ONLY: SignInChannel = { available: false, status: "off", mode: "normal", number: null };
 
-export function SignInPanel({ next, initialError = null, whatsapp = false }: Props) {
-  const [step, setStep] = useState<"choose" | "code" | "whatsapp">("choose");
+/**
+ * The sign-in screen: Google on top, then "or get a code" with an Email | WhatsApp switch, one field and one button.
+ * Email can never be switched off. WhatsApp can be paused (by a person, or by the breaker); it then stays visible but
+ * greyed, with one line saying why, and Email is selected.
+ */
+export function SignInPanel({ next, initialError = null, channel: initialChannel = EMAIL_ONLY }: Props) {
+  const panelId = useId();
+  const [channel, setChannel] = useState<SignInChannel>(initialChannel);
+  // What they tapped on this visit; until they tap, the way they used last on this device (read after the page loads, so
+  // the server's first draw and the browser's agree). A first visit has neither, and starts on Email.
+  const [picked, setPicked] = useState<SignInTab | null>(null);
+  const remembered = useSyncExternalStore(
+    () => () => { },
+    () => readChoice(),
+    () => null,
+  );
+  const tab: SignInTab = picked ?? remembered ?? "email";
+  const [step, setStep] = useState<"choose" | "code">("choose");
+  const [via, setVia] = useState<SignInTab>("email");
   const [email, setEmail] = useState("");
+  const [waInput, setWaInput] = useState("");
+  const [waPhone, setWaPhone] = useState<string | null>(null);
+  const [sent, setSent] = useState<{ phone: string; count: number } | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState<string | null>(initialError);
-  const [emailError, setEmailError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const bot = useTurnstile();
+
+  const whatsappOn = channel.available && channel.status === "on";
+  // WhatsApp only when it is on. A remembered choice is never lost for being paused today: it is just not used.
+  const active: SignInTab = tab === "whatsapp" && whatsappOn ? "whatsapp" : "email";
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -39,8 +71,23 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
     return () => clearTimeout(timer);
   }, [cooldown]);
 
-  const callback = (path: string) =>
-    `${window.location.origin}${path}?next=${encodeURIComponent(next)}`;
+  const callback = (path: string) => `${window.location.origin}${path}?next=${encodeURIComponent(next)}`;
+
+  function choose(to: SignInTab) {
+    setPicked(to);
+    setError(null);
+    setFieldError(null);
+    writeChoice(to);
+  }
+
+  function useEmailInstead() {
+    setPicked("email");
+    setStep("choose");
+    setError(null);
+    setFieldError(null);
+    setCode("");
+    writeChoice("email");
+  }
 
   async function continueWithGoogle() {
     setError(null);
@@ -56,11 +103,11 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
     }
   }
 
-  async function sendCode() {
+  async function sendEmailCode() {
     setError(null);
-    setEmailError(null);
+    setFieldError(null);
     if (!isEmail(email)) {
-      setEmailError("Enter the email address you check most often.");
+      setFieldError("Enter the email address you check most often.");
       return;
     }
     if (!bot.ready) {
@@ -78,108 +125,140 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
       setError(signInErrorMessage(error));
       return;
     }
+    writeChoice("email");
     setCode("");
+    setVia("email");
     setStep("code");
-    setCooldown(RESEND_SECONDS);
+    setCooldown(EMAIL_RESEND_SECONDS);
+  }
+
+  async function askWhatsAppCode() {
+    setError(null);
+    setFieldError(null);
+    const phone = waPhone ?? readTypedNumber(waInput);
+    if (!phone) {
+      setFieldError(BAD_NUMBER_LINE);
+      return;
+    }
+    if (!bot.ready) {
+      setError("One moment: we are checking that you are a person. Try again in a few seconds.");
+      return;
+    }
+    setBusy("whatsapp");
+    let status = 0;
+    let body: { ok?: boolean; error?: string; message?: string } | null = null;
+    try {
+      const response = await fetch("/api/auth/request-code", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ phone, captchaToken: bot.token ?? undefined }),
+      });
+      status = response.status;
+      body = await response.json().catch(() => null);
+    } catch {
+      status = 0;
+    }
+    bot.spent();
+    setBusy(null);
+
+    if (status !== 200 || body?.ok !== true) {
+      // Paused or off while the page was open: grey WhatsApp out and put Email forward, so nobody is stuck on a dead tab.
+      if (body?.error === "paused") setChannel((c) => ({ ...c, status: "paused" }));
+      else if (body?.error === "off") setChannel((c) => ({ ...c, status: "off" }));
+      else {
+        const said = typeof body?.message === "string" && body.message ? body.message : status === 0 ? `${whatsappErrorMessage({ message: "Failed to fetch" })} Or use email instead.` : UNAVAILABLE_LINE;
+        setError(said);
+      }
+      return;
+    }
+
+    writeChoice("whatsapp");
+    setWaPhone(phone);
+    const count = sent && sent.phone === phone ? sent.count + 1 : 1;
+    setSent({ phone, count });
+    setCode("");
+    setVia("whatsapp");
+    setStep("code");
+    // The same wait the server enforces: a minute, then two, then five. Pressing the button sooner would be ignored.
+    setCooldown(resendWaitSeconds(count));
   }
 
   async function verify(token: string) {
     if (busy === "verify") return;
+    if (via === "whatsapp" && !waPhone) return;
     setError(null);
     setBusy("verify");
     const supabase = createClient();
-    const { error } = await supabase.auth.verifyOtp({
-      email: normaliseEmail(email),
-      token,
-      type: "email",
-    });
-    if (error) {
-      setError(signInErrorMessage(error));
+    const { error: failure } =
+      via === "whatsapp"
+        ? await supabase.auth.verifyOtp({ phone: waPhone!, token, type: "sms" })
+        : await supabase.auth.verifyOtp({ email: normaliseEmail(email), token, type: "email" });
+    if (failure) {
+      setError(via === "whatsapp" ? whatsappErrorMessage(failure) : signInErrorMessage(failure));
       setCode("");
       setBusy(null);
       return;
     }
-    // Turn any invitation for this address into a role, then load the app
-    // fresh so the server sees the new session.
+    // Turn any invitation for this address into a role, then load the app fresh so the server sees the new session.
     try {
       await supabase.rpc("claim_invitations");
     } catch {
       // Roles are claimed again on the next sign-in.
     }
+    // Tell the activity log how they came in (the way only, never the address or number). It never waits or fails.
+    sendTrack({ kind: "signin", method: via === "whatsapp" ? "whatsapp" : "email", device: deviceOf(window.innerWidth) });
     window.location.assign(next);
   }
 
-  if (step === "whatsapp") {
-    return <WhatsAppSignIn next={next} onBack={() => setStep("choose")} />;
+  const backToChoose = (to: SignInTab) => {
+    setStep("choose");
+    setError(null);
+    setCode("");
+    if (to === "whatsapp") setWaPhone(null);
+  };
+
+  const shared = {
+    code,
+    onCode: (value: string) => {
+      setCode(value);
+      if (error) setError(null);
+    },
+    onComplete: verify,
+    verifying: busy === "verify",
+    error,
+    cooldown,
+    widget: bot.widget,
+    canResend: bot.ready,
+  };
+
+  if (step === "code" && via === "whatsapp" && waPhone) {
+    return (
+      <WhatsAppCodeStep
+        {...shared}
+        phone={waPhone}
+        mode={channel.mode}
+        number={channel.number}
+        resending={busy === "whatsapp"}
+        onResend={askWhatsAppCode}
+        onChange={() => backToChoose("whatsapp")}
+        onEmail={useEmailInstead}
+      />
+    );
   }
 
   if (step === "code") {
     return (
-      <div className="screen-enter flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <h2 className="t-title">Check your email</h2>
-          <p className="t-body text-soft">
-            We sent a six-digit code to <strong className="font-semibold text-ink">{normaliseEmail(email)}</strong>.
-            Enter it here.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <CodeInput
-            value={code}
-            onChange={(v) => {
-              setCode(v);
-              if (error) setError(null);
-            }}
-            onComplete={verify}
-            error={Boolean(error)}
-            disabled={busy === "verify"}
-            autoFocus
-          />
-          <div aria-live="polite" className="min-h-6">
-            {error ? (
-              <p role="alert" className="t-small text-danger">
-                {error}
-              </p>
-            ) : busy === "verify" ? (
-              <p className="t-small text-soft">Checking your code…</p>
-            ) : null}
-          </div>
-        </div>
-
-        <Button size="lg" fullWidth loading={busy === "verify"} disabled={code.length !== 6} onClick={() => verify(code)}>
-          Sign in
-        </Button>
-
-        {bot.widget}
-
-        <div className="flex flex-col items-start gap-1">
-          <Button
-            variant="ghost"
-            size="md"
-            className="-ml-4"
-            disabled={cooldown > 0 || busy === "email" || !bot.ready}
-            loading={busy === "email"}
-            onClick={sendCode}
-          >
-            {cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="md"
-            className="-ml-4"
-            onClick={() => {
-              setStep("choose");
-              setError(null);
-              setCode("");
-            }}
-          >
-            Use a different email
-          </Button>
-        </div>
-      </div>
+      <EmailCodeStep
+        {...shared}
+        email={normaliseEmail(email)}
+        resending={busy === "email"}
+        onResend={sendEmailCode}
+        onChange={() => backToChoose("email")}
+      />
     );
   }
+
+  const typed = readTypedNumber(waInput);
 
   return (
     <div className="screen-enter flex flex-col gap-7">
@@ -189,74 +268,113 @@ export function SignInPanel({ next, initialError = null, whatsapp = false }: Pro
       </div>
 
       <div className="flex flex-col gap-5">
-        <Button
-          variant="quiet"
-          size="lg"
-          fullWidth
-          loading={busy === "google"}
-          icon={<GoogleIcon />}
-          onClick={continueWithGoogle}
-        >
+        <Button variant="quiet" size="lg" fullWidth loading={busy === "google"} icon={<GoogleIcon />} onClick={continueWithGoogle}>
           Continue with Google
         </Button>
 
-        {whatsapp ? (
-          <Button
-            variant="quiet"
-            size="lg"
-            fullWidth
-            icon={<WhatsAppIcon />}
-            disabled={true}
-            onClick={() => {
-              setError(null);
-              setStep("whatsapp");
-            }}
-          >
-            Continue with WhatsApp (coming soon)
-          </Button>
-        ) : null}
-
-        <div className="flex items-center gap-4 text-soft" role="separator" aria-label="or">
+        <div className="flex items-center gap-4 text-soft" role="separator" aria-label="or get a code">
           <span className="h-px flex-1 bg-line" />
-          <span className="t-small">or</span>
+          <span className="t-small">or get a code</span>
           <span className="h-px flex-1 bg-line" />
         </div>
 
-        <form
-          noValidate
-          className="flex flex-col gap-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void sendCode();
-          }}
-        >
-          <Input
-            label="Email address"
-            type="email"
-            name="email"
-            inputMode="email"
-            autoComplete="email"
-            autoCapitalize="none"
-            spellCheck={false}
-            placeholder="you@example.com"
-            value={email}
-            error={emailError}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (emailError) setEmailError(null);
-            }}
-          />
-          {bot.widget}
-          <Button type="submit" size="lg" fullWidth loading={busy === "email"} disabled={!bot.ready}>
-            Email me a code
-          </Button>
-        </form>
+        {channel.available ? <ChannelToggle value={active} onChange={choose} whatsappDisabled={!whatsappOn} panelId={panelId} /> : null}
+        {channel.available && !whatsappOn ? (
+          <p role="status" className="t-small text-soft">
+            {PAUSED_LINE}
+          </p>
+        ) : null}
 
-        <div aria-live="polite" className="min-h-5">
+        <div
+          id={panelId}
+          role={channel.available ? "tabpanel" : undefined}
+          aria-labelledby={channel.available ? `signin-tab-${active}` : undefined}
+          className="flex flex-col gap-4"
+        >
+          {active === "email" ? (
+            <form
+              noValidate
+              className="flex flex-col gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void sendEmailCode();
+              }}
+            >
+              <Input
+                label="Email address"
+                type="email"
+                name="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="you@example.com"
+                value={email}
+                error={fieldError}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldError) setFieldError(null);
+                }}
+              />
+              {bot.widget}
+              <Button type="submit" size="lg" fullWidth loading={busy === "email"} disabled={!bot.ready}>
+                Email me a code
+              </Button>
+            </form>
+          ) : (
+            <form
+              noValidate
+              className="flex flex-col gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void askWhatsAppCode();
+              }}
+            >
+              <Input
+                label="WhatsApp number"
+                type="tel"
+                name="whatsapp"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={showsNigerianPrefix(waInput) ? "803 123 4567" : "+44 7700 900123"}
+                prefix={showsNigerianPrefix(waInput) ? "+234" : undefined}
+                hint={typed ? displayPhone(typed) : "Type it the way you usually do, like 0803 123 4567. Other countries start with +."}
+                value={waInput}
+                error={fieldError}
+                onChange={(e) => {
+                  setWaInput(e.target.value);
+                  if (fieldError) setFieldError(null);
+                }}
+              />
+              {bot.widget}
+              <Button type="submit" size="lg" fullWidth loading={busy === "whatsapp"} disabled={!bot.ready}>
+                Send code on WhatsApp
+              </Button>
+              <p className="t-small text-soft">{NOT_ADDED_LINE}</p>
+              {channel.mode === "reply_first" && channel.number ? (
+                <p className="t-small text-soft">Your code comes as a reply: after you press the button we will ask you to send us one short message on WhatsApp.</p>
+              ) : null}
+              {channel.number ? (
+                <p className="t-small text-soft">
+                  Tip: save this number as <strong className="font-semibold text-ink">United Tribes</strong>: {displayPhone(channel.number)}.
+                </p>
+              ) : null}
+            </form>
+          )}
+        </div>
+
+        <div aria-live="polite" className="flex min-h-5 flex-col items-start gap-1">
           {error ? (
-            <p role="alert" className="t-small text-danger">
-              {error}
-            </p>
+            <>
+              <p role="alert" className="t-small text-danger">
+                {error}
+              </p>
+              {active === "whatsapp" ? (
+                <Button variant="ghost" size="md" className="-ml-4" onClick={useEmailInstead}>
+                  Use email instead
+                </Button>
+              ) : null}
+            </>
           ) : null}
         </div>
       </div>

@@ -89,6 +89,7 @@ const SECTIONS = [
     title: "Keeping the site safe",
     body: [
       "To keep out automated abuse, the sign-in page and the private links we send to parents and referees may use a check from Cloudflare (Turnstile), which looks at how your browser behaves, not at who you are. We keep a log of important actions (for example that a leader was approved or an account was deleted). The log records what happened and who did it, not what you wrote.",
+      "We record which screens are used and when, and whether a sign-in used a code, a link or Google, never what you write. We use it only to see where people get stuck and to keep the platform working. Only the platform administrator can see it, groups of fewer than five people are never shown as numbers, and the detail is deleted after thirteen months.",
     ],
   },
   {

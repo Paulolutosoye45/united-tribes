@@ -3,7 +3,8 @@ import Image from "next/image";
 import { SignInPanel } from "@/components/auth/SignInPanel";
 import { Crest } from "@/components/brand/Crest";
 import { safeNext } from "@/lib/auth/redirect";
-import { getSupabaseEnv, whatsappSignInEnabled } from "@/lib/env";
+import { getSupabaseEnv } from "@/lib/env";
+import { currentChannel } from "@/lib/signin/deps";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -22,6 +23,9 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
     params.error === "link"
       ? "That sign-in link didn't work or has expired. Sign in again below."
       : null;
+
+  // How WhatsApp codes stand right now (on, paused, off), read fresh on every visit.
+  const channel = getSupabaseEnv() ? await currentChannel() : undefined;
 
   return (
     <main className="min-h-dvh bg-night lg:grid lg:grid-cols-[1.15fr_1fr] lg:bg-page">
@@ -68,7 +72,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
               That account is no longer here, so you have been signed out. To use United Tribes again, sign in below and start afresh.
             </p>
           ) : null}
-          {getSupabaseEnv() ? <SignInPanel next={next} initialError={linkError} whatsapp={whatsappSignInEnabled()} /> : <SetupNotice />}
+          {getSupabaseEnv() ? <SignInPanel next={next} initialError={linkError} channel={channel} /> : <SetupNotice />}
         </div>
 
         <footer className="mx-auto flex w-full max-w-md items-center gap-3 text-soft">

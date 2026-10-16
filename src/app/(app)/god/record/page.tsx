@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { PassphraseForm } from "@/components/god/PassphraseForm";
 import { formatLagosDay, formatLagosTime, formatShortDate } from "@/lib/dates";
 import { getOverview, loadRecord } from "@/lib/god/server";
-import { ago, clock, describeAction, describeKind, kindTone } from "@/lib/god/wording";
+import { activityLine, ago, clock, describeAction, describeKind, kindTone } from "@/lib/god/wording";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Your record" };
@@ -14,6 +14,8 @@ type SearchParams = Promise<{ before?: string }>;
 const TONE = { calm: "bg-soft", watch: "bg-[var(--crest-gold)]", alert: "bg-flame" } as const;
 
 function line(kind: string, action: string | null, detail: Record<string, unknown>): string {
+  const activity = activityLine(kind, action, detail);
+  if (activity) return activity;
   if (kind === "action" && action) return `${describeKind(kind)}: ${describeAction(action)}`;
   if (kind === "probe") return `${describeKind(kind)}${typeof detail.person === "string" ? `: ${detail.person}` : ""}`;
   if (kind === "wrong") {
