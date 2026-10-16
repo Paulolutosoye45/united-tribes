@@ -148,7 +148,7 @@ export function SignInPanel({ next, initialError = null, channel: initialChannel
     let status = 0;
     let body: { ok?: boolean; error?: string; message?: string } | null = null;
     try {
-      const response = await fetch("/api/auth/request-code", {
+      const response = await fetch("/api/auth/send-code", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ phone, captchaToken: bot.token ?? undefined }),
