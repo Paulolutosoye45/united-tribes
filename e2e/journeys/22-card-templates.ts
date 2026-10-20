@@ -150,8 +150,9 @@ async function main() {
       "each sign-off is in the log with the pastor's name",
     );
     check((await n("select count(*)::int n from public.goal_ideas gi join public.tribe_card_templates t on t.season_goal_id = gi.season_goal_id where t.community_id = $1 and t.status = 'signed_off'", [first.id])) >= waiting * 3, "…and the three weekly ideas of each card were filed for the Companion");
+    // The page refreshes itself a moment after the database changes
     check(
-      (await box.innerText()).includes(`${waiting} of`) && (await box.getByRole("img", { name: /percent signed off/ }).count()) === 1,
+      await eventually("the community's line and bar show the progress", async () => (await box.innerText()).includes(`${waiting} of`) && (await box.getByRole("img", { name: /percent signed off/ }).count()) === 1, 15),
       "the community's line and bar show the progress",
     );
     await shot(page, "22-signed");

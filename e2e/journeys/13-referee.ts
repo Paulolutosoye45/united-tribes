@@ -359,8 +359,9 @@ async function main() {
   // ============================================================================================================================
   const care = await newPage(browser, "desktop");
   await signIn(care.page, carer.email, "/care/referees");
-  // Other journeys share this database and leave their own call-backs; this one is told apart by what only it wrote
-  const mine = care.page.getByTestId("callback").filter({ hasText: "Pastor at my church" });
+  // Other journeys share this database and leave their own call-backs (some with the same referee name), so this one is told apart by the
+  // referee, the relationship and the applicant together
+  const mine = care.page.getByTestId("callback").filter({ hasText: "Sister Bola Ade" }).filter({ hasText: "Pastor at my church of Ngozi Okafor" });
   await mine.first().waitFor({ timeout: 20000 });
   const cardText = await mine.first().innerText();
   check(cardText.includes("Sister Bola Ade") && cardText.includes("Held back for a look"), "the care team sees the call-back with its reason");

@@ -1,5 +1,6 @@
 import type { Channel } from "../types";
 import { ResendEmailSender } from "./email";
+import { SmtpEmailSender, type SmtpSecurity } from "./smtp";
 import { LogProvider } from "./log";
 import { TermiiSmsSender, TwilioSmsSender } from "./sms";
 import type { ChannelProvider, Fetcher } from "./types";
@@ -15,6 +16,7 @@ const clean = (value: string | undefined) => (value ?? "").trim();
  *   MESSAGING_MODE=log          every channel only logs; nothing leaves the server
  *   WHATSAPP_PROVIDER=meta      (the same credentials the sign-in code uses)
  *   EMAIL_PROVIDER=resend       RESEND_API_KEY, EMAIL_FROM
+ *   EMAIL_PROVIDER=smtp         SMTP_HOST, EMAIL_FROM, and usually SMTP_USER, SMTP_PASSWORD, SMTP_PORT, SMTP_SECURITY (your own mail server)
  *   SMS_PROVIDER=termii|twilio  TERMII_API_KEY, TERMII_SENDER_ID  |  TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM
  *
  * A channel with no provider is `null`. A message for that channel is turned back
@@ -47,11 +49,39 @@ function whatsapp(env: Record<string, string | undefined>, fetcher?: Fetcher): C
 function email(env: Record<string, string | undefined>, fetcher?: Fetcher): ChannelProvider | null {
   const which = clean(env.EMAIL_PROVIDER).toLowerCase();
   if (which === "log") return new LogProvider("email");
+  if (which === "smtp") return smtp(env);
   if (which !== "resend") return null;
   const apiKey = clean(env.RESEND_API_KEY);
   const from = clean(env.EMAIL_FROM);
   if (!apiKey || !from) return null;
   return new ResendEmailSender({ apiKey, from, replyTo: clean(env.EMAIL_REPLY_TO) || undefined, baseUrl: clean(env.RESEND_API_BASE) || undefined, fetcher });
+}
+
+/** Your own mail server. Anything missing or unreadable gives no email provider, which /api/health shows as `email: null`. */
+function smtp(env: Record<string, string | undefined>): ChannelProvider | null {
+  const host = clean(env.SMTP_HOST);
+  const from = clean(env.EMAIL_FROM);
+  if (!host || !from) return null;
+  const said = clean(env.SMTP_SECURITY).toLowerCase();
+  const rawPort = clean(env.SMTP_PORT);
+  // Port 465 has always meant "encrypted from the first byte"; everything else starts plain and upgrades. Say so explicitly to override.
+  const security: SmtpSecurity = said === "tls" || said === "starttls" || said === "none" ? said : rawPort === "465" ? "tls" : "starttls";
+  const port = rawPort ? Number(rawPort) : security === "tls" ? 465 : security === "none" ? 25 : 587;
+  if (!Number.isInteger(port) || port < 1 || port > 65535) return null;
+  const user = clean(env.SMTP_USER);
+  // A login needs a password; one without the other is a mistake, not a server that wants no login.
+  if (user && !env.SMTP_PASSWORD) return null;
+  return new SmtpEmailSender({
+    host,
+    port,
+    security,
+    user: user || undefined,
+    password: user ? (env.SMTP_PASSWORD as string) : undefined,
+    from,
+    replyTo: clean(env.EMAIL_REPLY_TO) || undefined,
+    bounceTo: clean(env.SMTP_BOUNCE_ADDRESS) || undefined,
+    helloName: clean(env.SMTP_HELO_NAME) || undefined,
+  });
 }
 
 function sms(env: Record<string, string | undefined>, fetcher?: Fetcher): ChannelProvider | null {
@@ -75,6 +105,6 @@ function sms(env: Record<string, string | undefined>, fetcher?: Fetcher): Channe
   return null;
 }
 
-export { LogProvider, ResendEmailSender, TermiiSmsSender, TwilioSmsSender, WhatsAppTemplateSender };
+export { LogProvider, ResendEmailSender, SmtpEmailSender, TermiiSmsSender, TwilioSmsSender, WhatsAppTemplateSender };
 export type { ChannelProvider };
 export * from "./types";

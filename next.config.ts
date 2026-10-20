@@ -8,6 +8,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // A self-contained server for the Dockerfile (BUILD_STANDALONE=1 is set there). Everywhere else the normal build is used.
   ...(process.env.BUILD_STANDALONE === "1" ? { output: "standalone" as const } : {}),
+  // The mail library talks to your own mail server over a plain network connection; it runs as an ordinary Node package on the server,
+  // not bundled into the build.
+  serverExternalPackages: ["nodemailer"],
   turbopack: {
     rules: {
       "*.css": {

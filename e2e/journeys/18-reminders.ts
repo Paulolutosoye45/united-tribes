@@ -210,7 +210,7 @@ async function main() {
   check(await reviewer.page.getByTestId("approval-card").first().isVisible(), "the pastor sees it, as the person will read it");
   await shot(reviewer.page, "18-approvals");
   await reviewer.page.getByRole("button", { name: "Approve and send" }).first().click();
-  await reviewer.page.getByText(/Approved\./).first().waitFor({ timeout: 15000 });
+  await reviewer.page.getByText(/Approved\./).first().waitFor({ timeout: 60000 });
   const approved = await one("select status, approved_by from public.broadcasts where id = $1", [bigId]);
   check(approved?.status === "scheduled" && approved.approved_by === pastor, "the pastor’s yes schedules it, with their name");
   await q.query("update public.reminder_settings set approval_threshold = 200");

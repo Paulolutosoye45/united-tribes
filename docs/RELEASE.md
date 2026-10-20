@@ -99,7 +99,7 @@ This part needs your data, so the repository gives you the tools and the order, 
 4. Take every application in progress and move it one step, once under today's positions and once under the Open door.
 5. Sign off the cards on the copy through the screen (or `card_template_sign_off_community`), community by community, the sensitive ones one at a time. Check: 100 goals, 300 weekly ideas, no community above ten, the 23 original goals unchanged. `tests/db/static-checks.test.ts` is the same check against an empty database.
 6. Run the quiet run for the existing leaders (**Admin → Find your tribe → Run for existing leaders**). Read the results with the pastors for sense: a leader's current goal should rank high for them.
-7. Open the board, the pipeline page, the card screen and the pastor panel with real names and numbers. Time the board and the activity refresh. The board should answer in about a second at today's size.
+7. Open the board, the pipeline page, the card screen and the pastor panel with real names and numbers. Time the board and the activity refresh. The board should answer in about a second at today's size. Asking for a suggestion for one goal works out how well every approved leader suits it: about two seconds with 100 leaders on the build machine, so time it on your own data and expect it to grow with the number of leaders.
 8. Compare the function list with a dump taken before: `select proname, pg_get_function_identity_arguments(oid) from pg_proc where pronamespace = 'public'::regnamespace order by 1, 2;` The only differences must be the functions in the migrations you applied. (`rollback.test.ts` does this comparison for you against the empty database.)
 
 ## 5. Release order

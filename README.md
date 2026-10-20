@@ -138,7 +138,7 @@ provider or Cloudflare**. Where the app talks to one of those, the test talks to
 | Check | Result | Against |
 | --- | --- | --- |
 | Type-check, lint | clean | `npm run typecheck`, `npm run lint` |
-| Unit tests | **1,305 pass** (57 files): validation, wording, scoring, dates, roles, the assistant layer, the Companion, message templates and sending, security headers, sealing, data-rights wording, the church's spreadsheet reader, referee contact rules, the activity dashboard, and the rework (switch steps and modes, the 100 cards, the fit formula, the board and offer message, the owner's desks) | `npm run test:unit` |
+| Unit tests | **1,329 pass** (58 files): validation, wording, scoring, dates, roles, the assistant layer, the Companion, message templates and sending, security headers, sealing, data-rights wording, the church's spreadsheet reader, referee contact rules, the activity dashboard, and the rework (switch steps and modes, the 100 cards, the fit formula, the board and offer message, the owner's desks), and sending email through your own SMTP server (24 tests against a real mail server running on the build computer) | `npm run test:unit` |
 | Database tests | **1,408 pass** (44 files), including the upgrade from the first version, every access rule, the golden copies of every revised function at today's positions, the 100 cards signed off through the real functions, the fit engine against its reference copy, the board and offers, the owner's desks and conversations, the static checks and the rollback | `npm run test:db`, a real Postgres 17 with every migration. A failing test now fails the command (it used to exit with success) |
 | The switch matrix | **329 pass**: all **324 combinations** of the leader-pipeline switches, each taken from the first answer to a tribe members can see, with twelve rules read after every one | `npm run test:matrix` |
 | The way back | **958 of 958** original database tests pass on the baseline and, test by test, on a database built forward and rolled back; every function equals what it was, every table keeps its rows | `npm run test:rehearse` |
@@ -199,9 +199,10 @@ retention); **09** data rights (download, request, office answer, erasure, signe
    files, not against yours.
 13. **The first weights of the fit model (`lf-1`) and the order of the board's suggestions are a first proposal** for the pastorate to read
    and approve. They have not been compared with real tribe results, and are not changed until at least 30 tribe verdicts exist.
-14. **The message to a leader offering a tribe goes by email only.** Its WhatsApp template (`leader_offer`) is written and waits for
+14. **Email through your own mail server (SMTP, docs/EMAIL-SMTP.md) was tested only against a mail server running on the build computer**, not against yours, your DNS, or Gmail, Yahoo or Microsoft. Whether mail reaches the inbox depends on your records (SPF, DKIM, DMARC, reverse DNS) and your server's reputation, so warm up gradually. With your own server there is no automatic bounce or complaint report to the platform.
+15. **The message to a leader offering a tribe goes by email only.** Its WhatsApp template (`leader_offer`) is written and waits for
    Meta's approval (`npm run templates -- --submit`).
-15. **The platform stores no free-text chat**, so the owner's "conversations" are the message outbox, the chats staff opened and the
+16. **The platform stores no free-text chat**, so the owner's "conversations" are the message outbox, the chats staff opened and the
    announcements, not the words members wrote to one another. If you want the owner to read members' private words, that is a
    privacy decision for the pastorate and counsel, and nothing here does it.
 
@@ -256,6 +257,7 @@ These are drafts or proposals, not facts. Each is easy to change, and each is li
 | `npm run e2e` | Builds the app, starts it with the stand-ins and runs the browser journeys (`npm run e2e -- 07 09` for some). Needs a Chromium: set `CHROMIUM_PATH` or run `npx playwright-core install chromium` once |
 | `npm run standin` | A real Postgres plus a stand-in for Supabase, for local work |
 | `npm run reseal` | Change the key that seals private notes (`-- --apply` to do it). See docs/OPERATIONS.md |
+| `npm run email:test -- you@example.org` | Sends one real test email through the email provider the settings choose (Resend or your own SMTP server) and says what happened. See docs/EMAIL-SMTP.md |
 | `npm run templates` | Show the WhatsApp message wordings; `-- --submit` sends them to Meta; `-- --status` asks Meta |
 | `npm run bakeoff -- --providers mock` | Dry run of the Claude-versus-ChatGPT comparison, no keys needed |
 
@@ -315,6 +317,7 @@ To change a question's options edit `src/lib/intake/options.ts` or the catalogue
 
 | | For | About |
 | --- | --- | --- |
+| `docs/EMAIL-SMTP.md` | Whoever looks after the site | Sending email through your own mail server instead of Resend: DNS records, settings, a test tool, switching over, warming up, sign-in codes in Supabase, and what is different |
 | `docs/OPERATIONS.md` | Whoever looks after the site | Deploying, settings, the heartbeat, monitoring, changing a secret, backups, a runbook |
 | `docs/ADMIN.md` | The office | Every admin screen, who may do what, the launch checklist, data requests |
 | `docs/RETENTION.md` | Pastorate and counsel | What is kept and for how long; what deleting a person does and does not reach; open legal points |

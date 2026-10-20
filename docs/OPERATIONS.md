@@ -12,7 +12,7 @@ rehearse on a copy of live data, how to go back, and in what order to switch the
 ```
  member's phone ──►  the app (Next.js) ──►  Supabase: Postgres (all the rules) + sign-in
                        ▲        │
-   heartbeat (every    │        └──►  providers, each optional: WhatsApp (Meta), email (Resend), text (Termii or Twilio),
+   heartbeat (every    │        └──►  providers, each optional: WhatsApp (Meta), email (Resend or your own SMTP server), text (Termii or Twilio),
    5 minutes) ─────────┘               AI suggestions (Anthropic or OpenAI), voice notes (OpenAI), bot check (Cloudflare)
 ```
 
@@ -59,7 +59,7 @@ Do these in order. About half a day, most of it waiting for WhatsApp template ap
    With the secret it also shows the message queue:
    `curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR-SITE/api/health`.
 9. **WhatsApp:** `npm run templates -- --submit` sends the message wordings to Meta for approval (minutes to a day), then
-   set up WhatsApp sign-in only if wanted (docs/SIGNIN-CHANNELS.md). Email: verify the sending domain at Resend first. Text: Termii's sender name needs
+   set up WhatsApp sign-in only if wanted (docs/SIGNIN-CHANNELS.md). Email: verify the sending domain at Resend first, or use your own mail server instead (docs/EMAIL-SMTP.md). Text: Termii's sender name needs
    approval. Until a channel works, leave it unset.
 10. **Walk through it once** as a real person on a phone: sign in, fill the form, then open Admin and work down the checklist
     ("Before the season opens").
@@ -86,7 +86,7 @@ with the reasons, is in `.env.example`.
 | `DATA_ENCRYPTION_KEYS` | required in production | Seals members' private notes. See "Changing a secret". |
 | `WORKER_TOKEN` | required for messages | From step 5. |
 | `CRON_SECRET` | required for messages | Who may call the heartbeat and see the detailed health check. |
-| `WHATSAPP_*`, `EMAIL_*`/`RESEND_*`, `SMS_*`/`TERMII_*`/`TWILIO_*` | per channel | Sending providers. `MESSAGING_MODE=log` writes messages to the log instead of sending, for a rehearsal. |
+| `WHATSAPP_*`, `EMAIL_*`/`RESEND_*`/`SMTP_*`, `SMS_*`/`TERMII_*`/`TWILIO_*` | per channel | Sending providers. Email is Resend or your own SMTP server (docs/EMAIL-SMTP.md). `MESSAGING_MODE=log` writes messages to the log instead of sending, for a rehearsal. |
 | `WHATSAPP_SIGNIN=on` | optional | Shows the WhatsApp tab on the sign-in screen once a sender is working. Needs the hook (docs/SIGNIN-CHANNELS.md). |
 | `SIGNIN_WHATSAPP_ROUTE`, `LINKED_SENDER_URL`, `LINKED_SENDER_SECRET`, `WHATSAPP_SIGNIN_NUMBER`, `SIGNIN_HASH_SALT` | optional | Only for sign-in codes from an ordinary WhatsApp number (the `sender/` service). Read docs/SIGNIN-CHANNELS.md first: WhatsApp can restrict such a number. Leave unset for the official (Meta) route. |
 | `AI_PROVIDER`, `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`, `STT_PROVIDER` | optional | Suggestions and voice notes. Off with no key. |
@@ -204,7 +204,7 @@ Find the symptom, do the check, apply the fix. Nothing here needs the database p
 2. Is the master switch on, and is the journey **On** (not Rehearsal)? Rehearsal sends nothing by design.
 3. Outside the hours (reminders 9am–7pm Lagos, announcements 8am–8pm) mail waits for morning. The heartbeat (`/api/cron/tick`) must be running.
 4. An announcement for 200 or more people waits until a second person approves it: **Admin → Announcements → Approvals**.
-5. Email provider checks as for sign-in codes, plus the Resend webhook (`/api/webhooks/email`) so bounces and complaints reach the self-pause.
+5. Email provider checks as for sign-in codes. With Resend, also the webhook (`/api/webhooks/email`) so bounces and complaints reach the self-pause; with your own server (docs/EMAIL-SMTP.md) run `npm run email:test -- you@example.org` and read the bounce mailbox.
 6. The footer address is set in the `reminder_settings` row (`church_address`). See docs/MESSAGES-REMINDERS.md.
 
 **WhatsApp codes stopped, or the sign-in screen says "WhatsApp codes are paused today".**
