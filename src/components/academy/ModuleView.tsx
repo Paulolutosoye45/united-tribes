@@ -52,7 +52,7 @@ export function ModuleView({ detail }: { detail: ModuleDetail }) {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
-        <Link href="/lead/academy" className="press -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
+        <Link href="/lead/academy" className="press -ml-1 inline-flex min-h-10 w-fit items-center rounded-lg px-1 text-[0.95rem] font-medium text-soft hover:text-ink">
           ← Training
         </Link>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -111,7 +111,11 @@ export function ModuleView({ detail }: { detail: ModuleDetail }) {
                 {progress.attempts > 0 ? "Take it again" : "Start the quiz"}
               </Button>
             ) : (
-              <p className="t-small text-soft">You are previewing this module. Only leaders in training take the quiz.</p>
+              <p className="t-small text-soft" data-testid="module-preview">
+                {detail.mode === "off"
+                  ? "The Academy is switched off, so leaders cannot take this module right now. You can read it."
+                  : "You are previewing this module. Only leaders in training take the quiz."}
+              </p>
             )}
           </div>
         </>

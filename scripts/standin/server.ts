@@ -15,6 +15,7 @@
 import crypto from "node:crypto";
 import http from "node:http";
 import { Pool, type PoolClient } from "pg";
+import { signWebhook } from "../../src/lib/whatsapp/webhook";
 
 export type StandinOptions = {
   port: number;
@@ -29,6 +30,12 @@ export type StandinOptions = {
    * bot-check token that starts with this text. Every token seen is listed at GET /__captcha.
    */
   captchaPrefix?: string;
+  /**
+   * Like Supabase Auth with a "Send SMS" hook configured: instead of sending a text, it calls this address, signed the
+   * way Supabase signs its hooks, with the person and the code. A reply that is not a success makes the request fail
+   * as it does there ("Error sending sms"). Without it, a phone code request just answers success and sends nothing.
+   */
+  smsHook?: { url: string; secret: string };
 };
 
 type Json = Record<string, unknown>;
@@ -295,6 +302,30 @@ export async function startStandin(options: StandinOptions): Promise<{ close: ()
 
   const captchaSeen: { path: string; token: string | null }[] = [];
 
+  /** The "Send SMS" hook: tell it who the code is for and what it is. `newPhone` is set when a number is being added or changed. */
+  async function runSmsHook(user: { id: string; phone: string | null }, newPhone?: string) {
+    const hook = options.smsHook;
+    if (!hook) return;
+    const payload = JSON.stringify({
+      user: { id: user.id, phone: (user.phone ?? "").replace(/\D/g, ""), ...(newPhone ? { new_phone: newPhone.replace(/\D/g, "") } : {}) },
+      sms: { otp: code },
+    });
+    const id = `msg_${crypto.randomUUID()}`;
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    let ok = false;
+    try {
+      const response = await fetch(hook.url, {
+        method: "POST",
+        headers: { "content-type": "application/json", "webhook-id": id, "webhook-timestamp": timestamp, "webhook-signature": signWebhook(hook.secret, id, timestamp, payload) },
+        body: payload,
+      });
+      ok = response.ok;
+    } catch {
+      ok = false;
+    }
+    if (!ok) throw new HttpError(500, { code: 500, error_code: "sms_send_failed", msg: "Error sending sms" });
+  }
+
   async function handleAuth(req: http.IncomingMessage, path: string, url: URL, body: Json): Promise<{ status: number; body?: unknown }> {
     if (path === "/otp" && req.method === "POST") {
       const meta = body.gotrue_meta_security as { captcha_token?: unknown } | undefined;
@@ -306,6 +337,9 @@ export async function startStandin(options: StandinOptions): Promise<{ close: ()
     }
     if (path === "/otp" && req.method === "POST" && body.phone) {
       // Like the real service with shouldCreateUser off: an unknown number gets an error the app treats as "sent".
+      const digits = String(body.phone).replace(/\D/g, "");
+      const known = await pool.query("select id, phone from auth.users where regexp_replace(phone, '\\D', '', 'g') = $1", [digits]);
+      if (known.rows[0]) await runSmsHook(known.rows[0] as { id: string; phone: string | null });
       return { status: 200, body: {} };
     }
     if (path === "/otp" && req.method === "POST") {
@@ -318,12 +352,12 @@ export async function startStandin(options: StandinOptions): Promise<{ close: ()
       if (String(body.token ?? "") !== code) throw new HttpError(403, { code: 403, error_code: "otp_expired", msg: "Token has expired or is invalid" });
       const phone = String(body.phone).replace(/\D/g, "");
       if (body.type === "phone_change") {
-        const claims = bearerClaims(req);
-        const wanted = claims?.sub ? pendingPhones.get(String(claims.sub)) : undefined;
-        if (!claims?.sub || !wanted || wanted.replace(/\D/g, "") !== phone) throw new HttpError(403, { code: 403, error_code: "otp_expired", msg: "Token has expired or is invalid" });
-        await pool.query("update auth.users set phone = $2, phone_confirmed_at = now() where id = $1", [claims.sub, phone]);
-        pendingPhones.delete(String(claims.sub));
-        const row = (await pool.query("select id, email, phone, created_at, email_confirmed_at from auth.users where id = $1", [claims.sub])).rows[0] as UserRow;
+        // Like the real service, the number itself finds the account that is waiting to add it: this request carries no session.
+        const owner = [...pendingPhones.entries()].find(([, wanted]) => wanted.replace(/\D/g, "") === phone)?.[0];
+        if (!owner) throw new HttpError(403, { code: 403, error_code: "otp_expired", msg: "Token has expired or is invalid" });
+        await pool.query("update auth.users set phone = $2, phone_confirmed_at = now() where id = $1", [owner, phone]);
+        pendingPhones.delete(owner);
+        const row = (await pool.query("select id, email, phone, created_at, email_confirmed_at from auth.users where id = $1", [owner])).rows[0] as UserRow;
         return { status: 200, body: sessionFor(row) };
       }
       const found = await pool.query("select id, email, phone, created_at, email_confirmed_at from auth.users where regexp_replace(phone, '\\D', '', 'g') = $1", [phone]);
@@ -335,6 +369,7 @@ export async function startStandin(options: StandinOptions): Promise<{ close: ()
       if (!claims?.sub) throw new HttpError(401, { code: 401, error_code: "bad_jwt", msg: "invalid JWT" });
       if (body.phone) pendingPhones.set(String(claims.sub), String(body.phone));
       const found = await pool.query("select id, email, phone, created_at from auth.users where id = $1", [claims.sub]);
+      if (body.phone && found.rows[0]) await runSmsHook(found.rows[0] as { id: string; phone: string | null }, String(body.phone));
       return { status: 200, body: { ...userJson(found.rows[0]), phone_change: body.phone ? String(body.phone) : undefined } };
     }
     if (path === "/verify" && req.method === "POST") {

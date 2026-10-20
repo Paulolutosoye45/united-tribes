@@ -58,7 +58,7 @@ export function Checklist({ checklist, roles }: { checklist: Data; roles: readon
       )}
       {ready > 0 && todo.length > 0 ? (
         <details>
-          <summary className="t-small cursor-pointer text-soft">{ready} done</summary>
+          <summary className="t-small cursor-pointer py-2.5 text-soft">{ready} done</summary>
           <ul className="mt-2 flex flex-col gap-1.5">
             {lines
               .filter((l) => l.item.ok)

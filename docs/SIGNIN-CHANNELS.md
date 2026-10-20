@@ -134,7 +134,7 @@ Order matters: **database first, then Supabase, then the site, then (optional) t
    - Route A: `WHATSAPP_PROVIDER=meta` with the Meta settings as before.
    - Route B/C: `SIGNIN_WHATSAPP_ROUTE=linked`, `LINKED_SENDER_URL`, `LINKED_SENDER_SECRET`, `WHATSAPP_SIGNIN_NUMBER`.
 4. **The sender** (B and C only): follow `sender/README.md`.
-5. Run the **ten-minute check with a real number** in `APPLY.md`. Nothing here has been run against a real WhatsApp, Meta or
+5. Run the **first-hour check with a real number** in `DEPLOY.md`. Nothing here has been run against a real WhatsApp, Meta or
    Supabase project.
 
 If you set up Twilio *inside* Supabase in the earlier release: that set-up cannot have these limits (the hook is never called),

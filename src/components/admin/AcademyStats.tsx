@@ -1,14 +1,23 @@
 import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 import type { AcademyStats } from "@/lib/academy/types";
+import { REQUIRED_MODES, type AcademyModes } from "@/lib/academy/modes";
 
-/** Totals for the office. No names and no scores, only counts. */
-export function AcademyStatsPanel({ stats }: { stats: AcademyStats }) {
+/**
+ * Totals for the office. No names and no scores, only counts. When the Academy is switched off, the training figures say so
+ * instead of showing zeros that could be mistaken for a problem.
+ */
+export function AcademyStatsPanel({ stats, modes = REQUIRED_MODES }: { stats: AcademyStats; modes?: AcademyModes }) {
+  const off = modes.academy === "off";
   const tiles = [
-    { label: "In training", value: String(stats.trainees - stats.certified), note: `${stats.leaders} leaders, ${stats.assistants} assistants approved` },
+    off
+      ? { label: "Academy", value: "Off", note: modes.declaration === "required" ? "Switched off; only the signed declaration is asked for" : "Switched off; certification needs only an approved Tribe Card" }
+      : { label: "In training", value: String(stats.trainees - stats.certified), note: `${stats.leaders} leaders, ${stats.assistants} assistants approved` },
     { label: "Certified", value: String(stats.certified), note: `${stats.certified_leaders} leaders, ${stats.certified_assistants} assistants` },
     { label: "Tribe Cards", value: String(stats.cards_approved), note: `${stats.cards_submitted} waiting, ${stats.cards_paired} with an assistant` },
-    { label: "Workshops ahead", value: String(stats.upcoming_workshops), note: `${stats.practice_ready} practice sessions ready` },
+    off
+      ? { label: "Workshops ahead", value: String(stats.upcoming_workshops), note: "bookings are closed while the Academy is off" }
+      : { label: "Workshops ahead", value: String(stats.upcoming_workshops), note: `${stats.practice_ready} practice sessions ready` },
   ];
   return (
     <div className="flex flex-col gap-4">
@@ -21,7 +30,7 @@ export function AcademyStatsPanel({ stats }: { stats: AcademyStats }) {
           </div>
         ))}
       </dl>
-      {stats.modules.length > 0 ? (
+      {!off && stats.modules.length > 0 ? (
         <div className="card flex flex-col gap-3 p-5">
           <h3 className="font-semibold">Where leaders are in the course</h3>
           <ol className="flex flex-col gap-2.5">

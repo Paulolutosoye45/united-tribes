@@ -6,8 +6,9 @@ import { AcademyStatsPanel } from "@/components/admin/AcademyStats";
 import { LeaderStatsPanel } from "@/components/admin/LeaderStats";
 import { MatchStatsPanel } from "@/components/matching/MatchStats";
 import { loadChecklist } from "@/lib/admin/server";
+import { loadAcademyModes } from "@/lib/academy/server";
 import type { AcademyStats } from "@/lib/academy/types";
-import { ANNOUNCE_VIEW_ROLES, ASK_ROLES, DATA_ROLES, REMINDER_ROLES, LEADER_QUALITY_ROLES, REFEREE_MANAGER_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PRIVACY_ROLES, PROGRAMME_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole, type Role } from "@/lib/auth/roles";
+import { ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, DATA_ROLES, REMINDER_ROLES, LEADER_QUALITY_ROLES, PIPELINE_VIEW_ROLES, REFEREE_MANAGER_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PRIVACY_ROLES, PROGRAMME_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole, type Role } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import type { LeaderStats } from "@/lib/leaders/review-types";
 import type { MatchStats } from "@/lib/matching/types";
@@ -32,6 +33,8 @@ const GROUPS: { title: string; tiles: Tile[] }[] = [
     tiles: [
       { href: "/admin/catalogue", title: "Communities and goals", body: "The shared list members and leaders choose from, and the goals members write in.", roles: OFFICE_ROLES },
       { href: "/admin/champions", title: "Community champions", body: "Who looks after each community.", roles: OFFICE_ROLES },
+      { href: "/admin/leader-pipeline", title: "Leader pipeline", body: "The steps to become a leader: which questions, references, interview and training are required, optional or off, and a record of every change.", roles: PIPELINE_VIEW_ROLES },
+      { href: "/admin/leader-supply", title: "Leader supply", body: "Where members are waiting for a tribe and no leader is ready, who could lead it, and the offers made.", roles: BOARD_VIEW_ROLES },
       { href: "/admin/leader-quality", title: "Leader quality", body: "The first check on leader applications: the switch, the thresholds and the applications held for a person.", roles: LEADER_QUALITY_ROLES },
       { href: "/admin/referees", title: "Pastors and unit heads", body: "The church’s list that checks referees: upload your spreadsheet, keep it up to date, and see which references need a look.", roles: REFEREE_MANAGER_ROLES },
       { href: "/admin/people", title: "People and roles", body: "Invite the team and see who holds each role.", roles: PROGRAMME_ROLES },
@@ -69,12 +72,13 @@ export default async function AdminPage() {
   const session = await requireRole(OFFICE_ROLES, "/admin");
   const supabase = await createClient();
 
-  const [checklist, stats, leaderStats, academyStats, matchStats] = await Promise.all([
+  const [checklist, stats, leaderStats, academyStats, matchStats, academyModes] = await Promise.all([
     loadChecklist(supabase),
     supabase.rpc("intake_stats"),
     supabase.rpc("leader_stats"),
     supabase.rpc("academy_stats"),
     supabase.rpc("match_stats"),
+    loadAcademyModes(supabase),
   ]);
 
   const groups = GROUPS.map((g) => ({ ...g, tiles: g.tiles.filter((t) => hasAnyRole(session.roles, t.roles)) })).filter((g) => g.tiles.length > 0);
@@ -130,7 +134,7 @@ export default async function AdminPage() {
           {academyStats.data ? (
             <div className="flex flex-col gap-4">
               <h3 className="font-semibold">Leader Academy</h3>
-              <AcademyStatsPanel stats={academyStats.data as AcademyStats} />
+              <AcademyStatsPanel stats={academyStats.data as AcademyStats} modes={academyModes} />
             </div>
           ) : null}
           {matchStats.data ? (

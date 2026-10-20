@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "sender/node_modules", "sender/src/baileys.ts", "sender/src/main.ts", "sender/src/link.ts"]
 }

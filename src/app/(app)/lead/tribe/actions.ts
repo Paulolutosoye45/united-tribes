@@ -105,3 +105,14 @@ export async function saveMeetingAction(id: string, link: string, placeNote: str
   revalidatePath("/lead/tribe");
   return { ok: true };
 }
+
+/** "Start from the ready-made card": the database fills the Success Picture lines the leader has not written, and never changes one they have. */
+export async function prefillFromReadyMadeAction(id: string): Promise<Result<{ filled: boolean }>> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(id)) return { ok: false, message: TRY_AGAIN };
+  const { data, error } = await supabase.rpc("card_template_prefill", { p_tribe: id });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath("/lead/tribe");
+  return { ok: true, filled: (data as { filled?: boolean } | null)?.filled === true };
+}

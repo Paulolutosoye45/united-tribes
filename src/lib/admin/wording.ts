@@ -1,5 +1,7 @@
 import { formatDate, formatShortDate, plural } from "@/lib/dates";
 import { ROLE_LABELS, isRole, type Role } from "@/lib/auth/roles";
+import { ELIGIBILITY } from "@/lib/leaders/options";
+import { ELIGIBILITY_KEYS, type EligibilityKey, type SwitchId } from "@/lib/leaders/pipeline";
 import type { CheckItem, SeasonStatus } from "./types";
 
 type Tone = "gold" | "neutral" | "flame" | "outline" | "charcoal";
@@ -201,3 +203,153 @@ export const MESSAGE_STATUS_TONE: Record<string, Tone> = {
   failed: "flame",
   skipped: "neutral",
 };
+
+// ---------------------------------------------------------------------------
+// The switchboard for becoming a leader
+// ---------------------------------------------------------------------------
+
+export type SwitchGroup = "questions" | "steps" | "fit" | "training";
+
+export const SWITCH_GROUPS: { id: SwitchGroup; title: string; intro: string }[] = [
+  {
+    id: "questions",
+    title: "The questions on the first screen",
+    intro: "Each applicant is asked these before anything else. Required means the answer must be Yes. Optional means they are asked and a No does not stop them. Off means the question is not asked.",
+  },
+  {
+    id: "steps",
+    title: "The steps after they send",
+    intro: "What the panel waits for before it can invite someone or decide.",
+  },
+  {
+    id: "fit",
+    title: "Find your tribe",
+    intro: "The questions that help match a leader to the tribe cards they could lead, and the pastor’s fit panel.",
+  },
+  {
+    id: "training",
+    title: "Training after approval",
+    intro: "What a new leader finishes before their tribe is shown to members. Turning training off never takes anything away from a leader who has already done it.",
+  },
+];
+
+export const POSITION_WORDS: Record<string, string> = { required: "Required", optional: "Optional", off: "Off", on: "On" };
+export const positionWord = (value: string): string => POSITION_WORDS[value] ?? value;
+
+export type SwitchInfo = {
+  id: SwitchId;
+  group: SwitchGroup;
+  title: string;
+  /** The exact words the applicant sees, for a question. */
+  ask: string | null;
+  options: readonly string[];
+  means: Record<string, string>;
+};
+
+const QUESTION_TITLE: Record<EligibilityKey, string> = {
+  member6: "Six months as a member",
+  foundation: "Foundation of Faith",
+  serving: "Serving in a team",
+  age21: "Age 21 or over",
+  time: "Time each week",
+  safeguarding: "Safeguarding and code of conduct",
+  confidentiality: "Confidentiality",
+};
+
+const questionMeans = {
+  required: "The answer must be Yes. Anyone who answers No is stopped kindly before they send, and is shown other ways to serve.",
+  optional: "The applicant is asked. A No does not stop them, and the panel can see the answer.",
+  off: "Not asked. The question does not appear on the form or on the tracker.",
+};
+
+export const SWITCHES: SwitchInfo[] = [
+  ...ELIGIBILITY_KEYS.map(
+    (key): SwitchInfo => ({
+      id: `elig_${key}`,
+      group: "questions",
+      title: QUESTION_TITLE[key],
+      ask: ELIGIBILITY.find((e) => e.id === key)?.label ?? null,
+      options: ["required", "optional", "off"],
+      means: questionMeans,
+    }),
+  ),
+  {
+    id: "references_mode",
+    group: "steps",
+    title: "References",
+    ask: "Two people who know the applicant answer four short questions about them.",
+    options: ["required", "optional", "off"],
+    means: {
+      required: "The applicant names two referees, one a pastor or unit head. Both must answer, with no open concern, before a leader can be approved.",
+      optional: "The applicant may name up to two referees. Answers count when they come, and nothing waits for them. A concern a referee raises still has to be cleared by a pastor.",
+      off: "Not asked. Nobody is contacted, and the panel decides without references.",
+    },
+  },
+  {
+    id: "interview_mode",
+    group: "steps",
+    title: "Interview",
+    ask: "A short conversation with the panel, scored by two panel members.",
+    options: ["required", "optional", "off"],
+    means: {
+      required: "A pastor can approve only after the interview has been held and scored.",
+      optional: "The panel may invite someone to interview, or decide without one.",
+      off: "No interview. The panel decides from the application, and no one is invited.",
+    },
+  },
+  {
+    id: "tribe_fit",
+    group: "fit",
+    title: "Find your tribe",
+    ask: "A leader sees the tribes that suit their answers and chooses the one they would lead.",
+    options: ["off", "on"],
+    means: {
+      off: "Not used. The application is the same as before.",
+      on: "A new screen after “I lead best by”: the leader sees the tribes that suit their answers, chooses one and may name two backups. The pastor sees how well the leader fits the tribe they chose. A pastor still decides every application.",
+    },
+  },
+  {
+    id: "academy_mode",
+    group: "training",
+    title: "Leader Academy",
+    ask: "The modules and quizzes, and the coach’s practice sign-off.",
+    options: ["required", "optional", "off"],
+    means: {
+      required: "Every module passed and the practice session marked ready before a leader is certified.",
+      optional: "The Academy stays open to leaders, but certification does not wait for it.",
+      off: "The Academy is closed to leaders and certification does not need it. Everything already done is kept.",
+    },
+  },
+  {
+    id: "declaration_mode",
+    group: "training",
+    title: "Safeguarding declaration",
+    ask: "The leader signs the safeguarding declaration with their full name.",
+    options: ["required", "off"],
+    means: {
+      required: "The leader signs the declaration before they are certified.",
+      off: "No declaration is asked for. Declarations already signed are kept.",
+    },
+  },
+];
+
+export const SWITCH_BY_ID: Record<string, SwitchInfo> = Object.fromEntries(SWITCHES.map((s) => [s.id, s]));
+
+export const PRESET_INFO = {
+  full: {
+    title: "Full process",
+    body: "Today’s process: every question, both referees and the interview. The Academy and declaration are set to Required.",
+    confirm: "Set every switch back to the full process? Applications already sent keep the steps they were sent with.",
+  },
+  open_door: {
+    title: "Open door",
+    body: "Age 21, time each week, safeguarding and confidentiality only. No references, no interview. Find your tribe is turned on once it is ready. The Academy and declaration are set to Required.",
+    confirm: "Switch to the open door? Fewer steps are asked of new applicants from now on. Applications already sent keep the steps they were sent with.",
+  },
+} as const;
+
+export const PRESET_NAME: Record<string, string> = { full: "Full process", open_door: "Open door", empty: "Set by hand" };
+
+/** Said once, when both training switches are Off. */
+export const NO_TRAINING_WARNING =
+  "With the Academy and the declaration both off, a leader is certified as soon as their tribe card is approved, and an assistant leader as soon as they are approved. Nothing is checked about their training or safeguarding. Switch both off only if the church has decided it.";

@@ -1,4 +1,5 @@
 import { ZONES } from "@/lib/intake/options";
+import { andList, needsOf, parseAcademyModes } from "./modes";
 import type { CertState, TribeType, MyAcademy, SessionKind } from "./types";
 
 export const SESSION_KINDS: Record<SessionKind, { label: string; short: string; blurb: string; order: number }> = {
@@ -110,53 +111,102 @@ export const CARD_MISSING: Record<string, string> = {
   life: "Write the Loving Life line",
 };
 
-export type CheckRow = { id: "modules" | "declaration" | "practice" | "card"; label: string; detail: string; done: boolean; href: string };
+export type CheckRow = {
+  id: "modules" | "declaration" | "practice" | "card";
+  label: string;
+  detail: string;
+  /** What has actually been done. */
+  done: boolean;
+  /** Whether certification waits for it. A row that is not needed is shown as such, and one that is switched off is left out. */
+  needed: boolean;
+  href: string;
+};
 
-/** The four things that make a leader certified (three for an assistant), and where each stands. */
-export function checklist(my: Pick<MyAcademy, "state" | "practice" | "card">): CheckRow[] {
+/**
+ * What certification needs, and where each part stands. With the Academy and the declaration both required these are the four things
+ * (three for an assistant) it has always been. When the Academy is optional its two rows stay, marked "Not needed"; when it is off
+ * they are left out; when the declaration is off its row is left out.
+ */
+export function checklist(my: Pick<MyAcademy, "state" | "practice" | "card"> & { modes?: MyAcademy["modes"] }): CheckRow[] {
   const s: CertState = my.state;
-  const rows: CheckRow[] = [
-    {
+  const need = needsOf(s);
+  const modes = parseAcademyModes(my.modes);
+  const rows: CheckRow[] = [];
+  if (modes.academy !== "off") {
+    rows.push({
       id: "modules",
-      label: "Six modules, 80% or better on each quiz",
-      detail: `${s.modules_passed} of ${s.modules_total} passed`,
+      label: need.modules ? "Six modules, 80% or better on each quiz" : "Six modules",
+      detail: need.modules ? `${s.modules_passed} of ${s.modules_total} passed` : `Not needed. ${s.modules_passed} of ${s.modules_total} passed`,
       done: s.modules_done,
+      needed: need.modules,
       href: "/lead/academy#modules",
-    },
-    {
+    });
+  }
+  if (modes.declaration === "required" && need.declaration) {
+    rows.push({
       id: "declaration",
       label: "Safeguarding declaration signed",
-      detail: s.declaration ? "Signed" : "Opens when you pass the care and safeguarding module",
+      detail: s.declaration ? "Signed" : need.modules ? "Opens when you pass the care and safeguarding module" : "Ready for you to read and sign",
       done: s.declaration,
+      needed: true,
       href: "/lead/academy/declaration",
-    },
-    {
+    });
+  }
+  if (modes.academy !== "off") {
+    rows.push({
       id: "practice",
       label: "Practice session marked ready by a coach",
-      detail: my.practice ? (my.practice.ready ? "Ready" : "Not yet. See your coach’s note below") : "Your coach arranges this after the first workshop",
+      detail: need.practice
+        ? my.practice
+          ? my.practice.ready
+            ? "Ready"
+            : "Not yet. See your coach’s note below"
+          : "Your coach arranges this after the first workshop"
+        : my.practice?.ready
+          ? "Not needed. Your coach has marked you ready"
+          : "Not needed. Your coach can still arrange one with you",
       done: s.practice,
+      needed: need.practice,
       href: "/lead/academy#practice",
-    },
-  ];
+    });
+  }
   if (s.card_required) {
     rows.push({
       id: "card",
       label: "Tribe Card published and approved",
       detail: my.card ? (CARD_STATUS[my.card.status]?.label ?? "") : "Not started",
       done: s.card,
+      needed: true,
       href: "/lead/tribe",
     });
   }
   return rows;
 }
 
-/** Four quarters of the shield: modules, declaration, practice, card. */
+/** The sentence under the heading on the training page, and the count of what is needed against what is done. */
+export function certificationSummary(my: Pick<MyAcademy, "state" | "is_leader">): { total: number; done: number; sentence: string } {
+  const s = my.state;
+  const need = needsOf(s);
+  const asked: { text: string; done: boolean }[] = [];
+  if (need.modules) asked.push({ text: "your modules", done: s.modules_done });
+  if (need.declaration) asked.push({ text: "the safeguarding declaration", done: s.declaration });
+  if (need.practice) asked.push({ text: "a practice session", done: s.practice });
+  if (my.is_leader) asked.push({ text: "an approved Tribe Card", done: s.card });
+  return {
+    total: asked.length,
+    done: asked.filter((a) => a.done).length,
+    sentence: asked.length === 0 ? "Nothing more is needed to be certified." : `Certification needs ${andList(asked.map((a) => a.text))}.`,
+  };
+}
+
+/** Four quarters of the shield: modules, declaration, practice, card. A part that is not needed is full: nothing stands in the way there. */
 export function shieldFills(my: Pick<MyAcademy, "state">): [number, number, number, number] {
   const s = my.state;
+  const need = needsOf(s);
   return [
-    s.modules_total > 0 ? Math.min(1, s.modules_passed / s.modules_total) : 0,
-    s.declaration ? 1 : 0,
-    s.practice ? 1 : 0,
+    need.modules ? (s.modules_total > 0 ? Math.min(1, s.modules_passed / s.modules_total) : 0) : 1,
+    need.declaration ? (s.declaration ? 1 : 0) : 1,
+    need.practice ? (s.practice ? 1 : 0) : 1,
     !s.card_required || s.card ? 1 : 0,
   ];
 }
@@ -169,7 +219,9 @@ export function nextAction(my: MyAcademy): { title: string; body: string; cta: s
       ? { title: "You are certified.", body: "Your Tribe Card is the last thing members wait for.", cta: "Open my Tribe Card", href: "/lead/tribe" }
       : { title: "You are certified.", body: "Thank you for the work. Your coach will be in touch about the season ahead.", cta: "See my training", href: "/lead/academy" };
   }
-  const nextModule = my.modules.find((m) => !m.passed);
+  const need = needsOf(s);
+  // A module that is not needed is never what a leader is sent to next. The Academy stays open to them, but it is not the way forward.
+  const nextModule = need.modules ? my.modules.find((m) => !m.passed) : undefined;
   if (nextModule) {
     const started = nextModule.opened;
     return {
@@ -179,10 +231,10 @@ export function nextAction(my: MyAcademy): { title: string; body: string; cta: s
       href: `/lead/academy/${nextModule.slug}`,
     };
   }
-  if (!s.declaration) {
+  if (need.declaration && !s.declaration) {
     return { title: "Sign the safeguarding declaration", body: "Eight promises, and it takes a minute.", cta: "Read and sign", href: "/lead/academy/declaration" };
   }
-  if (!s.practice) {
+  if (need.practice && !s.practice) {
     const booked = my.sessions.some((x) => x.booked);
     return booked
       ? { title: "Your workshop is booked", body: "After it, your coach arranges your practice session.", cta: "See my training", href: "/lead/academy" }

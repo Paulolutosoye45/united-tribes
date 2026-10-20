@@ -5,6 +5,8 @@ import { getSession } from "@/lib/auth/session";
 import { firstProblem, parseLeaderAnswers, refereeProblem, withNormalisedContact, type RefereeInput } from "@/lib/leaders/answers";
 import { leaderConsentFor } from "@/lib/leaders/consent";
 import { SESSION_ENDED, TRY_AGAIN, friendly, isUuid } from "@/lib/leaders/errors";
+import { FIT_FAILED, parseFitView, parseSavedCalling, type FitView } from "@/lib/leaders/fit";
+import { loadApplyModes } from "@/lib/leaders/server";
 import { MAX_ANSWER_LENGTH, isWrittenField } from "@/lib/leaders/quality/fields";
 import { kickLeaderReading } from "@/lib/leaders/quality/kick";
 import { checkAnswer } from "@/lib/leaders/quality/scorer";
@@ -83,6 +85,23 @@ export async function saveRefereeAction(appId: string, slot: 1 | 2, input: Refer
 }
 
 /**
+ * Takes off a referee the applicant added, before any request has gone to them. The database says when that is no longer allowed.
+ * Used when referees are optional and the applicant clears one they had added.
+ */
+export async function clearRefereeAction(appId: string, slot: 1 | 2): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId) || (slot !== 1 && slot !== 2)) return { ok: false, message: TRY_AGAIN };
+  const supabase = await createClient();
+  const found = await supabase.from("leader_references").select("id").eq("application_id", appId).eq("slot", slot).maybeSingle();
+  if (found.error) return { ok: false, message: TRY_AGAIN };
+  if (!found.data) return { ok: true };
+  const { error } = await supabase.rpc("clear_referee", { p_reference: found.data.id });
+  if (error) return { ok: false, message: friendly(error) };
+  return { ok: true };
+}
+
+/**
  * Sends the application. What is saved in the database is checked again here and,
  * once more, by the database itself, which also scores the scenarios.
  */
@@ -103,7 +122,9 @@ export async function submitApplicationAction(appId: string): Promise<ActionResu
     referees[r.slot === 2 ? 2 : 1] = { name: r.referee_name, relationship: r.relationship, contact: r.contact, head: r.is_pastor_or_unit_head };
   }
   const parsed = parseLeaderAnswers(app.data.answers);
-  const problem = firstProblem(parsed, referees);
+  // Only the steps that apply to this application are checked here; the database checks the same ones again
+  const modes = await loadApplyModes(supabase, appId);
+  const problem = firstProblem(parsed, referees, modes);
   if (problem) return { ok: false, ...problem };
 
   // Make sure the number is stored in international form, which the database insists on.
@@ -123,6 +144,8 @@ export async function submitApplicationAction(appId: string): Promise<ActionResu
     // A written answer that has not passed its quick check sends the person back to the written questions.
     if (/quick check|written answers/i.test(message)) return { ok: false, message, step: "goal-story" };
     if (/updated wording/i.test(message)) return { ok: false, message, step: "ai-consent" };
+    // Find your tribe is on and the choice is missing, or the answers it was based on have changed since
+    if (/choose your tribe first/i.test(message)) return { ok: false, message, step: "find-tribe" };
     return { ok: false, message };
   }
   kickLeaderReading();
@@ -186,4 +209,54 @@ export async function aiConsentAction(appId: string): Promise<ActionResult> {
   if (error) return { ok: false, message: friendly(error) };
   kickLeaderReading();
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Find your tribe
+// ---------------------------------------------------------------------------
+
+export type FitRun = ActionResult<{
+  /** "ok" when there are tribes to show. "none" when there is nothing to choose, so the form goes straight on. */
+  state: "ok" | "none";
+  view?: FitView;
+}>;
+
+/**
+ * Compares the leader's answers with the tribes that have a signed-off card, and returns what a leader may see. The comparison itself
+ * is in the database; this only asks for it. "none" is not an error: no model yet, nothing to choose from, or an answer still missing.
+ */
+export async function runFitAction(appId: string): Promise<FitRun> {
+  const session = await getSession();
+  if (!session) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId)) return { ok: false, message: FIT_FAILED };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("leader_fit_run", { p_app: appId });
+  if (error) {
+    // Switched off while the leader was filling in: carry on without it. The database will not ask for a choice either.
+    if (/not switched on/i.test(error.message ?? "")) return { ok: true, state: "none" };
+    return { ok: false, message: error.code === "22023" || error.code === "P0002" ? friendly(error) : FIT_FAILED };
+  }
+  const view = parseFitView(data);
+  return view ? { ok: true, state: "ok", view } : { ok: true, state: "none" };
+}
+
+export type FitChosen = ActionResult<{
+  /** What the application now says about the leader's tribe. The form takes these into its own copy before it saves anything else. */
+  calling: { community: string; goal: string };
+  view: FitView | null;
+}>;
+
+/** Saves the tribe the leader chose, and up to two backups. The database also writes the tribe into the application's answers. */
+export async function chooseFitAction(appId: string, goalId: string, backups: string[]): Promise<FitChosen> {
+  const session = await getSession();
+  if (!session) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId) || !isUuid(goalId)) return { ok: false, message: TRY_AGAIN };
+  const picks = Array.isArray(backups) ? [...new Set(backups.filter(isUuid))].filter((b) => b !== goalId).slice(0, 2) : [];
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("leader_fit_choose", { p_app: appId, p_goal: goalId, p_backups: picks });
+  if (error) return { ok: false, message: friendly(error) };
+  const result = (data ?? {}) as { calling?: unknown; view?: unknown };
+  const calling = parseSavedCalling(result.calling);
+  if (!calling) return { ok: false, message: TRY_AGAIN };
+  return { ok: true, calling, view: parseFitView(result.view) };
 }

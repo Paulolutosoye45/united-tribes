@@ -8,27 +8,40 @@ import {
   aiConsentAction,
   checkAnswerAction,
   checkEligibilityAction,
+  chooseFitAction,
+  clearRefereeAction,
   restartApplicationAction,
+  runFitAction,
   saveRefereeAction,
   startApplicationAction,
   submitApplicationAction,
 } from "@/app/(focus)/lead/apply/actions";
-import { EMPTY_REFEREE, withNormalisedContact, type LeaderAnswers, type RefereeInput } from "@/lib/leaders/answers";
+import { EMPTY_REFEREE, isBlankReferee, withNormalisedContact, type LeaderAnswers, type RefereeInput } from "@/lib/leaders/answers";
+import { REQUIRED_MODES, type AcademyModes } from "@/lib/academy/modes";
+import { allOptions, fitInputKey, type FitView } from "@/lib/leaders/fit";
+import type { StageModes } from "@/lib/leaders/modes";
 import { isScenarioId } from "@/lib/leaders/scenarios";
 import type { LeaderCatalogue } from "@/lib/leaders/server";
 import {
+  FIT_INPUT_STEPS,
+  FIT_VIEW,
   SECTIONS,
-  STEP_IDS,
+  activeSteps,
   canContinue,
+  fitFills,
   nextStep,
-  previousStep,
+  savedStep,
   sectionOf,
   shieldFills,
   timeLeftLabel,
+  viewAfter,
+  viewBefore,
+  type FlowView,
   type Referees,
   type StepId,
 } from "@/lib/leaders/steps";
 import { Ineligible, Submitted } from "./ApplyEnds";
+import { FindTribe } from "./FindTribe";
 import {
   AiConsentStep,
   ContactStep,
@@ -48,7 +61,7 @@ import {
   type Patch,
 } from "./ApplySteps";
 
-export type View = "welcome" | StepId | "ineligible" | "done";
+export type View = "welcome" | FlowView | "ineligible" | "done";
 
 /** What the first check on written answers asks of this applicant. "off" means nothing is different from before. */
 export type ApplyAi = {
@@ -68,6 +81,12 @@ export type ApplyProps = {
   catalogue: LeaderCatalogue;
   applicantName: string;
   ai: ApplyAi;
+  /** Which steps apply to this application, as the database works them out. */
+  modes: StageModes;
+  /** The Academy and the declaration, for the words about what comes after. */
+  training?: AcademyModes;
+  /** Find your tribe is switched on: a screen after "how you lead best" where the leader chooses a tribe. Off changes nothing. */
+  fit?: boolean;
   initial: { view: View; answers: LeaderAnswers; referees: Referees; failed: string[] };
 };
 
@@ -82,7 +101,7 @@ const CHECKED: Partial<Record<StepId, string>> = {
 
 const trimmed = (r: RefereeInput) => JSON.stringify({ n: r.name.trim(), r: r.relationship.trim(), c: r.contact.trim(), h: r.head });
 
-export function ApplyFlow({ personId, applicationId, catalogue, applicantName, ai, initial }: ApplyProps) {
+export function ApplyFlow({ personId, applicationId, catalogue, applicantName, ai, modes, training = REQUIRED_MODES, fit = false, initial }: ApplyProps) {
   const router = useRouter();
   const [appId, setAppId] = useState(applicationId);
   const [view, setView] = useState<View>(initial.view);
@@ -99,12 +118,24 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
   const [feedback, setFeedback] = useState<(AnswerNote & { step: StepId }) | null>(null);
   const [consentPending, setConsentPending] = useState(ai.needsConsent);
   const [consentAgreed, setConsentAgreed] = useState(false);
+  // Find your tribe. It can be switched on while a leader is filling in, so the form can learn it from the database at the send.
+  const [fitOn, setFitOn] = useState(fit);
+  const [fitStatus, setFitStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
+  const [fitView, setFitView] = useState<FitView | null>(null);
+  const [fitGoal, setFitGoal] = useState<string | null>(null);
+  const [fitBackups, setFitBackups] = useState<string[]>([]);
+  const [fitError, setFitError] = useState<string | null>(null);
 
   const showConsent = ai.mode === "on" && consentPending && (view === "review" || view in CHECKED);
 
   const answersRef = useRef(answers);
   const appIdRef = useRef(applicationId);
   const saveChain = useRef<Promise<void>>(Promise.resolve());
+  // Counts every move between screens, so an answer that arrives after the leader has gone elsewhere is ignored
+  const moves = useRef(0);
+  // What the comparison read when the leader last chose, and the title of what they chose, in case the catalogue on the page is older
+  const fitKey = useRef<string | null>(null);
+  const fitChosen = useRef<{ slug: string; title: string } | null>(null);
   const savedReferees = useRef<Record<number, string>>({
     1: initial.referees[1] ? trimmed(initial.referees[1]) : "",
     2: initial.referees[2] ? trimmed(initial.referees[2]) : "",
@@ -145,8 +176,69 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
     setFeedback(null);
     setDir(direction);
     setView(target);
+    moves.current += 1;
     window.scrollTo({ top: 0, behavior: "instant" });
-    if (target !== "welcome" && target !== "done" && target !== "ineligible") void persist(target);
+    // Find your tribe is never saved as the step: the saved step stays "how you lead best"
+    if (target !== "welcome" && target !== "done" && target !== "ineligible") void persist(savedStep(target));
+    if (target === FIT_VIEW) void enterFit(direction);
+  }
+
+  /**
+   * Opens Find your tribe. The comparison reads what is saved, so the saves are finished first. If there is nothing to choose
+   * (no model yet, no tribe with a signed-off card, or the switch has been turned off) the leader is passed over it in the
+   * direction they were going and never sees an empty screen.
+   */
+  async function enterFit(direction: "forward" | "back") {
+    const turn = ++moves.current;
+    setFitStatus("loading");
+    setFitError(null);
+    await saveChain.current;
+    const id = appIdRef.current;
+    if (!id) return;
+    const result = await runFitAction(id);
+    if (moves.current !== turn) return;
+    if (!result.ok) {
+      setFitError(result.message);
+      setFitStatus("failed");
+      return;
+    }
+    if (result.state === "none" || !result.view) {
+      setFitStatus("idle");
+      setFitView(null);
+      return go(direction === "forward" ? (reviewMode ? "review" : viewAfter(FIT_VIEW, modes, true)) : "lead-best", direction);
+    }
+    const choice = result.view.choice;
+    setFitView(result.view);
+    setFitGoal(choice?.goalId ?? null);
+    setFitBackups(choice ? choice.backups.map((b) => b.goalId) : []);
+    setFitStatus("ready");
+  }
+
+  function chooseTribe(goalId: string) {
+    setFitGoal(goalId);
+    // A backup cannot also be the choice
+    setFitBackups((b) => b.filter((x) => x !== goalId));
+    setProblem(null);
+  }
+
+  function toggleBackup(goalId: string, on: boolean) {
+    setFitBackups((b) => (on ? (b.includes(goalId) || b.length >= 2 || goalId === fitGoal ? b : [...b, goalId]) : b.filter((x) => x !== goalId)));
+  }
+
+  /** Saves the choice. The tribe goes into the leader's own answers before anything else is saved, so the next save cannot undo it. */
+  async function continueFromFit() {
+    if (!fitGoal || !fitView) return;
+    setBusy(true);
+    setProblem(null);
+    await saveChain.current;
+    const result = await chooseFitAction(appIdRef.current!, fitGoal, fitBackups);
+    setBusy(false);
+    if (!result.ok) return setProblem(result.message);
+    patch("calling", { community: result.calling.community, goal: result.calling.goal, goalOther: undefined });
+    fitKey.current = fitInputKey(answersRef.current);
+    const picked = allOptions(fitView).find((o) => o.goalId === fitGoal);
+    fitChosen.current = picked ? { slug: result.calling.goal, title: picked.title } : null;
+    go(reviewMode ? "review" : viewAfter(FIT_VIEW, modes, true), "forward");
   }
 
   async function begin() {
@@ -157,7 +249,7 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
     if (!result.ok) return setProblem(result.message);
     appIdRef.current = result.id;
     setAppId(result.id);
-    go("eligibility", "forward");
+    go(activeSteps(modes)[0], "forward");
   }
 
   async function restart() {
@@ -172,7 +264,7 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
     answersRef.current = { eligibility: {}, calling: {}, scenarios: {}, style: {}, contact: {} };
     setAnswers(answersRef.current);
     setFailed([]);
-    go("eligibility", "back");
+    go(activeSteps(modes)[0], "back");
   }
 
   async function checkEligibility() {
@@ -189,11 +281,25 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
       window.scrollTo({ top: 0, behavior: "instant" });
       return;
     }
-    go(reviewMode ? "review" : "contact", "forward");
+    go(reviewMode ? "review" : nextStep("eligibility", modes), "forward");
   }
 
   async function saveReferee(slot: 1 | 2) {
     const value = referees[slot];
+    // Referees are optional: an empty one is simply not added. If it was added before and is now cleared, take it off.
+    if (modes.references === "optional" && isBlankReferee(value)) {
+      if (!savedReferees.current[slot]) return true;
+      setBusy(true);
+      setProblem(null);
+      const cleared = await clearRefereeAction(appIdRef.current!, slot);
+      setBusy(false);
+      if (!cleared.ok) {
+        setProblem(cleared.message);
+        return false;
+      }
+      savedReferees.current[slot] = "";
+      return true;
+    }
     if (!value) return false;
     if (savedReferees.current[slot] === trimmed(value)) return true;
     setBusy(true);
@@ -222,7 +328,15 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
         setConsentPending(true);
         return;
       }
-      if (result.step && (STEP_IDS as readonly string[]).includes(result.step)) {
+      // Find your tribe was switched on, or the answers it was based on changed: back to it, then straight on to the review
+      if (result.step === FIT_VIEW) {
+        setFitOn(true);
+        setReviewMode(true);
+        go(FIT_VIEW, "back");
+        setProblem(result.message);
+        return;
+      }
+      if (result.step && (activeSteps(modes) as readonly string[]).includes(result.step)) {
         setReviewMode(true);
         go(result.step as StepId, "back");
         setProblem(result.message);
@@ -268,21 +382,26 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
     if (showConsent) return void agreeToNewWording();
     if (view === "review") return void submit();
     if (view === "eligibility") return void checkEligibility();
+    if (view === FIT_VIEW) return void continueFromFit();
     if (view === "ref1" || view === "ref2") {
       if (!(await saveReferee(view === "ref1" ? 1 : 2))) return;
     }
     const field = CHECKED[view as StepId];
     if (field && ai.mode === "on" && !(await checkWritten(view as StepId, field))) return;
     // Changing the community from the review means the goal must be chosen again.
-    if (reviewMode && view === "community" && !canContinue("goal", answers, referees, agreed)) return go("goal", "forward");
-    if (reviewMode) return go("review", "forward");
-    go(nextStep(view), "forward");
+    if (reviewMode && view === "community" && !canContinue("goal", answers, referees, agreed, modes)) return go("goal", "forward");
+    if (reviewMode) {
+      // A screen the comparison reads was changed from the review: choose a tribe again before sending
+      if (fitOn && (FIT_INPUT_STEPS as readonly string[]).includes(view) && fitKey.current !== fitInputKey(answersRef.current)) return go(FIT_VIEW, "forward");
+      return go("review", "forward");
+    }
+    go(viewAfter(view, modes, fitOn), "forward");
   }
 
   function onBack() {
     if (view === "welcome" || view === "done" || view === "ineligible") return;
     if (reviewMode && view !== "review") return go("review", "back");
-    const prev = previousStep(view);
+    const prev = viewBefore(view, modes, fitOn);
     if (prev) go(prev, "back");
   }
 
@@ -292,23 +411,30 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
   }
 
   async function finishLater() {
-    if (view !== "welcome" && view !== "done" && view !== "ineligible") await persist(view);
+    if (view !== "welcome" && view !== "done" && view !== "ineligible") await persist(savedStep(view));
     router.push("/lead");
   }
 
-  if (view === "done") return <Submitted name={applicantName} firstCheck={ai.mode === "on"} />;
+  if (view === "done") return <Submitted name={applicantName} firstCheck={ai.mode === "on"} modes={modes} hasReferees={!isBlankReferee(referees[1]) || !isBlankReferee(referees[2])} />;
   if (view === "ineligible") return <Ineligible failed={failed} onRestart={() => void restart()} restarting={busy} error={problem} />;
 
   const onWelcome = view === "welcome";
-  const fills = shieldFills(view);
-  const section = onWelcome || view === "review" ? -1 : sectionOf(view);
-  const stepNo = onWelcome ? 0 : STEP_IDS.indexOf(view) + 1;
-  const canGo = showConsent ? consentAgreed : onWelcome ? agreed : canContinue(view, answers, referees, true);
+  const onFit = view === FIT_VIEW;
+  // Find your tribe is a view between two steps, so everything that works from the list of steps looks at the step before it
+  const stepView: StepId = onWelcome ? "eligibility" : onFit ? "lead-best" : view;
+  const fills = onFit ? fitFills(modes) : shieldFills(onWelcome ? "welcome" : stepView, modes);
+  const stepsHere = activeSteps(modes);
+  const section = onWelcome || view === "review" ? -1 : sectionOf(stepView);
+  const stepNo = onWelcome ? 0 : stepsHere.indexOf(stepView) + 1;
+  const canGo = showConsent ? consentAgreed : onWelcome ? agreed : onFit ? fitStatus === "ready" && fitGoal !== null : canContinue(stepView, answers, referees, true, modes);
   const label = showConsent ? "I agree, carry on" : onWelcome ? "I agree, start my application" : view === "review" ? "Send my application" : "Continue";
-  const caption = onWelcome ? "About fifteen minutes" : view === "review" ? "Last step" : `${SECTIONS[section]?.label ?? ""} · ${timeLeftLabel(view).toLowerCase()}`;
+  const caption = onWelcome ? "About fifteen minutes" : view === "review" ? "Last step" : `${SECTIONS[section]?.label ?? ""} · ${timeLeftLabel(view, modes, fitOn).toLowerCase()}`;
   const minWords = ai.mode === "on" ? ai.minWords : undefined;
   const c = answers.calling;
-  const goalTitle = catalogue.communities.find((t) => t.slug === c.community)?.goals.find((g) => g.slug === c.goal)?.title ?? c.goalOther?.trim() ?? null;
+  const known = catalogue.communities.find((t) => t.slug === c.community)?.goals.find((g) => g.slug === c.goal)?.title;
+  // A tribe whose card was signed off after this page was opened is not in the catalogue the page was given: use the title the leader chose
+  const justChosen = fitChosen.current && fitChosen.current.slug === c.goal ? fitChosen.current.title : null;
+  const goalTitle = known ?? justChosen ?? c.goalOther?.trim() ?? null;
 
   const setReferee = (slot: 1 | 2) => (next: RefereeInput) => setReferees((r) => ({ ...r, [slot]: next }));
 
@@ -319,7 +445,7 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
       sections={SECTIONS}
       saveState={saveState}
       caption={caption}
-      announce={onWelcome ? "Welcome" : `Question ${stepNo} of ${STEP_IDS.length}`}
+      announce={onWelcome ? "Welcome" : onFit ? "Find your tribe" : `Question ${stepNo} of ${stepsHere.length}`}
       progressLabel="Application progress"
       onWelcome={onWelcome}
       leaveHref="/lead"
@@ -328,17 +454,17 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
       complete={view === "review"}
       viewKey={view}
       dir={dir}
-      showBack={!onWelcome && previousStep(view) !== null}
+      showBack={!onWelcome && viewBefore(view, modes, fitOn) !== null}
       onBack={onBack}
       onContinue={() => void onContinue()}
       primaryLabel={label}
       canGo={canGo}
       busy={busy}
-      problem={problem && view !== "review" && view !== "ref1" && view !== "ref2" ? problem : null}
+      problem={problem && view !== "review" && view !== "ref1" && view !== "ref2" && !(onFit && fitStatus !== "ready") ? problem : null}
     >
       {showConsent ? <AiConsentStep text={ai.updatedConsentText} agreed={consentAgreed} onAgree={setConsentAgreed} /> : null}
-      {view === "welcome" ? <LeaderWelcome agreed={agreed} onAgree={setAgreed} consentText={ai.consentText} /> : null}
-      {view === "eligibility" ? <EligibilityStep answers={answers} patch={patch} /> : null}
+      {view === "welcome" ? <LeaderWelcome agreed={agreed} onAgree={setAgreed} consentText={ai.consentText} modes={modes} training={training} /> : null}
+      {view === "eligibility" ? <EligibilityStep answers={answers} patch={patch} modes={modes} /> : null}
       {view === "contact" ? <ContactStep answers={answers} patch={patch} /> : null}
       {view === "track" ? <TrackStep answers={answers} patch={patch} tracks={catalogue.tracks} /> : null}
       {view === "community" ? <CommunityStep answers={answers} patch={patch} communities={catalogue.communities} /> : null}
@@ -357,13 +483,25 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
       {isScenarioId(view) ? <ScenarioStep id={view} answers={answers} patch={patch} seed={seed} /> : null}
       {view === "style" ? <StyleStep answers={answers} patch={patch} /> : null}
       {view === "lead-best" ? <LeadBestStep answers={answers} patch={patch} /> : null}
+      {onFit ? (
+        <FindTribe
+          status={fitStatus}
+          view={fitView}
+          chosen={fitGoal}
+          backups={fitBackups}
+          onChoose={chooseTribe}
+          onBackup={toggleBackup}
+          onRetry={() => void enterFit("forward")}
+          error={fitError ?? problem}
+        />
+      ) : null}
       {view === "ref1" ? (
-        <RefereeStep slot={1} value={referees[1] ?? EMPTY_REFEREE} onChange={setReferee(1)} headNeeded={false} error={problem} />
+        <RefereeStep slot={1} value={referees[1] ?? EMPTY_REFEREE} onChange={setReferee(1)} headNeeded={false} error={problem} optional={modes.references === "optional"} />
       ) : null}
       {view === "ref2" ? (
-        <RefereeStep slot={2} value={referees[2] ?? EMPTY_REFEREE} onChange={setReferee(2)} headNeeded={!(referees[1]?.head)} error={problem} />
+        <RefereeStep slot={2} value={referees[2] ?? EMPTY_REFEREE} onChange={setReferee(2)} headNeeded={!(referees[1]?.head)} error={problem} optional={modes.references === "optional"} />
       ) : null}
-      {!showConsent && view === "review" ? <ReviewStep answers={answers} referees={referees} catalogue={catalogue} onEdit={onEdit} error={problem} /> : null}
+      {!showConsent && view === "review" ? <ReviewStep answers={answers} referees={referees} catalogue={catalogue} onEdit={onEdit} error={problem} modes={modes} goalFallback={justChosen} /> : null}
     </FlowFrame>
   );
 }

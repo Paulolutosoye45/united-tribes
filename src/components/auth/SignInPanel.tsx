@@ -43,7 +43,7 @@ export function SignInPanel({ next, initialError = null, channel: initialChannel
   // the server's first draw and the browser's agree). A first visit has neither, and starts on Email.
   const [picked, setPicked] = useState<SignInTab | null>(null);
   const remembered = useSyncExternalStore(
-    () => () => { },
+    () => () => {},
     () => readChoice(),
     () => null,
   );
@@ -148,7 +148,7 @@ export function SignInPanel({ next, initialError = null, channel: initialChannel
     let status = 0;
     let body: { ok?: boolean; error?: string; message?: string } | null = null;
     try {
-      const response = await fetch("/api/auth/send-code", {
+      const response = await fetch("/api/auth/request-code", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ phone, captchaToken: bot.token ?? undefined }),

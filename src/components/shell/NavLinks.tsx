@@ -62,6 +62,8 @@ export function BottomTabs({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   if (items.length < 2) return null;
   const index = items.findIndex((item) => isActive(pathname, item.href));
+  // Six or more places (a pastor, a director) leave about 50px each on a phone: tighter padding and a smaller label keep every word whole
+  const crowded = items.length >= 6;
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 safe-bottom lg:hidden">
       <nav
@@ -88,7 +90,8 @@ export function BottomTabs({ items }: { items: NavItem[] }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "press relative z-10 flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[22px] px-2 text-[0.72rem] font-medium leading-tight transition-colors duration-300",
+                "press relative z-10 flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[22px] font-medium leading-tight transition-colors duration-300",
+                crowded ? "px-0.5 text-[0.625rem]" : "px-2 text-[0.72rem]",
                 active ? "font-semibold text-on-flame" : "text-soft",
               )}
             >

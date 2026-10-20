@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { PassphraseForm } from "@/components/god/PassphraseForm";
 import { formatLagosDay, formatLagosTime, formatShortDate } from "@/lib/dates";
 import { getOverview, loadRecord } from "@/lib/god/server";
-import { activityLine, ago, clock, describeAction, describeKind, kindTone } from "@/lib/god/wording";
+import { activityLine, ago, clock, describeAction, describeKind, kindTone, lookedLine } from "@/lib/god/wording";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Your record" };
@@ -13,9 +13,11 @@ type SearchParams = Promise<{ before?: string }>;
 
 const TONE = { calm: "bg-soft", watch: "bg-[var(--crest-gold)]", alert: "bg-flame" } as const;
 
-function line(kind: string, action: string | null, detail: Record<string, unknown>): string {
+function line(kind: string, action: string | null, detail: Record<string, unknown>, ref: string | null): string {
   const activity = activityLine(kind, action, detail);
   if (activity) return activity;
+  const looked = lookedLine(kind, action, ref);
+  if (looked) return looked;
   if (kind === "action" && action) return `${describeKind(kind)}: ${describeAction(action)}`;
   if (kind === "probe") return `${describeKind(kind)}${typeof detail.person === "string" ? `: ${detail.person}` : ""}`;
   if (kind === "wrong") {
@@ -70,7 +72,7 @@ export default async function RecordPage({ searchParams }: { searchParams: Searc
               <li key={e.id} data-kind={e.kind} className="flex items-start gap-3 p-4">
                 <span aria-hidden="true" className={`mt-2 h-2 w-2 shrink-0 rounded-full ${TONE[kindTone(e.kind)]}`} />
                 <span className="min-w-0 flex-1">
-                  <span className="t-body block">{line(e.kind, e.action, e.detail)}</span>
+                  <span className="t-body block">{line(e.kind, e.action, e.detail, e.entity_id)}</span>
                   <span className="t-small text-soft">{ago(e.at, now) || `${formatLagosDay(e.at)}, ${formatLagosTime(e.at)}`}</span>
                 </span>
               </li>

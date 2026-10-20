@@ -2,12 +2,17 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import type { ModuleSummary } from "@/lib/academy/types";
 
-export function ModuleGrid({ modules }: { modules: ModuleSummary[] }) {
+export function ModuleGrid({ modules, optional = false }: { modules: ModuleSummary[]; optional?: boolean }) {
   return (
     <section id="modules" aria-labelledby="modules-heading" className="flex scroll-mt-24 flex-col gap-3">
       <h2 id="modules-heading" className="t-heading">
         Six modules
       </h2>
+      {optional ? (
+        <p className="t-small measure text-soft" data-testid="modules-optional">
+          Optional. These are open to you, and certification does not wait for them.
+        </p>
+      ) : null}
       <ol className="stagger grid gap-3 sm:grid-cols-2">
         {modules.map((m, i) => (
           <li key={m.slug} style={{ ["--i" as string]: i }}>

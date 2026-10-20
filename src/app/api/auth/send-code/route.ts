@@ -1,18 +1,18 @@
+import { seal } from "@/lib/crypto/seal";
+import { workerRpc, workerToken } from "@/lib/messaging/worker";
+import { hashSalt } from "@/lib/signin/hash";
+import { hookFailure, respond } from "@/lib/signin/outcome";
+import { runSendCode } from "@/lib/signin/send-code";
 import { readHookRequest } from "@/lib/whatsapp/payload";
 import { senderFromEnv } from "@/lib/whatsapp/provider";
 import { verifyWebhook } from "@/lib/whatsapp/webhook";
 
 const MAX_BODY = 4096;
-const NO_STORE = { "cache-control": "no-store" } as const;
-
-/** What the sign-in service expects back when something goes wrong. */
-function failure(status: number, message: string) {
-  return Response.json({ error: { http_code: status, message } }, { status, headers: NO_STORE });
-}
 
 /**
  * Supabase calls this instead of sending a text message, every time it has a
- * sign-in or number-change code to deliver. We put the code on WhatsApp.
+ * sign-in or number-change code to deliver. We put the code on WhatsApp, after
+ * the limits (src/lib/signin/send-code.ts) have said it may go.
  *
  * It is open to the internet by necessity, so nothing happens unless the
  * request carries a valid signature made with the hook secret. The code and
@@ -21,13 +21,14 @@ function failure(status: number, message: string) {
 export async function POST(request: Request) {
   const secret = process.env.SEND_SMS_HOOK_SECRET;
   const sender = senderFromEnv();
-  if (!secret || !sender) return failure(503, "WhatsApp sign-in is not set up.");
+  const token = workerToken();
+  if (!secret || !sender || !token) return respond(hookFailure(503, "WhatsApp sign-in is not set up."));
 
   // Refuse a large request before reading it.
   const declared = Number(request.headers.get("content-length") ?? 0);
-  if (declared > MAX_BODY) return failure(413, "Request too large.");
+  if (declared > MAX_BODY) return respond(hookFailure(413, "Request too large."));
   const body = await request.text();
-  if (body.length > MAX_BODY) return failure(413, "Request too large.");
+  if (body.length > MAX_BODY) return respond(hookFailure(413, "Request too large."));
 
   const trusted = verifyWebhook({
     secret,
@@ -36,22 +37,20 @@ export async function POST(request: Request) {
     signature: request.headers.get("webhook-signature"),
     body,
   });
-  if (!trusted) return failure(401, "Not allowed.");
+  if (!trusted) return respond(hookFailure(401, "Not allowed."));
 
   let json: unknown;
   try {
     json = JSON.parse(body);
   } catch {
-    return failure(400, "Unreadable request.");
+    return respond(hookFailure(400, "Unreadable request."));
   }
   const hook = readHookRequest(json);
-  if (!hook) return failure(400, "No number to send to.");
+  if (!hook) return respond(hookFailure(400, "No number to send to."));
 
-  const result = await sender.send(hook.to, hook.code);
-  if (!result.ok) {
-    // Enough to find the cause in the logs, nothing that identifies the person or the code.
-    console.error(`whatsapp code not sent: ${result.reason}${result.detail ? ` (${result.detail})` : ""} to ***${hook.to.slice(-4)}`);
-    return failure(500, "We couldn't send the WhatsApp message.");
+  try {
+    return respond(await runSendCode(hook, { sender, rpc: workerRpc(token), salt: hashSalt(), seal, log: (line) => console.error(line) }));
+  } catch {
+    return respond(hookFailure(503, "We couldn't send the WhatsApp message."));
   }
-  return Response.json({}, { status: 200, headers: NO_STORE });
 }

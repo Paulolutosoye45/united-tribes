@@ -8,6 +8,7 @@ import {
   decideAction,
   inviteToInterviewAction,
   saveReviewAction,
+  setEvidenceNoteAction,
 } from "@/app/(app)/review/actions";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +16,7 @@ import { Choice } from "@/components/ui/Choice";
 import { Textarea } from "@/components/ui/Input";
 import { AiScorecard } from "./AiScorecard";
 import { RefereeTrust } from "./RefereeTrust";
+import { TribeFitPanel } from "./TribeFitPanel";
 import { ScaleInput } from "@/components/intake/ui";
 import type { Role } from "@/lib/auth/roles";
 import { cn } from "@/lib/cn";
@@ -23,6 +25,7 @@ import { normaliseWhatsapp } from "@/lib/intake/answers";
 import { STYLE_PAIRS } from "@/lib/intake/options";
 import {
   CALLING_RUBRIC,
+  ELIGIBILITY,
   GOAL_RELATIONS,
   INTERVIEW_RUBRIC,
   LEAD_BEST,
@@ -32,6 +35,8 @@ import {
   WALK_LABELS,
   type RubricQuestion,
 } from "@/lib/leaders/options";
+import { PART_LABEL, evidenceSentence, referenceGateText, shares, visibleParts, type Part } from "@/lib/leaders/readiness";
+import type { FitPanel } from "@/lib/leaders/fit-panel";
 import type { ReviewReferee } from "@/lib/leaders/referee/types";
 import type { ReferenceView, Readiness, ReviewDetail, Scorecard } from "@/lib/leaders/review-types";
 import { isDecided } from "@/lib/leaders/status";
@@ -39,7 +44,20 @@ import { isDecided } from "@/lib/leaders/status";
 type Json = Record<string, unknown>;
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 
-export function ReviewWorkspace({ detail, roles, scorecard = null, referees = null }: { detail: ReviewDetail; roles: Role[]; scorecard?: Scorecard | null; referees?: ReviewReferee[] | null }) {
+export function ReviewWorkspace({
+  detail,
+  roles,
+  scorecard = null,
+  referees = null,
+  tribeFit = null,
+}: {
+  detail: ReviewDetail;
+  roles: Role[];
+  scorecard?: Scorecard | null;
+  referees?: ReviewReferee[] | null;
+  /** The Tribe fit panel as the database allowed this reviewer to see it. Null when Tribe fit has nothing to say for this application. */
+  tribeFit?: FitPanel | null;
+}) {
   const answers = detail.answers as { calling?: Json; style?: Json };
   const calling = (answers.calling ?? {}) as Json;
   const style = (answers.style ?? {}) as Json;
@@ -51,10 +69,13 @@ export function ReviewWorkspace({ detail, roles, scorecard = null, referees = nu
   const phone = normaliseWhatsapp(detail.whatsapp ?? "");
   const walk = Number(calling.walkRating);
   const interviewOpen = detail.status === "interview_booked" || detail.status === "interviewed";
+  const refsMode = detail.modes?.references ?? "required";
+  const interviewMode = detail.modes?.interview ?? "required";
+  const noNos = ELIGIBILITY.filter((q) => (detail.optional_no ?? []).includes(q.id));
 
   return (
     <div className="flex flex-col gap-8">
-      <Link href="/review" className="press -ml-1 inline-flex w-fit items-center gap-1.5 rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
+      <Link href="/review" className="press -ml-1 inline-flex min-h-10 w-fit items-center gap-1.5 rounded-lg px-1 text-[0.95rem] font-medium text-soft hover:text-ink">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="m15 6-6 6 6 6" />
         </svg>
@@ -71,7 +92,7 @@ export function ReviewWorkspace({ detail, roles, scorecard = null, referees = nu
           {detail.submitted_at ? ` · Sent ${formatShortDate(detail.submitted_at)}` : ""}
         </p>
         {phone ? (
-          <a href={`https://wa.me/${phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="t-small w-fit font-semibold text-accent underline underline-offset-4">
+          <a href={`https://wa.me/${phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="t-small inline-flex min-h-10 w-fit items-center font-semibold text-accent underline underline-offset-4">
             WhatsApp {phone}
           </a>
         ) : null}
@@ -86,6 +107,25 @@ export function ReviewWorkspace({ detail, roles, scorecard = null, referees = nu
         <section className="card flex flex-col gap-2 p-5" aria-label="Decision">
           <p className="font-semibold">{st.label}{detail.decided_at ? `, ${formatShortDate(detail.decided_at)}` : ""}</p>
           {detail.decision_note ? <p className="t-body whitespace-pre-line text-soft">{detail.decision_note}</p> : null}
+          {detail.evidence === "reduced" ? (
+            <p className="t-small text-soft" data-testid="decided-reduced">
+              Decided on thinner evidence than the full process.{detail.evidence_note ? ` Reason: ${detail.evidence_note}` : ""}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {noNos.length > 0 ? (
+        <section className="card flex flex-col gap-2 p-5" aria-labelledby="optional-no-heading" data-testid="optional-no">
+          <h2 id="optional-no-heading" className="font-semibold">
+            Answered “Not yet” to {noNos.length === 1 ? "a question that was optional" : "questions that were optional"}
+          </h2>
+          <ul className="t-small flex flex-col gap-1 text-soft">
+            {noNos.map((q) => (
+              <li key={q.id}>{q.label}</li>
+            ))}
+          </ul>
+          <p className="t-small text-soft">These did not stop the application. They are here for you to weigh.</p>
         </section>
       ) : null}
 
@@ -128,11 +168,13 @@ export function ReviewWorkspace({ detail, roles, scorecard = null, referees = nu
             </p>
           </Section>
 
-          <ReferencesBlock appId={detail.id} references={detail.references} canClear={isPastor && !decided} trust={referees} />
+          {refsMode === "off" && detail.references.length === 0 ? null : (
+            <ReferencesBlock appId={detail.id} references={detail.references} canClear={isPastor && !decided} trust={referees} optional={refsMode !== "required"} />
+          )}
         </div>
 
         <div className="flex flex-col gap-8">
-          {detail.can_invite || (detail.status === "submitted" && detail.readiness) ? <InvitePanel detail={detail} /> : null}
+          {interviewMode !== "off" && (detail.can_invite || (detail.status === "submitted" && detail.readiness)) ? <InvitePanel detail={detail} /> : null}
 
           {scorecard ? <AiScorecard appId={detail.id} card={scorecard} /> : null}
 
@@ -159,6 +201,8 @@ export function ReviewWorkspace({ detail, roles, scorecard = null, referees = nu
               locked={decided}
             />
           ) : null}
+
+          {tribeFit ? <TribeFitPanel panel={tribeFit} scored={Boolean(detail.mine.calling)} /> : null}
 
           {detail.readiness ? <ReadinessCard readiness={detail.readiness} /> : null}
           {detail.can_decide ? <DecisionPanel detail={detail} /> : null}
@@ -194,15 +238,29 @@ function Answer({ label, text, sub }: { label: string; text: string; sub?: strin
 // References
 // ---------------------------------------------------------------------------
 
-function ReferencesBlock({ appId, references, canClear, trust }: { appId: string; references: ReferenceView[]; canClear: boolean; trust: ReviewReferee[] | null }) {
+function ReferencesBlock({
+  appId,
+  references,
+  canClear,
+  trust,
+  optional = false,
+}: {
+  appId: string;
+  references: ReferenceView[];
+  canClear: boolean;
+  trust: ReviewReferee[] | null;
+  optional?: boolean;
+}) {
   return (
     <section className="flex flex-col gap-3">
       <div>
         <h2 className="t-heading">References</h2>
-        <p className="t-small text-soft">Rated by the referee from 1 to 5. The applicant never sees these.</p>
+        <p className="t-small text-soft">
+          {optional ? "Optional for this application. " : ""}Rated by the referee from 1 to 5. The applicant never sees these.
+        </p>
       </div>
       <ul className="flex flex-col gap-3">
-        {references.length === 0 ? <li className="card t-body p-5 text-soft">No referees named.</li> : null}
+        {references.length === 0 ? <li className="card t-body p-5 text-soft">{optional ? "No referees were added. They are optional." : "No referees named."}</li> : null}
         {references.map((r) => {
           const t = trust?.find((x) => x.id === r.id) ?? null;
           return (
@@ -371,7 +429,7 @@ function RubricPanel({
               ends="1 is not evident, 5 is strong"
             />
             <details className="t-small text-soft">
-              <summary className="cursor-pointer font-medium text-ink">What 1, 3 and 5 look like</summary>
+              <summary className="cursor-pointer py-2.5 font-medium text-ink">What 1, 3 and 5 look like</summary>
               <dl className="mt-2 flex flex-col gap-1.5">
                 <div><dt className="inline font-semibold text-ink">1: </dt><dd className="inline">{q.low}</dd></div>
                 <div><dt className="inline font-semibold text-ink">3: </dt><dd className="inline">{q.mid}</dd></div>
@@ -447,7 +505,9 @@ function InvitePanel({ detail }: { detail: ReviewDetail }) {
   const callingBy = detail.readiness?.calling_reviews ?? 0;
   // When the first check passed the application, its score stands in for the two reviewers' calling scores.
   const byFirstCheck = detail.readiness?.calling_source === "ai";
-  const ready = refsIn >= 2 && (byFirstCheck || callingBy >= 2);
+  // Both references must be in only when they are required. Optional ones never hold up an invitation.
+  const refsRequired = (detail.modes?.references ?? "required") === "required";
+  const ready = (!refsRequired || refsIn >= 2) && (byFirstCheck || callingBy >= 2);
 
   async function invite() {
     setBusy(true);
@@ -459,7 +519,7 @@ function InvitePanel({ detail }: { detail: ReviewDetail }) {
   }
 
   const checks = [
-    { ok: refsIn >= 2, text: `Both references in (${refsIn} of 2)` },
+    refsRequired ? { ok: refsIn >= 2, text: `Both references in (${refsIn} of 2)` } : { ok: true, text: `References are optional (${refsIn} in)` },
     byFirstCheck
       ? { ok: true, text: "The first check has scored it" }
       : { ok: callingBy >= 2, text: `Two reviewers have scored (${callingBy} of 2)` },
@@ -471,7 +531,10 @@ function InvitePanel({ detail }: { detail: ReviewDetail }) {
         <h2 id="invite-heading" className="t-heading">
           Invite to interview
         </h2>
-        <p className="t-small text-soft">Once invited, the applicant picks a time from the open slots.</p>
+        <p className="t-small text-soft">
+          Once invited, the applicant picks a time from the open slots.
+          {(detail.modes?.interview ?? "required") === "optional" ? " The interview is optional: a pastor can also decide without one." : ""}
+        </p>
       </div>
       <ul className="flex flex-col gap-1.5">
         {checks.map((c) => (
@@ -500,12 +563,12 @@ function InvitePanel({ detail }: { detail: ReviewDetail }) {
   );
 }
 
-function Bar({ label, weight, value, note }: { label: string; weight: number; value: number | null; note?: string }) {
+function Bar({ label, weight, value, note, weightText }: { label: string; weight: number; value: number | null; note?: string; weightText?: string }) {
   return (
     <li className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-3 text-[0.92rem]">
         <span>
-          {label} <span className="t-small text-soft">{weight}%</span>
+          {label} <span className="t-small text-soft">{weightText ?? `${weight}%`}</span>
         </span>
         <span className="font-semibold tabular-nums">{value === null ? "waiting" : Math.round(value)}</span>
       </div>
@@ -521,11 +584,24 @@ function ReadinessCard({ readiness: r }: { readiness: Readiness }) {
   const band = r.band === "leader" ? "Leader range" : r.band === "assistant_leader" ? "Assistant leader range" : r.band === "below" ? "Below the line" : null;
   const gates = [
     { ok: r.gates.goal_declared, text: "Season Goal declared" },
-    {
-      ok: r.gates.references_clean,
-      text: r.gates.open_concerns > 0 ? `Reference check: ${r.gates.open_concerns} open ${r.gates.open_concerns === 1 ? "concern" : "concerns"}` : "Reference check clean: both answered, one a pastor or unit head",
-    },
+    { ok: r.gates.references_clean, text: referenceGateText(r) },
   ];
+  const share = shares(r);
+  const sentence = evidenceSentence(r);
+  const reducedNow = r.evidence === "reduced" && r.readiness !== null;
+  const counted = r.counted ?? ["calling", "scenarios", "references", "interview"];
+  const value: Record<Part, number | null> = { calling: r.calling, scenarios: r.scenarios, references: r.references, interview: r.interview };
+  const refsRequired = (r.modes?.references ?? "required") === "required";
+  const note = (p: Part): string | undefined => {
+    if (p === "calling") {
+      return r.calling_source === "ai"
+        ? `From the first check${r.calling_reviews > 0 ? `, ${r.calling_reviews} ${r.calling_reviews === 1 ? "reviewer" : "reviewers"} also scored` : ""}`
+        : `${r.calling_reviews} of 2 reviewers`;
+    }
+    if (p === "references") return refsRequired ? `${r.references_received} of 2 answered` : `${r.references_received} answered`;
+    if (p === "interview") return `${r.interview_reviews} of 2 panelists`;
+    return undefined;
+  };
   return (
     <section aria-labelledby="readiness-heading" className="card flex flex-col gap-5 p-5">
       <div className="flex items-end justify-between gap-4">
@@ -540,16 +616,22 @@ function ReadinessCard({ readiness: r }: { readiness: Readiness }) {
           {band ? <p className="t-small font-semibold">{band}</p> : null}
         </div>
       </div>
+      {sentence ? (
+        <p className="t-small rounded-[var(--radius-control)] bg-gold/20 px-4 py-3" data-testid="evidence-sentence">
+          {sentence}
+        </p>
+      ) : null}
       <ul className="flex flex-col gap-4">
-        <Bar
-          label="Calling and goal fit"
-          weight={30}
-          value={r.calling}
-          note={r.calling_source === "ai" ? `From the first check${r.calling_reviews > 0 ? `, ${r.calling_reviews} ${r.calling_reviews === 1 ? "reviewer" : "reviewers"} also scored` : ""}` : `${r.calling_reviews} of 2 reviewers`}
-        />
-        <Bar label="Situations" weight={25} value={r.scenarios} />
-        <Bar label="References" weight={25} value={r.references} note={`${r.references_received} of 2 answered`} />
-        <Bar label="Interview" weight={20} value={r.interview} note={`${r.interview_reviews} of 2 panelists`} />
+        {visibleParts(r).map((p) => (
+          <Bar
+            key={p}
+            label={PART_LABEL[p]}
+            weight={share[p]}
+            weightText={reducedNow && !counted.includes(p) ? "not counted" : undefined}
+            value={value[p]}
+            note={note(p)}
+          />
+        ))}
       </ul>
       <ul className="flex flex-col gap-2 border-t border-line pt-4">
         {gates.map((g) => (
@@ -581,11 +663,16 @@ function DecisionPanel({ detail }: { detail: ReviewDetail }) {
 
   const interviewed = detail.status === "interviewed";
   const score = r?.readiness ?? null;
+  const interviewRequired = (detail.modes?.interview ?? "required") === "required";
+  const refsRequired = (detail.modes?.references ?? "required") === "required";
+  const thinner = r?.evidence === "reduced" && score !== null;
+  const [evidenceNote, setEvidenceNote] = useState(detail.evidence_note ?? "");
   const why = (need: number): string | null => {
-    if (!interviewed) return "Available once the interview is scored.";
+    // Approval waits for the interview only when the interview is required
+    if (interviewRequired && !interviewed) return "Available once the interview is scored.";
     if (score === null) return "Waiting for all the scores.";
     if (!r?.gates.goal_declared) return "No Season Goal declared.";
-    if (!r?.gates.references_clean) return "The reference check is not clean.";
+    if (!r?.gates.references_clean) return refsRequired ? "The reference check is not clean." : "A referee has raised a concern that has not been followed up yet.";
     if (Number(score) < need) return `Readiness is ${Math.round(Number(score) * 10) / 10}, below ${need}.`;
     return null;
   };
@@ -602,6 +689,15 @@ function DecisionPanel({ detail }: { detail: ReviewDetail }) {
     if (!choice) return;
     setBusy(true);
     setError(null);
+    // The reason for approving on thinner evidence is kept with the decision. It is never shown to the applicant.
+    if (thinner && choice !== "not_approved" && evidenceNote.trim() !== (detail.evidence_note ?? "").trim()) {
+      const saved = await setEvidenceNoteAction(detail.id, evidenceNote);
+      if (!saved.ok) {
+        setBusy(false);
+        setConfirming(false);
+        return setError(saved.message);
+      }
+    }
     const result = await decideAction(detail.id, choice, note);
     setBusy(false);
     if (!result.ok) {
@@ -636,6 +732,21 @@ function DecisionPanel({ detail }: { detail: ReviewDetail }) {
           />
         ))}
       </div>
+      {thinner ? (
+        <div className="flex flex-col gap-2 rounded-[var(--radius-control)] bg-gold/20 px-4 py-3" data-testid="thinner-evidence">
+          <p className="t-small font-semibold">This would rest on thinner evidence than the full process.</p>
+          <Textarea
+            label="Why you are comfortable approving on it"
+            name="evidence-note"
+            rows={2}
+            maxLength={600}
+            optional
+            value={evidenceNote}
+            onChange={(e) => setEvidenceNote(e.target.value)}
+            hint="Kept with the decision for the pastors and the office. The applicant never sees it."
+          />
+        </div>
+      ) : null}
       <Textarea
         label="A short note the applicant will read"
         name="decision-note"

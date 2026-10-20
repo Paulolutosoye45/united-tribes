@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Segmented } from "@/components/ui/Choice";
 import { Select, Textarea } from "@/components/ui/Input";
+import { needsOf, type AcademyModes } from "@/lib/academy/modes";
 import { CARD_STATUS, PRACTICE_FORMATS, SESSION_KINDS } from "@/lib/academy/options";
 import type { CohortRow, SessionKind } from "@/lib/academy/types";
 import { cn } from "@/lib/cn";
@@ -21,11 +22,12 @@ const WORKSHOP_WORDS: Record<string, string> = {
   to_mark: "Register not marked",
 };
 
-export function CohortList({ rows }: { rows: CohortRow[] }) {
+export function CohortList({ rows, modes }: { rows: CohortRow[]; modes: AcademyModes }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [openId, setOpenId] = useState<string | null>(null);
 
-  const waiting = rows.filter((r) => r.state.modules_done && !r.state.practice && !r.state.certified);
+  // "Ready for a practice session" only means something while the Academy is required
+  const waiting = modes.academy === "required" ? rows.filter((r) => r.state.modules_done && !r.state.practice && !r.state.certified) : [];
   const shown = rows.filter((r) => (filter === "certified" ? r.state.certified : filter === "practice" ? waiting.includes(r) : true));
 
   return (
@@ -38,9 +40,11 @@ export function CohortList({ rows }: { rows: CohortRow[] }) {
           <Chip selected={filter === "all"} onClick={() => setFilter("all")}>
             All {rows.length}
           </Chip>
-          <Chip selected={filter === "practice"} onClick={() => setFilter("practice")}>
-            Ready for a practice session {waiting.length}
-          </Chip>
+          {modes.academy === "required" ? (
+            <Chip selected={filter === "practice"} onClick={() => setFilter("practice")}>
+              Ready for a practice session {waiting.length}
+            </Chip>
+          ) : null}
           <Chip selected={filter === "certified"} onClick={() => setFilter("certified")}>
             Certified {rows.filter((r) => r.state.certified).length}
           </Chip>
@@ -55,7 +59,7 @@ export function CohortList({ rows }: { rows: CohortRow[] }) {
         <ul className="stagger flex flex-col gap-3">
           {shown.map((r, i) => (
             <li key={r.person_id} style={{ ["--i" as string]: Math.min(i, 8) }}>
-              <Row row={r} open={openId === r.person_id} onToggle={() => setOpenId(openId === r.person_id ? null : r.person_id)} />
+              <Row row={r} modes={modes} open={openId === r.person_id} onToggle={() => setOpenId(openId === r.person_id ? null : r.person_id)} />
             </li>
           ))}
         </ul>
@@ -64,8 +68,9 @@ export function CohortList({ rows }: { rows: CohortRow[] }) {
   );
 }
 
-function Row({ row, open, onToggle }: { row: CohortRow; open: boolean; onToggle: () => void }) {
+function Row({ row, modes, open, onToggle }: { row: CohortRow; modes: AcademyModes; open: boolean; onToggle: () => void }) {
   const s = row.state;
+  const need = needsOf(s);
   const pct = s.modules_total > 0 ? (s.modules_passed / s.modules_total) * 100 : 0;
   return (
     <article className="card flex flex-col gap-4 p-4 sm:p-5">
@@ -77,6 +82,7 @@ function Row({ row, open, onToggle }: { row: CohortRow; open: boolean; onToggle:
         {s.certified ? <Badge tone="gold">Certified</Badge> : <Badge tone="outline">In training</Badge>}
       </div>
 
+      {modes.academy === "off" ? null : (
       <div className="flex items-center gap-3">
         <div
           className="h-2 flex-1 overflow-hidden rounded-full bg-line"
@@ -89,13 +95,16 @@ function Row({ row, open, onToggle }: { row: CohortRow; open: boolean; onToggle:
           <span className="block h-full rounded-full bg-flame transition-[width] duration-700" style={{ width: `${pct}%` }} />
         </div>
         <span className="t-small shrink-0 text-soft">
-          {s.modules_passed} of {s.modules_total} modules
+          {s.modules_passed} of {s.modules_total} modules{need.modules ? "" : " (not needed)"}
         </span>
       </div>
+      )}
 
       <ul className="flex flex-wrap gap-2" aria-label="Where they stand">
-        <Pill ok={s.declaration} label={s.declaration ? "Declaration signed" : "Declaration not signed"} />
-        <Pill ok={row.practice?.ready === true} warn={row.practice?.ready === false} label={row.practice ? (row.practice.ready ? "Practice ready" : "Practice: not yet") : "Practice not marked"} />
+        {modes.declaration === "required" ? <Pill ok={s.declaration} label={s.declaration ? "Declaration signed" : "Declaration not signed"} /> : null}
+        {modes.academy === "off" ? null : (
+          <Pill ok={row.practice?.ready === true} warn={need.practice && row.practice?.ready === false} label={row.practice ? (row.practice.ready ? "Practice ready" : "Practice: not yet") : need.practice ? "Practice not marked" : "Practice not needed"} />
+        )}
         {s.card_required ? (
           <Pill ok={row.card?.status === "approved"} warn={row.card?.status === "changes_requested"} label={row.card ? `Card: ${CARD_STATUS[row.card.status]?.label ?? row.card.status}` : "No card yet"} />
         ) : null}
@@ -107,17 +116,19 @@ function Row({ row, open, onToggle }: { row: CohortRow; open: boolean; onToggle:
       {row.practice?.note ? <p className="t-small rounded-[var(--radius-control)] bg-surface px-4 py-3">Your note: {row.practice.note}</p> : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant={open ? "quiet" : "solid"} size="sm" aria-expanded={open} onClick={onToggle}>
-          {open ? "Close" : row.practice ? "Update the practice session" : "Mark the practice session"}
-        </Button>
+        {modes.academy === "off" ? null : (
+          <Button variant={open ? "quiet" : need.practice ? "solid" : "quiet"} size="sm" aria-expanded={open} onClick={onToggle}>
+            {open ? "Close" : row.practice ? "Update the practice session" : "Mark the practice session"}
+          </Button>
+        )}
         {row.card ? (
-          <a href={`/review/cards/${row.card.id}`} className="t-small font-semibold underline underline-offset-4">
+          <a href={`/review/cards/${row.card.id}`} className="t-small inline-flex min-h-10 items-center font-semibold underline underline-offset-4">
             Open the Tribe Card
           </a>
         ) : null}
       </div>
 
-      {open ? <PracticeForm row={row} onDone={onToggle} /> : null}
+      {open && modes.academy !== "off" ? <PracticeForm row={row} onDone={onToggle} /> : null}
     </article>
   );
 }

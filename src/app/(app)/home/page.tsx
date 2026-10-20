@@ -10,6 +10,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { ROLE_LABELS, canManageRoles } from "@/lib/auth/roles";
 import { requireSession } from "@/lib/auth/session";
 import { loadMyAcademy } from "@/lib/academy/server";
+import { parseAcademyModes, trainingShown } from "@/lib/academy/modes";
 import { loadMatches, readMatch } from "@/lib/matching/server";
 import { loadTribeWeek, loadMyCareTasks, loadMyWeek } from "@/lib/rhythm/server";
 import { nudgeLine, weekRange } from "@/lib/rhythm/wording";
@@ -60,6 +61,8 @@ export default async function HomePage() {
   const inTraining = session.roles.includes("leader") || session.roles.includes("assistant_leader");
   const academy = inTraining ? await loadMyAcademy(supabase) : null;
   const training = academy ? nextAction(academy) : null;
+  // When the Academy and the declaration are both off there is no training to talk about: the next step is simply the next step.
+  const trainingOn = academy ? trainingShown(parseAcademyModes(academy.modes)) : true;
 
   const inSeason = rhythm.placed && rhythm.state !== "before" ? rhythm : null;
 
@@ -134,11 +137,11 @@ export default async function HomePage() {
                 <Link href={training.href} className={buttonClasses({ className: "px-8" })}>
                   <span className="relative">{training.cta}</span>
                 </Link>
-                <span className="t-small text-white/70">Leader training</span>
+                <span className="t-small text-white/70">{trainingOn ? "Leader training" : "Becoming certified"}</span>
               </div>
             </div>
             <div className="absolute right-5 top-5 origin-top-right scale-50 sm:static sm:shrink-0 sm:scale-100">
-              <ShieldProgress fills={trainingFills(academy)} size={104} tone="light" label="Your training progress" />
+              <ShieldProgress fills={trainingFills(academy)} size={104} tone="light" label={trainingOn ? "Your training progress" : "Your progress"} />
             </div>
           </div>
         </section>
@@ -263,7 +266,7 @@ export default async function HomePage() {
           ) : training ? (
             <section aria-labelledby="lead-heading" className="card flex flex-col gap-3 p-6">
               <h2 id="lead-heading" className="t-heading">
-                Your training
+                {trainingOn ? "Your training" : "Your next step"}
               </h2>
               <div>
                 <p className="font-semibold">{training.title}</p>

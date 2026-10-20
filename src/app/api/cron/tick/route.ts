@@ -3,7 +3,10 @@ import { bearerMatches } from "@/lib/messaging/auth";
 import { dailyJobFaults, runDispatch } from "@/lib/messaging/dispatch";
 import { providersFromEnv } from "@/lib/messaging/providers";
 import { siteUrl, workerRpc, workerToken } from "@/lib/messaging/worker";
+import { whatsappSignInEnabled } from "@/lib/env";
 import { runLeaderJobs } from "@/lib/leaders/quality/jobs";
+import { runSigninTick } from "@/lib/signin/tick";
+import { senderFromEnv } from "@/lib/whatsapp/provider";
 import { writePendingSummaries } from "@/lib/reports/summary";
 
 export const dynamic = "force-dynamic";
@@ -58,9 +61,26 @@ async function handle(request: Request) {
         summary.problems.push("leader check: could not run this time");
       }
     }
+    // The owner's activity summaries: the last few days are counted again, and detail past the retention is cleared. A
+    // fault here is listed but never changes the answer, and nothing the owner sees depends on this finishing in time.
+    let activity: { refreshed: boolean } = { refreshed: false };
+    try {
+      const done = await rpc("worker_activity_refresh");
+      if (done.error) summary.problems.push(`activity summaries: ${done.error.message}`);
+      else activity = { refreshed: true };
+    } catch {
+      summary.problems.push("activity summaries: could not refresh this time");
+    }
+    // WhatsApp sign-in: how the sending number is, and the housekeeping behind the limits and the breaker.
+    let signin: { status: string | null; signal: string | null } | null = null;
+    if (whatsappSignInEnabled()) {
+      const ticked = await runSigninTick({ rpc, sender: senderFromEnv() });
+      summary.problems.push(...ticked.problems);
+      signin = { status: ticked.status, signal: ticked.signal };
+    }
     // A daily job that failed (the numbers, the clean-up) is listed too, so a monitor on this endpoint hears of it.
     summary.problems.push(...dailyJobFaults(summary.calendar));
-    return Response.json({ ...summary, summaries: reports.written, leaderChecks }, { status, headers: NO_STORE });
+    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, signin }, { status, headers: NO_STORE });
   } catch (error) {
     console.error("cron tick failed", error instanceof Error ? error.message : "unknown");
     return Response.json({ error: "tick failed" }, { status: 500, headers: NO_STORE });

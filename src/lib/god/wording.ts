@@ -1,3 +1,5 @@
+import { ROLES, ROLE_LABELS, type Role } from "@/lib/auth/roles";
+
 // Plain words for what the platform records. An action the list does not know is shown as it is written, so a new one
 // never disappears from the owner's view.
 
@@ -29,6 +31,20 @@ const ACTIONS: Record<string, string> = {
   "leader.interview_booked": "booked an interview",
   "leader.reference_received": "received a reference",
   "leader.concern_cleared": "cleared a concern",
+  "leader.appointed": "appointed a leader",
+  "leader.stepped_down": "stepped a leader down from an appointment",
+  "leader.offer_sent": "offered a leader a tribe where members are waiting",
+  "leader.offer_withdrawn": "withdrew an offer to lead",
+  "leader.offer_accepted": "accepted an offer to lead a tribe",
+  "leader.offer_declined": "declined an offer to lead a tribe",
+  "leader_fit.chosen": "chose a tribe on the application",
+  "leader_fit.model_saved": "saved a new version of the fit model",
+  "leader_fit.model_approved": "approved the fit model",
+  "leader_fit.quiet_run": "looked at the leaders we already have",
+  "card_template.created": "added a ready-made tribe card",
+  "card_template.saved": "changed a ready-made tribe card",
+  "card_template.signed_off": "signed off a ready-made tribe card",
+  "card_template.retired": "retired a ready-made tribe card",
   "academy.module_passed": "passed a training module",
   "academy.certified": "was certified",
   "academy.declaration_signed": "signed the safeguarding declaration",
@@ -91,7 +107,7 @@ export function areaOf(action: string): "people" | "tribes" | "leaders" | "care"
   const head = action.split(".")[0];
   if (["person", "role", "invitation", "contact", "photo", "checkin"].includes(head)) return "people";
   if (["tribe", "match", "swap", "multiply", "prayer", "testimony", "goal"].includes(head)) return "tribes";
-  if (["leader", "academy", "champion"].includes(head)) return "leaders";
+  if (["leader", "leader_fit", "card_template", "academy", "champion"].includes(head)) return "leaders";
   if (["care"].includes(head)) return "care";
   if (["erasure", "retention", "guardian"].includes(head)) return "privacy";
   return "office";
@@ -110,6 +126,7 @@ const KINDS: Record<string, string> = {
   viewed: "You looked at a tab of the activity dashboard",
   exported: "You exported the audit trail",
   activity_setting: "You changed an activity setting",
+  looked: "You looked at part of the console",
 };
 
 export function describeKind(kind: string): string {
@@ -148,6 +165,20 @@ export function activityLine(kind: string, action: string | null, detail: Record
     return `You changed ${what}${change}`;
   }
   return null;
+}
+
+/** The owner’s record line for a look at the desks or the conversations; null for any other kind. */
+export function lookedLine(kind: string, action: string | null, ref: string | null): string | null {
+  if (kind !== "looked") return null;
+  if (action === "desks") return "You looked at every desk";
+  if (action === "desk") {
+    const label = ref && (ROLES as readonly string[]).includes(ref) ? ROLE_LABELS[ref as Role] : null;
+    return label ? `You looked at the ${label.toLowerCase()} desk` : "You looked at a desk";
+  }
+  if (action === "conversations") return "You looked at the messages the platform has sent";
+  if (action === "person_conversation") return "You read the messages sent to one person";
+  if (action === "chat_opens") return "You looked at the chats staff opened";
+  return "You looked at part of the console";
 }
 
 /** Colour for the kind: what needs the owner's eye is flagged. */

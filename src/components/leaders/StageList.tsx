@@ -13,15 +13,17 @@ export function StageList({
   details?: Partial<Record<string, string>>;
   heading?: string;
 }) {
+  // A stage that is not part of this process is left out of the path, and the rest are numbered again
+  const shown = STAGES.filter((stage) => states?.find((s) => s.id === stage.id)?.state !== "off");
   return (
     <section aria-labelledby="stages-heading" className="flex flex-col gap-3">
       <h2 id="stages-heading" className="t-heading">
         {heading}
       </h2>
       <ol className="card flex flex-col px-5 py-4">
-        {STAGES.map((stage, i) => {
+        {shown.map((stage, i) => {
           const state = states?.find((s) => s.id === stage.id)?.state ?? "later";
-          const last = i === STAGES.length - 1;
+          const last = i === shown.length - 1;
           return (
             <li key={stage.id} className="relative flex gap-4 pb-5 last:pb-0">
               {!last ? (

@@ -101,7 +101,11 @@ export function ReviewQueue({ items, names, ai = {}, firstCheckOn = false }: { i
                       {[i.track && names[i.track], i.community && names[i.community]].filter(Boolean).join(" · ") || "Track and community not set"}
                     </span>
                     <span className="t-small mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span>References {i.references_received} of 2</span>
+                      {i.references_mode === "off" ? null : i.references_mode === "optional" ? (
+                        <span>References {i.references_received} (optional)</span>
+                      ) : (
+                        <span>References {i.references_received} of 2</span>
+                      )}
                       <span>Scored by {i.calling_reviews}</span>
                       {isInReview(i.status) && !waitingOnFirstCheck(ai[i.id], firstCheckOn) ? (
                         <span className={cn("font-semibold", i.i_reviewed_calling ? "text-success" : "text-accent")}>
@@ -115,6 +119,11 @@ export function ReviewQueue({ items, names, ai = {}, firstCheckOn = false }: { i
                         </span>
                       ) : null}
                       {i.open_concern ? <span className="font-semibold text-danger">Open concern</span> : null}
+                      {i.status === "submitted" && i.interview_mode === "off" && i.calling_reviews >= 2 ? (
+                        <span className="font-semibold text-success" data-testid="queue-ready">
+                          Two scores in: ready for a pastor
+                        </span>
+                      ) : null}
                     </span>
                     <span className="t-small mt-1 block text-soft">
                       {i.interview_at ? `Interview ${formatLagosDay(i.interview_at)}, ${formatLagosTime(i.interview_at)}` : i.submitted_at ? `Sent ${formatShortDate(i.submitted_at)}` : ""}

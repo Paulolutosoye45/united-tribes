@@ -1,4 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+
+// The hook now asks the database whether a code may go (the sign-in limits). Here the answer is always "yes";
+// the limits themselves are tested in signin-routes.test.ts and tests/db/signin.test.ts.
+const db = vi.hoisted(() => ({ calls: [] as { fn: string; args: Record<string, unknown> }[] }));
+vi.mock("@/lib/messaging/worker", async (original) => {
+  const real = await original<typeof import("@/lib/messaging/worker")>();
+  return {
+    ...real,
+    workerRpc: () => async (fn: string, args: Record<string, unknown> = {}) => {
+      db.calls.push({ fn, args });
+      return { data: fn === "worker_signin_gate" ? { decision: "allow", attempt: 7, mode: "normal" } : { ok: true }, error: null };
+    },
+  };
+});
+
 import { POST } from "@/app/api/auth/send-code/route";
 import { displayPhone, isUnknownAccount, maskPhone, normalisePhone, phoneDigits, whatsappErrorMessage } from "@/lib/auth/phone";
 import { whatsappSignInEnabled } from "@/lib/env";
@@ -109,6 +126,7 @@ describe("hook request", () => {
       userId: "u1",
       to: "2348031234567",
       code: "123456",
+      flow: "sign_in",
     });
   });
 
@@ -120,6 +138,7 @@ describe("hook request", () => {
     const read = readHookRequest({ user: { id: "u1", phone: "2348031234567", new_phone: "2348099999999" }, sms: { otp: "000123" } });
     expect(read?.to).toBe("2348099999999");
     expect(read?.code).toBe("000123");
+    expect(read?.flow).toBe("add_number");
   });
 
   it("works when the account has no number yet", () => {
@@ -216,6 +235,8 @@ describe("the send-code hook", () => {
   }
 
   beforeEach(() => {
+    db.calls.length = 0;
+    vi.stubEnv("WORKER_TOKEN", "w".repeat(40));
     vi.stubEnv("SEND_SMS_HOOK_SECRET", SECRET);
     vi.stubEnv("WHATSAPP_PROVIDER", "meta");
     vi.stubEnv("WHATSAPP_PHONE_NUMBER_ID", "123");
@@ -238,6 +259,9 @@ describe("the send-code hook", () => {
     const sent = JSON.parse((fetcher.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
     expect(sent.to).toBe("2348031234567");
     expect(sent.template.components[0].parameters[0].text).toBe("123456");
+    // The database was asked first, and told afterwards that it went.
+    expect(db.calls.map((c) => c.fn)).toEqual(["worker_signin_gate", "worker_signin_record"]);
+    expect(db.calls[1].args).toMatchObject({ p_attempt: 7, p_outcome: "sent" });
   });
 
   it("does nothing for a bad signature, a missing one, or an old one", async () => {
@@ -261,6 +285,9 @@ describe("the send-code hook", () => {
     expect((await POST(signed())).status).toBe(503);
     vi.stubEnv("SEND_SMS_HOOK_SECRET", SECRET);
     vi.stubEnv("WHATSAPP_PROVIDER", "none");
+    expect((await POST(signed())).status).toBe(503);
+    vi.stubEnv("WHATSAPP_PROVIDER", "meta");
+    vi.stubEnv("WORKER_TOKEN", "");
     expect((await POST(signed())).status).toBe(503);
   });
 

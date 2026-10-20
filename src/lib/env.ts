@@ -29,8 +29,8 @@ export function requireSupabaseEnv(): { url: string; key: string } {
  * service has a phone provider (or the send-code hook) behind it, so nobody
  * is shown a button that cannot work. Read on the server and passed down.
  */
-export function whatsappSignInEnabled(): boolean {
-  return (process.env.WHATSAPP_SIGNIN ?? "").trim().toLowerCase() === "on";
+export function whatsappSignInEnabled(env: Record<string, string | undefined> = process.env): boolean {
+  return (env.WHATSAPP_SIGNIN ?? "").trim().toLowerCase() === "on";
 }
 
 /**

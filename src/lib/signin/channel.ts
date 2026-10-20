@@ -34,7 +34,7 @@ const cleanNumber = (raw: string | undefined) => {
 
 export async function loadChannel(deps: ChannelDeps): Promise<SignInChannel> {
   const number = cleanNumber(deps.env.WHATSAPP_SIGNIN_NUMBER);
-  if (!whatsappSignInEnabled() || !deps.sender || !deps.rpc || !deps.salt) return UNAVAILABLE;
+  if (!whatsappSignInEnabled(deps.env) || !deps.sender || !deps.rpc || !deps.salt) return UNAVAILABLE;
 
   let status: SignInChannel["status"] = "paused";
   let mode: SignInChannel["mode"] = "normal";

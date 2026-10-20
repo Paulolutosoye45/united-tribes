@@ -1,6 +1,8 @@
+import { DEFAULT_MODES, type StageModes } from "./modes";
 import { STAGES } from "./options";
 
-export type StageState = "done" | "current" | "later";
+/** "off" is a stage that is not part of this application's process; the tracker leaves it out. */
+export type StageState = "done" | "current" | "later" | "off";
 
 /** Statuses after the application is sent and before a decision. */
 export const IN_REVIEW = ["submitted", "interview_invited", "interview_booked", "interviewed"] as const;
@@ -14,17 +16,38 @@ export const isDecided = (status: string) => (DECIDED as readonly string[]).incl
  * application while references are still coming in, so “References” and
  * “Panel review” can both be in progress at once.
  */
-export function stageStates(status: string, referencesAnswered: number): { id: (typeof STAGES)[number]["id"]; state: StageState }[] {
+export function stageStates(
+  status: string,
+  referencesAnswered: number,
+  modes: StageModes = DEFAULT_MODES,
+  /** How many referees the applicant added. Only used when references are optional. */
+  referencesAdded: number = 2,
+): { id: (typeof STAGES)[number]["id"]; state: StageState }[] {
   const sent = status !== "draft" && status !== "ineligible";
   const invitedOrBeyond = ["interview_invited", "interview_booked", "interviewed", ...DECIDED].includes(status);
   const interviewed = ["interviewed", ...DECIDED].includes(status);
   const decided = isDecided(status);
 
+  // References: required, they are done when both have answered. Optional, there is only something to wait for if some were added.
+  // Off, there is no such stage.
+  let references: StageState = !sent ? "later" : referencesAnswered >= 2 ? "done" : "current";
+  if (modes.references === "off") references = "off";
+  else if (modes.references === "optional") {
+    references = !sent ? "later" : referencesAdded <= 0 ? "off" : referencesAnswered >= referencesAdded ? "done" : "current";
+  }
+  // Interview: off, there is no such stage. Optional, it is on the tracker only once the panel has asked for one, and after a decision
+  // nothing says whether one was held, so it is left off then.
+  let interview: StageState = !invitedOrBeyond ? "later" : interviewed ? "done" : "current";
+  if (modes.interview === "off") interview = "off";
+  else if (modes.interview === "optional") {
+    interview = decided ? "off" : !invitedOrBeyond ? "later" : interviewed ? "done" : "current";
+  }
+
   const states: Record<(typeof STAGES)[number]["id"], StageState> = {
     apply: sent ? "done" : "current",
-    references: !sent ? "later" : referencesAnswered >= 2 ? "done" : "current",
+    references,
     review: !sent ? "later" : invitedOrBeyond ? "done" : "current",
-    interview: !invitedOrBeyond ? "later" : interviewed ? "done" : "current",
+    interview,
     decision: decided ? "done" : status === "interviewed" ? "current" : "later",
   };
   return STAGES.map((s) => ({ id: s.id, state: states[s.id] }));

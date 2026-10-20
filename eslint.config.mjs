@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The optional sender is its own package with its own dependencies (sender/README.md)
+    "sender/**",
   ]),
 ]);
 

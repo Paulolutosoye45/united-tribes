@@ -221,6 +221,39 @@ describe("POST /api/cron/tick", () => {
     expect(body.problems.join(" ")).toContain("summaries: boom");
   });
 
+  it("refreshes the owner's activity summaries each beat, with the worker token, and says so", async () => {
+    process.env.WORKER_TOKEN = TOKEN;
+    process.env.MESSAGING_MODE = "log";
+    rpc.mockImplementation(async (fn: string) => (fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null }));
+    const r = await call("POST", TOKEN_HEADER);
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ activity: { refreshed: true }, problems: [] });
+    expect(rpc.mock.calls.filter(([fn]) => fn === "worker_activity_refresh")).toHaveLength(1);
+  });
+
+  it("lists a fault in the activity summaries but keeps sending and still answers 200", async () => {
+    process.env.WORKER_TOKEN = TOKEN;
+    process.env.MESSAGING_MODE = "log";
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_activity_refresh") return { data: null, error: { message: "boom" } };
+      if (fn === "worker_claim") return { data: [], error: null };
+      return { data: { queued: 0 }, error: null };
+    });
+    const r = await call("POST", TOKEN_HEADER);
+    expect(r.status).toBe(200);
+    const body = await r.json();
+    expect(body.activity).toEqual({ refreshed: false });
+    expect(body.problems.join(" ")).toContain("activity summaries: boom");
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_activity_refresh") throw new Error("socket closed");
+      if (fn === "worker_claim") return { data: [], error: null };
+      return { data: { queued: 0 }, error: null };
+    });
+    const t = await call("POST", TOKEN_HEADER);
+    expect(t.status).toBe(200);
+    expect((await t.json()).problems.join(" ")).toContain("activity summaries: could not refresh");
+  });
+
   it("answers 502 when the database cannot be reached at all", async () => {
     process.env.WORKER_TOKEN = TOKEN;
     rpc.mockResolvedValue({ data: null, error: { message: "connection refused" } });
@@ -321,8 +354,20 @@ describe("/api/webhooks/email", () => {
     const complaint = JSON.stringify({ type: "email.complained", data: { email_id: "e2", to: ["x@y.org"] } });
     rpc.mockClear();
     expect((await post(complaint, signed(complaint))).status).toBe(200);
-    expect(rpc.mock.calls.map((c) => c[0])).toEqual(["worker_provider_event", "worker_opt_out"]);
-    expect(rpc.mock.calls[1][1]).toEqual({ p_phone: null, p_email: "x@y.org", p_channel: "email" });
+    expect(rpc.mock.calls.map((c) => c[0])).toEqual(["worker_provider_event", "worker_email_signal", "worker_opt_out"]);
+    expect(rpc.mock.calls[1][1]).toEqual({ p_provider_id: "e2", p_kind: "complaint" });
+    expect(rpc.mock.calls[2][1]).toEqual({ p_phone: null, p_email: "x@y.org", p_channel: "email" });
+
+    // an address that does not work is kept as a signal (two of them take it off every list); a full inbox is not
+    const bounced = JSON.stringify({ type: "email.bounced", data: { email_id: "e4", bounce: { type: "Permanent" } } });
+    rpc.mockClear();
+    expect((await post(bounced, signed(bounced))).status).toBe(200);
+    expect(rpc.mock.calls.map((c) => c[0])).toEqual(["worker_provider_event", "worker_email_signal"]);
+    expect(rpc.mock.calls[1][1]).toEqual({ p_provider_id: "e4", p_kind: "hard_bounce" });
+    const soft = JSON.stringify({ type: "email.bounced", data: { email_id: "e5", bounce: { type: "Transient" } } });
+    rpc.mockClear();
+    expect((await post(soft, signed(soft))).status).toBe(200);
+    expect(rpc.mock.calls.map((c) => c[0])).toEqual(["worker_provider_event"]);
 
     const opened = JSON.stringify({ type: "email.opened", data: { email_id: "e3" } });
     rpc.mockClear();

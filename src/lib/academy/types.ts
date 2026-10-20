@@ -40,6 +40,13 @@ export type CertState = {
   card_required: boolean;
   card: boolean;
   certified: boolean;
+  /**
+   * What the switches ask for. The keys above still say what was actually done. A key that is missing counts as needed, so an
+   * older answer from the database reads as the process has always run.
+   */
+  modules_needed?: boolean;
+  practice_needed?: boolean;
+  declaration_needed?: boolean;
 };
 
 export type MyAcademy = {
@@ -53,6 +60,8 @@ export type MyAcademy = {
   card: { id: string; status: TribeStatus; role: "leader" | "assistant" } | null;
   state: CertState;
   certified_at: string | null;
+  /** The two switches and when each was last moved. Missing means both are required. */
+  modes?: { academy: string; declaration: string; academy_since?: string | null; declaration_since?: string | null };
 };
 
 export type Section = { title: string; body?: string[]; points?: string[] };
@@ -74,6 +83,8 @@ export type ModuleDetail = {
   next: string | null;
   pass_mark: number;
   can_take: boolean;
+  /** The Academy's position. When it is off a leader cannot open the module, but the panel and administrators can read it. */
+  mode?: string;
 };
 
 export type QuizResult = {
@@ -121,6 +132,8 @@ export type MyTribe = TribeCard & {
   role: "leader" | "assistant";
   missing: string[];
   module_ok: boolean;
+  /** Whether the Success Picture module must be passed before the card is sent. False when the Academy is optional or off. */
+  module_needed?: boolean;
   editable: boolean;
   certified: boolean;
   /** The link an online tribe meets on, set by the leader once the card is approved. */

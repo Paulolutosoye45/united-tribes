@@ -1,6 +1,8 @@
 import path from "node:path";
 import { anonKey } from "../scripts/standin/server";
-import { TURNSTILE } from "./stubs";
+import { SIGNIN, TURNSTILE } from "./stubs";
+
+export { SIGNIN };
 
 /** Fixed on purpose: the stand-in and the built app must agree on the key. */
 export const JWT_SECRET = "standin-secret-not-for-real-use-0123456789abcdef";
@@ -33,6 +35,18 @@ export const MESSAGING = {
   verifyToken: "e2e-whatsapp-verify-token",
   emailWebhookSecret: `whsec_${Buffer.from("e2e-email-webhook-secret").toString("base64")}`,
 } as const;
+
+/** What the running app needs for WhatsApp sign-in: on, through the ordinary-number sender stand-in, with the hook secret. */
+export function signinEnv(stubUrl: string): Record<string, string> {
+  return {
+    WHATSAPP_SIGNIN: "on",
+    SIGNIN_WHATSAPP_ROUTE: "linked",
+    LINKED_SENDER_URL: `${stubUrl}/linked`,
+    LINKED_SENDER_SECRET: SIGNIN.linkedSecret,
+    WHATSAPP_SIGNIN_NUMBER: SIGNIN.number,
+    SEND_SMS_HOOK_SECRET: SIGNIN.hookSecret,
+  };
+}
 
 /**
  * The assistant, the voice-note transcriber and the key that seals private notes, for the throwaway stack.

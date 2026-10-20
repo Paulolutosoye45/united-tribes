@@ -13,7 +13,7 @@ const PARTS = [
   "A draft Success Picture: Loving God, Loving Others, Loving Life",
 ];
 
-export function StartCard() {
+export function StartCard({ moduleNeeded = true }: { moduleNeeded?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,8 @@ export function StartCard() {
       <div className="flex flex-col gap-2">
         <h2 className="t-heading">The page members choose you from</h2>
         <p className="t-body measure text-soft">
-          Your Tribe Card is how a member decides on your tribe. It takes about twenty minutes and saves as you type. You can start now and finish after the Success Picture module.
+          Your Tribe Card is how a member decides on your tribe. It takes about twenty minutes and saves as you type.
+          {moduleNeeded ? " You can start now and finish after the Success Picture module." : ""}
         </p>
       </div>
       <ul className="t-body flex flex-col gap-2">

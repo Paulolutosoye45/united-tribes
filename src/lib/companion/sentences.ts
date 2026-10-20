@@ -1,4 +1,5 @@
 import { STORY_EXAMPLES } from "@/lib/intake/options";
+import { OUTCOMES_EXTRA } from "./goal-extras";
 
 /**
  * Ready-made words for the two questions where staring at a blank box is the hardest part. Every sentence is a
@@ -177,5 +178,5 @@ const GENERIC_OUTCOMES: readonly string[] = [
 
 /** Three other ways to say how the season could end, for the goal the person chose. */
 export function outcomeSentences(goalSlug: string | undefined): string[] {
-  return [...(OUTCOMES[goalSlug ?? ""] ?? GENERIC_OUTCOMES)];
+  return [...(OUTCOMES[goalSlug ?? ""] ?? OUTCOMES_EXTRA[goalSlug ?? ""] ?? GENERIC_OUTCOMES)];
 }

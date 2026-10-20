@@ -94,7 +94,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         </div>
       </section>
 
-      {signInChannel.available ? <WhatsAppSignInCard linked={session.signInPhone} /> : null}
+      {signInChannel.available ? <WhatsAppSignInCard linked={session.signInPhone} channel={signInChannel} /> : null}
 
       <section aria-labelledby="contact-heading" className="flex flex-col gap-4">
         <h2 id="contact-heading" className="t-heading">

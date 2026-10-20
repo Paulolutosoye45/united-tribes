@@ -43,7 +43,7 @@ async function main() {
     { id: "x", template: "x", channel: "whatsapp", params: {}, urgency: "normal", attempts: 1, reply_token: null, to: { email: null, phone: null, name: null, first_name: "Ada" } },
     process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://unitedtribes.example",
   );
-  const definitions = Object.values(TEMPLATES).map((def) => ({ def, meta: metaTemplateDefinition(def, language, sample) }));
+  const definitions = Object.values(TEMPLATES).filter((def) => !def.emailOnly).map((def) => ({ def, meta: metaTemplateDefinition(def, language, sample) }));
 
   if (args.includes("--json")) {
     console.log(JSON.stringify(definitions.map((d) => d.meta), null, 2));

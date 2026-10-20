@@ -1,7 +1,7 @@
 import type { Row } from "./helpers";
 
 /** Fields a template may read that the database leaves out on purpose when there is nothing to say (or, for summary, that the sender adds just before sending). */
-const OPTIONAL = new Set(["group_url", "meeting_link", "place_note", "first_meeting_on", "first_meeting_by", "confession", "when", "will", "highlight", "follow_ups", "note", "pulse", "step_set", "near_end", "measure", "starts_at_label", "place", "mode", "minutes", "first_name", "summary"]);
+const OPTIONAL = new Set(["group_url", "meeting_link", "place_note", "first_meeting_on", "first_meeting_by", "confession", "when", "will", "highlight", "follow_ups", "note", "pulse", "step_set", "near_end", "measure", "starts_at_label", "place", "mode", "minutes", "first_name", "summary", "refs", "refs_optional", "interview", "academy", "declaration"]);
 
 /**
  * The database decides what to say; src/lib/messaging says how. For every queued message given,

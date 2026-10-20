@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/Badge";
 import type { MyAcademy } from "@/lib/academy/types";
 
-export function PracticeCard({ my }: { my: MyAcademy }) {
+export function PracticeCard({ my, optional = false }: { my: MyAcademy; optional?: boolean }) {
   const p = my.practice;
   return (
     <section id="practice" aria-labelledby="practice-heading" className="card flex scroll-mt-24 flex-col gap-3 p-6">
@@ -11,6 +11,11 @@ export function PracticeCard({ my }: { my: MyAcademy }) {
         </h2>
         {p ? p.ready ? <Badge tone="gold">Ready</Badge> : <Badge tone="flame">Not yet</Badge> : <Badge tone="outline">Not arranged</Badge>}
       </div>
+      {optional ? (
+        <p className="t-small text-soft" data-testid="practice-optional">
+          Optional. A coach can still arrange this with you, and certification does not wait for it.
+        </p>
+      ) : null}
       <p className="t-body text-soft">
         You co-lead one Starter Tribe session, or record a simulation, with a coach watching. It is 75 minutes, and a coach marks you ready when you can run a meeting with care.
       </p>

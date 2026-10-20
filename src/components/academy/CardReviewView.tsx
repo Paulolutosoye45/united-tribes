@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Select, Textarea } from "@/components/ui/Input";
 import { valuesFromCard } from "@/lib/academy/card";
+import { needsOf } from "@/lib/academy/modes";
 import { CARD_STATUS } from "@/lib/academy/options";
 import type { AssistantSuggestion, CardReview } from "@/lib/academy/types";
 import { TribePreview } from "./TribePreview";
@@ -30,10 +31,13 @@ export function CardReviewView({ card, suggestions, canPair }: { card: CardRevie
   }
 
   const s = card.leader_state;
+  // Only what certification asks for is listed as a condition. A part that is optional or off is marked, so the reviewer is never left
+  // wondering why a leader is certified with the training undone.
+  const need = needsOf(s);
   const conditions = [
-    { ok: s.modules_done, label: `Modules ${s.modules_passed} of ${s.modules_total}` },
-    { ok: s.declaration, label: "Declaration signed" },
-    { ok: s.practice, label: "Practice session ready" },
+    { ok: s.modules_done, label: need.modules ? `Modules ${s.modules_passed} of ${s.modules_total}` : `Modules ${s.modules_passed} of ${s.modules_total} (not needed)` },
+    ...(need.declaration ? [{ ok: s.declaration, label: "Declaration signed" }] : [{ ok: s.declaration, label: s.declaration ? "Declaration signed (not needed)" : "Declaration not asked for" }]),
+    { ok: s.practice, label: need.practice ? "Practice session ready" : "Practice session (not needed)" },
     { ok: s.card, label: "Card approved" },
   ];
 

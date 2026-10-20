@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 export function PageHead({ title, children, back = { href: "/admin", label: "Admin" } }: { title: string; children?: ReactNode; back?: { href: string; label: string } }) {
   return (
     <header className="flex flex-col gap-2">
-      <Link href={back.href} className="t-small text-soft hover:text-ink">
+      <Link href={back.href} className="t-small inline-flex min-h-10 w-fit items-center text-soft hover:text-ink">
         <span aria-hidden="true">← </span>
         {back.label}
       </Link>

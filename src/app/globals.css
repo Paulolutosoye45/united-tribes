@@ -236,6 +236,34 @@ body {
   }
 
   /*
+   * A plain text box or drop-down for the office screens, where the label is written next to it. The same look as the form fields
+   * (src/components/ui/Input.tsx) at a height that suits a desk and a thumb: 48px.
+   */
+  .input {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0 1rem;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--raised);
+    color: var(--ink);
+    font: inherit;
+    font-size: 1rem;
+    transition: border-color 200ms, box-shadow 200ms;
+  }
+  .input::placeholder {
+    color: color-mix(in srgb, var(--soft) 70%, transparent);
+  }
+  .input:hover {
+    border-color: var(--soft);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--ink);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--crest-gold) 45%, transparent);
+  }
+
+  /*
    * Night panel: crest charcoal, lit from the top right by an ember glow,
    * with a fine grain so large areas do not look flat.
    */

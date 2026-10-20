@@ -9,6 +9,20 @@ The United Tribes small-group platform at The Covenant Nation, Iganmu. Phase 0 l
 
 Stack: Next.js 16 (App Router), TypeScript, Tailwind CSS 4, Supabase (Postgres, Auth, row level security).
 
+## Round 2, Phase 5: the activity log and decision dashboard (platform owner only)
+
+The blueprint's Phase 5 was reworked to be seen by the platform owner alone: it lives inside the God console as an **Activity** room,
+and no other role has a menu item, link, number or page from it. Judgement calls: the telemetry tables have no policy and no grant,
+and every report is a function that begins with `god_only()`, so a mistake in a page cannot expose it; the one thing signed-in people
+can call is a narrow door (`activity_track`) that takes a screen name, a device size, a sign-in method or a speed band and nothing else;
+the catalogue of what may be recorded is a table, and an event or an extra field not on it is refused; form events come from
+triggers on the existing form tables so the forms' own code did not change; the owner is never recorded, and the owner's own looks are in
+`god_log` as "You"; groups under five show as "<5"; young members are counted and never named; summaries are rebuilt on the
+five-minute heartbeat so every tab opens from summaries, not from a million rows (all tabs under two seconds at 20,000 people and
+1,000,000 events); detail is kept 13 months (3 to 36 by setting); the weekly brief is written by fixed rules and shown on the page, not
+sent anywhere; the recommended thresholds are the defaults (14 days, 48 hours, 5 days, 5 messages, 2 days, 25 percent, 21 days).
+Three event kinds are reserved for Phases 3 and 4 and read zero until they write them. Current guide: **docs/ACTIVITY.md**.
+
 ## Round 2, Phase 2: proving the referee is the person named
 
 The applicant no longer holds the referee's link: the system sends it, with a six-digit code to the same contact, and the church's

@@ -57,7 +57,7 @@ real address), `applications_close_on`, the caps, `holdout_pct`, `bulk_per_minut
 
 ## What is not promised
 
-- Nothing was sent through a real email provider while building. Do the check in APPLY.md with your own address first.
+- Nothing was sent through a real email provider while building. Do the first-hour check in DEPLOY.md with your own address first.
 - Deliverability needs SPF, DKIM and DMARC on the sending domain; keep complaints under 0.3%.
 - "Tapped" means someone opened our own page; "acted" is read from their records.
 - A button opened by someone not signed in goes through sign-in, then on to the right place.

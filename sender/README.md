@@ -43,7 +43,7 @@ It holds no database, no account data and no code history. A code exists in its 
 4. **Point the website at it.** On the website set `SIGNIN_WHATSAPP_ROUTE=linked`, `LINKED_SENDER_URL` (the https
    address), `LINKED_SENDER_SECRET` (same text), `WHATSAPP_SIGNIN_NUMBER` (the number, digits only with country code).
    Redeploy.
-5. **Check it** with the ten-minute check in `APPLY.md`. Start in **reply-first** mode (the default): the code is held
+5. **Check it** with the first-hour check in `DEPLOY.md`. Start in **reply-first** mode (the default): the code is held
    until the person messages the number first, which is how WhatsApp expects a number to be used.
 
 ## Keeping the link alive

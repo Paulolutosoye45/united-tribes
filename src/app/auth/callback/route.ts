@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { recordSignIn } from "@/lib/activity/signin";
 import { claimInvitations } from "@/lib/auth/after-sign-in";
 import { safeNext } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/server";
@@ -16,5 +17,6 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.redirect(`${origin}/sign-in?error=link`);
 
   await claimInvitations(supabase);
+  await recordSignIn(supabase, "google");
   return NextResponse.redirect(`${origin}${next}`);
 }

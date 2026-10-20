@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { saveCardAction, submitCardAction } from "@/app/(app)/lead/tribe/actions";
+import { saveCardAction, submitCardAction, prefillFromReadyMadeAction } from "@/app/(app)/lead/tribe/actions";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
@@ -12,6 +12,7 @@ import { Input, Select, Textarea } from "@/components/ui/Input";
 import { LIMITS, missingFields, storyForCard, valuesFromCard, type CardValues } from "@/lib/academy/card";
 import { CARD_MISSING, CARD_STATUS, TRIBE_TYPES, DAYS, clockLabel, timesFor, ZONES } from "@/lib/academy/options";
 import type { MyTribe } from "@/lib/academy/types";
+import { prefillLines, type ReadyMade } from "@/lib/cards/templates";
 import type { LeaderCatalogue } from "@/lib/leaders/server";
 import { TribePreview } from "./TribePreview";
 
@@ -42,10 +43,13 @@ export function TribeBuilder({
   card,
   catalogue,
   applicationStory,
+  readyMade = null,
 }: {
   card: MyTribe;
   catalogue: LeaderCatalogue;
   applicationStory: string | null;
+  /** The signed-off ready-made card for this tribe's goal, the public fields only. Null when there is none. */
+  readyMade?: ReadyMade | null;
 }) {
   const router = useRouter();
   const editable = card.editable;
@@ -113,7 +117,24 @@ export function TribeBuilder({
   const fixed = new Set(card.fixed);
   const times = timesFor(values.meeting_day);
   const status = CARD_STATUS[card.status];
-  const canSend = editable && card.module_ok && missing.length === 0;
+  // The Success Picture module comes first only when the Academy is required. A missing answer counts as required.
+  const moduleBlocks = card.module_needed !== false && !card.module_ok;
+  const canSend = editable && !moduleBlocks && missing.length === 0;
+
+  // "Start from the ready-made card". What is typed is saved first, then the database fills only the lines that are still empty.
+  const [starting, setStarting] = useState(false);
+  const linesLeft = readyMade !== null && (!values.god.trim() || !values.others.trim() || !values.life.trim());
+  async function startFromReadyMade() {
+    if (!readyMade) return;
+    setStarting(true);
+    setProblem(null);
+    await flush();
+    const result = await prefillFromReadyMadeAction(card.id);
+    setStarting(false);
+    if (!result.ok) return setProblem(result.message);
+    setValues((v) => ({ ...v, ...prefillLines(v, readyMade) }));
+    setSave("saved");
+  }
 
   async function send() {
     setSubmitting(true);
@@ -316,6 +337,7 @@ export function TribeBuilder({
           <p className="t-small text-soft">
             One line for each value. In week 1 your tribe will refine these and sign them as its Tribe Covenant. Make each line something the whole tribe could see happen.
           </p>
+          {readyMade ? <ReadyMadePanel r={readyMade} canUse={editable && linesLeft} loading={starting} onUse={() => void startFromReadyMade()} /> : null}
           {LINE_FIELDS.map((f) => (
             <Textarea
               key={f.key}
@@ -341,7 +363,7 @@ export function TribeBuilder({
               </h2>
               <SaveNote state={save} />
             </div>
-            {!card.module_ok ? (
+            {moduleBlocks ? (
               <p className="t-body text-soft">
                 Pass the module on the Success Picture first, then send your card.{" "}
                 <Link href="/lead/academy/the-success-picture" className="font-semibold underline underline-offset-4">
@@ -390,6 +412,69 @@ export function TribeBuilder({
           </dl>
         ) : null}
       </aside>
+    </div>
+  );
+}
+
+/** The reviewed card for this goal: a place to start, and a button that puts its lines in the empty boxes. Nothing is overwritten. */
+function ReadyMadePanel({ r, canUse, loading, onUse }: { r: ReadyMade; canUse: boolean; loading: boolean; onUse: () => void }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-[var(--radius-control)] bg-surface px-4 py-4" data-testid="ready-made">
+      <div>
+        <p className="font-semibold">A ready-made card for this goal</p>
+        <p className="t-small text-soft">Written and signed off by the pastorate. Use it as it is, change it, or write your own.</p>
+      </div>
+      <dl className="t-small flex flex-col gap-1.5">
+        {r.whoFor ? (
+          <div>
+            <dt className="font-semibold">Who it is for</dt>
+            <dd className="text-soft">{r.whoFor}</dd>
+          </div>
+        ) : null}
+        <div>
+          <dt className="font-semibold">Loving God</dt>
+          <dd className="text-soft">{r.lovingGod}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold">Loving Others</dt>
+          <dd className="text-soft">{r.lovingOthers}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold">Loving Life</dt>
+          <dd className="text-soft">{r.lovingLife}</dd>
+        </div>
+        {r.week12 ? (
+          <div>
+            <dt className="font-semibold">By week 12</dt>
+            <dd className="text-soft">{r.week12}</dd>
+          </div>
+        ) : null}
+        <div>
+          <dt className="font-semibold">Ideas for the weeks</dt>
+          <dd className="text-soft">
+            <ol className="list-decimal pl-5">
+              {r.arc.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ol>
+          </dd>
+        </div>
+        {r.guardrail ? (
+          <div>
+            <dt className="font-semibold">Keep in mind</dt>
+            <dd className="text-soft">{r.guardrail}</dd>
+          </div>
+        ) : null}
+      </dl>
+      <div className="flex flex-wrap items-center gap-3">
+        {canUse ? (
+          <Button type="button" variant="quiet" size="sm" loading={loading} onClick={onUse}>
+            Start from the ready-made card
+          </Button>
+        ) : (
+          <p className="t-small text-soft">Your three lines are already written, so nothing is changed.</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -134,6 +134,11 @@ export default async function GodPersonPage({ params }: { params: Params }) {
           </p>
         ))}
         <Row k="Assistant" v={`${p.assistant.calls} calls · ${p.assistant.fallbacks} fell back`} />
+        <p className="t-small">
+          <Link href={`/god/conversations?person=${p.person.id}`} className="underline">
+            Read every message sent to them, and their answers
+          </Link>
+        </p>
       </Section>
 
       <Section title="Recent activity">

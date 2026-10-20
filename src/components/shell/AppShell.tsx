@@ -30,7 +30,7 @@ export async function AppShell({ session, children }: { session: Session; childr
 
       <header className="glass safe-top sticky top-0 z-30 border-b border-line">
         <div className="mx-auto grid h-16 max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 sm:px-8">
-          <Link href="/home" className="press flex w-fit items-center gap-3 rounded-lg">
+          <Link href="/home" className="press flex min-h-10 w-fit items-center gap-3 rounded-lg">
             <Crest size={26} />
             <span className="t-heading" style={{ fontStretch: "88%", letterSpacing: "-0.02em" }}>
               United Tribes

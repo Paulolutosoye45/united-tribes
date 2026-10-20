@@ -67,6 +67,18 @@ export function primaryRole(roles: readonly Role[]): Role {
 /** Who runs the first check on leader applications: the switch, the thresholds and the held list. The database checks the same. */
 export const LEADER_QUALITY_ROLES: readonly Role[] = ["pastor", "director"];
 
+/** Who sees the switchboard for becoming a leader: the office reads and changes it, pastors read it. The database checks the same. */
+export const PIPELINE_VIEW_ROLES: readonly Role[] = ["admin", "director", "pastor"];
+export const PIPELINE_EDIT_ROLES: readonly Role[] = ["admin", "director"];
+
+/** Who sees the Find your tribe model, proposes a new version and runs it quietly over the leaders. Only the pastor approves a version. */
+export const FIT_MODEL_ROLES: readonly Role[] = ["admin", "director", "pastor"];
+export const FIT_APPROVE_ROLES: readonly Role[] = ["pastor"];
+
+/** Who reads and edits the ready-made Tribe Cards. Only the pastor and directors sign one off or retire it. The database checks the same. */
+export const TEMPLATE_VIEW_ROLES: readonly Role[] = ["pastor", "director", "admin"];
+export const TEMPLATE_SIGN_ROLES: readonly Role[] = ["pastor", "director"];
+
 /** Who reads and scores leader applications. Only a pastor decides. */
 export const REVIEW_ROLES: readonly Role[] = ["pastor", "director", "coach"];
 
@@ -219,3 +231,7 @@ export const REFEREE_DECIDER_ROLES: readonly Role[] = ["pastor", "director"];
 
 /** Makes the call-backs: the short call to a referee who was flagged or picked at random. */
 export const REFEREE_CARE_ROLES: readonly Role[] = ["care_lead", "pastor", "director", "admin"];
+
+/** Who reads the leader supply-and-demand board, the suggestions and the offers. Only the pastor, directors and the admin make or withdraw an offer. The database checks the same. */
+export const BOARD_VIEW_ROLES: readonly Role[] = ["admin", "director", "pastor", "data_lead"];
+export const BOARD_OFFER_ROLES: readonly Role[] = ["admin", "director", "pastor"];

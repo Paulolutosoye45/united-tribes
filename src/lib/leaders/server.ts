@@ -3,6 +3,8 @@ import type { Catalogue } from "@/components/intake/types";
 import { loadCatalogue } from "@/lib/intake/server";
 import type { createClient } from "@/lib/supabase/server";
 import { parseLeaderAnswers, type LeaderAnswers } from "./answers";
+import { DEFAULT_MODES, modesFromPipeline, parseModes, type StageModes } from "./modes";
+import { DEFAULT_PIPELINE, parsePipeline, type Pipeline } from "./pipeline";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 type Row = Record<string, unknown>;
@@ -30,6 +32,37 @@ export async function loadLeaderCatalogue(supabase: Supabase, options: { include
       ages: ages(t.min_age, t.max_age),
     })),
   };
+}
+
+/**
+ * Where each switch for becoming a leader stands. If the database cannot be asked, or answers in a way nobody expects, this is
+ * today's process (every question, both referees and the interview), so a failure to read only ever makes the screens stricter.
+ */
+export async function loadPipeline(supabase: Supabase): Promise<Pipeline> {
+  try {
+    const { data, error } = await supabase.rpc("leader_pipeline_public");
+    if (error) return structuredClone(DEFAULT_PIPELINE);
+    return parsePipeline(data);
+  } catch {
+    return structuredClone(DEFAULT_PIPELINE);
+  }
+}
+
+/**
+ * Which steps apply to one application. For one that exists, the database works it out (my_application_modes): the position now for a
+ * draft, and the more lenient of when it was sent and now for one that is sent. For someone who has not started, it is the positions
+ * now. If neither can be read, every step is asked, as before the switchboard.
+ */
+export async function loadApplyModes(supabase: Supabase, applicationId: string | null): Promise<StageModes> {
+  try {
+    if (applicationId) {
+      const { data, error } = await supabase.rpc("my_application_modes", { p_app: applicationId });
+      if (!error && data) return parseModes(data);
+    }
+    return modesFromPipeline(await loadPipeline(supabase));
+  } catch {
+    return structuredClone(DEFAULT_MODES);
+  }
 }
 
 export type ApplicationRecord = {

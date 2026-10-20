@@ -4,6 +4,9 @@ For whoever looks after the site: how it is put together, how to deploy it, what
 do when something stops working. The office's day-to-day screens are in docs/ADMIN.md; what is kept and for how long is in
 docs/RETENTION.md.
 
+**Starting from scratch or upgrading?** Read `DEPLOY.md` at the top of the package first: it says which migration files to run, in what order, how to
+rehearse on a copy of live data, how to go back, and in what order to switch the new tools on (`docs/RELEASE.md`).
+
 ## What runs where
 
 ```
@@ -19,8 +22,10 @@ docs/RETENTION.md.
   Supabase's service-role key, so even a bug in the app cannot read what the signed-in person may not. Keep it that way: do not
   add that key to the app's settings.
 - **The heartbeat** (`/api/cron/tick`) runs the season calendar, sends what is due, writes new report summaries, tidies the referee
-  checks (forgets spent codes and ended sessions; marks a request that never went out as *Couldn’t reach*) and, once a day,
-  refreshes the reporting copy and applies the clean-up rules. If it stops, nothing breaks for members today, but reminders
+  checks (forgets spent codes and ended sessions; marks a request that never went out as *Couldn’t reach*), rebuilds the
+  platform owner's activity summaries (docs/ACTIVITY.md; a failure shows in `problems` as "activity summaries: …" and does not
+  stop messages) and, once a day, refreshes the reporting copy and applies the clean-up rules, including deleting activity detail
+  older than the retention setting. If it stops, nothing breaks for members today, but reminders
   and weekly messages stop. Watching it is the one job that matters most (see "Watching it" below).
 - **Providers** are all optional and each is off until its settings are present. With none set, the site works and messages are
   simply not sent (or, with `MESSAGING_MODE=log`, are written to the server log instead).
@@ -32,7 +37,7 @@ Do these in order. About half a day, most of it waiting for WhatsApp template ap
 1. **Create the Supabase project.** Choose the region nearest Lagos when you create it (at the time of writing Cape Town,
    `af-south-1`, or London, `eu-west-2`; the region cannot be changed later). Choose a plan that includes daily backups (see
    "Backups" below), not the free tier, before real members use it.
-2. **Run the database files.** In `supabase/migrations/` there are 25 files. Either paste them into the SQL editor in file-name
+2. **Run the database files.** In `supabase/migrations/` there are 42 files. Either paste them into the SQL editor in file-name
    order, or link the Supabase CLI to the project and run `supabase db push`. Never skip one and never run them out of order.
    Check afterwards: `select public.ping();` returns `{"ok": true}`.
 3. **Set up sign-in** as in README → "Turn on sign-in (Supabase settings)" (6-digit code, 600 seconds, your own email sender, the code-only

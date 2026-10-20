@@ -5,7 +5,7 @@ import { requireRole } from "@/lib/auth/session";
 import { loadModels, loadRetrainPreview } from "@/lib/growth/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Matching model" } ;
+export const metadata: Metadata = { title: "Matching model" };
 
 export default async function ModelPage() {
   const session = await requireRole(MODEL_ROLES, "/growth/model");

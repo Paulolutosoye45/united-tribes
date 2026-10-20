@@ -1,5 +1,6 @@
 import { SECTIONS as MEMBER_SECTIONS, SECONDS_PER_STEP, isStepId as isMemberStep, sectionOf as memberSection, shieldFills as memberFills, stepsLeft, type StepId as MemberStep } from "@/lib/intake/steps";
-import { STEP_IDS as LEADER_STEPS, SECTIONS as LEADER_SECTIONS, isStepId as isLeaderStep, minutesLeft as leaderMinutes, sectionOf as leaderSection, shieldFills as leaderFills, type StepId as LeaderStep } from "@/lib/leaders/steps";
+import { DEFAULT_MODES, parseModes, type StageModes } from "@/lib/leaders/modes";
+import { SECTIONS as LEADER_SECTIONS, activeSteps as leaderActive, isStepId as isLeaderStep, minutesLeft as leaderMinutes, resolveStep as leaderResolve, sectionOf as leaderSection, shieldFills as leaderFills, type StepId as LeaderStep } from "@/lib/leaders/steps";
 import { clock, dayName, num, str } from "@/lib/messaging/format";
 import type { Params } from "@/lib/messaging/types";
 import { designedHtml, type DesignSpec } from "./email-design";
@@ -29,22 +30,43 @@ export function memberProgress(step: unknown): Progress | null {
   };
 }
 
-export function leaderProgress(step: unknown): Progress | null {
+/** How far through the form, counting only the screens this application has. With every step asked, all twenty-one count. */
+export function leaderProgress(step: unknown, modes: StageModes = DEFAULT_MODES): Progress | null {
   if (!isLeaderStep(step)) return null;
-  const id = step as LeaderStep;
-  const fills = leaderFills(id);
+  const id = leaderResolve(step as LeaderStep, modes);
+  const fills = leaderFills(id, modes);
   const at = leaderSection(id);
+  const active = leaderActive(modes);
   return {
     fills,
     percent: Math.round(((fills[0] + fills[1] + fills[2] + fills[3]) / 4) * 100),
     section: at >= 0 ? LEADER_SECTIONS[at].label : "Last look",
-    minutes: leaderMinutes(id),
-    partsLeft: LEADER_STEPS.length - LEADER_STEPS.indexOf(id),
+    minutes: leaderMinutes(id, modes),
+    partsLeft: active.length - active.indexOf(id),
   };
 }
 
-export function progressFor(journey: string, step: unknown): Progress | null {
-  return journey === "leader_application" ? leaderProgress(step) : journey === "member_form" ? memberProgress(step) : null;
+export function progressFor(journey: string, step: unknown, modes: StageModes = DEFAULT_MODES): Progress | null {
+  return journey === "leader_application" ? leaderProgress(step, modes) : journey === "member_form" ? memberProgress(step) : null;
+}
+
+/** The steps that apply to a leader application, as the database put them in the email's data. Missing means every step. */
+export function modesOfData(data: Data): StageModes {
+  return data.modes === undefined || data.modes === null ? DEFAULT_MODES : parseModes(data.modes);
+}
+
+/**
+ * The reminder's words follow the steps that apply. The sentence about having two referees ready is dropped when references are
+ * not asked, and says they are optional when they are. With every step asked, nothing changes.
+ */
+export function adaptParagraphs(paragraphs: string[], journey: string | null, modes: StageModes): string[] {
+  if (journey !== "leader_application" || modes.references === "required") return paragraphs;
+  if (modes.references === "off") return paragraphs.filter((t) => !/\breferees?\b/i.test(t));
+  return paragraphs.map((t) =>
+    /^have your two referees/i.test(t.trim())
+      ? "If you would like to add referees, have their names and numbers ready: each gets a private link once you send it."
+      : t,
+  );
 }
 
 const WORDS = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
@@ -52,7 +74,7 @@ const small = (n: number) => (n >= 1 && n <= 12 ? WORDS[n] : String(n));
 
 /** The values a person's email can use, worked out from the facts the database gave (and nothing else). */
 export function fieldValues(data: Data, journey: string | null, site: string): Record<string, string> {
-  const progress = journey ? progressFor(journey, data.step) : null;
+  const progress = journey ? progressFor(journey, data.step, modesOfData(data)) : null;
   const tribe = str(data.tribe);
   const meets =
     data.meeting_day == null || data.meeting_time == null

@@ -1,4 +1,5 @@
 import { CHILDREN, GROUP_ROLES, RELATIONSHIPS, STYLE_PAIRS, WORK_FIELDS, WORK_STATUSES, type StyleKey } from "@/lib/intake/options";
+import { GOAL_AFFINITY_EXTRA } from "./goal-extras";
 import type { Fact, Profile } from "./profile";
 import { TRAITS, isTender, type Trait } from "./traits";
 
@@ -145,6 +146,9 @@ export const GOAL_AFFINITY: Record<string, Aff> = {
   "turn-my-craft-into-income": { t_income: 3, f_creative: 1.2, self_employed: 1 },
 };
 
+/** The 23 goals above plus the 77 added with the 100 Tribe Cards. A goal in neither is matched by its own words, as before. */
+const ALL_GOAL_AFFINITY: Record<string, Aff> = { ...GOAL_AFFINITY_EXTRA, ...GOAL_AFFINITY };
+
 export type Rankable = { id: string; name: string; description?: string };
 
 /** Contributions of the profile's facts to an item that has a table of affinities. */
@@ -210,7 +214,7 @@ export function rankCommunities(profile: Profile, communities: readonly Rankable
 }
 
 export function rankGoals(profile: Profile, goals: readonly Rankable[]): Raw[] {
-  return goals.map((g) => rawFor(profile, g, GOAL_AFFINITY));
+  return goals.map((g) => rawFor(profile, g, ALL_GOAL_AFFINITY));
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

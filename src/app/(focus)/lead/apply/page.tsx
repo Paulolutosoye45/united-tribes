@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ApplyFlow, type ApplyAi, type View } from "@/components/leaders/ApplyFlow";
+import { loadAcademyModes } from "@/lib/academy/server";
 import { requireSession } from "@/lib/auth/session";
 import { EMPTY_ANSWERS } from "@/lib/leaders/answers";
 import { LEADER_CONSENT_AI, leaderConsentFor } from "@/lib/leaders/consent";
-import { loadLeaderCatalogue, loadMyApplication } from "@/lib/leaders/server";
-import { isStepId } from "@/lib/leaders/steps";
+import { WIRED } from "@/lib/leaders/pipeline";
+import { loadApplyModes, loadLeaderCatalogue, loadMyApplication, loadPipeline } from "@/lib/leaders/server";
+import { isStepId, resolveStep } from "@/lib/leaders/steps";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Lead a tribe" };
@@ -38,6 +40,11 @@ export default async function ApplyPage() {
     updatedConsentText: LEADER_CONSENT_AI,
   };
 
+  // Which steps apply to this application, worked out by the database
+  const [modes, training, pipeline] = await Promise.all([loadApplyModes(supabase, application?.id ?? null), loadAcademyModes(supabase), loadPipeline(supabase)]);
+  // Find your tribe: a screen after "how you lead best". Off, or unreadable, and the form is exactly what it was.
+  const fit = WIRED.tribeFit && pipeline.tribeFit;
+
   // Sent, decided or withdrawn applications live on the Lead page.
   if (application && application.status !== "draft" && application.status !== "ineligible") redirect("/lead");
 
@@ -46,7 +53,8 @@ export default async function ApplyPage() {
 
   let view: View = "welcome";
   if (application?.status === "ineligible") view = "ineligible";
-  else if (application?.status === "draft") view = isStepId(application.step) ? application.step : "eligibility";
+  // A draft saved at a screen that no longer applies (a referee, when references have since been switched off) goes on to the next one
+  else if (application?.status === "draft") view = resolveStep(isStepId(application.step) ? application.step : "eligibility", modes);
 
   const name = session.person.preferredName ?? session.person.fullName?.split(" ")[0] ?? "friend";
 
@@ -57,6 +65,9 @@ export default async function ApplyPage() {
       catalogue={catalogue}
       applicantName={name}
       ai={ai}
+      modes={modes}
+      training={training}
+      fit={fit}
       initial={{
         view,
         answers: application?.answers ?? EMPTY_ANSWERS,

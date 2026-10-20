@@ -7,6 +7,13 @@
  *   GET  /__sent[?channel=whatsapp|email|sms]   what has been received, oldest first
  *   POST /__reset                               forget everything
  *
+ * It stands in for the ordinary-number WhatsApp sender (/sender) too, with the same checks the real one makes:
+ *
+ *   POST /linked/send                           one short message, signed; recorded as channel "linked"
+ *   GET  /linked/health                         the number's state (open unless a journey says otherwise)
+ *   POST /__linked/state {"state": "open"|"logged_out"|"restricted"}
+ *   POST /__linked/mode  {"fail": true}         make every send fail, to trip the breaker
+ *
  * It also stands in for Cloudflare Turnstile (the bot check):
  *
  *   GET  /turnstile/api.js                      a widget that hands the page a token straight away
@@ -15,10 +22,19 @@
  *   POST /__turnstile/mode  {"refuse": true}    make every check fail, to prove the app fails closed
  */
 import http from "node:http";
+import { verify } from "../sender/src/auth";
 
-export type Received = { channel: "whatsapp" | "email" | "sms"; at: number; id: string; body: Record<string, unknown> };
+export type Received = { channel: "whatsapp" | "email" | "sms" | "linked"; at: number; id: string; body: Record<string, unknown> };
 
 export const KEYS = { whatsappToken: "wa_e2e_token", phoneNumberId: "100200300", resend: "re_e2e", termii: "tm_e2e" } as const;
+
+/** WhatsApp sign-in through the ordinary-number sender (the stand-in for it is in stubs.ts). Not real: for the throwaway stack only. */
+export const SIGNIN = {
+  linkedSecret: "e2e-linked-sender-secret-0123456789",
+  hookSecret: `v1,whsec_${Buffer.from("e2e-send-sms-hook-secret-0123456789").toString("base64")}`,
+  /** The number people are told to save and message */
+  number: "2348000000001",
+} as const;
 
 export const TURNSTILE = { siteKey: "1x00000000000000000000AA", secret: "e2e-turnstile-secret", tokenPrefix: "e2e-turnstile-token-" } as const;
 
@@ -52,6 +68,8 @@ export function startStubs(port: number): Promise<{ url: string; received: Recei
   const spent = new Set<string>();
   let refuseAll = false;
   let counter = 0;
+  let linkedState = "open";
+  let linkedFails = false;
 
   const server = http.createServer((req, res) => {
     const chunks: Buffer[] = [];
@@ -76,7 +94,34 @@ export function startStubs(port: number): Promise<{ url: string; received: Recei
       }
       if (req.method === "POST" && url.pathname === "/__reset") {
         received.length = 0;
+        linkedState = "open";
+        linkedFails = false;
         return send(200, { ok: true });
+      }
+
+      // The ordinary-number sender
+      if (url.pathname === "/__linked/state" && req.method === "POST") {
+        linkedState = typeof body.state === "string" ? body.state : "open";
+        return send(200, { state: linkedState });
+      }
+      if (url.pathname === "/__linked/mode" && req.method === "POST") {
+        linkedFails = body.fail === true;
+        return send(200, { fail: linkedFails });
+      }
+      if (url.pathname.startsWith("/linked/")) {
+        if (!verify(SIGNIN.linkedSecret, req.headers, raw)) return send(401, { ok: false, reason: "not_allowed" });
+        if (req.method === "GET" && url.pathname === "/linked/health") return send(200, { ok: linkedState === "open", state: linkedState });
+        if (req.method === "POST" && url.pathname === "/linked/send") {
+          const to = String(body.to ?? "");
+          const text = String(body.text ?? "");
+          if (!/^[1-9]\d{7,14}$/.test(to) || !text || text.length > 200 || /https?:|www\./i.test(text)) return send(422, { ok: false, reason: "bad_text" });
+          if (linkedState !== "open") return send(503, { ok: false, reason: linkedState });
+          if (linkedFails) return send(503, { ok: false, reason: "failed" });
+          const id = `linked.E2E${++counter}`;
+          received.push({ channel: "linked", at: Date.now(), id, body: { to, text } });
+          return send(200, { ok: true, id });
+        }
+        return send(404, { ok: false, reason: "not_found" });
       }
 
       if (req.method === "GET" && url.pathname === "/turnstile/api.js") {

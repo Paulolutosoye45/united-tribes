@@ -5,7 +5,9 @@ import { useState } from "react";
 import { Crest } from "@/components/brand/Crest";
 import { ShieldBurst } from "@/components/flow/Celebration";
 import { Button, buttonClasses } from "@/components/ui/Button";
+import { DEFAULT_MODES, type StageModes } from "@/lib/leaders/modes";
 import { ELIGIBILITY, ELIGIBILITY_ADVICE, OTHER_WAYS_TO_SERVE, type EligibilityId } from "@/lib/leaders/options";
+import { submittedWording } from "@/lib/leaders/wording";
 
 /** Shown when a check is “not yet”. Kind and specific: what to do instead, and when to return. */
 export function Ineligible({
@@ -73,8 +75,20 @@ export function Ineligible({
   );
 }
 
-export function Submitted({ name, firstCheck = false }: { name: string; firstCheck?: boolean }) {
+export function Submitted({
+  name,
+  firstCheck = false,
+  modes = DEFAULT_MODES,
+  hasReferees = true,
+}: {
+  name: string;
+  firstCheck?: boolean;
+  modes?: StageModes;
+  /** Whether the applicant added any referees (only matters when referees are optional). */
+  hasReferees?: boolean;
+}) {
   const [leaving, setLeaving] = useState(false);
+  const words = submittedWording(modes, firstCheck, hasReferees);
   return (
     <main className="night safe-top flex min-h-dvh flex-col items-center justify-between px-6 pb-8 [--safe-pt:4rem] text-center">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-7">
@@ -82,15 +96,13 @@ export function Submitted({ name, firstCheck = false }: { name: string; firstChe
         <div className="rise-in flex flex-col gap-3" style={{ animationDelay: "250ms" }}>
           <h1 className="t-title">Sent, {name}.</h1>
           <p className="t-body mx-auto max-w-[38ch] text-white/80">
-            {firstCheck
-              ? "Your application is with us. We are reading it now, which takes a few minutes. We will message you when it is done, and then you can ask your referees. Interview invitations wait until both have answered."
-              : "Your application is with the panel, who can start reading it now. One more step: ask each of your referees. We send them a private link and a code ourselves. Interview invitations wait until both have answered."}
+            {words.body}
           </p>
         </div>
       </div>
       <div className="rise-in flex w-full max-w-md flex-col gap-3" style={{ animationDelay: "450ms" }}>
         <Link href="/lead" onClick={() => setLeaving(true)} className={buttonClasses({ fullWidth: true })} aria-busy={leaving}>
-          <span className="relative">{firstCheck ? "See where it stands" : "Ask my referees"}</span>
+          <span className="relative">{words.button}</span>
         </Link>
         <Link href="/home" className={buttonClasses({ fullWidth: true, variant: "night", size: "md" })}>
           <span className="relative">Go to home</span>

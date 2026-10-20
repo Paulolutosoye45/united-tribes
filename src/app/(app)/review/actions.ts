@@ -36,6 +36,17 @@ export async function inviteToInterviewAction(appId: string): Promise<Result> {
   return { ok: true };
 }
 
+/** A pastor's one-line reason for approving on thinner evidence. Kept with the decision; the applicant never sees it. */
+export async function setEvidenceNoteAction(appId: string, note: string): Promise<Result> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(appId)) return { ok: false, message: TRY_AGAIN };
+  const { error } = await supabase.rpc("set_evidence_note", { p_app: appId, p_note: String(note ?? "").slice(0, 600) });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath(`/review/${appId}`);
+  return { ok: true };
+}
+
 /** A pastor records that they followed up a referee’s concern. */
 export async function clearConcernAction(appId: string, referenceId: string, note: string): Promise<Result> {
   const supabase = await authed();

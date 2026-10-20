@@ -160,7 +160,7 @@ shows as *Couldn’t reach*, and the applicant can change that referee’s conta
 - A reference answered **before** a person was added to the list is matched automatically when the list changes; a pastor's earlier
   confirmation is kept.
 - Nothing has been sent through a real WhatsApp, text or email provider from where this was built. The tests use a stand-in
-  that records what would be sent. Do the check in APPLY.md with your own phone and email first.
+  that records what would be sent. Do the first-hour check in DEPLOY.md with your own phone and email first.
 - A phone number is sent to on WhatsApp, and by text when an SMS provider is set (`SMS_PROVIDER`, as for the other messages).
 
 ## Where things are

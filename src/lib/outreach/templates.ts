@@ -1,6 +1,6 @@
 import { flat, num, smsLine, str } from "@/lib/messaging/format";
 import type { Context, Params, TemplateDef } from "@/lib/messaging/types";
-import { churchOf, fieldValues, fill, preheaderFor, progressFor, type Data } from "./compose";
+import { adaptParagraphs, churchOf, fieldValues, fill, modesOfData, preheaderFor, progressFor, type Data } from "./compose";
 import type { DesignSpec, Hero } from "./email-design";
 import { ASKS, JOURNEYS } from "./labels";
 
@@ -30,7 +30,7 @@ const SAVED_NOTE: Record<string, string> = {
 
 function heroFor(journey: string, step: number, data: Data, values: Record<string, string>): Hero | undefined {
   if (journey === "member_form" || journey === "leader_application") {
-    const progress = progressFor(journey, data.step);
+    const progress = progressFor(journey, data.step, modesOfData(data));
     return progress ? { kind: "progress", progress, label: journey === "member_form" ? "Your form" : "Your application" } : undefined;
   }
   if (journey === "no_tribe" && step >= 2 && str(data.tribe_1)) {
@@ -57,10 +57,10 @@ function designed(p: Params, c: Context): ReturnType<TemplateDef["email"]> {
   const step = num(copy.step, 0);
   const values = fieldValues(data, journey, c.site);
   const subject = fill(str(copy.subject), values) || "A note from United Tribes";
-  const paragraphs = strs(copy.paragraphs).map((t) => fill(t, values)).filter(Boolean);
+  const paragraphs = adaptParagraphs(strs(copy.paragraphs), journey, modesOfData(data)).map((t) => fill(t, values)).filter(Boolean);
   const go = page(c, links.go);
   const label = str(copy.button_label);
-  const progress = journey ? progressFor(journey, data.step) : null;
+  const progress = journey ? progressFor(journey, data.step, modesOfData(data)) : null;
   const stopToken = str(links.stop);
   const spec: DesignSpec = {
     subject,

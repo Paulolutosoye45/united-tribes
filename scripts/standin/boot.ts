@@ -26,7 +26,7 @@ export type Booted = {
  * Starts a throwaway Postgres (it refuses to run as root), applies the shim and
  * every migration, and puts the stand-in in front of it.
  */
-export async function bootStandin(options: { apiPort?: number; pgPort?: number; jwtSecret?: string; captchaPrefix?: string } = {}): Promise<Booted> {
+export async function bootStandin(options: { apiPort?: number; pgPort?: number; jwtSecret?: string; captchaPrefix?: string; smsHook?: { url: string; secret: string } } = {}): Promise<Booted> {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "ut-standin-"));
   const pgPort = options.pgPort ?? 55000 + Math.floor(Math.random() * 2000);
   const apiPort = options.apiPort ?? 54321;
@@ -55,6 +55,7 @@ export async function bootStandin(options: { apiPort?: number; pgPort?: number; 
     jwtSecret,
     rolesFor: personaRoles,
     captchaPrefix: options.captchaPrefix,
+    smsHook: options.smsHook,
   });
 
   return {

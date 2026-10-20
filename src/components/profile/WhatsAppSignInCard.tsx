@@ -3,14 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { UserAttributes } from "@supabase/supabase-js";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClasses } from "@/components/ui/Button";
 import { CodeInput } from "@/components/ui/CodeInput";
 import { Input } from "@/components/ui/Input";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
-import { maskPhone, normalisePhone, phoneDigits, whatsappErrorMessage } from "@/lib/auth/phone";
+import { displayPhone, maskPhone, normalisePhone, phoneDigits, whatsappErrorMessage } from "@/lib/auth/phone";
+import { resendWaitSeconds } from "@/lib/signin/caps";
+import type { SignInChannel } from "@/lib/signin/channel";
+import { readTypedNumber } from "@/lib/signin/typed-number";
+import { ASK_TEXT, CODE_LIFETIME_LINE, PAUSED_LINE, openWhatsAppLink } from "@/lib/signin/wording";
 import { createClient } from "@/lib/supabase/browser";
-
-const RESEND_SECONDS = 30;
 
 type Step = "idle" | "number" | "code" | "done";
 type Busy = null | "send" | "verify";
@@ -21,7 +23,7 @@ type Busy = null | "send" | "verify";
  * number that is not theirs. The number lives with the sign-in service; it is
  * not copied into the member's answers and is never shown to a leader.
  */
-export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
+export function WhatsAppSignInCard({ linked, channel }: { linked: string | null; channel: SignInChannel }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("idle");
   const [input, setInput] = useState("");
@@ -31,6 +33,12 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [numberError, setNumberError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [asked, setAsked] = useState<{ phone: string; count: number } | null>(null);
+
+  // Paused (by a person or by the breaker) or off: no code can be sent, so say so instead of letting someone wait for one.
+  const paused = channel.status !== "on";
+  // Reply-first: the code is held until the person messages our number, so the next step is to send that message.
+  const replyFirst = channel.mode === "reply_first" && channel.number !== null;
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -41,7 +49,7 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
   async function sendCode() {
     setError(null);
     setNumberError(null);
-    const e164 = phone ?? normalisePhone(input);
+    const e164 = phone ?? readTypedNumber(input) ?? normalisePhone(input);
     if (!e164) {
       setNumberError("That number doesn't look right. Include your network code, like 0803 123 4567.");
       return;
@@ -61,7 +69,10 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
     setPhone(e164);
     setCode("");
     setStep("code");
-    setCooldown(RESEND_SECONDS);
+    // The same wait the server enforces for the same number: a minute, then two, then five.
+    const count = asked && asked.phone === e164 ? asked.count + 1 : 1;
+    setAsked({ phone: e164, count });
+    setCooldown(resendWaitSeconds(count));
   }
 
   async function verify(token: string) {
@@ -77,6 +88,7 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
     }
     setBusy(null);
     setStep("done");
+    setAsked(null);
     router.refresh();
   }
 
@@ -87,6 +99,7 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
     setCode("");
     setError(null);
     setNumberError(null);
+    setAsked(null);
   }
 
   const shown = maskPhone(phone ?? linked ?? "");
@@ -112,6 +125,12 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
           </div>
         </div>
 
+        {paused ? (
+          <p role="status" className="t-small text-soft">
+            {PAUSED_LINE} You can add or change your number once WhatsApp codes are back.
+          </p>
+        ) : null}
+
         {step === "done" ? (
           <p role="status" className="pop-in rounded-[var(--radius-control)] bg-gold/25 px-4 py-3 font-medium">
             Done. Your WhatsApp number is added.
@@ -123,6 +142,7 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
             <Button
               variant="quiet"
               size="md"
+              disabled={paused}
               onClick={() => {
                 setStep("number");
               }}
@@ -148,7 +168,11 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
               inputMode="tel"
               autoComplete="tel"
               placeholder="0803 123 4567"
-              hint="We send a six-digit code to this number to check it is yours."
+              hint={
+                replyFirst
+                  ? "To check it is yours, you will send one short message from this number to ours, and we reply with a six-digit code."
+                  : "We send a six-digit code to this number to check it is yours."
+              }
               value={input}
               error={numberError}
               onChange={(e) => {
@@ -177,9 +201,30 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
 
         {step === "code" && phone ? (
           <div className="flex flex-col gap-4">
-            <p className="t-body">
-              We sent a six-digit code to <strong className="font-semibold">{maskPhone(phone)}</strong> on WhatsApp.
-            </p>
+            {replyFirst && channel.number ? (
+              <>
+                <p className="t-body">
+                  Now message us from <strong className="font-semibold">{maskPhone(phone)}</strong>: tap the button and press send on the message that is ready.
+                  We will reply with a six-digit code for you to type below. {CODE_LIFETIME_LINE}
+                </p>
+                <a
+                  href={openWhatsAppLink(channel.number, ASK_TEXT)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonClasses({ variant: "primary", size: "lg", fullWidth: true })}
+                >
+                  <WhatsAppIcon />
+                  <span className="relative">Open WhatsApp and send the message</span>
+                </a>
+                <p className="t-small text-soft">
+                  Tip: save this number as <strong className="font-semibold text-ink">United Tribes</strong>: {displayPhone(channel.number)}.
+                </p>
+              </>
+            ) : (
+              <p className="t-body">
+                We sent a six-digit code to <strong className="font-semibold">{maskPhone(phone)}</strong> on WhatsApp. {CODE_LIFETIME_LINE}
+              </p>
+            )}
             <CodeInput
               value={code}
               onChange={(v) => {
@@ -189,7 +234,7 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
               onComplete={verify}
               error={Boolean(error)}
               disabled={busy === "verify"}
-              autoFocus
+              autoFocus={!replyFirst}
             />
             <div aria-live="polite" className="min-h-6">
               {error ? (
@@ -205,7 +250,7 @@ export function WhatsAppSignInCard({ linked }: { linked: string | null }) {
                 Add this number
               </Button>
               <Button variant="ghost" size="md" disabled={cooldown > 0 || busy === "send"} loading={busy === "send"} onClick={sendCode}>
-                {cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}
+                {cooldown > 0 ? `Send a new code in ${cooldown}s` : replyFirst ? "Ask for a new code" : "Send a new code"}
               </Button>
               <Button variant="ghost" size="md" onClick={reset}>
                 Cancel

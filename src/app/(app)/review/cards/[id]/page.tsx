@@ -17,17 +17,25 @@ export default async function ReviewCardPage({ params }: { params: Promise<{ id:
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("review_tribe", { p_id: id });
   if (error || !data) notFound();
-  const suggestions = await supabase.rpc("suggest_assistants", { p_tribe: id });
+  const [suggestions, appointment] = await Promise.all([supabase.rpc("suggest_assistants", { p_tribe: id }), supabase.rpc("tribe_appointment_note", { p_tribe: id })]);
   const card = data as CardReview;
+  // A leader the owner appointed has no application behind the card. The office is told that, and never by whom.
+  const note = appointment.error ? null : (appointment.data as { text?: unknown } | null);
+  const appointedNote = note && typeof note.text === "string" && note.text.length <= 200 ? note.text : null;
 
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <Link href="/review/cards" className="press -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
+        <Link href="/review/cards" className="press -ml-1 inline-flex min-h-10 w-fit items-center rounded-lg px-1 text-[0.95rem] font-medium text-soft hover:text-ink">
           ← All Tribe Cards
         </Link>
         <h1 className="t-title">{card.name ?? "Unnamed tribe"}</h1>
       </header>
+      {appointedNote ? (
+        <p role="note" className="t-body rounded-[var(--radius-control)] bg-gold/20 px-4 py-3" data-testid="appointed-note">
+          {appointedNote}
+        </p>
+      ) : null}
       <CardReviewView card={card} suggestions={(suggestions.data as AssistantSuggestion[] | null) ?? []} canPair />
     </div>
   );

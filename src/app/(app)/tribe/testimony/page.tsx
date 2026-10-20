@@ -18,7 +18,7 @@ export default async function TestimonyPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
-        <Link href="/tribe" className="press -ml-1 w-fit rounded-lg px-1 py-1 text-[0.95rem] font-medium text-soft hover:text-ink">
+        <Link href="/tribe" className="press -ml-1 inline-flex min-h-10 w-fit items-center rounded-lg px-1 text-[0.95rem] font-medium text-soft hover:text-ink">
           ← My tribe
         </Link>
         <h1 className="t-title">Testimonies</h1>

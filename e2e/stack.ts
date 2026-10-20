@@ -7,14 +7,20 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { bootStandin } from "../scripts/standin/boot";
-import { API_PORT, APP_PORT, JWT_SECRET, STATE_FILE, STUB_PORT, appEnv, intakeEnv, messagingEnv, securityEnv } from "./env";
+import { API_PORT, APP_PORT, JWT_SECRET, SIGNIN, STATE_FILE, STUB_PORT, appEnv, intakeEnv, messagingEnv, securityEnv, signinEnv } from "./env";
 import { seedPeople } from "./seed";
 import { TURNSTILE, startStubs } from "./stubs";
 
 const ROOT = path.resolve(__dirname, "..");
 
 async function main() {
-  const booted = await bootStandin({ apiPort: API_PORT, jwtSecret: JWT_SECRET, captchaPrefix: TURNSTILE.tokenPrefix });
+  // A phone sign-in code goes to the app's "Send SMS" hook, as it does with Supabase.
+  const booted = await bootStandin({
+    apiPort: API_PORT,
+    jwtSecret: JWT_SECRET,
+    captchaPrefix: TURNSTILE.tokenPrefix,
+    smsHook: { url: `http://127.0.0.1:${APP_PORT}/api/auth/send-code`, secret: SIGNIN.hookSecret },
+  });
   const q = (sql: string, args: unknown[] = []) => booted.admin.query(sql, args);
   await seedPeople(q);
 
@@ -30,7 +36,7 @@ async function main() {
   fs.writeFileSync(STATE_FILE, JSON.stringify({ pgPort: booted.pgPort, stubUrl: stubs.url, workerToken: worker }));
 
   const log = fs.openSync(path.join(path.dirname(STATE_FILE), "next.log"), "w");
-  const app = spawn("npx", ["next", "start", "-p", String(APP_PORT)], { cwd: ROOT, env: { ...process.env, ...appEnv(), ...messagingEnv(worker, stubs.url), ...securityEnv(stubs.url), ...intakeEnv() }, stdio: ["ignore", log, log] });
+  const app = spawn("npx", ["next", "start", "-p", String(APP_PORT)], { cwd: ROOT, env: { ...process.env, ...appEnv(), ...messagingEnv(worker, stubs.url), ...securityEnv(stubs.url), ...intakeEnv(), ...signinEnv(stubs.url) }, stdio: ["ignore", log, log] });
   const stop = async () => {
     app.kill();
     await stubs.close();

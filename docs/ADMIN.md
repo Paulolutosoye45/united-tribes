@@ -19,6 +19,10 @@ are the screens the signed-in person's role allows, and the numbers ("At a glanc
 | Message log | admin, director, data lead | admin, director (put a failed message back in the queue) |
 | Data requests (account deletion) | admin, director | admin, director |
 | Pastors and unit heads (the list referees are checked against) | admin, director, pastor | admin, director, pastor |
+| Leader pipeline (the steps to become a leader, the Academy and the declaration; see SWITCHBOARD.md) | admin, director, pastor | admin, director |
+| Leader pipeline → Tribe fit (the compatibility test: the model, readiness, the quiet run; see LEADER-FIT.md) | admin, director, pastor | propose a version: admin, director, pastor; approve it: pastor only; look at the leaders now: admin, director, pastor |
+| Leader supply (where members are waiting for a tribe with no leader, who could lead it, offers; see LEADER-BOARD.md) | admin, director, pastor, data lead | offer or withdraw: admin, director, pastor |
+| Review leaders → Ready-made cards (the 100 Tribe Cards; see TRIBE-CARDS.md) | admin, director, pastor | edit: admin, director, pastor; sign off and retire: director, pastor |
 
 The database enforces every line of this table; the screens only hide what a person could not use. Someone who opens a
 screen they may not see is sent to Home.

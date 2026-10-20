@@ -13,6 +13,9 @@ export type QueueItem = {
   i_reviewed_calling: boolean;
   i_reviewed_interview: boolean;
   interview_at: string | null;
+  /** How the references and the interview stand for this application (required, optional or off). Missing means required. */
+  references_mode?: "required" | "optional" | "off";
+  interview_mode?: "required" | "optional" | "off";
 };
 
 export type Readiness = {
@@ -28,6 +31,12 @@ export type Readiness = {
   readiness: number | null;
   gates: { goal_declared: boolean; references_clean: boolean; open_concerns: number; pastor_or_unit_head_referee: boolean };
   band: "leader" | "assistant_leader" | "below" | null;
+  /** What the score rests on. Missing on an older reading, which counted all four parts. */
+  counted?: ("calling" | "scenarios" | "references" | "interview")[];
+  missing?: { part: "calling" | "scenarios" | "references" | "interview"; why: "not_asked" | "not_received" }[];
+  /** "full" when all four parts are in; "reduced" when the score rests on fewer. */
+  evidence?: "full" | "reduced";
+  modes?: { references: "required" | "optional" | "off"; interview: "required" | "optional" | "off" };
 };
 
 export type ReferenceView = {
@@ -67,6 +76,13 @@ export type ReviewDetail = {
   can_invite: boolean;
   decision_note: string | null;
   decided_at: string | null;
+  /** Which steps applied to this application. Missing means all of them. */
+  modes?: { references: "required" | "optional" | "off"; interview: "required" | "optional" | "off"; sent?: boolean };
+  /** Eligibility questions the applicant answered "not yet" that were optional, so did not stop them. */
+  optional_no?: string[];
+  /** For those who decide only: whether the evidence is full or reduced, and the pastor's reason if one was given. */
+  evidence?: "full" | "reduced" | null;
+  evidence_note?: string | null;
 };
 
 export type SlotView = {

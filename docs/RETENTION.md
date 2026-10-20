@@ -18,6 +18,7 @@ Nothing here is legal advice. The periods below are the software's starting posi
 | A parent's or guardian's name and contact, with the permission they gave | 90 days after the young person's last season ended | The daily clean-up |
 | A leader's application, referees' answers and the panel's scores | While the person serves; withdrawn applications are deleted at once | See "Leaders" below |
 | The event log (what was done, when, by whom; never what was written) | Kept | Not cleared (it is the church's record of who did what). It holds no names or email addresses of members, only internal codes |
+| What the platform owner's activity dashboard records (which screen was opened and when, sign-in method, form steps; never what was written; docs/ACTIVITY.md) | **13 months** of detail (the owner can set 3 to 36); the daily counts, which hold no person, are kept | The daily clean-up deletes events older than the setting. A deleted member's rows go with their account |
 | The reporting copy (`bi` views, one coded row per member and season) | Rebuilt daily from live data | A deleted member drops out at the next daily rebuild, or at once with Admin → Sending and reporting → Refresh now |
 | Database backups | As long as the backup plan keeps them | They roll off by themselves (see "What deleting does not reach") |
 
@@ -36,7 +37,9 @@ Once per Lagos day, inside the heartbeat (`worker_tick` calls `retention_tick`),
 2. deletes unfinished member forms untouched for 30 days;
 3. clears the written season story from every profile whose season has ended;
 4. deletes messages that went to a bare address (a referee, a parent) 90 days after they finished;
-5. empties the wording of every other finished message after 90 days.
+5. empties the wording of every other finished message after 90 days;
+6. (Phase 5) deletes activity events older than the activity retention setting, 13 months unless the owner changed it. This runs
+   in the activity refresh on the heartbeat (`worker_activity_refresh`), once per Lagos day, and its count appears in the heartbeat's answer.
 
 It then writes one line to the event log with **counts only** ("3 forms, 12 messages…"), never who or what. It runs once a day
 (it remembers it has run), and a failure shows up in the heartbeat's `problems` list without stopping messages going out
@@ -121,6 +124,7 @@ Be honest about these in the privacy notice (it already says the first two). Sof
 | The download route (opens the sealed notes) | `src/app/(app)/profile/data/route.ts`, `src/lib/privacy/export.ts` |
 | The member's screen | `src/components/profile/YourData.tsx` |
 | The office's screen | `src/app/(app)/admin/privacy/`, `src/components/admin/ErasureBoard.tsx` |
+| Activity retention (Phase 5) | `supabase/migrations/20261215000100_activity.sql` (`activity_prune`, `activity_settings`) |
 | Tests | `tests/db/data-rights.test.ts` (16), `tests/unit/privacy.test.ts`, `e2e/journeys/09-data-rights.ts` (46 checks in a browser) |
 
 ## Open points for the pastorate and counsel
@@ -140,5 +144,8 @@ Be honest about these in the privacy notice (it already says the first two). Sof
    under the right of access, or the church can decide to include them.
 6. **Young people.** With the teen track on (docs/TEENS.md), a parent or guardian may ask on a young person's behalf. They do
    that through the office, which writes the request down; check what proof of identity the church will ask for.
-7. **Wording.** The privacy notice, the consent screens and the parent's page are plain-language drafts. Counsel should review
+7. **Activity recording.** The privacy notice now says screens and sign-in methods are recorded (never what is written), only the
+   platform administrator sees them, and detail is deleted after thirteen months. Counsel should say whether that is enough or a
+   consent line is wanted, and whether 13 months is right (docs/ACTIVITY.md, last section).
+8. **Wording.** The privacy notice, the consent screens and the parent's page are plain-language drafts. Counsel should review
    all three together, and add the office's contact details.

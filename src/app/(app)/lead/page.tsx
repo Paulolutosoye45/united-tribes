@@ -4,18 +4,26 @@ import Link from "next/link";
 import { ShieldProgress } from "@/components/brand/ShieldProgress";
 import { FirstCheckPanel } from "@/components/leaders/FirstCheckPanel";
 import { InterviewPicker, type InterviewOptions } from "@/components/leaders/InterviewPicker";
+import { LeaderOffer } from "@/components/leaders/LeaderOffer";
 import { RefereeLinks } from "@/components/leaders/RefereeLinks";
 import { StageList } from "@/components/leaders/StageList";
 import { WithdrawApplication } from "@/components/leaders/WithdrawApplication";
 import { buttonClasses } from "@/components/ui/Button";
+import { trainingAsk, trainingButton } from "@/lib/academy/wording";
+import { loadAcademyModes } from "@/lib/academy/server";
 import { requireSession } from "@/lib/auth/session";
 import { ELIGIBILITY, ELIGIBILITY_ADVICE, OTHER_WAYS_TO_SERVE, STATUS_INFO, type EligibilityId } from "@/lib/leaders/options";
+import type { StageModes } from "@/lib/leaders/modes";
+import { WIRED, type EligibilityKey } from "@/lib/leaders/pipeline";
+import type { StageState } from "@/lib/leaders/status";
+import { parseMyOffer } from "@/lib/leaders/board";
 import { LEADER_CONSENT_AI } from "@/lib/leaders/consent";
 import { readFirstCheckStatus } from "@/lib/leaders/quality/status";
 import { BROWSER_COOKIE, traceOf } from "@/lib/leaders/referee/trace";
-import { loadMyApplication } from "@/lib/leaders/server";
+import { loadApplyModes, loadMyApplication, loadPipeline } from "@/lib/leaders/server";
 import { isDecided, isInReview, stageStates } from "@/lib/leaders/status";
-import { isStepId, minutesLeft, shieldFills } from "@/lib/leaders/steps";
+import { isStepId, minutesLeft, resolveStep, shieldFills } from "@/lib/leaders/steps";
+import { outlineDetails, stageDetails, statusLine } from "@/lib/leaders/wording";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Lead a tribe" };
@@ -31,6 +39,11 @@ export default async function LeadPage() {
     if (trace.net && trace.bid) await supabase.rpc("referee_note_applicant", { p_net: trace.net, p_bid: trace.bid });
   }
 
+  // Which steps apply to this application, worked out by the database. Without one, the positions now.
+  const modes = await loadApplyModes(supabase, application?.id ?? null);
+  // Whether the Academy and the declaration are asked for: what the approval line and the training button say
+  const training = await loadAcademyModes(supabase);
+  const trainingTo = trainingButton(training);
   const status = application?.status ?? "none";
   const interviewing = ["interview_invited", "interview_booked", "interviewed"].includes(status);
   const options = interviewing ? ((await supabase.rpc("my_interview_options")).data as InterviewOptions | null) : null;
@@ -48,16 +61,16 @@ export default async function LeadPage() {
           fills={[0, 0, 0, 0]}
         />
         <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-          <StageList heading="How it works" />
+          <StageList heading="How it works" states={outline(modes)} details={outlineDetails(modes)} />
           <section className="card flex flex-col gap-3 p-6" aria-labelledby="asks-heading">
             <h2 id="asks-heading" className="t-heading">
               What it asks of you
             </h2>
             <ul className="t-body flex flex-col gap-2 text-soft">
               <li>75 minutes a week, for 12 weeks.</li>
-              <li>About 10 hours of training before your tribe begins, with a safeguarding course.</li>
+              {trainingAsk(training) ? <li>{trainingAsk(training)}</li> : null}
               <li>Keeping what members share private, unless someone is at risk.</li>
-              <li>Six months in the church, Foundation of Faith done, and serving somewhere now.</li>
+              {asksAnyOf(modes, ["member6", "foundation", "serving"]) ? <li>{membershipLine(modes)}</li> : null}
             </ul>
           </section>
         </div>
@@ -67,8 +80,10 @@ export default async function LeadPage() {
 
   // ------------------------------------------------------------------ in progress
   if (application.status === "draft") {
-    const step = isStepId(application.step) ? application.step : "eligibility";
-    const left = minutesLeft(step);
+    const step = resolveStep(isStepId(application.step) ? application.step : "eligibility", modes);
+    // Find your tribe adds about a minute to a form that has not reached it yet
+    const fit = WIRED.tribeFit && (await loadPipeline(supabase)).tribeFit;
+    const left = minutesLeft(step, modes, fit);
     return (
       <div className="flex flex-col gap-8">
         <Hero
@@ -76,7 +91,7 @@ export default async function LeadPage() {
           body={`About ${left} ${left === 1 ? "minute" : "minutes"} to go. Your answers so far are saved.`}
           cta="Continue my application"
           note="Only the review panel will see it."
-          fills={shieldFills(step)}
+          fills={shieldFills(step, modes)}
         />
         <div>
           <WithdrawApplication appId={application.id} sent={false} />
@@ -125,7 +140,7 @@ export default async function LeadPage() {
   // ------------------------------------------------------------------ sent, in review or decided
   const info = STATUS_INFO[application.status];
   const answered = references.filter((r) => r.answered).length;
-  const states = stageStates(application.status, answered);
+  const states = stageStates(application.status, answered, modes, references.length);
   const decided = isDecided(application.status);
   const approved = application.status === "approved_leader" || application.status === "approved_assistant";
 
@@ -133,6 +148,8 @@ export default async function LeadPage() {
   const firstCheck = isInReview(application.status) ? readFirstCheckStatus((await supabase.rpc("leader_ai_status", { p_app: application.id })).data) : null;
   const checkOn = firstCheck?.mode === "on";
   const refereesOpen = !checkOn || firstCheck?.refereesOpen !== false;
+  // An open offer to lead a tribe where members are waiting. The database returns one only to a leader, and only while it is open.
+  const offer = approved ? parseMyOffer((await supabase.rpc("my_leader_offers")).data) : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -143,14 +160,16 @@ export default async function LeadPage() {
             <h1 id="status-heading" className="t-title pr-14 sm:pr-0">
               {info.label}
             </h1>
-            <p className="t-body text-white/80">{info.line}</p>
+            <p className="t-body text-white/80">{statusLine(application.status, modes, training)}</p>
             {approved ? (
               <div className="mt-1 flex flex-wrap gap-3">
-                <Link href="/lead/academy" className={buttonClasses({ className: "px-8" })}>
-                  <span className="relative">Open my training</span>
-                </Link>
+                {trainingTo ? (
+                  <Link href={trainingTo.href} className={buttonClasses({ className: "px-8" })}>
+                    <span className="relative">{trainingTo.label}</span>
+                  </Link>
+                ) : null}
                 {application.status === "approved_leader" ? (
-                  <Link href="/lead/tribe" className={buttonClasses({ variant: "night", className: "px-6" })}>
+                  <Link href="/lead/tribe" className={buttonClasses(trainingTo ? { variant: "night", className: "px-6" } : { className: "px-8" })}>
                     <span className="relative">My Tribe Card</span>
                   </Link>
                 ) : null}
@@ -171,6 +190,8 @@ export default async function LeadPage() {
           </div>
         </div>
       </section>
+
+      {offer ? <LeaderOffer offer={offer} /> : null}
 
       {application.decisionNote && decided ? (
         <section aria-labelledby="note-heading" className="card flex flex-col gap-2 p-6">
@@ -195,7 +216,7 @@ export default async function LeadPage() {
       {firstCheck && checkOn ? <FirstCheckPanel appId={application.id} status={firstCheck} consentText={LEADER_CONSENT_AI} /> : null}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
-        <StageList states={states} details={{ references: `${answered} of 2 answered` }} />
+        <StageList states={states} details={stageDetails(modes, answered, references.length)} />
         <div className="flex flex-col gap-8">
           {isInReview(application.status) && refereesOpen && references.length > 0 ? (
             <RefereeLinks appId={application.id} applicant={session.person.preferredName ?? session.person.fullName ?? ""} references={references} />
@@ -213,11 +234,33 @@ export default async function LeadPage() {
   );
 }
 
-function approvedFills(states: { id: string; state: string }[]): [number, number, number, number] {
+function approvedFills(all: { id: string; state: string }[]): [number, number, number, number] {
+  // Stages that are not part of this process do not count towards the shield
+  const states = all.filter((s) => s.state !== "off");
   const done = states.filter((s) => s.state === "done").length;
   const current = states.some((s) => s.state === "current") ? 0.5 : 0;
   const total = Math.min(4, ((done + current) / states.length) * 4);
   return [Math.min(1, total), Math.min(1, Math.max(0, total - 1)), Math.min(1, Math.max(0, total - 2)), Math.min(1, Math.max(0, total - 3))];
+}
+
+/** The tracker before anyone has started: every stage ahead, except the ones that are not part of the process. */
+function outline(modes: StageModes) {
+  return stageStates("draft", 0, modes).map((s) => ({ id: s.id, state: (s.state === "off" ? "off" : "later") as StageState }));
+}
+
+/** Whether any of these questions is put to the applicant. */
+const asksAnyOf = (modes: StageModes, keys: EligibilityKey[]) => keys.some((k) => modes.eligibility[k] !== "off");
+
+/** The line about the church, shortened to what is asked. With all three asked, it is the line it has always been. */
+function membershipLine(modes: StageModes) {
+  const parts = [
+    modes.eligibility.member6 !== "off" ? "six months in the church" : null,
+    modes.eligibility.foundation !== "off" ? "Foundation of Faith done" : null,
+    modes.eligibility.serving !== "off" ? "serving somewhere now" : null,
+  ].filter(Boolean) as string[];
+  if (parts.length === 3) return "Six months in the church, Foundation of Faith done, and serving somewhere now.";
+  const text = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
 }
 
 function Hero({ title, body, cta, note, fills }: { title: string; body: string; cta: string; note: string; fills: [number, number, number, number] }) {

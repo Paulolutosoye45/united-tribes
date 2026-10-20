@@ -783,6 +783,19 @@ const celebrationPrompt: TemplateDef = {
 // People applying to lead
 // ---------------------------------------------------------------------------
 
+/**
+ * What happens next, in words that fit the steps this application goes through. The database adds refs: false, refs_optional: true or
+ * interview: false to the message only when a step does not apply, so with every step asked this is the sentence it has always been.
+ */
+export function receivedNext(p: Params): string {
+  const noRefs = p.refs === false;
+  const optionalRefs = p.refs_optional === true;
+  const noInterview = p.interview === false;
+  const read = noRefs ? "Next, we read it" : optionalRefs ? "Next, we read it, together with your references if you added any" : "Next, we read it together with your references";
+  if (noInterview) return `${read}, and a pastor decides. You’ll hear from us at each step.`;
+  return `${read}. If everything is in order we’ll invite you to a short conversation. You’ll hear from us at each step.`;
+}
+
 const applicationReceived: TemplateDef = {
   key: "application_received",
   audience: "applicant",
@@ -792,7 +805,7 @@ const applicationReceived: TemplateDef = {
     greeting: `Hi ${c.first},`,
     paragraphs: [
       "Thank you for offering to lead. Your application is with us.",
-      "Next, we read it together with your references. If everything is in order we’ll invite you to a short conversation. You’ll hear from us at each step.",
+      receivedNext(p),
     ],
     cta: { label: "See my application", url: c.link("/lead") },
   }),
@@ -843,6 +856,17 @@ const applicationInterviewBooked: TemplateDef = {
   }),
 };
 
+/**
+ * The line that says what comes after approval, for the application_approved message. The database adds declaration: false only when
+ * the signed declaration is switched off, so with the Academy and the declaration both required this is the sentence it has always been.
+ */
+export function approvedNext(p: Params): string {
+  if (p.declaration === false) return "Next is the Leader Academy: six short modules and two workshops. Open it whenever you’re ready.";
+  return "Next is the Leader Academy: six short modules, a safeguarding declaration, and two workshops. Open it whenever you’re ready.";
+}
+
+const REACH_OUT = "Please also tell us how you’d like to be reached, so the reminders you need can find you.";
+
 const applicationApproved: TemplateDef = {
   key: "application_approved",
   audience: "applicant",
@@ -852,8 +876,8 @@ const applicationApproved: TemplateDef = {
     greeting: `Hi ${c.first},`,
     paragraphs: [
       `Good news: you have been approved as ${str(p.role, "a leader")}. Thank you for saying yes.`,
-      "Next is the Leader Academy: six short modules, a safeguarding declaration, and two workshops. Open it whenever you’re ready.",
-      "Please also tell us how you’d like to be reached, so the reminders you need can find you.",
+      approvedNext(p),
+      REACH_OUT,
     ],
     cta: { label: "Start the Academy", url: c.link("/lead/academy") },
   }),
@@ -862,6 +886,85 @@ const applicationApproved: TemplateDef = {
     body: "Hi {{1}}, good news: you have been approved as {{2}}. Thank you for saying yes. Next is the Leader Academy: {{3}}",
     example: ["Ngozi", "tribe leader", "https://unitedtribes.example/lead/academy"],
     vars: [flat(c.first), flat(str(p.role, "a leader")), flat(c.link("/lead/academy"))],
+  }),
+};
+
+// The three other ways an approval can read, chosen by the database (leader_approved_template) from the Academy and declaration switches.
+// Each is its own template, because the wording of a WhatsApp template is fixed when Meta approves it.
+
+/** The Academy is optional: open to the new leader, not asked of them. The declaration line follows its own switch. */
+const applicationApprovedOptional: TemplateDef = {
+  key: "application_approved_optional",
+  audience: "applicant",
+  title: "You’ve been approved (Academy optional)",
+  email: (p, c) => ({
+    subject: `Welcome: you’re approved as ${str(p.role, "a leader")}`,
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      `Good news: you have been approved as ${str(p.role, "a leader")}. Thank you for saying yes.`,
+      p.declaration === false
+        ? "The Leader Academy is open to you whenever you want it: six short modules and two workshops. It is optional, so take it when it will help you."
+        : "The Leader Academy is open to you whenever you want it: six short modules and two workshops. It is optional. What we do ask is that you sign the safeguarding declaration.",
+      REACH_OUT,
+    ],
+    cta: { label: "Open the Academy", url: c.link("/lead/academy") },
+  }),
+  sms: (p, c) => smsLine(`You’re approved as ${str(p.role, "a leader")}. The Academy is open to you, and optional:`, c.link("/lead/academy")),
+  whatsapp: (p, c) => ({
+    body: "Hi {{1}}, good news: you have been approved as {{2}}. Thank you for saying yes. The Leader Academy is open to you whenever you want it, and it is optional: {{3}}",
+    example: ["Ngozi", "tribe leader", "https://unitedtribes.example/lead/academy"],
+    vars: [flat(c.first), flat(str(p.role, "a leader")), flat(c.link("/lead/academy"))],
+  }),
+};
+
+/** The Academy is off and the signed declaration is still asked for. */
+const applicationApprovedDeclaration: TemplateDef = {
+  key: "application_approved_declaration",
+  audience: "applicant",
+  title: "You’ve been approved (declaration only)",
+  email: (p, c) => ({
+    subject: `Welcome: you’re approved as ${str(p.role, "a leader")}`,
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      `Good news: you have been approved as ${str(p.role, "a leader")}. Thank you for saying yes.`,
+      "Next is a short safeguarding declaration, which every leader signs. It takes a few minutes.",
+      REACH_OUT,
+    ],
+    cta: { label: "Sign the declaration", url: c.link("/lead/academy/declaration") },
+  }),
+  sms: (p, c) => smsLine(`You’re approved as ${str(p.role, "a leader")}. Please sign the safeguarding declaration:`, c.link("/lead/academy/declaration")),
+  whatsapp: (p, c) => ({
+    body: "Hi {{1}}, good news: you have been approved as {{2}}. Thank you for saying yes. Next is a short safeguarding declaration that every leader signs: {{3}}",
+    example: ["Ngozi", "tribe leader", "https://unitedtribes.example/lead/academy/declaration"],
+    vars: [flat(c.first), flat(str(p.role, "a leader")), flat(c.link("/lead/academy/declaration"))],
+  }),
+};
+
+/** The Academy and the declaration are both off. A tribe leader's next step is the Tribe Card; an assistant leader has none. */
+const applicationApprovedOpen: TemplateDef = {
+  key: "application_approved_open",
+  audience: "applicant",
+  title: "You’ve been approved (nothing to complete first)",
+  email: (p, c) => {
+    const assistant = str(p.role) === "assistant leader";
+    return {
+      subject: `Welcome: you’re approved as ${str(p.role, "a leader")}`,
+      greeting: `Hi ${c.first},`,
+      paragraphs: [
+        `Good news: you have been approved as ${str(p.role, "a leader")}. Thank you for saying yes.`,
+        assistant
+          ? "There is nothing to complete before you start. Your tribe leader will be in touch about your tribe."
+          : "Next is your Tribe Card. It is how a member decides on your tribe, it takes about twenty minutes, and it saves as you type.",
+        REACH_OUT,
+      ],
+      cta: { label: assistant ? "See my page" : "Start my Tribe Card", url: c.link(assistant ? "/lead" : "/lead/tribe") },
+    };
+  },
+  sms: (p, c) => smsLine(`You’re approved as ${str(p.role, "a leader")}. See what comes next:`, c.link("/lead")),
+  whatsapp: (p, c) => ({
+    body: "Hi {{1}}, good news: you have been approved as {{2}}. Thank you for saying yes. Open your page to see what comes next: {{3}}",
+    example: ["Ngozi", "tribe leader", "https://unitedtribes.example/lead"],
+    vars: [flat(c.first), flat(str(p.role, "a leader")), flat(c.link("/lead"))],
   }),
 };
 
@@ -952,6 +1055,50 @@ const leaderCheckClear: TemplateDef = {
   }),
 };
 
+// The same message when references are not asked, or are optional. They are their own templates, so the wording Meta approved for
+// leader_check_clear is never changed. The database picks which one to send (leader_check_template).
+const leaderCheckClearOpen: TemplateDef = {
+  key: "leader_check_clear_open",
+  audience: "applicant",
+  title: "Your application has been read",
+  email: (_p, c) => ({
+    subject: "Your application has been read",
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      "Thank you for your application. We have read it, and the panel will take it from here.",
+      "Nothing more is needed from you now. You’ll hear from us at each step.",
+    ],
+    cta: { label: "See my application", url: c.link("/lead") },
+  }),
+  sms: (_p, c) => smsLine("Your leader application has been read. You’ll hear from us at each step:", c.link("/lead")),
+  whatsapp: (_p, c) => ({
+    body: "Hi {{1}}, your leader application has been read and the panel will take it from here. You will hear from us at each step: {{2}}",
+    example: ["Ngozi", "https://unitedtribes.example/lead"],
+    vars: [flat(c.first), flat(c.link("/lead"))],
+  }),
+};
+
+const leaderCheckClearOptional: TemplateDef = {
+  key: "leader_check_clear_optional",
+  audience: "applicant",
+  title: "Your application has been read (referees optional)",
+  email: (_p, c) => ({
+    subject: "Your application has been read",
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      "Thank you for your application. We have read it, and the panel will take it from here.",
+      "If you added referees, you can send each of them their private link now. The panel does not wait for them.",
+    ],
+    cta: { label: "See my application", url: c.link("/lead") },
+  }),
+  sms: (_p, c) => smsLine("Your leader application has been read. If you added referees, send each their private link:", c.link("/lead")),
+  whatsapp: (_p, c) => ({
+    body: "Hi {{1}}, your leader application has been read and the panel will take it from here. If you added referees, please send each of them their private link: {{2}}",
+    example: ["Ngozi", "https://unitedtribes.example/lead"],
+    vars: [flat(c.first), flat(c.link("/lead"))],
+  }),
+};
+
 // ---------------------------------------------------------------------------
 // Sign-in codes on WhatsApp: alerts for the people who run it. Email only, and never any code or number.
 // ---------------------------------------------------------------------------
@@ -1009,6 +1156,46 @@ const signinStopAlert: TemplateDef = {
     body: "Hi {{1}}, someone replied STOP or not me to a WhatsApp sign-in code, so codes to that number are blocked for 30 days. See the details here: {{2}}",
     example: ["Ngozi", "https://unitedtribes.example/admin/signin"],
     vars: [flat(c.first), flat(c.link("/admin/signin"))],
+  }),
+};
+
+// ---------------------------------------------------------------------------
+// An offer to lead (the supply-and-demand board, Phase 7)
+// ---------------------------------------------------------------------------
+
+const NUMBER_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
+
+/** "Nine people are waiting": a small count in words, a larger one in figures. A count is all an offer ever says about the members. */
+export function waitingPhrase(count: unknown): string {
+  const n = Math.max(1, Math.floor(Number(count)) || 1);
+  const figure = n < NUMBER_WORDS.length ? NUMBER_WORDS[n] : String(n);
+  return n === 1 ? "One person is waiting" : `${figure} people are waiting`;
+}
+
+/** The goal in words; a blank one reads as "a tribe" rather than leaving a gap in the sentence. */
+const goalName = (goal: unknown): string => str(goal).trim() || "a tribe";
+
+const leaderOffer: TemplateDef = {
+  key: "leader_offer",
+  audience: "leader",
+  // Email first. A WhatsApp version has to be approved by Meta before it can be sent, so this one is never put to Meta.
+  emailOnly: true,
+  title: "An offer to lead a tribe where members are waiting",
+  email: (p, c) => ({
+    subject: `Would you lead ${goalName(p.goal)} this season?`,
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      `${waitingPhrase(p.waiting)} for ${goalName(p.goal)}. Would you lead it this season?`,
+      "If you say yes, your Tribe Card starts with the goal already chosen and the three lines of the Success Picture written for you to make your own. A pastor still approves the card, as always.",
+      str(p.expires_on) ? `The offer stays open until ${str(p.expires_on)}. If now is not the right time, tell us on the same page. Nothing changes for you.` : "If now is not the right time, tell us on the same page. Nothing changes for you.",
+    ],
+    cta: { label: "See the offer", url: c.link("/lead") },
+  }),
+  sms: (p, c) => smsLine(`${waitingPhrase(p.waiting)} for ${goalName(p.goal)}. Would you lead it this season? See the offer:`, c.link("/lead")),
+  whatsapp: (p, c) => ({
+    body: "Hi {{1}}, {{2}} for {{3}}. Would you lead it this season? See the offer and answer here: {{4}}",
+    example: ["Ngozi", "Nine people are waiting", "Win my first ten paying customers", "https://unitedtribes.example/lead"],
+    vars: [flat(c.first), flat(waitingPhrase(p.waiting)), flat(goalName(p.goal)), flat(c.link("/lead"))],
   }),
 };
 
@@ -1316,9 +1503,9 @@ export const TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(
     leaderMissedOne, leaderMissedTwo, birthdayTomorrow, birthdayToday, testimonyWaiting,
     coachDigest, coachLogMissing, coachMissedThree, coachLowPulse, coachWelcomeOverdue,
     careUrgent, careTask, careTaskReminder, careTaskOverdue, coachHelp, celebrationPrompt,
-    applicationReceived, applicationInterviewInvited, applicationInterviewBooked, applicationApproved, applicationNotApproved,
-    leaderCheckConsent, leaderCheckStrengthen, leaderCheckClear,
-    signinPaused, signinStopAlert,
+    applicationReceived, applicationInterviewInvited, applicationInterviewBooked, applicationApproved, applicationApprovedOptional, applicationApprovedDeclaration, applicationApprovedOpen, applicationNotApproved,
+    leaderCheckConsent, leaderCheckStrengthen, leaderCheckClear, leaderCheckClearOpen, leaderCheckClearOptional,
+    signinPaused, signinStopAlert, leaderOffer,
     refereeRequest, refereeCode, refereeReverify, reportReady,
     swapRequested, swapOffered, swapDeclined, swapMoved, guardianRequest, guardianUpdate,
     ...OUTREACH_TEMPLATES,

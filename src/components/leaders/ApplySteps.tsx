@@ -10,7 +10,8 @@ import { useDictation } from "@/components/intake/useDictation";
 import { cn } from "@/lib/cn";
 import { hasWords, normaliseWhatsapp } from "@/lib/intake/answers";
 import { STYLE_PAIRS } from "@/lib/intake/options";
-import { charsToGo, type LeaderAnswers, type RefereeInput } from "@/lib/leaders/answers";
+import { charsToGo, isBlankReferee, type LeaderAnswers, type RefereeInput } from "@/lib/leaders/answers";
+import { DEFAULT_MODES, askedQuestions, type StageModes } from "@/lib/leaders/modes";
 import {
   ELIGIBILITY,
   GOAL_RELATIONS,
@@ -22,6 +23,9 @@ import { SCENARIOS, SCENARIO_IDS, shuffled, type OptionId, type ScenarioId } fro
 import type { LeaderCatalogue } from "@/lib/leaders/server";
 import { countWords } from "@/lib/leaders/quality/text";
 import type { StepId } from "@/lib/leaders/steps";
+import { REQUIRED_MODES, type AcademyModes } from "@/lib/academy/modes";
+import { welcomeAsk } from "@/lib/academy/wording";
+import { eligibilityHeading, reviewFooter, welcomeStages } from "@/lib/leaders/wording";
 
 export type Patch = <K extends keyof LeaderAnswers>(section: K, value: Partial<LeaderAnswers[K]>) => void;
 type Base = { answers: LeaderAnswers; patch: Patch };
@@ -33,14 +37,20 @@ const append = (current: string | undefined, add: string, max: number) =>
 // Welcome
 // ---------------------------------------------------------------------------
 
-const STAGES_AT_A_GLANCE = [
-  { title: "This application", body: "Eight written answers and six situations. About fifteen minutes, and you can stop and come back." },
-  { title: "Two referees", body: "Two people who have seen you serve answer four questions about you. We send each of them their own private link. One is a pastor or unit head." },
-  { title: "Panel and interview", body: "Two reviewers read your answers. If you are invited, you have a 20-minute conversation." },
-  { title: "A pastor decides", body: "You see the result here, with a short note. Training follows." },
-];
-
-export function LeaderWelcome({ agreed, onAgree, consentText }: { agreed: boolean; onAgree: (v: boolean) => void; consentText: string }) {
+export function LeaderWelcome({
+  agreed,
+  onAgree,
+  consentText,
+  modes = DEFAULT_MODES,
+  training = REQUIRED_MODES,
+}: {
+  agreed: boolean;
+  onAgree: (v: boolean) => void;
+  consentText: string;
+  modes?: StageModes;
+  /** The Academy and the declaration, so the screen promises only the training that is on. */
+  training?: AcademyModes;
+}) {
   return (
     <>
       <StepHeading
@@ -48,7 +58,7 @@ export function LeaderWelcome({ agreed, onAgree, consentText }: { agreed: boolea
         hint="Leaders are chosen for character and reliability, not for title or talent. Here is how it works, and how we look after what you share."
       />
       <ol className="card rise-in mb-6 divide-y divide-line overflow-hidden">
-        {STAGES_AT_A_GLANCE.map((p, i) => (
+        {welcomeStages(modes, training).map((p, i) => (
           <li key={p.title} className="flex gap-4 px-5 py-4">
             <span aria-hidden="true" className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-strong text-[0.8rem] font-bold">
               {i + 1}
@@ -61,7 +71,7 @@ export function LeaderWelcome({ agreed, onAgree, consentText }: { agreed: boolea
         ))}
       </ol>
       <p className="t-small mb-6 rounded-[var(--radius-control)] bg-gold/20 px-4 py-3 text-ink">
-        What it asks of you: 75 minutes a week for 12 weeks, plus about 10 hours of training before your tribe begins.
+        {welcomeAsk(training)}
       </p>
       <fieldset className="flex flex-col gap-3">
         <legend className="t-heading mb-3">Your agreement</legend>
@@ -90,19 +100,19 @@ export function LeaderWelcome({ agreed, onAgree, consentText }: { agreed: boolea
 // Getting started
 // ---------------------------------------------------------------------------
 
-export function EligibilityStep({ answers, patch }: Base) {
+export function EligibilityStep({ answers, patch, modes = DEFAULT_MODES }: Base & { modes?: StageModes }) {
+  const heading = eligibilityHeading(modes);
+  const asked = askedQuestions(modes);
   return (
     <>
-      <StepHeading
-        title="First, seven quick questions."
-        hint="Every answer needs to be yes to lead. If one is not yet, we will point you to another way to serve."
-      />
+      <StepHeading title={heading.title} hint={heading.body} />
       <div className="stagger flex flex-col gap-3">
-        {ELIGIBILITY.map((q, i) => (
-          <fieldset key={q.id} style={{ ["--i" as string]: i }} className="card flex flex-col gap-3 p-4 sm:p-5">
+        {ELIGIBILITY.filter((q) => asked.includes(q.id)).map((q, i) => (
+          <fieldset key={q.id} style={{ ["--i" as string]: i }} className="card flex flex-col gap-3 p-4 sm:p-5" data-testid={`elig-${q.id}`}>
             <legend className="sr-only">{q.label}</legend>
             <p className="font-medium leading-snug" aria-hidden="true">
               {q.label}
+              {modes.eligibility[q.id] === "optional" ? <span className="t-small ml-2 font-normal text-soft">(optional)</span> : null}
             </p>
             <Segmented
               name={`elig-${q.id}`}
@@ -561,6 +571,7 @@ export function RefereeStep({
   onChange,
   headNeeded,
   error,
+  optional = false,
 }: {
   slot: 1 | 2;
   value: RefereeInput;
@@ -568,15 +579,21 @@ export function RefereeStep({
   /** True when the other referee is not a pastor or unit head. */
   headNeeded: boolean;
   error: string | null;
+  /** Referees are optional: this one can be left empty, and no pastor or unit head is needed. */
+  optional?: boolean;
 }) {
   return (
     <>
       <StepHeading
-        title={slot === 1 ? "Who can speak for you?" : "And a second person."}
+        title={slot === 1 ? "Who can speak for you?" : optional ? "And, if you like, a second person." : "And a second person."}
         hint={
-          slot === 1
-            ? "Choose someone who has seen you serve and will be honest. After you apply, we send them a private link and a code ourselves. They answer four short questions."
-            : "Someone different, who knows you in another setting. One of your two referees must be a pastor or unit head."
+          optional
+            ? slot === 1
+              ? "This is optional. If you add someone who has seen you serve, we send them a private link and a code ourselves after you apply, and they answer four short questions. To skip it, leave this empty and press Continue."
+              : "Someone different, who knows you in another setting. Also optional: leave it empty to carry on."
+            : slot === 1
+              ? "Choose someone who has seen you serve and will be honest. After you apply, we send them a private link and a code ourselves. They answer four short questions."
+              : "Someone different, who knows you in another setting. One of your two referees must be a pastor or unit head."
         }
       />
       <div className="flex flex-col gap-5">
@@ -626,7 +643,10 @@ export function RefereeStep({
           title="This person is a pastor or unit head"
           description="The church’s list confirms this. If they are not on it, a pastor will."
         />
-        {slot === 2 && headNeeded && !value.head ? (
+        {optional && !isBlankReferee(value) ? (
+          <Note tone="info">Add everything for this person, or clear it all to skip. We cannot keep half of it.</Note>
+        ) : null}
+        {!optional && slot === 2 && headNeeded && !value.head ? (
           <Note tone="info">Neither referee is marked as a pastor or unit head yet. One of them must be.</Note>
         ) : null}
         {error ? (
@@ -655,23 +675,30 @@ export function ReviewStep({
   catalogue,
   onEdit,
   error,
+  modes = DEFAULT_MODES,
+  goalFallback = null,
 }: {
   answers: LeaderAnswers;
   referees: { 1?: RefereeInput; 2?: RefereeInput };
   catalogue: LeaderCatalogue;
   onEdit: (step: StepId) => void;
   error: string | null;
+  modes?: StageModes;
+  /** The title of the tribe the leader just chose, for one the page's catalogue does not have yet. */
+  goalFallback?: string | null;
 }) {
   const c = answers.calling;
   const track = catalogue.tracks.find((t) => t.slug === c.track);
   const community = catalogue.communities.find((t) => t.slug === c.community);
-  const goal = community?.goals.find((g) => g.slug === c.goal)?.title ?? c.goalOther?.trim() ?? null;
+  const goal = community?.goals.find((g) => g.slug === c.goal)?.title ?? goalFallback ?? c.goalOther?.trim() ?? null;
   const relation = GOAL_RELATIONS.find((r) => r.id === c.goalRelation)?.label;
   const answered = SCENARIO_IDS.filter((id) => answers.scenarios[id]?.best && answers.scenarios[id]?.worst).length;
   const styled = STYLE_PAIRS.filter((p) => answers.style[p.key]).length;
   const refLine = (r?: RefereeInput) => (r ? [r.name.trim(), r.relationship.trim(), r.head ? "pastor or unit head" : null].filter(Boolean).join(", ") : null);
 
-  const groups: { id: string; label: string; color: string; rows: { step: StepId; label: string; value: string | null }[] }[] = [
+  const optionalRefs = modes.references === "optional";
+  type Group = { id: string; label: string; color: string; rows: { step: StepId; label: string; value: string | null; optional?: boolean }[] };
+  const allGroups: Group[] = [
     {
       id: "start",
       label: "Getting started",
@@ -708,11 +735,13 @@ export function ReviewStep({
       label: "People who know you",
       color: "var(--crest-amber)",
       rows: [
-        { step: "ref1", label: "First referee", value: refLine(referees[1]) },
-        { step: "ref2", label: "Second referee", value: refLine(referees[2]) },
+        { step: "ref1", label: "First referee", value: refLine(referees[1]), optional: optionalRefs },
+        { step: "ref2", label: "Second referee", value: refLine(referees[2]), optional: optionalRefs },
       ],
     },
   ];
+  // With references off there is nothing to show under "People who know you"
+  const groups = allGroups.filter((g) => g.id !== "people" || modes.references !== "off");
 
   return (
     <>
@@ -729,7 +758,7 @@ export function ReviewStep({
                 <div key={row.label} className="flex items-start justify-between gap-4 px-5 py-3.5">
                   <div className="min-w-0">
                     <dt className="t-small text-soft">{row.label}</dt>
-                    <dd className="mt-0.5 break-words font-medium">{row.value || <span className="font-normal text-soft">Missing</span>}</dd>
+                    <dd className="mt-0.5 break-words font-medium">{row.value || <span className="font-normal text-soft">{row.optional ? "Not added" : "Missing"}</span>}</dd>
                   </div>
                   <button
                     type="button"
@@ -744,9 +773,7 @@ export function ReviewStep({
           </section>
         ))}
       </div>
-      <p className="t-small mt-5 text-soft">
-        After you send it, you press “Send request” for each referee and we send them a private link and a code. You never see the link. The panel reads your application while they answer. An interview invitation waits until both have.
-      </p>
+      <p className="t-small mt-5 text-soft">{reviewFooter(modes)}</p>
       {error ? (
         <div className="mt-5" role="alert">
           <Note tone="info">{error}</Note>

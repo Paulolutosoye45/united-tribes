@@ -11,12 +11,12 @@ export function Checklist({ my }: { my: MyAcademy }) {
       <h2 id="cert-heading" className="t-heading">
         What certification needs
       </h2>
-      <ol className="card flex flex-col px-5 py-4">
+      <ol className="card flex flex-col px-5 py-4" data-testid="cert-checklist">
         {rows.map((row, i) => {
           const last = i === rows.length - 1;
-          const current = !row.done && rows.slice(0, i).every((r) => r.done || r.id === "practice" || r.id === "card");
+          const current = row.needed && !row.done && rows.slice(0, i).every((r) => r.done || !r.needed || r.id === "practice" || r.id === "card");
           return (
-            <li key={row.id} className="relative flex gap-4 pb-5 last:pb-0">
+            <li key={row.id} data-testid={`cert-${row.id}`} data-needed={row.needed ? "yes" : "no"} className="relative flex gap-4 pb-5 last:pb-0">
               {!last ? <span aria-hidden="true" className={cn("absolute left-[0.8rem] top-8 h-[calc(100%-1.75rem)] w-0.5 rounded-full", row.done ? "bg-gold" : "bg-line")} /> : null}
               <span
                 aria-hidden="true"
@@ -27,16 +27,16 @@ export function Checklist({ my }: { my: MyAcademy }) {
                   !row.done && !current && "border-line bg-raised text-soft",
                 )}
               >
-                {row.done ? "✓" : i + 1}
+                {row.done ? "✓" : row.needed ? i + 1 : "–"}
               </span>
               <div className="min-w-0 flex-1 pt-px">
                 <p className={cn("font-semibold leading-snug", !row.done && !current && "text-soft")}>
                   {row.label}
-                  <span className="sr-only">{row.done ? " (done)" : " (not yet)"}</span>
+                  <span className="sr-only">{row.done ? " (done)" : row.needed ? " (not yet)" : " (not needed)"}</span>
                 </p>
                 <p className="t-small text-soft">{row.detail}</p>
                 {!row.done && (row.id === "card" || row.id === "declaration") && current ? (
-                  <Link href={row.href} className="t-small mt-1 inline-block font-semibold underline underline-offset-4">
+                  <Link href={row.href} className="t-small mt-1 inline-flex min-h-10 min-w-10 items-center font-semibold underline underline-offset-4">
                     Open
                   </Link>
                 ) : null}

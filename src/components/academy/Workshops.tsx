@@ -11,7 +11,7 @@ import { formatLagosDay, formatLagosTime } from "@/lib/dates";
 
 const KINDS = Object.keys(SESSION_KINDS) as SessionKind[];
 
-export function Workshops({ sessions, attended }: { sessions: SessionSummary[]; attended: Record<SessionKind, boolean> }) {
+export function Workshops({ sessions, attended, optional = false }: { sessions: SessionSummary[]; attended: Record<SessionKind, boolean>; optional?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<{ id: string; message: string } | null>(null);
@@ -30,6 +30,11 @@ export function Workshops({ sessions, attended }: { sessions: SessionSummary[]; 
       <h2 id="workshops-heading" className="t-heading">
         Two live workshops
       </h2>
+      {optional ? (
+        <p className="t-small measure text-soft" data-testid="workshops-optional">
+          Optional. You can book them, and certification does not wait for them.
+        </p>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
         {KINDS.map((kind) => {
           const info = SESSION_KINDS[kind];

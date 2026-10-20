@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { hasWords, normaliseWhatsapp } from "@/lib/intake/answers";
 import { STYLE_PAIRS } from "@/lib/intake/options";
+import { DEFAULT_MODES, requiredQuestions, type StageModes } from "./modes";
 import { ELIGIBILITY_IDS, GOAL_RELATIONS, LEAD_BEST, MIN_WRITTEN } from "./options";
 import { contactProblem, normaliseContact } from "./referee/contact";
 import { OPTION_IDS, SCENARIO_IDS } from "./scenarios";
@@ -106,6 +107,11 @@ export function contactLooksReal(value: string): boolean {
   return normaliseContact(value) !== null;
 }
 
+/** Nothing typed or ticked. An optional referee left like this is simply not added. */
+export function isBlankReferee(r: RefereeInput | undefined): boolean {
+  return !r || (r.name.trim() === "" && r.relationship.trim() === "" && r.contact.trim() === "" && !r.head);
+}
+
 export function refereeProblem(r: RefereeInput | undefined): string | null {
   if (!r) return "Add this referee.";
   const name = r.name.trim();
@@ -134,9 +140,13 @@ export function normalisedContact(value: string): string {
 export type Problem = { step: string; message: string };
 
 /** The first thing missing from a finished application, naming the step to go back to. */
-export function firstProblem(a: LeaderAnswers, referees: { 1?: RefereeInput; 2?: RefereeInput }): Problem | null {
-  for (const id of ELIGIBILITY_IDS) {
-    if (a.eligibility[id] !== true) return { step: "eligibility", message: "Answer yes to all seven questions to apply." };
+export function firstProblem(a: LeaderAnswers, referees: { 1?: RefereeInput; 2?: RefereeInput }, modes: StageModes = DEFAULT_MODES): Problem | null {
+  // Only the questions that are required must be yes. An optional "not yet" never stops anyone.
+  const required = requiredQuestions(modes);
+  for (const id of required) {
+    if (a.eligibility[id] !== true) {
+      return { step: "eligibility", message: required.length === ELIGIBILITY_IDS.length ? "Answer yes to all seven questions to apply." : "Answer yes to every required question to apply." };
+    }
   }
   if (!normaliseWhatsapp(a.contact.whatsapp ?? "")) return { step: "contact", message: "Add a WhatsApp number so the panel can reach you." };
   const c = a.calling;
@@ -154,6 +164,20 @@ export function firstProblem(a: LeaderAnswers, referees: { 1?: RefereeInput; 2?:
     if (!s?.best || !s.worst || s.best === s.worst) return { step: id, message: "Choose one best and one different worst response." };
   }
   if (!a.style.leadBest) return { step: "lead-best", message: "Say how you lead best." };
+  if (modes.references === "off") return null;
+  if (modes.references === "optional") {
+    // Referees are not needed. Any that were added must be complete and different people; no pastor or unit head is needed.
+    for (const slot of [1, 2] as const) {
+      if (isBlankReferee(referees[slot])) continue;
+      const p = refereeProblem(referees[slot]);
+      if (p) return { step: `ref${slot}`, message: p };
+    }
+    const [o1, o2] = [referees[1], referees[2]];
+    if (!isBlankReferee(o1) && !isBlankReferee(o2) && normalisedContact(o1!.contact) === normalisedContact(o2!.contact)) {
+      return { step: "ref2", message: "Your two referees must be different people." };
+    }
+    return null;
+  }
   for (const slot of [1, 2] as const) {
     const p = refereeProblem(referees[slot]);
     if (p) return { step: `ref${slot}`, message: p };
