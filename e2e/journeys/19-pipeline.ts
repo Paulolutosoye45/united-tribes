@@ -126,7 +126,7 @@ async function main() {
     check(log.length === 3, "the log has all three training changes");
 
     // The Admin page says so rather than showing zeros
-    await open(page, "/admin");
+    await open(page, "/admin/figures");
     const hub = await text(page);
     check(hub.includes("Leader Academy"), "the Admin page still has its Academy figures");
     check(hub.includes("certification needs only an approved Tribe Card"), "…and says the Academy is off and what certification needs");
@@ -141,7 +141,7 @@ async function main() {
     check(s.academy_mode === "required" && s.declaration_mode === "required" && s.preset === "open_door", "pressing a preset sets the Academy and the declaration back to Required");
     log = await all("select setting, new_value, preset from public.leader_pipeline_log where setting in ('academy_mode','declaration_mode') order by id desc limit 2");
     check(log.length === 2 && log.every((r) => r.new_value === "required" && r.preset === "open_door"), "…and the log says the preset did it");
-    await open(page, "/admin");
+    await open(page, "/admin/figures");
     check(!(await text(page)).includes("certification needs only an approved Tribe Card"), "the Admin page goes back to the training figures");
     await ctx.close();
   }

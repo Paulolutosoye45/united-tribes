@@ -68,14 +68,15 @@ async function main() {
   const admin = await newPage(browser, "desktop");
   await signIn(admin.page, "admin.mary@example.org", "/admin");
   await open(admin.page, "/admin");
-  const hub = await text(admin.page);
-  check(await heading(admin.page, "Admin").isVisible(), "the admin reaches the hub");
-  check(/Before the season opens/.test(hub) && /\d of 9 ready/.test(hub), "…which opens with what is still missing before a season can open");
-  check(/Write the vision and mission/.test(hub) && /Add the testimony form address/.test(hub), "…and says plainly that the church’s words and the testimony form are not written yet");
-  for (const t of ["Seasons", "Weekly guides", "Communities and goals", "Community champions", "People and roles", "Targets", "Settings", "Sending and reporting", "Message log", "Tribe changes", "Multiply", "Matching model"]) {
-    check((await link(admin.page, new RegExp(`^${t}`)).count()) === 1, `the hub links to ${t}`);
+  check(await heading(admin.page, "Today").isVisible(), "the admin reaches Today");
+  for (const t of ["Seasons", "Weekly guides", "Communities and goals", "Community champions", "People and roles", "Targets", "Settings", "Sending and email", "Message log", "Tribe changes", "Next season", "Matching model", "Figures"]) {
+    check((await link(admin.page, new RegExp(`^${t}`)).count()) === 1, `the Admin menu links to ${t}`);
   }
-  check(/At a glance/.test(hub), "the numbers are still on the hub, under “At a glance”");
+  await open(admin.page, "/admin/seasons");
+  const hub = await text(admin.page);
+  check(/Before the season opens/.test(hub) && /\d of 9 ready/.test(hub), "the Seasons page opens with what is still missing before a season can open");
+  check(/Write the vision and mission/.test(hub) && /Add the testimony form address/.test(hub), "…and says plainly that the church’s words and the testimony form are not written yet");
+  await open(admin.page, "/admin");
   await noOverflow(admin.page, "the hub on desktop");
   await shot(admin.page, "admin-hub");
   const phoneHub = await newPage(browser);
@@ -113,7 +114,7 @@ async function main() {
   await shot(leader.page, "academy-words");
   await leader.ctx.close();
 
-  await open(admin.page, "/admin");
+  await open(admin.page, "/admin/seasons");
   const afterWords = await text(admin.page);
   check(!/Write the vision and mission/.test(afterWords) && !/Add the testimony form address/.test(afterWords), "the checklist no longer asks for them");
 
@@ -286,7 +287,7 @@ async function main() {
   await signIn(pastor.page, "pastor.ife@example.org", "/admin");
   await open(pastor.page, "/admin");
   check((await link(pastor.page, /^Settings/).count()) === 1 && (await link(pastor.page, /^Weekly guides/).count()) === 1, "the pastor reaches the settings and the guides");
-  check((await link(pastor.page, /^People and roles/).count()) === 0 && (await link(pastor.page, /^Sending and reporting/).count()) === 0, "…but is not shown the people or the sending service");
+  check((await link(pastor.page, /^People and roles/).count()) === 0 && (await link(pastor.page, /^Sending and email/).count()) === 0, "…but is not shown the people or the sending service");
   await open(pastor.page, "/admin/guides/1");
   check((await pastor.page.getByRole("button", { name: "Save and approve" }).count()) === 1, "the pastor can edit and approve a guide");
   await open(pastor.page, "/admin/targets");

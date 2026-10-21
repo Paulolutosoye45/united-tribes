@@ -102,7 +102,7 @@ async function main() {
   // ============================================================================================================================
   const office = await newPage(browser, "desktop", { expectStatuses: [422] }); // a turned-back file is a 422, which the browser logs
   await signIn(office.page, pastor.email, "/admin/referees");
-  await heading(office.page, "Pastors and unit heads").waitFor({ timeout: 20000 });
+  await heading(office.page, "Church referee list").waitFor({ timeout: 20000 });
   check((await tid(office.page, "ov-on").textContent())?.trim() === "0", "the list starts empty");
   check(await tid(office.page, "uploader").isVisible(), "the upload box is the first thing on the page");
   check((await tid(office.page, "dl-template-xlsx").getAttribute("href"))?.includes("kind=template") === true, "a template can be downloaded");
@@ -218,7 +218,7 @@ async function main() {
   // the same screen on a phone
   const phoneOffice = await newPage(browser);
   await signIn(phoneOffice.page, pastor.email, "/admin/referees");
-  await heading(phoneOffice.page, "Pastors and unit heads").waitFor({ timeout: 20000 });
+  await heading(phoneOffice.page, "Church referee list").waitFor({ timeout: 20000 });
   await noOverflow(phoneOffice.page, "the list page on a phone");
   await phoneOffice.page.getByTestId("file-input").setInputFiles(fixture);
   await tid(phoneOffice.page, "upload-review").waitFor({ timeout: 20000 });

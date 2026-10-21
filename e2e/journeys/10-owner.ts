@@ -148,7 +148,7 @@ async function main() {
     ["/admin", /Admin/],
     ["/admin/people", /People and roles/],
     ["/admin/privacy", /./],
-    ["/admin/system", /Sending and reporting/],
+    ["/admin/system", /Sending and email/],
     ["/review", /./],
     ["/care", /./],
     ["/dashboard", /./],

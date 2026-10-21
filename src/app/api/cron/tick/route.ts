@@ -71,6 +71,17 @@ async function handle(request: Request) {
     } catch {
       summary.problems.push("activity summaries: could not refresh this time");
     }
+    // The team's notices: what has been waiting too long, what is due tomorrow, and the daily and weekly summaries. The
+    // database decides who is told, and when (it holds back at night); with every group switched off it does nothing.
+    // A fault here is listed but never stops the messages above.
+    let notices: { swept: boolean } = { swept: false };
+    try {
+      const swept = await rpc("worker_notice_sweep");
+      if (swept.error) summary.problems.push(`notices: ${swept.error.message}`);
+      else notices = { swept: true };
+    } catch {
+      summary.problems.push("notices: could not run this time");
+    }
     // WhatsApp sign-in: how the sending number is, and the housekeeping behind the limits and the breaker.
     let signin: { status: string | null; signal: string | null } | null = null;
     if (whatsappSignInEnabled()) {
@@ -80,7 +91,7 @@ async function handle(request: Request) {
     }
     // A daily job that failed (the numbers, the clean-up) is listed too, so a monitor on this endpoint hears of it.
     summary.problems.push(...dailyJobFaults(summary.calendar));
-    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, signin }, { status, headers: NO_STORE });
+    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, signin }, { status, headers: NO_STORE });
   } catch (error) {
     console.error("cron tick failed", error instanceof Error ? error.message : "unknown");
     return Response.json({ error: "tick failed" }, { status: 500, headers: NO_STORE });

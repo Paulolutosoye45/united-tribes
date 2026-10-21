@@ -121,6 +121,7 @@ Everything stays at the defaults until Mary switches it.
    | Owner's appointments | `20261222000100_leader_appointments.sql` |
    | 7 The board, suggestions and offers | `20261223000100_leader_board.sql` |
    | Owner's oversight (desks and conversations) | `20261224000100_god_oversight.sql` |
+   | Team emails and the new Admin | `20261225000100_notices.sql`, then `20261225000200_notice_triggers.sql` |
 
 4. **Leave everything at the defaults for a few days.** The platform behaves exactly as before, with the new tools idle and the 100 cards waiting as drafts. Watch for errors (**Admin → System**, and the host's logs).
 5. **Switch things on in this order, each its own decision, a week apart if you can:**

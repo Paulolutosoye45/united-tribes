@@ -499,8 +499,12 @@ async function main() {
     });
     await as(PASTOR, "/admin", async (page) => {
       await open(page, "/admin");
-      check((await text(page)).includes("Leader supply"), "the Admin page lists Leader supply");
       await sweep(page, "the Admin page");
+      // On a phone the menu is behind the bar at the top
+      await page.getByTestId("admin-bar").tap();
+      await page.getByTestId("admin-sheet").waitFor({ state: "visible", timeout: 10000 });
+      check((await text(page)).includes("Leaders needed"), "the Admin menu lists Leaders needed");
+      await sweep(page, "the Admin menu");
     });
   });
 

@@ -11,7 +11,7 @@ import { isListFilter, readList, readOverview, type ListFilter } from "@/lib/lea
 import { loadLeaderCatalogue } from "@/lib/leaders/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Leader quality" };
+export const metadata: Metadata = { title: "Answer checks" };
 
 type Search = Promise<{ list?: string; q?: string; page?: string }>;
 
@@ -39,7 +39,7 @@ export default async function LeaderQualityPage({ searchParams }: { searchParams
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHead title="Leader quality">
+      <PageHead title="Answer checks">
         The first check on leader applications. It reads the written answers so pastors’ time goes to real applications. It scores, asks the applicant for more, or holds an application for a person. It never turns anyone down: a pastor decides, as always. {" "}
         <Link href="/review" className="font-semibold text-accent underline underline-offset-4">
           Review leaders

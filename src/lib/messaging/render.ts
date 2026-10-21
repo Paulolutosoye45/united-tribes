@@ -75,6 +75,9 @@ export function emailBody(def: TemplateDef, content: EmailContent, c: Context): 
   const paragraphs = content.paragraphs.map((p) => p.trim()).filter(Boolean);
   const cta = content.cta && safeUrl(content.cta.url) ? content.cta : undefined;
   const options = (content.options ?? []).filter((o) => safeUrl(o.url));
+  const sections = (content.sections ?? [])
+    .map((s) => ({ title: s.title, items: s.items.filter((i) => safeUrl(i.url)) }))
+    .filter((s) => s.items.length > 0);
 
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapeHtml(content.subject)}</title></head>
@@ -85,6 +88,8 @@ export function emailBody(def: TemplateDef, content: EmailContent, c: Context): 
 <tr><td style="background:#ffffff;border:1px solid ${COLOUR.rule};border-radius:16px;padding:28px 26px;border-top:4px solid ${COLOUR.flame}">
 ${content.greeting ? `<p style="margin:0 0 16px;font-size:17px;line-height:1.5;font-weight:600">${escapeHtml(content.greeting)}</p>` : ""}
 ${paragraphs.map((p) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.6">${linkify(escapeHtml(p))}</p>`).join("\n")}
+${sections.map((s) => `<p style="margin:18px 0 6px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${COLOUR.soft}">${escapeHtml(s.title)}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 6px">${s.items.map((i) => `<tr><td style="padding:9px 0;border-top:1px solid ${COLOUR.rule};font-size:15px;line-height:1.45"><a href="${escapeHtml(i.url)}" style="color:${COLOUR.ink};text-decoration:none;font-weight:600">${escapeHtml(i.label)}</a>${i.note ? `<span style="color:${COLOUR.soft}"> · ${escapeHtml(i.note)}</span>` : ""}</td></tr>`).join("")}</table>`).join("\n")}
 ${content.quote ? `<blockquote style="margin:6px 0 18px;padding:12px 16px;border-left:4px solid ${COLOUR.gold};background:${COLOUR.paper};font-size:15px;line-height:1.6;white-space:pre-line">${linkify(escapeHtml(content.quote))}</blockquote>` : ""}
 ${options.length > 0 ? `<p style="margin:6px 0 18px">${options.map((o) => `<a href="${escapeHtml(o.url)}" style="display:inline-block;margin:0 8px 8px 0;padding:11px 18px;border:2px solid ${COLOUR.charcoal};border-radius:999px;color:${COLOUR.charcoal};text-decoration:none;font-weight:700;font-size:15px">${escapeHtml(o.label)}</a>`).join("")}</p>` : ""}
 ${cta ? `<p style="margin:8px 0 4px"><a href="${escapeHtml(cta.url)}" style="display:inline-block;padding:13px 24px;background:${COLOUR.flame};border-radius:999px;color:#ffffff;text-decoration:none;font-weight:700;font-size:16px">${escapeHtml(cta.label)}</a></p>` : ""}
@@ -95,6 +100,7 @@ ${cta ? `<p style="margin:8px 0 4px"><a href="${escapeHtml(cta.url)}" style="dis
   const text = [
     content.greeting,
     ...paragraphs,
+    ...sections.map((s) => [s.title.toUpperCase(), ...s.items.map((i) => `- ${i.label}${i.note ? ` (${i.note})` : ""}: ${i.url}`)].join("\n")),
     content.quote ? `---\n${content.quote}\n---` : undefined,
     ...options.map((o) => `${o.label}: ${o.url}`),
     cta ? `${cta.label}: ${cta.url}` : undefined,

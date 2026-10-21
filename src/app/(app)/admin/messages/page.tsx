@@ -29,7 +29,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Sea
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHead title="Message log" back={{ href: "/admin/system", label: "Sending and reporting" }}>
+      <PageHead title="Message log" back={{ href: "/admin/system", label: "Sending and email" }}>
         Every WhatsApp, email and text the platform has queued, and what became of it. Names are shown here for the office only.
         {canRetry ? " A message that failed can be tried again; it goes out on the next heartbeat." : ""}
       </PageHead>

@@ -1,8 +1,10 @@
-# The admin hub
+# The admin pages
 
-Everything the office needs to run United Tribes without a developer. Open **Admin** in the top bar. The hub starts with
-**Before the season opens**: a checklist of what is still missing, each line a link to the screen that fixes it. Below it
-are the screens the signed-in person's role allows, and the numbers ("At a glance").
+Everything the office needs to run United Tribes without a developer. Open **Admin** in the top bar. It opens on **Today**: what is waiting for you,
+and nothing else (see `docs/NOTICES-ADMIN.md`). Every other page is in the menu down the left (on a phone, behind the bar at the top), grouped
+as Season, People, Leaders, Messages, Programme and System, and you can type what you came to do into the search box. The pages below keep
+their addresses; four were renamed (Leader quality is now **Answer checks**, Leader supply is **Leaders needed**, Pastors and unit heads is
+**Church referee list**, Sending and reporting is **Sending and email**). The launch checklist ("Before the season opens") is at the top of **Seasons**.
 
 ## Who can do what
 
@@ -15,13 +17,16 @@ are the screens the signed-in person's role allows, and the numbers ("At a glanc
 | People and roles | admin, director | admin, director |
 | Targets | admin, director, pastor, data lead | admin, director, data lead |
 | Settings (the church's words, testimony form) | admin, director, pastor, data lead | admin, director, pastor |
-| Sending and reporting | admin, director, data lead | admin (tokens), admin, director, data lead (reporting copy) |
+| Sending and email | admin, director, data lead | admin (tokens), admin, director, data lead (reporting copy) |
 | Message log | admin, director, data lead | admin, director (put a failed message back in the queue) |
+| Notifications (the team's emails: the switches, who receives them, the log; see NOTICES-ADMIN.md) | admin, director, pastor, data lead | switch a group Off, Rehearsal or On: admin, director |
+| Figures (intake, leader, Academy and matching numbers) | admin, director, pastor, data lead | none |
+| Answer checks (the first check on leader applications; see LEADER-QUALITY.md) | pastor, director | see LEADER-QUALITY.md |
 | Data requests (account deletion) | admin, director | admin, director |
-| Pastors and unit heads (the list referees are checked against) | admin, director, pastor | admin, director, pastor |
+| Church referee list (the list referees are checked against) | admin, director, pastor | admin, director, pastor |
 | Leader pipeline (the steps to become a leader, the Academy and the declaration; see SWITCHBOARD.md) | admin, director, pastor | admin, director |
 | Leader pipeline → Tribe fit (the compatibility test: the model, readiness, the quiet run; see LEADER-FIT.md) | admin, director, pastor | propose a version: admin, director, pastor; approve it: pastor only; look at the leaders now: admin, director, pastor |
-| Leader supply (where members are waiting for a tribe with no leader, who could lead it, offers; see LEADER-BOARD.md) | admin, director, pastor, data lead | offer or withdraw: admin, director, pastor |
+| Leaders needed (where members are waiting for a tribe with no leader, who could lead it, offers; see LEADER-BOARD.md) | admin, director, pastor, data lead | offer or withdraw: admin, director, pastor |
 | Review leaders → Ready-made cards (the 100 Tribe Cards; see TRIBE-CARDS.md) | admin, director, pastor | edit: admin, director, pastor; sign off and retire: director, pastor |
 
 The database enforces every line of this table; the screens only hide what a person could not use. Someone who opens a
@@ -70,7 +75,7 @@ usual setting. Dashboards change the next time they are opened; nothing already 
 - **Platform switches** (more than one centre, tribes for ages 13 to 17) are shown, never changed here. Only whoever manages
   the database can turn one on, after the steps in docs/MULTI-CENTRE.md and docs/TEENS.md.
 
-## Sending and reporting
+## Sending and email
 
 - **Sending token**: the sending service (Vercel cron or any host that calls the worker endpoints) holds one token and can
   only claim a message, report how it went and run the weekly calendar. The token is shown **once**; the database keeps a
@@ -105,7 +110,7 @@ version.
 - The log records that a deletion happened, who answered, and nothing about who was deleted. Details of what is and is not
   removed, and how long everything else is kept, are in docs/RETENTION.md.
 
-## Pastors and unit heads
+## Church referee list
 
 The church's own list, used to tell whether a referee is a pastor or unit head. Upload the spreadsheet (Excel or CSV), read what it would
 change, press Add, and upload again whenever it changes. Uploads can be undone. Everything about it, including the settings on the
@@ -119,10 +124,10 @@ referee is a "verified contact" and a pastor has to confirm each one by hand.
 3. The vision and mission are written (Settings).
 4. The twelve guides are read and approved (Weekly guides).
 5. At least one Tribe Card is approved (Review → Tribe Cards).
-6. A sending token exists and the sending service has reported in (Sending and reporting).
+6. A sending token exists and the sending service has reported in (Sending and email).
 7. Every community has a champion (Community champions).
 8. The testimony form address is saved (Settings).
-9. The reporting copy has been refreshed once (Sending and reporting).
+9. The reporting copy has been refreshed once (Sending and email).
 
-Not on the screen's checklist, but needed before launch: the church's list of pastors and unit heads is uploaded (**Admin → Pastors and unit heads**, docs/REFEREES.md), and the church's privacy notice states how quickly a data request is answered
+Not on the screen's checklist, but needed before launch: the church's list of pastors and unit heads is uploaded (**Admin → Church referee list**, docs/REFEREES.md), and the church's privacy notice states how quickly a data request is answered
 (the app does not set a deadline, so agree the time the church promises with counsel), and someone is named to watch **Admin → Data requests**. See docs/RETENTION.md.

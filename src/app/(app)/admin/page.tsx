@@ -1,148 +1,144 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Checklist } from "@/components/admin/Checklist";
-import { IntakeStats, type Stats } from "@/components/admin/IntakeStats";
-import { AcademyStatsPanel } from "@/components/admin/AcademyStats";
-import { LeaderStatsPanel } from "@/components/admin/LeaderStats";
-import { MatchStatsPanel } from "@/components/matching/MatchStats";
-import { loadChecklist } from "@/lib/admin/server";
-import { loadAcademyModes } from "@/lib/academy/server";
-import type { AcademyStats } from "@/lib/academy/types";
-import { ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, DATA_ROLES, REMINDER_ROLES, LEADER_QUALITY_ROLES, PIPELINE_VIEW_ROLES, REFEREE_MANAGER_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PRIVACY_ROLES, PROGRAMME_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole, type Role } from "@/lib/auth/roles";
+import { NeedsAttention } from "@/components/admin/NeedsAttention";
+import { loadAttention } from "@/lib/admin/notices-server";
+import { canOpenDashboard, hatsOf, noticeWarnings, shortcutsFor } from "@/lib/admin/today";
+import { OFFICE_ROLES, ROLE_LABELS } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
-import type { LeaderStats } from "@/lib/leaders/review-types";
-import type { MatchStats } from "@/lib/matching/types";
-import { createClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/dates";
 
 export const metadata: Metadata = { title: "Admin" };
 
-type Tile = { href: string; title: string; body: string; roles: readonly Role[] };
+const figure = (n: number) => n.toLocaleString("en");
 
-const GROUPS: { title: string; tiles: Tile[] }[] = [
-  {
-    title: "Run the season",
-    tiles: [
-      { href: "/admin/seasons", title: "Seasons", body: "Plan the next season, open it, run it and close it.", roles: OFFICE_ROLES },
-      { href: "/admin/guides", title: "Weekly guides", body: "The twelve guides: passages, questions, the sermon link and the confession.", roles: OFFICE_ROLES },
-      { href: "/growth/swaps", title: "Tribe changes", body: "Members asking for a different tribe in the first weeks.", roles: SWAP_ROLES },
-      { href: "/growth/multiply", title: "Multiply", body: "What happens to each tribe next season.", roles: MULTIPLY_ROLES },
-    ],
-  },
-  {
-    title: "The programme",
-    tiles: [
-      { href: "/admin/catalogue", title: "Communities and goals", body: "The shared list members and leaders choose from, and the goals members write in.", roles: OFFICE_ROLES },
-      { href: "/admin/champions", title: "Community champions", body: "Who looks after each community.", roles: OFFICE_ROLES },
-      { href: "/admin/leader-pipeline", title: "Leader pipeline", body: "The steps to become a leader: which questions, references, interview and training are required, optional or off, and a record of every change.", roles: PIPELINE_VIEW_ROLES },
-      { href: "/admin/leader-supply", title: "Leader supply", body: "Where members are waiting for a tribe and no leader is ready, who could lead it, and the offers made.", roles: BOARD_VIEW_ROLES },
-      { href: "/admin/leader-quality", title: "Leader quality", body: "The first check on leader applications: the switch, the thresholds and the applications held for a person.", roles: LEADER_QUALITY_ROLES },
-      { href: "/admin/referees", title: "Pastors and unit heads", body: "The church’s list that checks referees: upload your spreadsheet, keep it up to date, and see which references need a look.", roles: REFEREE_MANAGER_ROLES },
-      { href: "/admin/people", title: "People and roles", body: "Invite the team and see who holds each role.", roles: PROGRAMME_ROLES },
-      { href: "/care/teens", title: "Young people", body: "Parent and guardian permission, and the call that confirms it.", roles: TEEN_ROLES },
-      { href: "/admin/privacy", title: "Data requests", body: "Members who ask for their account and everything in it to be deleted.", roles: PRIVACY_ROLES },
-    ],
-  },
-  {
-    title: "Messages",
-    tiles: [
-      { href: "/admin/announcements", title: "Announcements", body: "Write to members from live records, see it as they will read it, and send it with a second person’s approval.", roles: ANNOUNCE_VIEW_ROLES },
-      { href: "/admin/reminders", title: "Automatic reminders", body: "Four gentle journeys for people who started and went quiet. Rehearse, read, then switch on.", roles: REMINDER_ROLES },
-      { href: "/care/asks", title: "Asked for a person", body: "People who answered a reminder by asking someone to reach out.", roles: ASK_ROLES },
-    ],
-  },
-  {
-    title: "Measure",
-    tiles: [
-      { href: "/admin/targets", title: "Targets", body: "The numbers every dashboard and report is measured against.", roles: OFFICE_ROLES },
-      { href: "/growth/model", title: "Matching model", body: "The weights, and what the results suggest changing.", roles: MODEL_ROLES },
-    ],
-  },
-  {
-    title: "System",
-    tiles: [
-      { href: "/admin/settings", title: "Settings", body: "The church’s vision and mission, the testimony form, and the platform switches.", roles: OFFICE_ROLES },
-      { href: "/admin/system", title: "Sending and reporting", body: "The sending service, and the copy your reporting tool reads.", roles: DATA_ROLES },
-      { href: "/admin/signin", title: "WhatsApp sign-in", body: "The switch for WhatsApp codes, how many may go out, and what paused them.", roles: SIGNIN_ROLES },
-      { href: "/admin/messages", title: "Message log", body: "Every message queued, and what became of it.", roles: DATA_ROLES },
-    ],
-  },
-];
-
+/**
+ * Today: what is waiting for the person signed in, and nothing else. Someone who holds more than one role (an admin who is also a pastor)
+ * gets one page, with the work of every role they hold, each kind once, the most urgent first. Every other Admin page is in the menu.
+ */
 export default async function AdminPage() {
   const session = await requireRole(OFFICE_ROLES, "/admin");
-  const supabase = await createClient();
-
-  const [checklist, stats, leaderStats, academyStats, matchStats, academyModes] = await Promise.all([
-    loadChecklist(supabase),
-    supabase.rpc("intake_stats"),
-    supabase.rpc("leader_stats"),
-    supabase.rpc("academy_stats"),
-    supabase.rpc("match_stats"),
-    loadAcademyModes(supabase),
-  ]);
-
-  const groups = GROUPS.map((g) => ({ ...g, tiles: g.tiles.filter((t) => hasAnyRole(session.roles, t.roles)) })).filter((g) => g.tiles.length > 0);
-  const glance = Boolean(stats.data || leaderStats.data || academyStats.data || matchStats.data);
+  const att = await loadAttention();
+  const hats = hatsOf(session.roles);
+  const shortcuts = shortcutsFor(session.roles);
+  const warnings = att ? noticeWarnings(att) : [];
+  const roleWords = hats.map((r) => ROLE_LABELS[r].toLowerCase());
 
   return (
-    <div className="flex flex-col gap-12">
+    <div className="flex flex-col gap-10">
       <header className="flex flex-col gap-2">
-        <h1 className="t-title">Admin</h1>
-        <p className="t-body measure text-soft">Everything the office needs to run United Tribes: the season, the guides, the catalogue, the targets and the system behind them.</p>
+        <h1 className="t-title">Today</h1>
+        <p className="t-body measure text-soft">
+          {hats.length > 1
+            ? `What is waiting for you as ${roleWords.slice(0, -1).join(", ")} and ${roleWords[roleWords.length - 1]}, in one list. Everything else is in the menu.`
+            : "What is waiting for you. Everything else is in the menu."}
+        </p>
       </header>
 
-      {checklist ? <Checklist checklist={checklist} roles={session.roles} /> : null}
+      {att ? (
+        <NeedsAttention rows={att.rows} roles={session.roles} />
+      ) : (
+        <p role="alert" className="card t-body p-6 text-soft" data-testid="attention-failed">
+          We couldn’t load what is waiting. The menu still works. Try again in a moment.
+        </p>
+      )}
 
-      {groups.map((g) => {
-        const id = `group-${g.title.toLowerCase().replace(/[^a-z]+/g, "-")}`;
-        return (
-          <section key={g.title} aria-labelledby={id} className="flex flex-col gap-4">
-            <h2 id={id} className="t-heading">
-              {g.title}
-            </h2>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {g.tiles.map((t) => (
-                <li key={t.href}>
-                  <Link href={t.href} className="card press flex h-full flex-col gap-0.5 p-4 hover:bg-surface">
-                    <span className="font-semibold">{t.title}</span>
-                    <span className="t-small text-soft">{t.body}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        );
-      })}
-
-      {glance ? (
-        <section aria-labelledby="glance-heading" className="flex flex-col gap-12">
-          <h2 id="glance-heading" className="t-heading">
-            At a glance
+      {warnings.length > 0 ? (
+        <section aria-labelledby="warnings-heading" className="flex flex-col gap-3" data-testid="notice-warnings">
+          <h2 id="warnings-heading" className="t-heading">
+            Team emails
           </h2>
-          {stats.data ? (
-            <div className="flex flex-col gap-4">
-              <h3 className="font-semibold">The form so far</h3>
-              <IntakeStats stats={stats.data as Stats} />
-            </div>
-          ) : null}
-          {leaderStats.data ? (
-            <div className="flex flex-col gap-4">
-              <h3 className="font-semibold">Leader applications</h3>
-              <LeaderStatsPanel stats={leaderStats.data as LeaderStats} />
-            </div>
-          ) : null}
-          {academyStats.data ? (
-            <div className="flex flex-col gap-4">
-              <h3 className="font-semibold">Leader Academy</h3>
-              <AcademyStatsPanel stats={academyStats.data as AcademyStats} modes={academyModes} />
-            </div>
-          ) : null}
-          {matchStats.data ? (
-            <div className="flex flex-col gap-4">
-              <h3 className="font-semibold">Matching and placement</h3>
-              <MatchStatsPanel stats={matchStats.data as MatchStats} />
-            </div>
-          ) : null}
+          <ul className="flex flex-col gap-2">
+            {warnings.map((w) => (
+              <li key={w.text}>
+                <Link href={w.href} className="card press flex min-h-11 items-center justify-between gap-4 p-4 hover:bg-surface">
+                  <span className="t-body">{w.text}</span>
+                  <span aria-hidden="true" className="text-soft">
+                    →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {att && att.coming.length > 0 ? (
+        <section aria-labelledby="coming-heading" className="flex flex-col gap-3" data-testid="coming-up">
+          <h2 id="coming-heading" className="t-heading">
+            Coming up
+          </h2>
+          <ul className="card flex flex-col divide-y divide-line p-0">
+            {att.coming.map((c) => {
+              const body = (
+                <>
+                  <span className="font-medium">{c.label}</span>
+                  <span className="t-small text-soft">{formatDate(c.on)}</span>
+                </>
+              );
+              return (
+                <li key={`${c.label}-${c.on}`}>
+                  {c.href ? (
+                    <Link href={c.href} className="flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-3 hover:bg-surface">
+                      {body}
+                    </Link>
+                  ) : (
+                    <div className="flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-3">{body}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {shortcuts.length > 0 ? (
+        <section aria-labelledby="shortcuts-heading" className="flex flex-col gap-3 lg:hidden" data-testid="shortcuts">
+          <h2 id="shortcuts-heading" className="t-heading">
+            Shortcuts
+          </h2>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {shortcuts.map((s) => (
+              <li key={s.href}>
+                <Link href={s.href} className="card press flex min-h-14 items-center justify-between gap-3 p-4 font-semibold hover:bg-surface">
+                  {s.label}
+                  <span aria-hidden="true" className="text-soft">
+                    →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {att?.numbers ? (
+        <section aria-labelledby="numbers-heading" className="flex flex-col gap-3" data-testid="numbers">
+          <h2 id="numbers-heading" className="t-heading">
+            Numbers
+          </h2>
+          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              ["Members placed", att.numbers.placed],
+              ["Applications this month", att.numbers.applicationsMonth],
+              ["Leaders certified", att.numbers.certified],
+              ["Tribes open", att.numbers.tribesOpen],
+            ].map(([label, n]) => (
+              <div key={label} className="card flex flex-col gap-0.5 p-4">
+                <dt className="t-small text-soft">{label}</dt>
+                <dd className="text-2xl font-semibold">{figure(n as number)}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="flex flex-wrap gap-x-6">
+            <Link href="/admin/figures" className="press inline-flex min-h-11 items-center font-semibold underline underline-offset-4">
+              More figures
+            </Link>
+            {canOpenDashboard(session.roles) ? (
+              <Link href="/dashboard" className="press inline-flex min-h-11 items-center font-semibold underline underline-offset-4">
+                See the full dashboard
+              </Link>
+            ) : null}
+          </p>
         </section>
       ) : null}
     </div>

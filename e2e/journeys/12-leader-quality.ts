@@ -173,7 +173,7 @@ async function main() {
   const d = await newPage(browser, "desktop");
   const dp = d.page;
   await signIn(dp, "director.bola@example.org", "/admin/leader-quality");
-  await heading(dp, "Leader quality").waitFor({ timeout: 15000 });
+  await heading(dp, "Answer checks").waitFor({ timeout: 15000 });
   check((await dp.getByTestId("mode-now").innerText()).trim() === "Off", "the director sees the first check is Off");
   check((await dp.getByTestId("held-list").count()) === 1 && (await dp.getByTestId("thresholds").count()) === 1, "the held list and the thresholds are on the same page");
   await choice(dp, "leader-mode", "shadow").click();
@@ -393,7 +393,7 @@ async function main() {
   const p = await newPage(browser, "desktop");
   const pp = p.page;
   await signIn(pp, "pastor.ife@example.org", "/admin/leader-quality");
-  await heading(pp, "Leader quality").waitFor({ timeout: 15000 });
+  await heading(pp, "Answer checks").waitFor({ timeout: 15000 });
   const heldNow = (await one("select count(*)::int as n from public.leader_ai_state where state = 'held'"))!.n as number;
   check(heldNow >= 1 && (await pp.getByTestId("count-held").innerText()).trim() === String(heldNow), `the pastor sees the applications held for a person (${heldNow}), and Femi’s is one of them`);
   const row = pp.getByTestId("held-list").getByRole("link", { name: /Femi Coker/ });
@@ -417,7 +417,7 @@ async function main() {
   // --- 7. Phones: the pastor’s list, and the numbers --------------------------------------------------------------
   const m = await newPage(browser, "phone");
   await signIn(m.page, "pastor.ife@example.org", "/admin/leader-quality");
-  await heading(m.page, "Leader quality").waitFor({ timeout: 15000 });
+  await heading(m.page, "Answer checks").waitFor({ timeout: 15000 });
   await noOverflow(m.page, "admin leader quality (phone)");
   const passedNow = (await one("select count(*)::int as n from public.leader_ai_state where state in ('clear', 'cleared_by_person')"))!.n as number;
   check(passedNow >= 3 && (await m.page.getByTestId("count-clear").innerText()).trim() === String(passedNow), `on a phone the count of those who passed matches (${passedNow}): Tobi, Wale (by the check) and Femi (by a person) are among them`);

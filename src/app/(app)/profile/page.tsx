@@ -7,6 +7,8 @@ import { PhotoCard } from "@/components/profile/PhotoCard";
 import { YourData } from "@/components/profile/YourData";
 import { EmailSwitches } from "@/components/profile/EmailSwitches";
 import { WhatsAppSignInCard } from "@/components/profile/WhatsAppSignInCard";
+import { MyNotices } from "@/components/profile/MyNotices";
+import { loadMyNoticePrefs } from "@/lib/admin/notices-server";
 import { loadMySwitches } from "@/lib/outreach/server";
 import { providerFromEnv } from "@/lib/ai/suggest";
 import { requireSession } from "@/lib/auth/session";
@@ -27,7 +29,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const signInChannel = await currentChannel();
 
   const leads = hasAnyRole(session.roles, ["leader", "assistant_leader", "coach"]);
-  const [profile, draft, ai, contactRow, photoRow, erasure, switches] = await Promise.all([
+  const staff = hasAnyRole(session.roles, ["admin", "pastor", "director", "care_lead", "coach"]);
+  const [profile, draft, ai, contactRow, photoRow, erasure, switches, noticePrefs] = await Promise.all([
     supabase.from("member_profiles").select("submitted_at").eq("person_id", session.person.id).maybeSingle(),
     supabase.from("intake_drafts").select("updated_at").eq("person_id", session.person.id).maybeSingle(),
     supabase.rpc("has_consent", { p_purpose: "ai_assist" }),
@@ -35,6 +38,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     leads ? supabase.rpc("my_photo_info") : Promise.resolve({ data: null }),
     supabase.rpc("my_erasure_request"),
     loadMySwitches(supabase),
+    staff ? loadMyNoticePrefs() : Promise.resolve([]),
   ]);
   const photo = (photoRow.data as { has?: boolean; updated_at?: string | null } | null) ?? null;
   const contact = readContact(contactRow.data);
@@ -109,6 +113,15 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             Emails from us
           </h2>
           <EmailSwitches initial={switches} />
+        </section>
+      ) : null}
+
+      {noticePrefs.length > 0 ? (
+        <section aria-labelledby="notices-heading" className="flex flex-col gap-4">
+          <h2 id="notices-heading" className="t-heading">
+            My notices
+          </h2>
+          <MyNotices prefs={noticePrefs} />
         </section>
       ) : null}
 

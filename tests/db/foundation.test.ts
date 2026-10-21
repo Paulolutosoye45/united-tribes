@@ -887,6 +887,14 @@ describe("locked-down defaults", () => {
       "activity_viewed",
       "worker_activity_refresh",
       "ping",
+      // Notices and the new Admin: what is waiting for the signed-in person, the switches, the log, and each team member's own choices.
+      // Each checks the role itself; the engine behind them is not reachable at all.
+      "admin_attention",
+      "notice_overview",
+      "notice_set_mode",
+      "notice_log",
+      "my_notice_prefs",
+      "save_notice_pref",
       // Phase A: the switchboard for becoming a leader. Each of these checks the role itself.
       "leader_pipeline_public",
       "leader_pipeline_set",
@@ -985,6 +993,8 @@ describe("locked-down defaults", () => {
       "worker_email_signal",
       // Round 2, Phase 5: the heartbeat rebuilds the owner's activity summaries (needs the sending token)
       "worker_activity_refresh",
+      // The heartbeat sweeps for the team's timed notices and summaries (needs the sending token)
+      "worker_notice_sweep",
       "ping",
     ]);
     const { rows } = await db.admin.query(`

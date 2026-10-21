@@ -13,7 +13,7 @@ import { STANDINGS, type Standing } from "@/lib/leaders/referee/labels";
 import { isDirectoryState, loadDirectory, loadImportHistory, loadRefereeOverview, loadUnverified } from "@/lib/leaders/referee/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Pastors and unit heads" };
+export const metadata: Metadata = { title: "Church referee list" };
 
 type Search = Promise<{ q?: string; who?: string; show?: string; page?: string }>;
 
@@ -37,7 +37,7 @@ export default async function RefereesPage({ searchParams }: { searchParams: Sea
 
   return (
     <div className="flex flex-col gap-10">
-      <PageHead title="Pastors and unit heads">
+      <PageHead title="Church referee list">
         The church’s own list. When a referee proves they hold a phone number or email on it, the application knows it has the word of a pastor or unit head, and nobody has to tick a box. Applicants never see this list.
       </PageHead>
 

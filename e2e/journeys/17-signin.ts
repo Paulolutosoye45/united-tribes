@@ -387,8 +387,10 @@ async function main() {
     await fresh();
     const d = await newPage(browser, "phone");
     await signIn(d.page, "data_lead.chioma@example.org", "/admin");
-    await d.page.getByRole("link", { name: /WhatsApp sign-in/ }).first().waitFor({ timeout: 15000 });
-    check(true, "the data lead sees WhatsApp sign-in in the Admin hub");
+    // On a phone the Admin menu is behind the bar at the top
+    await d.page.getByTestId("admin-bar").tap();
+    await d.page.getByTestId("admin-sheet").getByRole("link", { name: /WhatsApp sign-in/ }).waitFor({ timeout: 15000 });
+    check(true, "the data lead sees WhatsApp sign-in in the Admin menu");
     await d.page.goto(`${BASE}/admin/signin`);
     await heading(d.page, "WhatsApp sign-in").waitFor({ timeout: 15000 });
     const field = d.page.getByLabel("All WhatsApp codes in an hour");

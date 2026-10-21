@@ -32,6 +32,8 @@ export type EmailContent = {
   cta?: { label: string; url: string };
   /** Extra links below the button, such as the three answers to the Friday question. */
   options?: { label: string; url: string }[];
+  /** Titled lists of links, one part for each thing a person looks after (the daily or weekly summary for the team). Left out in every other email. */
+  sections?: { title: string; items: { label: string; url: string; note?: string }[] }[];
   /** A fully designed email (reminders and announcements): used instead of the plain layout, with its own footer. */
   design?: DesignSpec;
   /** Extra mail headers, such as the one-click unsubscribe that mail programs show as a button. */

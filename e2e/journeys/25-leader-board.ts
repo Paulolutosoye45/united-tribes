@@ -101,8 +101,8 @@ async function main() {
   const { ctx, page } = await newPage(browser, "desktop");
   await signIn(page, "pastor.ife@example.org", "/admin");
   await open(page, "/admin");
-  check((await page.getByRole("link", { name: /Leader supply/ }).count()) >= 1, "the pastor finds “Leader supply” on the Admin page");
-  await page.getByRole("link", { name: /Leader supply/ }).first().click();
+  check((await page.getByRole("link", { name: /Leaders needed/ }).count()) >= 1, "the pastor finds “Leaders needed” on the Admin page");
+  await page.getByRole("link", { name: /Leaders needed/ }).first().click();
   await page.waitForURL(/\/admin\/leader-supply/, { timeout: 15000 });
   await page.getByTestId("leader-board").waitFor({ timeout: 20000 });
   await noOverflow(page, "the leader supply page on a desktop");

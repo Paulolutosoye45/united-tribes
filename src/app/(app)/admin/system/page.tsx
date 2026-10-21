@@ -8,7 +8,7 @@ import { loadBiStatus, loadMessageStats, loadWorkerTokens } from "@/lib/admin/se
 import { formatShortDate } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Sending and reporting" };
+export const metadata: Metadata = { title: "Sending and email" };
 
 export default async function SystemPage() {
   const session = await requireRole(DATA_ROLES, "/admin/system");
@@ -18,7 +18,7 @@ export default async function SystemPage() {
 
   return (
     <div className="flex flex-col gap-12">
-      <PageHead title="Sending and reporting">How messages reach people, and how the numbers reach your reporting tool.</PageHead>
+      <PageHead title="Sending and email">How messages reach people, and how the numbers reach your reporting tool.</PageHead>
 
       <section aria-labelledby="sending-heading" className="flex flex-col gap-4">
         <h2 id="sending-heading" className="t-heading">
