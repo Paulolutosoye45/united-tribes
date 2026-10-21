@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Choice } from "@/components/ui/Choice";
-import { AI_CONSENT, MATCHING_CONSENT } from "@/lib/intake/consent";
+import { AI_CONSENT, MATCHING_CONSENT, TEAM_CONTACT_CONSENT } from "@/lib/intake/consent";
 import { StepHeading } from "./ui";
 
 const POINTS = [
@@ -24,6 +24,8 @@ export function Welcome({
   ai,
   onMatching,
   onAi,
+  share = false,
+  onShare,
   seasonName,
 }: {
   aiAvailable: boolean;
@@ -31,6 +33,9 @@ export function Welcome({
   ai: boolean;
   onMatching: (v: boolean) => void;
   onAi: (v: boolean) => void;
+  /** Whether a leader may be given their contact details at once. Left out for a young person, who is never placed automatically. */
+  share?: boolean;
+  onShare?: (v: boolean) => void;
   seasonName: string | null;
 }) {
   return (
@@ -68,6 +73,17 @@ export function Welcome({
             onChange={(e) => onAi(e.target.checked)}
             title={AI_CONSENT}
             description="Optional. Say no and the Companion still suggests answers on your phone. Nothing you write goes to an AI service."
+          />
+        ) : null}
+        {onShare ? (
+          <Choice
+            type="checkbox"
+            name="consent-share"
+            value="yes"
+            checked={share}
+            onChange={(e) => onShare(e.target.checked)}
+            title={TEAM_CONTACT_CONSENT}
+            description="Optional. If you leave it empty, we tell you your tribe first and give you a day to say no before your leader is given anything."
           />
         ) : null}
       </fieldset>

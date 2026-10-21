@@ -5,7 +5,7 @@ import { turnstileScriptUrl, turnstileSiteKey } from "@/lib/security/turnstile";
 import { updateSession } from "@/lib/supabase/proxy";
 
 /** Pages anyone can open without signing in. */
-const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/design", "/brand", "/icon", "/apple-icon", "/privacy", "/reference", "/r", "/e", "/guardian", "/manifest.webmanifest", "/sw.js", "/offline"];
+const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/design", "/brand", "/icon", "/apple-icon", "/privacy", "/reference", "/r", "/placed", "/e", "/guardian", "/manifest.webmanifest", "/sw.js", "/offline"];
 
 /**
  * Called by a service, not a person: the sign-in hook, the scheduler, the monitor, the message providers, and the optional

@@ -11,7 +11,6 @@ import { formatDate, plural } from "@/lib/dates";
 import { GROUP_ROLES } from "@/lib/intake/options";
 import type { Roster } from "@/lib/matching/types";
 import { welcomeMessage } from "@/lib/matching/wording";
-import { cleanWhatsappLink } from "@/lib/helper/whatsapp";
 
 /** The leader's welcome work: who has joined, who they have called, the WhatsApp group and the first meeting. */
 export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; leaderFirstName: string }) {
@@ -27,12 +26,11 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
 
   const called = members.filter((m) => m.called).length;
 
-
   async function save() {
     setSaving(true);
     setSaved(false);
     setError(null);
-    const result = await saveOnboardingAction(tribe.id, cleanWhatsappLink(group), first);
+    const result = await saveOnboardingAction(tribe.id, group, first);
     setSaving(false);
     if (!result.ok) return setError(result.message);
     setSaved(true);
@@ -70,7 +68,10 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
                   <p className="font-semibold leading-snug">{m.name}</p>
                   <p className="t-small text-soft">Joined {formatDate(m.joined_at.slice(0, 10))}</p>
                 </div>
-                {m.called ? <Badge tone="gold">Welcomed</Badge> : <Badge tone="outline">To welcome</Badge>}
+                <span className="flex flex-wrap items-center gap-2">
+                  {m.placement ? <Badge tone="neutral">{m.placement === "confirmed" ? "Placed by the church · said yes" : "Placed by the church · yet to answer"}</Badge> : null}
+                  {m.called ? <Badge tone="gold">Welcomed</Badge> : <Badge tone="outline">To welcome</Badge>}
+                </span>
               </div>
               <MemberBrief member={m} />
               <div className="flex flex-wrap items-center gap-2.5">
@@ -97,7 +98,11 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
                     </a>
                   </>
                 ) : (
-                  <p className="t-small text-soft">No WhatsApp number shared. Ask your coach how to reach {m.first_name}.</p>
+                  <p className="t-small text-soft">
+                    {m.withheld
+                      ? `${m.first_name} asked that their number is not shared. They have your details and will reach out. You can message them in the tribe’s WhatsApp group.`
+                      : `No WhatsApp number shared. Ask your coach how to reach ${m.first_name}.`}
+                  </p>
                 )}
                 {editable ? (
                   <Button variant="ghost" size="sm" loading={working === m.person_id} aria-pressed={m.called} onClick={() => void toggle(m.person_id, !m.called)}>
@@ -136,12 +141,6 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
               setGroup(e.target.value);
               setSaved(false);
             }}
-            onPaste={(e) => {
-              e.preventDefault();
-              setGroup(cleanWhatsappLink(e.clipboardData.getData('text')));
-              setSaved(false);
-            }}
-            onBlur={() => setGroup((v) => cleanWhatsappLink(v))}
           />
           <Input
             label="First meeting"

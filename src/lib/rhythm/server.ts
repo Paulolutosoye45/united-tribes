@@ -7,7 +7,7 @@ export async function loadMyWeek(supabase: SupabaseClient, view?: number | null)
 }
 
 export async function loadTribeWeek(supabase: SupabaseClient, tribeId: string, week?: number | null): Promise<TribeWeek | null> {
-  const { data } = await supabase.rpc("tribe_week", { p_tribe: tribeId, p_week: week ?? null });
+  const { data } = await supabase.rpc("tribe_week_marked", { p_tribe: tribeId, p_week: week ?? null });
   return (data as TribeWeek | null) ?? null;
 }
 

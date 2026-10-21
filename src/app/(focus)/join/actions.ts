@@ -14,13 +14,15 @@ const TRY_AGAIN = "We couldn't save that. Check your connection and try again.";
 const CANNOT_SEAL = "We can't keep private notes safely right now, so we haven't saved them. Take them out to finish, or try again later.";
 
 /** Records that the person agreed to use of their answers (and, if they chose, the assistant). */
-export async function recordConsentAction(input: { ai: boolean }): Promise<ActionResult> {
+export async function recordConsentAction(input: { ai: boolean; share?: boolean }): Promise<ActionResult> {
   const session = await getSession();
   if (!session) return { ok: false, message: "Your session ended. Sign in again to continue." };
   const supabase = await createClient();
 
   const rows = [{ person_id: session.person.id, purpose: "matching", granted: true, version: CONSENT_VERSION }];
   if (input.ai === true) rows.push({ person_id: session.person.id, purpose: "ai_assist", granted: true, version: CONSENT_VERSION });
+  // Optional: yes lets a leader be given the member's contact details as soon as the church places them. No answer is written when it is left empty.
+  if (input.share === true) rows.push({ person_id: session.person.id, purpose: "team_contact", granted: true, version: CONSENT_VERSION });
 
   const { error } = await supabase.from("consents").insert(rows);
   if (error) return { ok: false, message: TRY_AGAIN };

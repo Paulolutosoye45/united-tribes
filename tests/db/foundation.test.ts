@@ -943,6 +943,43 @@ describe("locked-down defaults", () => {
       "god_chat_opens",
       "god_announcements",
       "god_looked",
+      // Automatic placement, bulk leaders and assistant recommendations: the console's functions each begin god_only(); the leader's and
+      // member's own calls check who is asking; the office's assistant functions check the role
+      "god_start_leader_card",
+      "placement_adjust",
+      "placement_hold_clear",
+      "placement_hold_set",
+      "placement_holds_list",
+      "placement_leaders_adjust",
+      "placement_leaders_apply",
+      "placement_leaders_approve",
+      "placement_leaders_cancel",
+      "placement_leaders_options",
+      "placement_leaders_plan",
+      "placement_leaders_view",
+      "placement_options",
+      "placement_overview",
+      "placement_resolve_small",
+      "placement_run_approve",
+      "placement_run_cancel",
+      "placement_run_items",
+      "placement_run_new",
+      "placement_run_place",
+      "placement_run_step",
+      "placement_run_view",
+      "placement_settings_get",
+      "placement_settings_save",
+      "placement_undo",
+      "my_placement",
+      "placement_my_confirm",
+      "placement_my_withhold",
+      "tribe_roster_marked",
+      "tribe_week_marked",
+      "assistant_recommend",
+      "assistant_withdraw",
+      "assistant_my_state",
+      "assistant_requests",
+      "assistant_decide",
     ]);
     // The only things someone who is not signed in may do: open a referee or guardian link and
     // answer it, and the sending service's calls. Each needs a secret: the link's, or the sending token.
@@ -995,6 +1032,13 @@ describe("locked-down defaults", () => {
       "worker_activity_refresh",
       // The heartbeat sweeps for the team's timed notices and summaries (needs the sending token)
       "worker_notice_sweep",
+      // The private "your tribe" page and the heartbeat's placement and assistant steps (each needs the sending token or the link's secret)
+      "worker_placed_change",
+      "worker_placed_confirm",
+      "worker_placed_info",
+      "worker_placed_withhold",
+      "worker_placement_tick",
+      "worker_assistant_tick",
       "ping",
     ]);
     const { rows } = await db.admin.query(`

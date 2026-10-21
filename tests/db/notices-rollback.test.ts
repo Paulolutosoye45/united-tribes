@@ -15,8 +15,16 @@ const ROOT = path.resolve(__dirname, "../..");
 const MIGRATIONS = path.join(ROOT, "supabase/migrations");
 const ROLLBACK = path.join(ROOT, "supabase/rollback");
 const LAST_BEFORE_NOTICES = "20261224000100";
-/** Run in this order: the triggers first, then the engine. */
-const DOWN = ["20261225000200_notice_triggers.down.sql", "20261225000100_notices.down.sql"];
+/**
+ * Run in this order: anything built after the notices first (the way back is newest first), then the notice triggers, then the engine.
+ * The files built after are found by name, so a later feature's rollback is run here without this test having to know about it.
+ */
+const LATER_DOWN = fs
+  .readdirSync(ROLLBACK)
+  .filter((f) => f.endsWith(".down.sql") && f.slice(0, 14) > "20261225000200")
+  .sort()
+  .reverse();
+const DOWN = [...LATER_DOWN, "20261225000200_notice_triggers.down.sql", "20261225000100_notices.down.sql"];
 
 let db: TestDb;
 let baseline: Client;

@@ -123,3 +123,26 @@ export async function requestGuardianAction(name: string, relationship: string, 
   refresh();
   return { ok: true };
 }
+
+/** "Yes, I'm in", for a member the church placed. The seat was already theirs; this is their agreement to the covenant. */
+export async function confirmPlacementAction(): Promise<Result> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  const { data, error } = await supabase.rpc("placement_my_confirm", { p_version: AGREEMENT_VERSION });
+  if (error) return { ok: false, message: friendly(error) };
+  if ((data as { ok?: boolean } | null)?.ok !== true) return { ok: false, message: "That place is no longer yours to confirm." };
+  refresh();
+  return { ok: true };
+}
+
+/** "Don't share my details", for a member the church placed. If the leader has already been told, the answer says so. */
+export async function withholdPlacementAction(): Promise<{ ok: true; late: boolean } | { ok: false; message: string }> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  const { data, error } = await supabase.rpc("placement_my_withhold");
+  if (error) return { ok: false, message: friendly(error) };
+  const d = (data ?? {}) as { ok?: boolean; late?: boolean };
+  if (d.ok !== true) return { ok: false, message: "That place is no longer yours to change." };
+  refresh();
+  return { ok: true, late: d.late === true };
+}

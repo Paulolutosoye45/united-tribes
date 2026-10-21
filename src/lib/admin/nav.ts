@@ -1,6 +1,6 @@
 import {
   ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, DATA_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PIPELINE_VIEW_ROLES,
-  PRIVACY_ROLES, REFEREE_MANAGER_ROLES, REMINDER_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, TEMPLATE_VIEW_ROLES, hasAnyRole, type Role,
+  OVERSIGHT_ROLES, PRIVACY_ROLES, REFEREE_MANAGER_ROLES, REMINDER_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, TEMPLATE_VIEW_ROLES, hasAnyRole, type Role,
 } from "@/lib/auth/roles";
 
 /**
@@ -144,6 +144,13 @@ export const SECTIONS: readonly NavSection[] = [
         about: "Where members are waiting and no leader is ready, and the offers made",
         roles: BOARD_VIEW_ROLES,
         synonyms: ["leader supply", "members waiting", "waiting for a tribe", "no leader", "offers", "demand", "who could lead"],
+      },
+      {
+        href: "/admin/assistants",
+        label: "Assistant leaders",
+        about: "A leader’s recommendation for an assistant: approve it, decline it, or replace the one they have",
+        roles: OVERSIGHT_ROLES,
+        synonyms: ["assistant leader", "assistants", "recommend an assistant", "replace an assistant", "second leader", "co-leader", "pair an assistant"],
       },
       {
         href: "/review/templates",

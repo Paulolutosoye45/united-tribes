@@ -35,6 +35,19 @@ async function handle(request: Request) {
   try {
     const rpc = workerRpc(token);
     const ai = providerFromEnv();
+    // Automatic placement and assistant recommendations come first, so what they queue goes out in this same beat. With the
+    // placement switch Off the database does nothing at all. A fault here is listed but never stops the messages below.
+    const early: string[] = [];
+    let placement: { ran: boolean } = { ran: false };
+    try {
+      const placed = await rpc("worker_placement_tick");
+      if (placed.error) early.push(`placement: ${placed.error.message}`);
+      else placement = { ran: true };
+      const assistants = await rpc("worker_assistant_tick");
+      if (assistants.error) early.push(`assistants: ${assistants.error.message}`);
+    } catch {
+      early.push("placement: could not run this time");
+    }
     const summary = await runDispatch({
       rpc,
       providers: providersFromEnv(),
@@ -44,6 +57,7 @@ async function handle(request: Request) {
     });
     // 502 means the database could not be reached for the messages; a fault in the summaries below is listed
     // in "problems" but never turns a working tick into a failed one.
+    summary.problems.push(...early);
     const status = summary.problems.length > 0 && summary.sent === 0 && summary.claimed === 0 ? 502 : 200;
     // Reports the database has just made get their opening paragraph. A fault here never stops the messages.
     const reports = await writePendingSummaries(rpc, ai, { budgetMs: 12_000 });
@@ -91,7 +105,7 @@ async function handle(request: Request) {
     }
     // A daily job that failed (the numbers, the clean-up) is listed too, so a monitor on this endpoint hears of it.
     summary.problems.push(...dailyJobFaults(summary.calendar));
-    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, signin }, { status, headers: NO_STORE });
+    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, signin, placement }, { status, headers: NO_STORE });
   } catch (error) {
     console.error("cron tick failed", error instanceof Error ? error.message : "unknown");
     return Response.json({ error: "tick failed" }, { status: 500, headers: NO_STORE });

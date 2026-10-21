@@ -86,6 +86,10 @@ export interface RosterMember {
   note: string | null;
   /** A note exists but could not be opened (the key is missing or has changed). */
   note_locked: boolean;
+  /** Set when the church placed them: waiting for their yes, or said yes. */
+  placement?: "pending" | "confirmed";
+  /** They asked that their WhatsApp number is not shared. They have the leader's details and will reach out. */
+  withheld?: boolean;
 }
 
 /** What the database returns for a member: the note is still sealed. It never leaves the server in this form. */

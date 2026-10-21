@@ -116,3 +116,24 @@ export async function prefillFromReadyMadeAction(id: string): Promise<Result<{ f
   revalidatePath("/lead/tribe");
   return { ok: true, filled: (data as { filled?: boolean } | null)?.filled === true };
 }
+
+/** The leader names the person they would like as their assistant. The office decides; nobody is told yet but the office. */
+export async function recommendAssistantAction(tribe: string, email: string, reason: string): Promise<Result> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(tribe) || typeof email !== "string" || typeof reason !== "string") return { ok: false, message: TRY_AGAIN };
+  const { error } = await supabase.rpc("assistant_recommend", { p_tribe: tribe, p_person: null, p_email: email.trim().slice(0, 254), p_reason: reason.trim().slice(0, 400) || null });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath("/lead/tribe");
+  return { ok: true };
+}
+
+export async function withdrawAssistantAction(rec: string): Promise<Result> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (!isUuid(rec)) return { ok: false, message: TRY_AGAIN };
+  const { error } = await supabase.rpc("assistant_withdraw", { p_rec: rec });
+  if (error) return { ok: false, message: friendly(error) };
+  revalidatePath("/lead/tribe");
+  return { ok: true };
+}

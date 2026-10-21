@@ -69,6 +69,7 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
   const [dir, setDir] = useState<"forward" | "back">("forward");
   const [answers, setAnswers] = useState<Answers>(initial.answers);
   const [ai, setAi] = useState(initial.ai);
+  const [share, setShare] = useState(false);
   const [agreed, setAgreed] = useState(initial.view !== "welcome");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [busy, setBusy] = useState(false);
@@ -224,7 +225,7 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
   async function begin() {
     setBusy(true);
     setProblem(null);
-    const result = await recordConsentAction({ ai: assistantOn });
+    const result = await recordConsentAction({ ai: assistantOn, share: share && !isTeen });
     setBusy(false);
     if (!result.ok) {
       setProblem(result.message);
@@ -352,7 +353,7 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
       problem={problem && view !== "review" ? problem : null}
     >
       {view === "welcome" ? (
-        <Welcome aiAvailable={aiAvailable} matching={agreed} ai={ai} onMatching={setAgreed} onAi={setAi} seasonName={seasonName} />
+        <Welcome aiAvailable={aiAvailable} matching={agreed} ai={ai} onMatching={setAgreed} onAi={setAi} share={share} onShare={isTeen ? undefined : setShare} seasonName={seasonName} />
       ) : null}
       {view === "age" ? <AgeStep answers={answers} set={set} catalogue={catalogue} teensOpen={teensOpen} /> : null}
       {view === "name" ? <NameStep answers={answers} set={set} /> : null}

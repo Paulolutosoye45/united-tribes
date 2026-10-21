@@ -8,8 +8,10 @@ import { valuesFromCard } from "@/lib/academy/card";
 import { loadAcademyModes, loadMyTribe } from "@/lib/academy/server";
 import { trainingShown } from "@/lib/academy/modes";
 import { NextSeasonTribes } from "@/components/leaders/NextSeasonTribes";
+import { AssistantRecommend } from "@/components/matching/AssistantRecommend";
 import { TribeOnboarding } from "@/components/matching/TribeOnboarding";
 import { loadRoster } from "@/lib/matching/server";
+import { parseMyAssistant } from "@/lib/placement/assistants";
 import { firstName } from "@/lib/academy/card";
 import { requireRole } from "@/lib/auth/session";
 import { parseReadyMade } from "@/lib/cards/templates";
@@ -64,6 +66,9 @@ export default async function TribePage() {
 
   const story = mine?.application?.answers.calling.goalStory ?? null;
   const roster = card.status === "approved" ? await loadRoster(supabase, card.id) : null;
+  // The leader's own page for recommending an assistant. Only extra: if it cannot be read, nothing is shown.
+  const mineAssistant = card.role === "leader" && card.status === "approved" ? await supabase.rpc("assistant_my_state", { p_tribe: card.id }) : null;
+  const assistantState = mineAssistant && !mineAssistant.error ? parseMyAssistant(mineAssistant.data) : null;
   // The signed-off ready-made card for this goal, if there is one. Only extra: if it cannot be read, the builder is as it was.
   const ready = card.role === "leader" && card.editable ? await supabase.rpc("card_template_for_tribe", { p_tribe: card.id }) : null;
   const readyMade = ready && !ready.error ? parseReadyMade(ready.data) : null;
@@ -83,6 +88,7 @@ export default async function TribePage() {
         <MeetingLink tribeId={card.id} link={card.meeting_link ?? null} placeNote={card.place_note} online={card.mode !== "in_person"} />
       ) : null}
       {roster ? <TribeOnboarding roster={roster} leaderFirstName={firstName(card.leader.name)} /> : null}
+      {assistantState ? <AssistantRecommend tribeId={card.id} state={assistantState} /> : null}
       {card.role === "leader" ? (
         <TribeBuilder card={card} catalogue={catalogue} applicationStory={story} readyMade={readyMade} />
       ) : (

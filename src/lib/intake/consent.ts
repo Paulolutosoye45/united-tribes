@@ -4,12 +4,16 @@
  * Have a lawyer review the full text against the Nigeria Data Protection Act
  * before real members use it.
  */
-export const CONSENT_VERSION = "2026-12-v3";
+export const CONSENT_VERSION = "2026-12-v4";
 
 export const MATCHING_CONSENT =
   "I agree that The Covenant Nation may use my answers, including my faith journey, to match me to a tribe and to contact me about it.";
 
 export const AI_CONSENT =
   "I agree that what I write or say about my season may be read by an AI service so it can suggest options and draft a sentence for me. A voice note is turned into words and the recording is deleted straight away. Contact details are removed first, and my private notes and the rest of my profile stay out of it.";
+
+/** Optional. Saying yes lets a leader be told straight away; saying nothing gives the member a day to say no after they are told their tribe. */
+export const TEAM_CONTACT_CONSENT =
+  "If the church places me in a tribe, my leader may be given my name, my email and my WhatsApp number (if I gave one) so they can say hello.";
 
 export const WHATSAPP_CONSENT = "You may message me on WhatsApp about my tribe.";

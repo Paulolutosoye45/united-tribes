@@ -25,7 +25,7 @@ export async function readMatch(supabase: SupabaseClient): Promise<MyMatch | nul
  * it is opened here, on the server, and only the opened text goes on to the page. The ciphertext never does.
  */
 export async function loadRoster(supabase: SupabaseClient, tribeId: string): Promise<Roster | null> {
-  const { data } = await supabase.rpc("tribe_roster", { p_tribe: tribeId });
+  const { data } = await supabase.rpc("tribe_roster_marked", { p_tribe: tribeId });
   if (!data) return null;
   const raw = data as { tribe: Roster["tribe"]; members: RawRosterMember[] };
   return {

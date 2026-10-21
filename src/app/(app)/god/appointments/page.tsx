@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { AppointBoard } from "@/components/god/AppointBoard";
+import { AppointTabs } from "@/components/god/AppointTabs";
 import { parseAppointments } from "@/lib/god/appointments";
 import { loadLeaderCatalogue } from "@/lib/leaders/server";
 import { createClient } from "@/lib/supabase/server";
@@ -20,6 +21,7 @@ export default async function GodAppointmentsPage() {
           Appoint someone to lead a tribe without an application. It gives them the leader role and starts their Tribe Card. A pastor still approves the card and the Academy still certifies them, so members see nothing until both are done.
         </p>
       </header>
+      <AppointTabs current="one" />
       <AppointBoard
         tracks={catalogue.tracks.map((t) => ({ slug: t.slug, name: t.name, ages: t.ages }))}
         communities={catalogue.communities.map((c) => ({ slug: c.slug, name: c.name, goals: c.goals.map((g) => ({ slug: g.slug, title: g.title })) }))}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MatchList } from "@/components/matching/MatchList";
+import { PlacedBanner } from "@/components/matching/PlacedBanner";
 import { PlacementView } from "@/components/matching/PlacementView";
 import { SwapCard } from "@/components/growth/SwapCard";
 import { TeenWaiting } from "@/components/guardian/TeenWaiting";
@@ -9,6 +10,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { requireSession } from "@/lib/auth/session";
 import { loadMyGuardian, loadMySwap } from "@/lib/growth/server";
 import { loadMatches } from "@/lib/matching/server";
+import { loadMyPlacement } from "@/lib/placement/server";
 import { loadMyProgress, loadWordDays } from "@/lib/dashboard/server";
 import { loadMyWeek, loadWeekLayer } from "@/lib/rhythm/server";
 import { createClient } from "@/lib/supabase/server";
@@ -52,7 +54,14 @@ export default async function TribePage({ searchParams }: { searchParams: Search
   const match = await loadMatches(supabase);
 
   if (match?.placement) {
-    return <PlacementView placement={match.placement} justJoined={joined === "1"} />;
+    // A member the church placed is asked, above their tribe, to say yes or to keep their details private
+    const placedByChurch = await loadMyPlacement(supabase);
+    return (
+      <div className="flex flex-col gap-8">
+        {placedByChurch?.active ? <PlacedBanner state={placedByChurch} /> : null}
+        <PlacementView placement={match.placement} justJoined={joined === "1"} />
+      </div>
+    );
   }
 
   if (!match?.profile) {
