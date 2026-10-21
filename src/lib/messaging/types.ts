@@ -62,7 +62,7 @@ export type Context = {
 
 export type TemplateDef = {
   key: string;
-  audience: "member" | "leader" | "coach" | "care" | "applicant" | "referee" | "office" | "guardian";
+  audience: "member" | "leader" | "coach" | "care" | "applicant" | "referee" | "office" | "guardian" | "invitee";
   /** What this is, for the list of templates and the message log. */
   title: string;
   /** Only ever sent by email (a staff alert): it is never put to Meta for approval. The WhatsApp wording still exists so the type is whole. */

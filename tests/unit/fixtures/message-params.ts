@@ -1,3 +1,4 @@
+import { INVITATION_SAMPLES } from "@/lib/messaging/templates-invitation";
 import { PLACEMENT_SAMPLES } from "@/lib/messaging/templates-placement";
 import type { Params } from "@/lib/messaging/types";
 
@@ -102,6 +103,7 @@ const OVERRIDES: Record<string, Params> = {
   referee_reverify: { kind: "email", secret: "r".repeat(43), days: 30, referee: "Pastor Femi", applicant: "Ngozi Okafor", applicant_first: "Ngozi" },
   referee_code: { code: "482913", minutes: 10, referee: "Pastor Femi", applicant: "Ngozi Okafor" },
   ...PLACEMENT_SAMPLES,
+  ...INVITATION_SAMPLES,
 };
 
 export function sampleParams(template: string): Params {

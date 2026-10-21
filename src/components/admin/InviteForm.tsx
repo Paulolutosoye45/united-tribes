@@ -35,7 +35,7 @@ export function InviteForm({ roles }: { roles: Role[] }) {
       </div>
 
       <p className="t-small text-soft">
-        We don&apos;t email invitations yet. Tell them to sign in with this exact address and the role is added.
+        We email them the invitation. They get the role the first time they sign in with this exact address.
       </p>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

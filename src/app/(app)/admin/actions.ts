@@ -37,8 +37,8 @@ export async function inviteAction(_prev: ActionState, formData: FormData): Prom
   return {
     status: "ok",
     message: grantedNow
-      ? `${email} already has an account, so they are now ${label.toLowerCase()}.`
-      : `${email} is invited as ${label.toLowerCase()}. They get the role the first time they sign in with that address.`,
+      ? `${email} already has an account, so they are now ${label.toLowerCase()}. An email is on its way to tell them.`
+      : `${email} is invited as ${label.toLowerCase()}. An email is on its way. They get the role the first time they sign in with that address.`,
   };
 }
 

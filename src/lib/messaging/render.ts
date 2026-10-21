@@ -61,6 +61,10 @@ function footerFor(def: TemplateDef, c: Context): { html: string; text: string }
     const line = "You are receiving this because someone named you as a referee. We will not email you again about this.";
     return { html: escapeHtml(line), text: line };
   }
+  if (def.audience === "invitee") {
+    const line = "You are receiving this because someone at The Covenant Nation invited this address to United Tribes. If you were not expecting it, ignore it: nothing happens unless you sign in.";
+    return { html: escapeHtml(line), text: line };
+  }
   const line = "You are receiving this as part of United Tribes at The Covenant Nation.";
   const settings = c.link("/profile");
   return {

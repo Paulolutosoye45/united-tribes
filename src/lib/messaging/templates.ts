@@ -1,6 +1,7 @@
 import { clock, dayName, flat, list, meetsText, names, num, shortDay, smsLine, str } from "./format";
 import { OUTREACH_TEMPLATES } from "@/lib/outreach/templates";
 import { NOTICE_TEMPLATES } from "./templates-notices";
+import { INVITATION_TEMPLATES } from "./templates-invitation";
 import { PLACEMENT_TEMPLATES } from "./templates-placement";
 import { salutation } from "@/lib/leaders/status";
 import { digestSummary } from "./summary";
@@ -1513,6 +1514,7 @@ export const TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(
     ...OUTREACH_TEMPLATES,
     ...NOTICE_TEMPLATES,
     ...PLACEMENT_TEMPLATES,
+    ...INVITATION_TEMPLATES,
   ].map((t) => [t.key, signed(t)]),
 );
 

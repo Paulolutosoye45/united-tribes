@@ -18,6 +18,15 @@ const ROOT = path.resolve(__dirname, "../..");
 const MIGRATIONS = path.join(ROOT, "supabase/migrations");
 const ROLLBACK = path.join(ROOT, "supabase/rollback");
 const LAST_BEFORE = "20261225000200";
+/**
+ * Anything built after these migrations is taken back first (newest first, found by name), so what is compared is the database as it stood
+ * between them. Each of those rollback files drops only its own functions and triggers.
+ */
+const LATER_DOWN = fs
+  .readdirSync(ROLLBACK)
+  .filter((f) => f.endsWith(".down.sql") && f.slice(0, 14) > "20261226000200")
+  .sort()
+  .reverse();
 /** Run in this order: the assistants first (they stand alone), then placement. */
 const DOWN = [
   "20261226000200_assistant_recommendations.down.sql",
@@ -104,6 +113,7 @@ beforeAll(async () => {
   for (const f of files)
     await baseline.query(fs.readFileSync(path.join(MIGRATIONS, f), "utf8"));
   ({ db, k } = await newKit());
+  for (const f of LATER_DOWN) await db.admin.query(fs.readFileSync(path.join(ROLLBACK, f), "utf8"));
   season = await openSeason(db);
   o = await makeOwner(db);
 }, 300_000);

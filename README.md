@@ -341,5 +341,6 @@ To change a question's options edit `src/lib/intake/options.ts` or the catalogue
 | `docs/APPLY-NOTICES-ADMIN.md` | Whoever applies this package | The two migrations, switching it on group by group, how to check it, the way back, and every existing test that had to change |
 | `docs/AUTO-PLACEMENT.md` | The owner, the pastorate, the office | Placing waiting members in tribes automatically (the Off / Rehearsal / On switch, a run in five steps, what the member and the leader are sent, Undo), appointing many leaders at once, and a leader recommending an assistant leader |
 | `docs/APPLY-AUTO-PLACEMENT.md` | Whoever applies this package | The three migrations, switching it on with a pilot run, how to check it, the way back, and every existing test that had to change |
+| `docs/APPLY-INVITATION-EMAIL.md` | Whoever applies this package | Why invitations sent no email, the one migration that fixes it, how to check it, what to look at if it still does not arrive, and the way back |
 | `docs/GOD.md` | The platform owner | The hidden owner account, the passphrase, appointing a leader, the desk of each role, the platform's conversations, and what the owner never sees |
 | `docs/APPLY-PHASE-A.md`, `docs/APPLY-PHASE-BCD.md` | Whoever applied the earlier packages | How the earlier change-only packages were applied (history; DEPLOY.md replaces them for a new project) |
