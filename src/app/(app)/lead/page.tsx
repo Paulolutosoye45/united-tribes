@@ -57,7 +57,7 @@ export default async function LeadPage() {
           title={isLeader ? "Lead another tribe." : "Lead a tribe."}
           body="Leaders are chosen for character and reliability, not for title or talent. If you have lived through a Season Goal, you could walk with others through it."
           cta="Start my application"
-          note="About fifteen minutes. Save and come back."
+          note="About Five minutes. Save and come back."
           fills={[0, 0, 0, 0]}
         />
         <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
