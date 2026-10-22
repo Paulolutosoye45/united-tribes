@@ -73,7 +73,7 @@ type Spec = {
   urgent?: boolean;
   subject: (p: Params) => string;
   body: (p: Params, c: Context) => string[];
-  button?: { label: string; path: string };
+  button?: { label: string | ((p: Params) => string); path: string };
   sample: Params;
   /** Leave out the greeting (a message to an address we know no name for). */
   noGreeting?: boolean;
@@ -311,6 +311,21 @@ add({
 // ---------------------------------------------------------------------------
 // Admins and the data lead
 // ---------------------------------------------------------------------------
+
+add({
+  key: "admin_application_sent", audience: "office", group: "admin", title: "A new leader application was sent", urgent: true,
+  who: "Admins and directors, not the person who applied", when: "At once, when someone sends their leader application",
+  subject: () => "A new leader application was sent",
+  body: (p) => [
+    `${clean(p.applicant, "Someone")} has sent a leader application.`,
+    ...(count(p, "waiting", 1) > 1 ? [`${count(p, "waiting", 1)} applications have been sent and are waiting to be invited to an interview.`] : []),
+    str(p.path) === "/review"
+      ? "An interview can be offered once both references are in and two reviewers have scored it. A pastor decides every application."
+      : "The pastors and directors review it. The figures page shows how many applications have come in.",
+  ],
+  button: { label: (p) => (str(p.path) === "/review" ? "Open the applications" : "See the figures"), path: "/review" },
+  sample: { applicant: "Ngozi", waiting: 3, path: "/review" },
+});
 
 add({
   key: "admin_data_request", audience: "office", group: "admin", title: "A deletion request came in",
@@ -848,7 +863,7 @@ function toTemplate(s: Spec): TemplateDef {
       subject: s.subject(p),
       ...(s.noGreeting ? {} : { greeting: `Hi ${c.first},` }),
       paragraphs: s.body(p, c),
-      ...(s.button ? { cta: { label: s.button.label, url: target(p, c, s.button.path) } } : {}),
+      ...(s.button ? { cta: { label: typeof s.button.label === "function" ? s.button.label(p) : s.button.label, url: target(p, c, s.button.path) } } : {}),
     }),
     sms: (p, c) => smsLine(s.subject(p), s.button ? target(p, c, s.button.path) : undefined),
     whatsapp: (p, c) => ({

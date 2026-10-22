@@ -17,11 +17,18 @@ export default async function ReviewCardPage({ params }: { params: Promise<{ id:
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("review_tribe", { p_id: id });
   if (error || !data) notFound();
-  const [suggestions, appointment] = await Promise.all([supabase.rpc("suggest_assistants", { p_tribe: id }), supabase.rpc("tribe_appointment_note", { p_tribe: id })]);
+  const [suggestions, appointment, choice] = await Promise.all([
+    supabase.rpc("suggest_assistants", { p_tribe: id }),
+    supabase.rpc("tribe_appointment_note", { p_tribe: id }),
+    supabase.rpc("tribe_goal_choice_note", { p_tribe: id }),
+  ]);
   const card = data as CardReview;
   // A leader the owner appointed has no application behind the card. The office is told that, and never by whom.
   const note = appointment.error ? null : (appointment.data as { text?: unknown } | null);
   const appointedNote = note && typeof note.text === "string" && note.text.length <= 200 ? note.text : null;
+  // When the leader chose a goal other than the one the church started them on. Never a name, and never the owner.
+  const picked = choice.error ? null : (choice.data as { text?: unknown } | null);
+  const choiceNote = picked && typeof picked.text === "string" && picked.text.length <= 200 ? picked.text : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -34,6 +41,11 @@ export default async function ReviewCardPage({ params }: { params: Promise<{ id:
       {appointedNote ? (
         <p role="note" className="t-body rounded-[var(--radius-control)] bg-gold/20 px-4 py-3" data-testid="appointed-note">
           {appointedNote}
+        </p>
+      ) : null}
+      {choiceNote ? (
+        <p role="note" className="t-body rounded-[var(--radius-control)] bg-gold/20 px-4 py-3" data-testid="goal-choice-note">
+          {choiceNote}
         </p>
       ) : null}
       <CardReviewView card={card} suggestions={(suggestions.data as AssistantSuggestion[] | null) ?? []} canPair />

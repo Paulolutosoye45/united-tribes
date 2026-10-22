@@ -1,4 +1,5 @@
 import { INVITATION_SAMPLES } from "@/lib/messaging/templates-invitation";
+import { LEADER_WELCOME_SAMPLES } from "@/lib/messaging/templates-leader-welcome";
 import { PLACEMENT_SAMPLES } from "@/lib/messaging/templates-placement";
 import type { Params } from "@/lib/messaging/types";
 
@@ -104,6 +105,7 @@ const OVERRIDES: Record<string, Params> = {
   referee_code: { code: "482913", minutes: 10, referee: "Pastor Femi", applicant: "Ngozi Okafor" },
   ...PLACEMENT_SAMPLES,
   ...INVITATION_SAMPLES,
+  ...LEADER_WELCOME_SAMPLES,
 };
 
 export function sampleParams(template: string): Params {

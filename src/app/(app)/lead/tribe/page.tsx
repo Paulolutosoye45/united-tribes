@@ -14,6 +14,7 @@ import { loadRoster } from "@/lib/matching/server";
 import { parseMyAssistant } from "@/lib/placement/assistants";
 import { firstName } from "@/lib/academy/card";
 import { requireRole } from "@/lib/auth/session";
+import { parseGoalHints } from "@/lib/academy/goal-choice";
 import { parseReadyMade } from "@/lib/cards/templates";
 import { parseFitMine } from "@/lib/leaders/fit";
 import { loadLeaderCatalogue, loadMyApplication } from "@/lib/leaders/server";
@@ -72,6 +73,9 @@ export default async function TribePage() {
   // The signed-off ready-made card for this goal, if there is one. Only extra: if it cannot be read, the builder is as it was.
   const ready = card.role === "leader" && card.editable ? await supabase.rpc("card_template_for_tribe", { p_tribe: card.id }) : null;
   const readyMade = ready && !ready.error ? parseReadyMade(ready.data) : null;
+  // The goals this leader may choose from, when the church has let them. Null for every other leader. Only extra: if it cannot be read, the card is as it was.
+  const hintsRes = card.role === "leader" && card.editable ? await supabase.rpc("tribe_goal_hints", { p_tribe: card.id }) : null;
+  const goalHints = hintsRes && !hintsRes.error ? parseGoalHints(hintsRes.data) : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -90,7 +94,7 @@ export default async function TribePage() {
       {roster ? <TribeOnboarding roster={roster} leaderFirstName={firstName(card.leader.name)} /> : null}
       {assistantState ? <AssistantRecommend tribeId={card.id} state={assistantState} /> : null}
       {card.role === "leader" ? (
-        <TribeBuilder card={card} catalogue={catalogue} applicationStory={story} readyMade={readyMade} />
+        <TribeBuilder card={card} catalogue={catalogue} applicationStory={story} readyMade={readyMade} goalHints={goalHints} />
       ) : (
         <div className="max-w-xl">
           <TribePreview

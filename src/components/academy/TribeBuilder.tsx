@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { saveCardAction, submitCardAction, prefillFromReadyMadeAction } from "@/app/(app)/lead/tribe/actions";
+import { goalHintsAction } from "@/app/(app)/lead/tribe/choice-actions";
+import { GoalPicker } from "@/components/academy/GoalPicker";
+import type { GoalHints } from "@/lib/academy/goal-choice";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
@@ -44,12 +47,15 @@ export function TribeBuilder({
   catalogue,
   applicationStory,
   readyMade = null,
+  goalHints = null,
 }: {
   card: MyTribe;
   catalogue: LeaderCatalogue;
   applicationStory: string | null;
   /** The signed-off ready-made card for this tribe's goal, the public fields only. Null when there is none. */
   readyMade?: ReadyMade | null;
+  /** The goals this leader may choose from, when the church has let them choose. Null for every other leader, whose card is as it always was. */
+  goalHints?: GoalHints | null;
 }) {
   const router = useRouter();
   const editable = card.editable;
@@ -57,6 +63,8 @@ export function TribeBuilder({
   const [save, setSave] = useState<Save>("idle");
   const [problem, setProblem] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [hints, setHints] = useState<GoalHints | null>(goalHints);
+  const [choosing, setChoosing] = useState<string | null>(null);
 
   const pending = useRef<Partial<CardValues>>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,6 +144,40 @@ export function TribeBuilder({
     setSave("saved");
   }
 
+  // A leader the church has let choose picks a goal from the list. What is typed is saved first. The database then refills the Success
+  // Picture lines the leader has not written, and may rename a tribe that still has its appointment name, so the card is read back.
+  async function chooseGoal(slug: string) {
+    if (!hints || !editable || choosing || slug === values.goal) return;
+    const item = hints.goals.find((g) => g.slug === slug);
+    if (!item) return;
+    setChoosing(slug);
+    setProblem(null);
+    await flush();
+    setSave("saving");
+    let result;
+    try {
+      result = await saveCardAction(card.id, hints.communityToo ? { community: item.community, goal: item.slug } : { goal: item.slug });
+    } catch {
+      result = { ok: false as const, message: "We couldn’t save that. Check your connection and try again." };
+    }
+    if (!result.ok) {
+      setChoosing(null);
+      setSave("error");
+      return setProblem(result.message);
+    }
+    const fresh = await goalHintsAction(card.id).catch(() => null);
+    if (fresh?.ok && fresh.hints) {
+      const h = fresh.hints;
+      setHints(h);
+      setValues((v) => ({ ...v, community: h.community ?? v.community, goal: h.goal ?? v.goal, name: h.name, god: h.lines.god, others: h.lines.others, life: h.lines.life }));
+    } else {
+      setValues((v) => ({ ...v, community: hints.communityToo ? item.community : v.community, goal: item.slug }));
+    }
+    setChoosing(null);
+    setSave("saved");
+    router.refresh();
+  }
+
   async function send() {
     setSubmitting(true);
     setProblem(null);
@@ -205,7 +247,7 @@ export function TribeBuilder({
         </Section>
 
         <Section title="What it is built on" step="2">
-          {fixed.size === 3 ? (
+          {hints ? null : fixed.size === 3 ? (
             <p className="t-small text-soft">These come from your approved application, because your tribe is built on the goal you have lived.</p>
           ) : (
             <p className="t-small text-soft">Choose the community and Season Goal your tribe is built on. Anything from your application is already filled in.</p>
@@ -222,7 +264,7 @@ export function TribeBuilder({
               ))}
             </Select>
           )}
-          {fixed.has("community") ? (
+          {fixed.has("community") || hints?.communityToo ? (
             <Fixed label="Community" value={community?.name ?? card.community?.name ?? ""} />
           ) : (
             <Select label="Community" name="community" value={values.community} disabled={!editable} onChange={(e) => change({ community: e.target.value, goal: "" }, true)}>
@@ -234,7 +276,9 @@ export function TribeBuilder({
               ))}
             </Select>
           )}
-          {fixed.has("goal") ? (
+          {hints ? (
+            <GoalPicker hints={hints} selected={values.goal} busy={choosing} disabled={!editable} onPick={(slug) => void chooseGoal(slug)} />
+          ) : fixed.has("goal") ? (
             <Fixed label="Season Goal" value={goal?.title ?? card.goal?.title ?? ""} />
           ) : (
             <Select label="Season Goal" name="goal" value={values.goal} disabled={!editable || !community} onChange={(e) => change({ goal: e.target.value }, true)}>

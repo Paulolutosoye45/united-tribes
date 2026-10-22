@@ -34,6 +34,12 @@ export type EmailContent = {
   options?: { label: string; url: string }[];
   /** Titled lists of links, one part for each thing a person looks after (the daily or weekly summary for the team). Left out in every other email. */
   sections?: { title: string; items: { label: string; url: string; note?: string }[] }[];
+  /** A numbered list of steps, each with its words and, when it has one, a picture under them (the leader welcome email). The words come first, so the email is whole when a mail program hides pictures. */
+  steps?: { title: string; items: { title: string; body: string; image?: { src: string; alt: string; width: number; height: number } }[] };
+  /** Titled bullet lists, such as the promises that come with a role (the leader welcome email). */
+  lists?: { title: string; items: string[] }[];
+  /** The lines under the button: a name, then a title. */
+  signoff?: string[];
   /** A fully designed email (reminders and announcements): used instead of the plain layout, with its own footer. */
   design?: DesignSpec;
   /** Extra mail headers, such as the one-click unsubscribe that mail programs show as a button. */

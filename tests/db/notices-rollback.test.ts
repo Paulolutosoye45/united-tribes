@@ -110,9 +110,11 @@ describe("the way back from the team's emails", () => {
       expect(text, f).toMatch(/^-- /);
       expect(text, f).toMatch(/\bbegin;/);
       expect(text, f).toMatch(/\bcommit;\s*$/);
-      // They drop functions and triggers, and do nothing else: no row is touched, no table dropped
+      // They drop functions and triggers, and do nothing else: no row is touched, no table dropped. A feature built after the notices may
+      // need to put data back where it was (the way back from "Let them choose" restores the list of locked parts on the tribes it
+      // unlocked), so only the notices' own files are held to "no row is touched"; every file is held to the rest.
       const code = text.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-      expect(code, f).not.toMatch(/\b(delete|truncate|insert|update)\b\s/i);
+      expect(code, f).not.toMatch(LATER_DOWN.includes(f) ? /\b(delete|truncate|insert)\b\s/i : /\b(delete|truncate|insert|update)\b\s/i);
       expect(code, f).not.toMatch(/\bdrop\s+(table|column|schema)\b/i);
       expect(code, f).not.toMatch(/\balter\s+table\b/i);
       await db.admin.query(text);

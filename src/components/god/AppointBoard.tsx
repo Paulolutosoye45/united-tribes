@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Input";
+import { ChooseBar, ChooseCard, type ChooseContext } from "@/components/god/GoalChoice";
 import { formatShortDate } from "@/lib/dates";
 import {
   APPOINT_PROMISE,
@@ -36,7 +37,18 @@ type Community = { slug: string; name: string; goals: { slug: string; title: str
  * are waiting for, and appoint to one. It starts their Tribe Card and gives them the leader role. A pastor still approves the card and
  * the Academy still certifies them, so members see nothing until both are done.
  */
-export function AppointBoard({ tracks, communities, appointments }: { tracks: Track[]; communities: Community[]; appointments: Appointment[] }) {
+export function AppointBoard({
+  tracks,
+  communities,
+  appointments,
+  choose = null,
+}: {
+  tracks: Track[];
+  communities: Community[];
+  appointments: Appointment[];
+  /** What "Let them choose" needs. Null where the database cannot give it, and the page then looks as it always did. */
+  choose?: ChooseContext | null;
+}) {
   const d = useDo();
   const [query, setQuery] = useState("");
   const [people, setPeople] = useState<FoundPerson[] | null>(null);
@@ -308,7 +320,7 @@ export function AppointBoard({ tracks, communities, appointments }: { tracks: Tr
         </section>
       ) : null}
 
-      <Appointed appointments={appointments} />
+      <Appointed appointments={appointments} choose={choose} />
     </div>
   );
 }
@@ -367,8 +379,11 @@ function SuggestionList({
   );
 }
 
-function Appointed({ appointments }: { appointments: Appointment[] }) {
+function Appointed({ appointments, choose }: { appointments: Appointment[]; choose: ChooseContext | null }) {
   const d = useDo();
+  // The leaders ticked for "Let them choose" or "Lock it again", by tribe
+  const [ticked, setTicked] = useState<string[]>([]);
+  const names = Object.fromEntries(appointments.flatMap((a) => (a.tribe ? [[a.tribe.id, a.person.name] as const] : [])));
   const [open, setOpen] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [said, setSaid] = useState<string | null>(null);
@@ -391,6 +406,7 @@ function Appointed({ appointments }: { appointments: Appointment[] }) {
         Appointed leaders
       </h2>
       <Notice error={d.error} saved={said} />
+      {choose ? <ChooseBar ctx={choose} selected={ticked} names={names} onDone={() => setTicked([])} /> : null}
       {appointments.length === 0 ? <p className="card t-body p-5 text-soft">Nobody has been appointed yet.</p> : null}
       <ul className="flex flex-col gap-3">
         {appointments.map((a) => (
@@ -423,6 +439,19 @@ function Appointed({ appointments }: { appointments: Appointment[] }) {
                   Open the tribe
                 </Link>
               </p>
+            ) : null}
+            {choose && a.active && a.tribe ? (
+              <ChooseCard
+                tribe={a.tribe.id}
+                name={a.person.name}
+                ctx={choose}
+                names={names}
+                selected={ticked.includes(a.tribe.id)}
+                onSelect={(on) => {
+                  const id = a.tribe?.id;
+                  if (id) setTicked((t) => (on ? [...t.filter((x) => x !== id), id] : t.filter((x) => x !== id)));
+                }}
+              />
             ) : null}
             {a.active ? (
               open === a.id ? (

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
-/** The two ways to appoint: one person at a time, or many at once. */
-export function AppointTabs({ current }: { current: "one" | "bulk" }) {
+/** The two ways to appoint (one person at a time, or many at once), and the welcome email that can follow. */
+export function AppointTabs({ current }: { current: "one" | "bulk" | "welcome" }) {
   const tabs = [
     { id: "one", href: "/god/appointments", label: "One at a time" },
     { id: "bulk", href: "/god/appointments/bulk", label: "Bulk" },
+    { id: "welcome", href: "/god/appointments/welcome", label: "Welcome email" },
   ] as const;
   return (
     <nav aria-label="Ways to appoint" className="flex flex-wrap gap-2">

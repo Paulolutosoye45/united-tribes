@@ -79,17 +79,17 @@ A notice that cannot be queued **never stops the thing that caused it**. The app
 
 ### What an email never contains
 
-No name of a person in need, no note, score or reason, no referee's words, no sealed note, nothing about a young member (anyone under 18 is never emailed by this system), and never the hidden platform owner (who is neither a recipient nor named). Emails say that something is waiting and link to the page where it is done. A concern from a referee says only that there is one. A parent's permission waiting for its call says only that one is waiting.
+No name of a person in need, no note, score or reason, no referee's words, no sealed note, nothing about a young member (anyone under 18 is never emailed by this system), and never the hidden platform owner (who is neither a recipient nor named: when the owner gives someone a role in God Mode, the admins' email says the role was given and not by whom). Emails say that something is waiting and link to the page where it is done. A concern from a referee says only that there is one. A parent's permission waiting for its call says only that one is waiting.
 
 ### The groups and their notices
 
-There are **57 notices**: 56 for events and checks, and the summary.
+There are **58 notices**: 57 for events and checks, and the summary.
 
-**Admins** (a summary by default): a deletion request came in; a deletion request is nearly due *(right away; 7 and 2 days before the 30-day deadline)*; messages are failing; messages are not going out *(right away)*; someone's role changed *(right away)*; how the week's email went (Mondays); the reporting copy did not refresh; launch steps are still open before a season; you now hold a new role *(right away, to the person)*.
+**Admins** (a summary by default): a new leader application was sent *(right away; also to the directors)*; a deletion request came in; a deletion request is nearly due *(right away; 7 and 2 days before the 30-day deadline)*; messages are failing; messages are not going out *(right away)*; someone's role changed *(right away)*; how the week's email went (Mondays); the reporting copy did not refresh; launch steps are still open before a season; you now hold a new role *(right away, to the person)*.
 
 **Pastors** (a summary by default): an application is ready for a decision; applications are waiting a long time (weekly, after 7 days); a referee raised a concern *(right away)*; a reference is held for a look; a Tribe Card is ready for review; Tribe Cards are waiting (weekly, after 5 days); ready-made cards are waiting for sign-off (Mondays); a new fit model is waiting for approval; a season ends in two weeks.
 
-**Directors** (a summary by default): an interview was booked; interviews tomorrow; an interview has no outcome; interview times are running out; a leader offer was answered; an offer has had no answer (once, after 5 days); members are waiting where no leader is ready (Mondays, 8 or more); members finished the form and have no tribe (Mondays); a season is about to open (14, 7 and 2 days before); something has waited too long (weekly, after 14 days for an application or 10 for a card).
+**Directors** (a summary by default): a new leader application was sent *(right away)*; an interview was booked; interviews tomorrow; an interview has no outcome; interview times are running out; a leader offer was answered; an offer has had no answer (once, after 5 days); members are waiting where no leader is ready (Mondays, 8 or more); members finished the form and have no tribe (Mondays); a season is about to open (14, 7 and 2 days before); something has waited too long (weekly, after 14 days for an application or 10 for a card).
 
 **Care team** (a summary by default; never a name or a reason): referee call-backs are due (Mondays); a parent's permission is waiting for its call; people have asked for someone to reach out (after 2 days).
 
@@ -126,7 +126,7 @@ They are rows in `public.notice_numbers` and change with a database update, not 
 
 ## How it was checked
 
-- **Database** (`tests/db/notices.test.ts`, 60 tests): Off writes nothing; Rehearsal writes only to the log; On queues email only; settings unreadable means Off; the owner and anyone under 18 are never written to; a notice that cannot be queued is a line on the log, not an error; one email per event per person for someone with several roles; a role taken away stops the notices that day; every notice's recipient and wording; the timed checks at every hour that matters; the Admin pages' functions return the work of each role merged; who may call what; row security on every new table with no grant.
+- **Database** (`tests/db/notices.test.ts`, 60 tests, and `tests/db/notices-application-sent.test.ts`, 19 tests for the new-application notice and the hidden owner's name): Off writes nothing; Rehearsal writes only to the log; On queues email only; settings unreadable means Off; the owner and anyone under 18 are never written to; a notice that cannot be queued is a line on the log, not an error; one email per event per person for someone with several roles; a role taken away stops the notices that day; every notice's recipient and wording; the timed checks at every hour that matters; the Admin pages' functions return the work of each role merged; who may call what; row security on every new table with no grant.
 - **Templates** (`tests/unit/notice-templates.test.ts`): every notice has a template, none contains a private field, links go only to the platform's own pages, singular and plural, escaping.
 - **Menu and Today** (`tests/unit/admin-nav.test.ts`, `admin-notices.test.ts`): every Admin page is in the menu, the menu's roles equal each page's own gate (read from the page source), the union for several roles, search, counts, shortcuts.
 - **Browser journeys**: `28-notices` (the whole path for an admin who is also a pastor, including the email that arrives) and `29-admin-menu` (the menu on a computer and on a phone, for one role and two). The older journeys that touch Admin were updated for the new names; see `docs/APPLY-NOTICES-ADMIN.md`.

@@ -12,6 +12,7 @@ import {
   planLeadersAction,
   readSheetAction,
 } from "@/app/(app)/god/appointments/bulk/actions";
+import { ChooseRun, type ChooseContext } from "@/components/god/GoalChoice";
 import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { Badge } from "@/components/ui/Badge";
@@ -35,13 +36,13 @@ const TEMPLATE_CSV = [SHEET_HEADER.join(","), "(example) ada@example.org,Young p
  * that needs a leader, by the same fit model the single appointment uses. You read the pairs, change any you like, and apply them.
  * It starts each Tribe Card. It never approves a card and never certifies anyone.
  */
-export function BulkLeaders({ view }: { view: LeadersView }) {
+export function BulkLeaders({ view, choose = null }: { view: LeadersView; choose?: ChooseContext | null }) {
   const run = view.run;
   const live = run && ["planned", "approved", "applying"].includes(run.status);
   return (
     <div className="flex flex-col gap-8" data-testid="bulk-leaders">
       {live ? null : <Start />}
-      {run ? <Plan view={view} /> : null}
+      {run ? <Plan view={view} choose={choose} /> : null}
     </div>
   );
 }
@@ -163,7 +164,7 @@ function Start() {
 
 // ---------------------------------------------------------------------------
 
-function Plan({ view }: { view: LeadersView }) {
+function Plan({ view, choose }: { view: LeadersView; choose: ChooseContext | null }) {
   const run = view.run!;
   const proposed = view.items.filter((i) => i.status === "proposed");
   const applied = view.items.filter((i) => i.status === "applied");
@@ -210,7 +211,7 @@ function Plan({ view }: { view: LeadersView }) {
       </section>
       {run.status === "planned" ? <Approve runId={run.id} proposed={proposed.length} /> : null}
       {run.status === "approved" || run.status === "applying" ? <ApplyDriver runId={run.id} total={proposed.length + applied.length + failed.length} done={applied.length} /> : null}
-      {run.status === "done" ? <Done applied={applied} failed={failed} /> : null}
+      {run.status === "done" ? <Done applied={applied} failed={failed} runId={run.id} choose={choose} /> : null}
     </>
   );
 }
@@ -392,8 +393,9 @@ function ApplyDriver({ runId, total, done }: { runId: string; total: number; don
   );
 }
 
-function Done({ applied, failed }: { applied: LeaderItem[]; failed: LeaderItem[] }) {
+function Done({ applied, failed, runId, choose }: { applied: LeaderItem[]; failed: LeaderItem[]; runId: string; choose: ChooseContext | null }) {
   return (
+    <>
     <section aria-labelledby="done-heading" className="card flex flex-col gap-3 p-5 sm:p-6" data-testid="bulk-done">
       <h2 id="done-heading" className="t-heading">
         Done
@@ -403,5 +405,7 @@ function Done({ applied, failed }: { applied: LeaderItem[]; failed: LeaderItem[]
         {failed.length > 0 ? ` ${pluralise(failed.length, "person", "people")} could not be appointed and ${failed.length === 1 ? "is" : "are"} listed above with the reason.` : ""}
       </p>
     </section>
+    {choose && applied.length > 0 ? <ChooseRun run={runId} ctx={choose} tribes={applied.flatMap((a) => (a.tribe ? [a.tribe] : []))} /> : null}
+    </>
   );
 }

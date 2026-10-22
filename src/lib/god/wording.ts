@@ -33,6 +33,13 @@ const ACTIONS: Record<string, string> = {
   "leader.concern_cleared": "cleared a concern",
   "leader.appointed": "appointed a leader",
   "leader.stepped_down": "stepped a leader down from an appointment",
+  "leader.goal_unlocked": "let a leader choose their own goal",
+  "leader.goal_locked": "locked a leader’s goal again",
+  "leader.goal_chosen": "chose their own goal",
+  "leader.welcome_queued": "queued a welcome email for a leader",
+  "leader.welcome_approved": "approved the wording of the leader welcome email",
+  "leader.welcome_withdrawn": "took the approval of the leader welcome email away",
+  "leader.welcome_signature_saved": "changed the name under the leader welcome email",
   "leader.offer_sent": "offered a leader a tribe where members are waiting",
   "leader.offer_withdrawn": "withdrew an offer to lead",
   "leader.offer_accepted": "accepted an offer to lead a tribe",
@@ -123,6 +130,7 @@ const KINDS: Record<string, string> = {
   owner_set: "The owner account was set",
   owner_removed: "The owner account was removed",
   action: "You changed something",
+  leader: "A leader",
   viewed: "You looked at a tab of the activity dashboard",
   exported: "You exported the audit trail",
   activity_setting: "You changed an activity setting",
@@ -163,6 +171,32 @@ export function activityLine(kind: string, action: string | null, detail: Record
     const what = ACTIVITY_SETTINGS[action ?? ""] ?? "an activity setting";
     const change = detail.from !== undefined && detail.to !== undefined ? `, from ${String(detail.from)} to ${String(detail.to)}` : "";
     return `You changed ${what}${change}`;
+  }
+  return null;
+}
+
+const quoted = (v: unknown) => (typeof v === "string" && v.trim() ? `“${v.trim().slice(0, 140)}”` : null);
+
+/**
+ * The owner’s record line for letting a leader choose their goal, locking it again, a leader’s own pick and the welcome email; null for
+ * anything else. The record holds goal titles, never a leader’s name: the owner’s page shows who it was from the tribe.
+ */
+export function goalLine(kind: string, action: string | null, detail: Record<string, unknown> = {}): string | null {
+  const goal = quoted(detail.goal);
+  if (kind === "action" && action === "leader.goal_unlocked") {
+    const more = detail.community_too === true ? ", and the community too" : "";
+    return `You let a leader choose their own goal${more}${goal ? `. They were started on ${goal}` : ""}`;
+  }
+  if (kind === "action" && action === "leader.goal_locked") return `You locked a leader’s goal again${goal ? `. It is ${goal}` : ""}`;
+  if (kind === "action" && action === "leader.welcome_queued") {
+    const what = detail.variant === "choose" ? "they may choose" : "their goal was chosen for them";
+    return `You queued the welcome email for a leader (${what})${detail.again === true ? ", again" : ""}`;
+  }
+  if (kind === "leader" && action === "leader.goal_chosen") {
+    const was = quoted(detail.was);
+    const waiting = typeof detail.waiting === "number" && Number.isFinite(detail.waiting) ? Math.max(0, Math.round(detail.waiting)) : null;
+    const queue = waiting === null ? "" : waiting === 0 ? ". No one was waiting for it" : `. ${waiting} ${waiting === 1 ? "member was" : "members were"} waiting for it`;
+    return `A leader chose their own goal${goal ? `: ${goal}` : ""}${was ? `, instead of ${was}` : ""}${queue}`;
   }
   return null;
 }

@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { PassphraseForm } from "@/components/god/PassphraseForm";
 import { formatLagosDay, formatLagosTime, formatShortDate } from "@/lib/dates";
 import { getOverview, loadRecord } from "@/lib/god/server";
-import { activityLine, ago, clock, describeAction, describeKind, kindTone, lookedLine } from "@/lib/god/wording";
+import { activityLine, ago, clock, describeAction, describeKind, goalLine, kindTone, lookedLine } from "@/lib/god/wording";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Your record" };
@@ -16,6 +16,8 @@ const TONE = { calm: "bg-soft", watch: "bg-[var(--crest-gold)]", alert: "bg-flam
 function line(kind: string, action: string | null, detail: Record<string, unknown>, ref: string | null): string {
   const activity = activityLine(kind, action, detail);
   if (activity) return activity;
+  const goal = goalLine(kind, action, detail);
+  if (goal) return goal;
   const looked = lookedLine(kind, action, ref);
   if (looked) return looked;
   if (kind === "action" && action) return `${describeKind(kind)}: ${describeAction(action)}`;

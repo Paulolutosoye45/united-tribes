@@ -42,7 +42,7 @@ The account has to be new to the programme: no role, no tribe, no form. The func
 | --- | --- |
 | **Every page** | `/admin`, `/review`, `/care`, `/dashboard`, `/reports`, `/growth`, privacy requests and the rest open for the owner. Every "may this person do that?" question in the platform is answered by `has_any_role()` or `my_roles()`, and both say yes to every role while the owner is unlocked. Nothing else had to change. |
 | **The console, `/god`** | An overview with live numbers; a **live feed** of what is happening (it can be kept live and filtered); every person, with their tribe and form, and the power to give or take away any role; every tribe, with its members and weeks; the owner's own record. |
-| **Appointments, `/god/appointments`** | Appoint a leader to a tribe without an application: see "Appointing a leader" below. |
+| **Appointments, `/god/appointments`** | Appoint a leader to a tribe without an application: see "Appointing a leader" below. Three tabs: **One at a time**, **Bulk**, and **Welcome email**. On each appointed leader, **Let them choose** lets the leader pick their own goal: see "Letting a leader choose their goal" below. |
 | **Activity, `/god/activity`** | The decision dashboard (Round 2, Phase 5): what needs a decision this week, where people stop in the forms, quiet tribes, failing messages, the audit trail of what the church's people did, and the thresholds. **Visible to the owner only**; read docs/ACTIVITY.md. The console's tabs are Overview, People, Tribes, Desks, Conversations, Activity and Your record |
 | **Desks, `/god/desks`** | Every kind of stakeholder (member, leader, assistant leader, coach, community champion, care lead, data lead, director, pastor, admin) as one desk: how many hold the role, how many were active this week, the numbers they watch (members waiting, tribes to review, applications in review, cards waiting for sign-off, open care tasks and so on), and the screens they use, each one a link that opens for the owner. See "Seeing what every stakeholder sees" below. |
 | **Conversations, `/god/conversations`** | The messages the platform has sent (and the answers people gave to them), the chats staff opened, and the announcements. See "Conversations" below. |
@@ -95,6 +95,51 @@ have joined, **nothing happens** and the page says how many: a pastor moves them
 the appointment gave it and the person has nothing else to lead and no approved application. **A certificate is never withdrawn.**
 
 It is checked by `tests/db/leader-appointments.test.ts` (37 tests) and the journey `e2e/journeys/24-appointment.ts`.
+
+## Letting a leader choose their goal (`/god/appointments`, Bulk, and Welcome email)
+
+An appointment starts the leader on one goal and locks it. Sometimes the leader knows better which goal they have walked. **Let them choose**
+hands that one decision to them, and nothing else. It is for the owner only (every function begins with the same owner check as the rest
+of this page), and **a leader who has not been unlocked sees and does exactly what they did before**.
+
+**The owner's side.**
+
+* On each appointed leader, **Let them choose** opens a short panel saying what it does. **Yes, let them choose** unlocks the goal.
+  **Let them choose the community too** is a tick, off by default. **Select** boxes unlock several at once, and on **Bulk**, once a run has
+  appointed leaders, one button unlocks the whole run. A leader whose card cannot be unlocked is skipped with the reason beside them, and
+  the rest go ahead.
+* Each leader shows one status line: *locked*, *can choose*, *chose* (with the goal title), or why it cannot be done (the card was sent, a
+  member has joined, or the leader applied and was approved in the ordinary way). **Lock it again** puts the lock back and **keeps what
+  the leader already picked**.
+* It stops by itself the moment the card is sent for review, or a member joins. The database refuses a change after that, whatever asks.
+
+**The leader's side.** On their own Tribe Card the goal is a list instead of a fixed box. The goal the church started them on is first and
+marked; the rest are ordered by how many members are waiting for them (*No one is waiting yet* when none are). Only goals that have a
+signed-off ready-made card, in an open community, are offered. **Sensitive goals are left off** unless the owner said a pastor cleared that
+leader when appointing them; the goal the church started them on is always allowed. Picking one refills the three Success Picture lines
+from that goal's ready-made card, **but only the lines the leader has not rewritten**. The tribe's name follows the community only if it is
+still the name the appointment made and the community was unlocked too.
+
+**What the pastor sees.** On the Tribe Card review page: *"This leader chose their own goal. The church had started them on a different
+one."* It never names the owner. The review is otherwise unchanged: a pastor still approves the card, and the Academy and the declaration
+still certify the leader.
+
+**The owner's private record** (`god_log`, `/god/record`) gets a line for each unlock, lock, leader's pick and welcome email, in plain
+words, using the goal's title and not the leader's name (the owner's own pages show names live from the current data).
+
+**The welcome email.** One email, from the system's address and signed with two lines the owner keeps (by default *Wale Ekundayo* and
+*Pastor TCN Iganmu Center*). It explains the choice and the steps that follow, with a picture of each screen. There are two versions
+(*you may choose your goal* and *your goal is set*), matching the state of the lock. It is **email only** (never put to Meta for approval),
+is sent at most once per tribe per version unless the owner presses **Send again**, waits for the quiet hours (10 pm to 6 am Lagos), and
+**cancels a short "you have been appointed" email for the same tribe that has not yet gone**, since this one covers it.
+
+**Nothing is sent until the pastor's wording is approved.** On **Welcome email** the owner reads both versions as they would go today and
+presses **<name> has approved this wording**. The approval is tied to the version of the wording; changing the name or title takes it away.
+Until then, the *Send the welcome email* tick and button are off, and letting them choose still works without the email.
+
+It is checked by `tests/db/goal-unlock.test.ts`, `tests/db/goal-unlock-rollback.test.ts`, the unit tests `leader-welcome-template.test.ts`,
+`leader-guide-pictures.test.ts`, `god-goal-wording.test.ts` and `email-layout-unchanged.test.ts`, and the journey `e2e/journeys/33-let-them-choose.ts`.
+How to apply it, and the way back: `docs/APPLY-GOAL-UNLOCK.md`.
 
 ## Seeing what every stakeholder sees (`/god/desks`)
 

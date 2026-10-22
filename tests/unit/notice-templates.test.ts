@@ -23,12 +23,12 @@ function message(template: string, params: Params, over: Partial<ClaimedMessage[
 }
 
 const read = (file: string) => readFileSync(join(__dirname, "../../supabase/migrations", file), "utf8");
-const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}`;
+const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}`;
 
 describe("the notices, as templates", () => {
-  it("has the 57 the blueprint lists, each registered with the sender", () => {
-    expect(keys).toHaveLength(57);
-    expect(new Set(keys).size).toBe(57);
+  it("has the 58 notices (the 57 of the blueprint and the one for a new application), each registered with the sender", () => {
+    expect(keys).toHaveLength(58);
+    expect(new Set(keys).size).toBe(58);
     for (const key of keys) expect(TEMPLATES[key], key).toBeDefined();
     expect(NOTICE_CATALOGUE.map((n) => n.key).sort()).toEqual([...keys].sort());
     expect(Object.keys(NOTICE_SAMPLES).sort()).toEqual([...keys].sort());
@@ -169,6 +169,27 @@ describe("the details that change with the fields", () => {
     expect(render("leader_seats", { seats_left: 1 }).subject).toBe("Builders Tribe has 1 seat left");
     expect(render("leader_seats", { seats_left: 0 }).subject).toBe("Builders Tribe is full");
     expect(render("leader_seats", { seats_left: 0 }).text).toContain("No one else can join");
+  });
+
+  it("tells the team that an application was sent, and gives each person a button to a page they can open", () => {
+    const toReview = render("admin_application_sent", { applicant: "Ngozi", waiting: 1, path: "/review" });
+    expect(toReview.subject).toBe("A new leader application was sent");
+    expect(toReview.text).toContain("Ngozi has sent a leader application.");
+    expect(toReview.text).not.toMatch(/waiting to be invited/);
+    expect(toReview.text).toContain("both references are in");
+    expect(toReview.text).toContain("Open the applications");
+    expect(toReview.text).toContain(`${SITE}/review`);
+    const several = render("admin_application_sent", { applicant: "Ngozi", waiting: 3, path: "/review" });
+    expect(several.text).toContain("3 applications have been sent and are waiting to be invited to an interview.");
+    // An admin who cannot open the review list is sent to the figures instead, and is not told to open applications
+    const toFigures = render("admin_application_sent", { applicant: "Ngozi", waiting: 1, path: "/admin/figures" });
+    expect(toFigures.text).toContain("See the figures");
+    expect(toFigures.text).toContain(`${SITE}/admin/figures`);
+    expect(toFigures.text).not.toContain("Open the applications");
+    // A young applicant or the hidden owner arrives with no name: the email says "Someone", never a blank or the word null
+    const unnamed = render("admin_application_sent", { applicant: null });
+    expect(unnamed.text).toContain("Someone has sent a leader application.");
+    expect(unnamed.text).not.toMatch(/null|undefined/);
   });
 
   it("says added or removed, and what it was", () => {
@@ -331,7 +352,7 @@ describe("the catalogue the Notifications page shows", () => {
 
   it("marks as 'at once' only what the database sends at once", () => {
     const urgent = NOTICE_CATALOGUE.filter((n) => n.urgent).map((n) => n.key).sort();
-    expect(urgent).toEqual(["admin_data_request_due", "admin_queue_stuck", "admin_role_changed", "pastor_referee_concern", "staff_role_welcome"]);
+    expect(urgent).toEqual(["admin_application_sent", "admin_data_request_due", "admin_queue_stuck", "admin_role_changed", "pastor_referee_concern", "staff_role_welcome"]);
   });
 
   it("never lists the same group twice, and only groups that have a digest say so", () => {
