@@ -6,7 +6,7 @@ import type { AudiencePreview, AudienceSample, AudienceSpec } from "@/lib/outrea
 
 const PAGES = ["/admin/announcements", "/admin/announcements/approvals", "/admin"];
 
-const isSpec = (v: unknown): v is AudienceSpec => Boolean(v) && typeof v === "object" && typeof (v as { kind?: unknown }).kind === "string";
+const isSpec =  (v: unknown): v is AudienceSpec => Boolean(v) && typeof v === "object" && typeof (v as { kind?: unknown }).kind === "string";
 
 export type DraftFields = {
   title: string;
