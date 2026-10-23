@@ -11,6 +11,7 @@ import { formatDate, plural } from "@/lib/dates";
 import { GROUP_ROLES } from "@/lib/intake/options";
 import type { Roster } from "@/lib/matching/types";
 import { welcomeMessage } from "@/lib/matching/wording";
+import { cleanWhatsappLink } from "@/lib/helper/whatsapp";
 
 /** The leader's welcome work: who has joined, who they have called, the WhatsApp group and the first meeting. */
 export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; leaderFirstName: string }) {
@@ -30,7 +31,7 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
     setSaving(true);
     setSaved(false);
     setError(null);
-    const result = await saveOnboardingAction(tribe.id, group, first);
+     const result = await saveOnboardingAction(tribe.id, cleanWhatsappLink(group), first);
     setSaving(false);
     if (!result.ok) return setError(result.message);
     setSaved(true);
@@ -141,6 +142,13 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
               setGroup(e.target.value);
               setSaved(false);
             }}
+
+              onPaste={(e) => {
+              e.preventDefault();
+              setGroup(cleanWhatsappLink(e.clipboardData.getData('text')));
+              setSaved(false);
+            }}
+            onBlur={() => setGroup((v) => cleanWhatsappLink(v))}
           />
           <Input
             label="First meeting"
