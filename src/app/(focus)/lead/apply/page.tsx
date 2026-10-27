@@ -4,6 +4,7 @@ import { ApplyFlow, type ApplyAi, type View } from "@/components/leaders/ApplyFl
 import { loadAcademyModes } from "@/lib/academy/server";
 import { requireSession } from "@/lib/auth/session";
 import { EMPTY_ANSWERS } from "@/lib/leaders/answers";
+import { parseMyAppointment } from "@/lib/leaders/appointed";
 import { LEADER_CONSENT_AI, leaderConsentFor } from "@/lib/leaders/consent";
 import { WIRED } from "@/lib/leaders/pipeline";
 import { loadApplyModes, loadLeaderCatalogue, loadMyApplication, loadPipeline } from "@/lib/leaders/server";
@@ -47,6 +48,8 @@ export default async function ApplyPage() {
 
   // Sent, decided or withdrawn applications live on the Lead page.
   if (application && application.status !== "draft" && application.status !== "ineligible") redirect("/lead");
+  // A leader the church appointed has no application to make. Their page is the Lead page. (With no lookup, this changes nothing.)
+  if (parseMyAppointment((await supabase.rpc("my_appointment")).data)) redirect("/lead");
 
   const referees: { 1?: { name: string; relationship: string; contact: string; head: boolean }; 2?: { name: string; relationship: string; contact: string; head: boolean } } = {};
   for (const r of references) referees[r.slot] = { name: r.name, relationship: r.relationship, contact: r.contact, head: r.head };

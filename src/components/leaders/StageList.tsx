@@ -2,19 +2,21 @@ import { cn } from "@/lib/cn";
 import { STAGES } from "@/lib/leaders/options";
 import type { StageState } from "@/lib/leaders/status";
 
-/** The five stages as a vertical path: done, where you are, and what is still ahead. */
+/** The five stages as a vertical path: done, where you are, and what is still ahead. Another set of stages can be given, as for an appointed leader. */
 export function StageList({
   states,
   details,
   heading = "Where you are",
+  stages = STAGES,
 }: {
+  stages?: readonly { id: string; label: string; blurb: string }[];
   states?: { id: string; state: StageState }[];
   /** A short extra line under a stage, such as “1 of 2 answered”. */
   details?: Partial<Record<string, string>>;
   heading?: string;
 }) {
   // A stage that is not part of this process is left out of the path, and the rest are numbered again
-  const shown = STAGES.filter((stage) => states?.find((s) => s.id === stage.id)?.state !== "off");
+  const shown = stages.filter((stage) => states?.find((s) => s.id === stage.id)?.state !== "off");
   return (
     <section aria-labelledby="stages-heading" className="flex flex-col gap-3">
       <h2 id="stages-heading" className="t-heading">

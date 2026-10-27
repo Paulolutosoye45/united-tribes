@@ -90,6 +90,16 @@ application and no readiness score, and it does not change who decides anything.
 administrator. There is no application behind this card."* The role is recorded with no grantor, the event log has no name, and nothing
 anywhere names the owner. The owner's own record (`god_log`) has the full account.
 
+**What the appointed leader sees.** Their **Lead a tribe** page says *"You have been appointed to lead <their tribe>."* and shows the four
+steps that are true for them: **Appointed** (done), **Leader training** (or the safeguarding declaration, or nothing, as the Academy and
+declaration switches say), **Tribe Card** (a pastor approves it) and **Open to members**. It has the same buttons an approved leader has. It
+says **appointed**, never **approved**: nobody has reviewed an application, and the page does not pretend someone did. It never says who
+appointed them, and never shows the owner's note. It reads one function, `my_appointment()`, which returns only the tribe's name, where its
+card stands and whether they are certified. A leader approved through the application keeps the application page. A person who sent an
+application before they were appointed sees the appointed page, with a card offering to delete the old application. While someone is
+appointed they cannot start a new application (a guard in the database, and the apply page sends them back to Lead); after **Step down** they
+can. Checked by `tests/db/my-appointment.test.ts`, `tests/unit/leader-appointed.test.ts` and journey 24.
+
 **Stepping down.** On an appointment, **Step down** (with an optional reason) ends it. A tribe with no members joined is closed. If members
 have joined, **nothing happens** and the page says how many: a pastor moves them to another tribe first. The leader role goes back only if
 the appointment gave it and the person has nothing else to lead and no approved application. **A certificate is never withdrawn.**

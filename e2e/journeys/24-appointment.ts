@@ -7,8 +7,11 @@
  *  - Chiamaka has the leader role and a Tribe Card with the goal locked and the three lines from the ready-made card. She is not
  *    certified; nothing is certified for her. The log names no one.
  *  - The pastor opening that Tribe Card is told it was appointed by an administrator, and there is no application behind it.
+ *  - Chiamaka's Lead page says she has been appointed to lead her tribe, with the steps that are true for her. It never offers her an
+ *    application (and the apply page sends her back), and never says who appointed her.
  *  - Stepping Chiamaka down closes her empty tribe and takes back the role the appointment gave her.
  *  - Funke is appointed too; when members have joined her tribe, stepping her down is refused, in words, and nothing changes.
+ *  - Funke had sent an application before she was appointed. Her Lead page shows she is appointed and offers to delete the old application.
  *
  * Set E2E_SHOTS=<folder> to keep a picture of each screen.
  */
@@ -194,6 +197,27 @@ async function main() {
     await open(p.page, "/lead/tribe");
     check(await heading(p.page, "Your Tribe Card").isVisible(), "Chiamaka opens her Tribe Card");
     await noOverflow(p.page, "an appointed leader's Tribe Card on a phone");
+
+    // Her Lead page: appointed, not a stranger to the programme who has never applied
+    await open(p.page, "/lead");
+    await p.page.getByTestId("appointed").waitFor({ timeout: 20000 });
+    const lead = await text(p.page);
+    check(await heading(p.page, /You have been appointed to lead/).isVisible() && lead.includes(String(tribe.name)), "Chiamaka's Lead page says she has been appointed, and names her tribe");
+    check(!/Start my application|Lead another tribe|Continue my application/.test(lead), "…and does not offer her an application");
+    check(["Appointed", "Leader training", "Tribe Card", "Open to members"].every((t) => lead.includes(t)), "…with the four steps that are true for her");
+    check(/Appointed[\s\S]*done/i.test(lead) || (await p.page.getByText("Appointed", { exact: true }).first().isVisible()), "…the first of them done");
+    check(
+      (await p.page.getByRole("link", { name: "My Tribe Card" }).first().isVisible()) &&
+        (await p.page.getByRole("link", { name: "This week" }).first().isVisible()) &&
+        (await p.page.getByRole("link", { name: "Open my training" }).first().isVisible()),
+      "…and the same buttons an approved leader has: training, My Tribe Card, This week",
+    );
+    check(!/Approved as a leader|application is approved/i.test(lead), "…and does not say she was approved through an application");
+    check(!lead.includes("Platform Owner") && !lead.includes(owner.email) && !/administrator|Asked by the pastor/i.test(lead), "…and does not say who appointed her, or the owner's note");
+    await shot(p.page, "24-lead-appointed");
+    await noOverflow(p.page, "an appointed leader's Lead page on a phone");
+    await open(p.page, "/lead/apply");
+    check(new URL(p.page.url()).pathname === "/lead", "the apply page sends her back to the Lead page");
     await p.ctx.close();
   }
 
@@ -253,6 +277,29 @@ async function main() {
   check(true, "with a member joined, stepping down is refused, in words");
   check((await one("select status from public.leader_appointments where id = $1", [fa.id]))?.status === "active", "…and nothing changes");
   check((await one("select status from public.tribes where id = $1", [fa.tribe_id]))?.status !== "closed", "…the tribe stays open");
+
+  // ---- Funke sent an application before she was appointed ----------------------------------------------------------------------------
+  {
+    await q.query(
+      "insert into public.leader_applications (person_id, status, step, answers, consent_version, submitted_at) values ($1, 'submitted', 'review', '{}'::jsonb, 'test', now())",
+      [funke.id],
+    );
+    const p = await newPage(browser, "phone");
+    await signIn(p.page, funke.email, "/lead");
+    await open(p.page, "/lead");
+    await p.page.getByTestId("appointed").waitFor({ timeout: 20000 });
+    const f = await text(p.page);
+    check(/appointed to lead/.test(f) && !/Your leader application|In review|With the review panel/.test(f), "Funke's Lead page shows she is appointed, not the application she sent earlier");
+    check(/Your Tribe Card is approved\. Members can find your tribe once you are certified/.test(f), "…and says where she is: the card is approved, certification is next");
+    check(/An application you started/.test(f) && /review panel may still contact you/.test(f), "…and says the old application is not needed, and may still be asked about");
+    await shot(p.page, "24-lead-appointed-leftover");
+    await p.page.getByRole("button", { name: "Withdraw my application" }).click();
+    await p.page.getByRole("button", { name: "Yes, delete it" }).click();
+    await eventually("the old application is gone", async () => (await n("select count(*)::int n from public.leader_applications where person_id = $1", [funke.id])) === 0);
+    await eventually("the card about it is gone", async () => !/An application you started/.test(await text(p.page)));
+    check(/appointed to lead/.test(await text(p.page)), "…and she is still shown as appointed");
+    await p.ctx.close();
+  }
 
   await ctx.close();
   await browser.close();

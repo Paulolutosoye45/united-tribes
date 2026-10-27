@@ -10,8 +10,9 @@ import { StageList } from "@/components/leaders/StageList";
 import { WithdrawApplication } from "@/components/leaders/WithdrawApplication";
 import { buttonClasses } from "@/components/ui/Button";
 import { trainingAsk, trainingButton } from "@/lib/academy/wording";
-import { loadAcademyModes } from "@/lib/academy/server";
+import { loadAcademyModes, loadMyAcademy } from "@/lib/academy/server";
 import { requireSession } from "@/lib/auth/session";
+import { appointedLine, appointedSteps, appointedTitle, parseMyAppointment, trainingFinished } from "@/lib/leaders/appointed";
 import { ELIGIBILITY, ELIGIBILITY_ADVICE, OTHER_WAYS_TO_SERVE, STATUS_INFO, type EligibilityId } from "@/lib/leaders/options";
 import type { StageModes } from "@/lib/leaders/modes";
 import { WIRED, type EligibilityKey } from "@/lib/leaders/pipeline";
@@ -49,6 +50,70 @@ export default async function LeadPage() {
   const options = interviewing ? ((await supabase.rpc("my_interview_options")).data as InterviewOptions | null) : null;
   const isLeader = session.roles.includes("leader") || session.roles.includes("assistant_leader");
 
+  // ------------------------------------------------------------------ appointed
+  // A leader the church appointed has no application to show, so the page would call them someone who has never applied. The database
+  // says whether they are appointed and where their Tribe Card stands, never by whom. Someone approved through the application keeps
+  // the page below, and if the lookup is unavailable the page is as it was.
+  const appointment =
+    isLeader && status !== "approved_leader" && status !== "approved_assistant" ? parseMyAppointment((await supabase.rpc("my_appointment")).data) : null;
+  if (appointment) {
+    const mine = await loadMyAcademy(supabase);
+    const trainingDone = mine ? trainingFinished(mine.state, training) : false;
+    const trained = appointment.certified || trainingDone;
+    const steps = appointedSteps(appointment, training, trainingDone);
+    const links = [
+      ...(trainingTo && !trained ? [trainingTo] : []),
+      ...(session.roles.includes("leader") ? [{ label: "My Tribe Card", href: "/lead/tribe" }] : []),
+      { label: "This week", href: "/lead/week" },
+    ];
+    const complete = appointment.tribeStatus === "approved" && appointment.certified;
+    // An application they began before they were appointed is not needed now. They can delete it, and until they do the panel may still ask about it.
+    const leftover = application && ["draft", "submitted", "interview_invited", "interview_booked", "interviewed"].includes(application.status) ? application : null;
+    return (
+      <div className="flex flex-col gap-8">
+        <section aria-labelledby="status-heading" data-testid="appointed" className="night rise-in rounded-[var(--radius-sheet)] p-6 sm:p-10">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex max-w-[34rem] flex-col gap-3">
+              <p className="t-small text-white/70">Your leader role</p>
+              <h1 id="status-heading" className="t-title pr-14 sm:pr-0">
+                {appointedTitle(appointment)}
+              </h1>
+              <p className="t-body text-white/80">{appointedLine(appointment, training, trainingDone)}</p>
+              <div className="mt-1 flex flex-wrap gap-3">
+                {links.map((l, i) => (
+                  <Link key={l.href} href={l.href} className={buttonClasses(i === 0 ? { className: "px-8" } : { variant: "night", className: "px-6" })}>
+                    <span className="relative">{l.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <div className="absolute right-5 top-5 origin-top-right scale-50 sm:static sm:shrink-0 sm:scale-100">
+              <ShieldProgress fills={approvedFills(steps)} size={104} tone="light" label="Your progress" done={complete} />
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
+          <StageList stages={steps} states={steps} />
+          {leftover ? (
+            <section aria-labelledby="open-app-heading" className="card flex flex-col gap-3 p-6">
+              <h2 id="open-app-heading" className="t-heading">
+                An application you started
+              </h2>
+              <p className="t-body text-soft">
+                You do not need it, because you have already been appointed.
+                {leftover.status !== "draft" ? " Until you delete it, the review panel may still contact you about it." : ""}
+              </p>
+              <div>
+                <WithdrawApplication appId={leftover.id} sent={leftover.status !== "draft"} />
+              </div>
+            </section>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   // ------------------------------------------------------------------ not started
   if (!application) {
     return (
@@ -57,7 +122,7 @@ export default async function LeadPage() {
           title={isLeader ? "Lead another tribe." : "Lead a tribe."}
           body="Leaders are chosen for character and reliability, not for title or talent. If you have lived through a Season Goal, you could walk with others through it."
           cta="Start my application"
-          note="About Five minutes. Save and come back."
+          note="About fifteen minutes. Save and come back."
           fills={[0, 0, 0, 0]}
         />
         <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">

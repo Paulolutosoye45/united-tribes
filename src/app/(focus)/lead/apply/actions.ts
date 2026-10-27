@@ -34,6 +34,8 @@ export async function startApplicationAction(): Promise<ActionResult<{ id: strin
     .single();
   if (error || !data) {
     if (error?.code === "23505") return { ok: false, message: "You already have an application open. Find it on the Lead page." };
+    // The one refusal the database words for a person: you have been appointed to lead, so there is no application to send.
+    if (error?.code === "22023") return { ok: false, message: friendly(error) };
     return { ok: false, message: TRY_AGAIN };
   }
   return { ok: true, id: data.id };

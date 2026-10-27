@@ -929,6 +929,7 @@ describe("locked-down defaults", () => {
       "god_appointment_list",
       "god_appointment_step_down",
       "tribe_appointment_note",
+      "my_appointment",
       "god_unlock_goal",
       "god_unlock_goal_run",
       "god_lock_goal",
