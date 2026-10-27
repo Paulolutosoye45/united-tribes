@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { AppointBoard } from "@/components/god/AppointBoard";
 import { AppointTabs } from "@/components/god/AppointTabs";
 import { parseAppointments } from "@/lib/god/appointments";
+import { loadFeatureBoard } from "@/lib/features/server";
 import { loadChooseData } from "@/lib/god/goal-unlock-server";
 import { loadLeaderCatalogue } from "@/lib/leaders/server";
 import { createClient } from "@/lib/supabase/server";
@@ -17,6 +18,8 @@ export default async function GodAppointmentsPage() {
   const appointments = list.error ? [] : parseAppointments(list.data);
   // The state of each leader's goal lock. Null (and nothing extra shown) if the database cannot say.
   const choose = await loadChooseData(supabase, appointments.flatMap((a) => (a.active && a.tribe ? [a.tribe.id] : [])));
+  // Whether the Details check is open, so the form can say the stage of life is a suggestion. Off, and the form is as it was.
+  const stageNote = ((await loadFeatureBoard(supabase))?.features.find((f) => f.key === "details_check")?.summary ?? "off") !== "off";
 
   return (
     <div className="flex flex-col gap-6">
@@ -32,6 +35,7 @@ export default async function GodAppointmentsPage() {
         communities={catalogue.communities.map((c) => ({ slug: c.slug, name: c.name, goals: c.goals.map((g) => ({ slug: g.slug, title: g.title })) }))}
         appointments={appointments}
         choose={choose}
+        stageNote={stageNote}
       />
     </div>
   );

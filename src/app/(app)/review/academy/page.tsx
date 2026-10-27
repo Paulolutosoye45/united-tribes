@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CohortList } from "@/components/academy/CohortList";
 import { SessionManager } from "@/components/academy/SessionManager";
 import { SwitchedOff } from "@/components/academy/SwitchedOff";
-import { PanelTabs } from "@/components/leaders/PanelTabs";
+import { ReviewTabs } from "@/components/leaders/ReviewTabs";
 import { REVIEW_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { loadAcademyModes } from "@/lib/academy/server";
@@ -46,7 +46,7 @@ export default async function ReviewAcademyPage() {
               : "See where every approved leader stands on what certification needs, and run the workshop registers."}
           </p>
         </div>
-        <PanelTabs />
+        <ReviewTabs />
       </header>
 
       {isPanel ? (

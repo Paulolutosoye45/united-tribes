@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { TemplateBoard } from "@/components/cards/TemplateBoard";
-import { PanelTabs } from "@/components/leaders/PanelTabs";
+import { ReviewTabs } from "@/components/leaders/ReviewTabs";
 import { TEMPLATE_SIGN_ROLES, TEMPLATE_VIEW_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { parseTemplateList } from "@/lib/cards/templates";
@@ -25,7 +25,7 @@ export default async function ReviewTemplatesPage() {
             Every goal a leader can run has a ready-made card: who it is for, the three Success Picture lines, the weekly ideas, a guardrail, and a hidden note on what it asks of its leader. Nothing is live until a pastor or director signs it off. Sign off a community at a time, and read the sensitive ones one by one.
           </p>
         </div>
-        <PanelTabs />
+        <ReviewTabs />
       </header>
       {list ? (
         <TemplateBoard list={list} tracks={catalogue.tracks.map((t) => ({ slug: t.slug, name: t.name }))} canEdit canSign={canSign} />

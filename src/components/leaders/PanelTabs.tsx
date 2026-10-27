@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
-const TABS = [
+const BASE_TABS = [
   { href: "/review", label: "Applications", exact: true },
   { href: "/review/interviews", label: "Interviews" },
   { href: "/review/academy", label: "Academy" },
@@ -13,11 +13,14 @@ const TABS = [
   { href: "/review/rhythm", label: "Weekly report" },
 ] as const;
 
-/** The parts of the panel’s work, as a row that scrolls sideways on a phone. */
-export function PanelTabs() {
+const STAGES_TAB = { href: "/review/stages", label: "Stage changes" } as const;
+
+/** The parts of the panel’s work, as a row that scrolls sideways on a phone. `stages` adds the tab for changes to a leader’s stage of life. */
+export function PanelTabs({ stages = false }: { stages?: boolean }) {
   const pathname = usePathname();
+  const TABS: readonly { href: string; label: string; exact?: true }[] = stages ? [...BASE_TABS.slice(0, 4), STAGES_TAB, ...BASE_TABS.slice(4)] : BASE_TABS;
   // An application opened from the queue (/review/<id>) belongs to the first tab.
-  const active = TABS.find((t) => pathname === t.href || (!("exact" in t) && pathname.startsWith(`${t.href}/`)))?.href ?? "/review";
+  const active = TABS.find((t) => pathname === t.href || (!t.exact && pathname.startsWith(`${t.href}/`)))?.href ?? "/review";
   return (
     <nav aria-label="Review sections" className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
       <ul className="flex w-max gap-2 sm:w-auto">

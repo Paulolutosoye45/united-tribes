@@ -19,6 +19,8 @@ Nothing here is legal advice. The periods below are the software's starting posi
 | A leader's application, referees' answers and the panel's scores | While the person serves; withdrawn applications are deleted at once | See "Leaders" below |
 | The event log (what was done, when, by whom; never what was written) | Kept | Not cleared (it is the church's record of who did what). It holds no names or email addresses of members, only internal codes |
 | The export log and the log of switch changes (who made which file, when, as which role, for what reason, how many rows; never what was in it; docs/EXPORTS.md) | **2 years** | The daily clean-up (`worker_export_sweep`) removes older lines, and standing links a month after they ended. A file itself is never stored: it is made when asked and sent, so there is nothing to delete |
+| What a person confirmed about themselves, and its history (who set a value, when, how: `profile_facts`, `profile_fact_history`; docs/PROFILES.md) | While the person has an account | Goes with the person's account when they delete it. A change waiting for a pastor and the Details check's lines for that person go with it too |
+| A Details check's private link and six-digit code | The link **14 days**, a code **10 minutes** | Stored only as fingerprints; forgotten once the message is finished with, and expired links are deleted by the daily clean-up (`worker_details_tick`) |
 | What the platform owner's activity dashboard records (which screen was opened and when, sign-in method, form steps; never what was written; docs/ACTIVITY.md) | **13 months** of detail (the owner can set 3 to 36); the daily counts, which hold no person, are kept | The daily clean-up deletes events older than the setting. A deleted member's rows go with their account |
 | The reporting copy (`bi` views, one coded row per member and season) | Rebuilt daily from live data | A deleted member drops out at the next daily rebuild, or at once with Admin → Sending and reporting → Refresh now |
 | Database backups | As long as the backup plan keeps them | They roll off by themselves (see "What deleting does not reach") |
@@ -128,6 +130,7 @@ Be honest about these in the privacy notice (it already says the first two). Sof
 | The member's screen | `src/components/profile/YourData.tsx` |
 | The office's screen | `src/app/(app)/admin/privacy/`, `src/components/admin/ErasureBoard.tsx` |
 | Activity retention (Phase 5) | `supabase/migrations/20261215000100_activity.sql` (`activity_prune`, `activity_settings`) |
+| Profiles: the facts store and the Details check | `supabase/migrations/20270101000100_profiles_stage1.sql` (`profile_facts`, `details_check_tokens`, `worker_details_tick`) |
 | Export log retention | `supabase/migrations/20261231000100_exports.sql` (`export_retention`, `worker_export_sweep`) |
 | Tests | `tests/db/data-rights.test.ts` (16), `tests/unit/privacy.test.ts`, `e2e/journeys/09-data-rights.ts` (46 checks in a browser) |
 

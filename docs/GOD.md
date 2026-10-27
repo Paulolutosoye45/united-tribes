@@ -43,8 +43,10 @@ The account has to be new to the programme: no role, no tribe, no form. The func
 | **Every page** | `/admin`, `/review`, `/care`, `/dashboard`, `/reports`, `/growth`, privacy requests and the rest open for the owner. Every "may this person do that?" question in the platform is answered by `has_any_role()` or `my_roles()`, and both say yes to every role while the owner is unlocked. Nothing else had to change. |
 | **The console, `/god`** | An overview with live numbers; a **live feed** of what is happening (it can be kept live and filtered); every person, with their tribe and form, and the power to give or take away any role; every tribe, with its members and weeks; the owner's own record. |
 | **Appointments, `/god/appointments`** | Appoint a leader to a tribe without an application: see "Appointing a leader" below. Three tabs: **One at a time**, **Bulk**, and **Welcome email**. On each appointed leader, **Let them choose** lets the leader pick their own goal: see "Letting a leader choose their goal" below. |
-| **Activity, `/god/activity`** | The decision dashboard (Round 2, Phase 5): what needs a decision this week, where people stop in the forms, quiet tribes, failing messages, the audit trail of what the church's people did, and the thresholds. **Visible to the owner only**; read docs/ACTIVITY.md. The console's tabs are Overview, People, Tribes, Desks, Conversations, Activity and Your record |
+| **Activity, `/god/activity`** | The decision dashboard (Round 2, Phase 5): what needs a decision this week, where people stop in the forms, quiet tribes, failing messages, the audit trail of what the church's people did, and the thresholds. **Visible to the owner only**; read docs/ACTIVITY.md. The console's tabs are Overview, Desks, People, Conversations, Tribes, Appointments, Placement, Exports, Features, Details check, Activity and Your record |
 | **Desks, `/god/desks`** | Every kind of stakeholder (member, leader, assistant leader, coach, community champion, care lead, data lead, director, pastor, admin) as one desk: how many hold the role, how many were active this week, the numbers they watch (members waiting, tribes to review, applications in review, cards waiting for sign-off, open care tasks and so on), and the screens they use, each one a link that opens for the owner. See "Seeing what every stakeholder sees" below. |
+| **Features, `/god/features`** | The switchboard for Profiles and the Weekly Rhythm: every new function is Off, Rehearsal, Limited or On, at the platform, a centre, a community, a tribe or one person, with the Master pause and the log. See "Features and the Details check" below. |
+| **Details check, `/god/details`** | Ask leaders to confirm what the church holds about them (stage of life; age range for members): who, what, a rehearsal or live, and where each person stands. See below. |
 | **Conversations, `/god/conversations`** | The messages the platform has sent (and the answers people gave to them), the chats staff opened, and the announcements. See "Conversations" below. |
 | **A bar on every page** | Says the owner's access is on and when it ends, with a **Lock now** button. |
 | **Changing the passphrase** | From the owner's record: the current passphrase and the new one twice. |
@@ -197,6 +199,18 @@ not for an administrator, the held messages show nothing, the owner's record nam
 ## Exports and Reports (`/god/exports`)
 
 The **Exports** tab is the only place any switch for exports and reports can be moved. An administrator, a director and a pastor cannot, and the database refuses them if they call it directly. It holds a position for each of the fourteen packs (Off, Rehearsal, Limited, On), the formats and ways in, the two stops (*Pause all exports*, *Stop all People files*), the testers, the day the impact assessment was signed, the number that counts as unusual use, the log of every change, and the log of files made (who, which pack, why, how many rows; never what was in a file). Everything starts Off. How it works is in `docs/EXPORTS.md`.
+
+## Features and the Details check (`/god/features`, `/god/details`)
+
+The **Features** tab is the only place any switch of Profiles and the Weekly Rhythm can be moved. An administrator, a director and a pastor cannot, and the database refuses them if they call it directly (pastors, directors and the admin can only *read* what is on, so the Stage changes tab can appear for them). It lists seventeen functions in six stages; the three of stage 1 (My page, the Details Check, and the hold on the Tribe Card) can be moved, the others say when they arrive. Everything starts Off.
+
+- **Where:** the whole platform, a centre, a community, a tribe, or one person; the narrowest place wins. One rule per function per place.
+- **Who:** a rule can be limited to some roles. Open it **for tribe leaders first.** A rule limited to some roles replaces an unfiltered rule at the same place.
+- **A reason** (at least eight characters) is required to open a function for the whole platform with no role filter. Every change is one line in the log, in words.
+- **Order is enforced:** the Details Check cannot be opened before My page.
+- **The Master pause** makes every new function act as Off at once; resuming brings back every rule.
+
+The **Details check** tab asks people to confirm a fact. Choose who (appointed leaders, all leaders, one tribe's leader, named people, or everyone still unconfirmed) and what; the page shows how many would be asked and how many are left out and why, never who. A **Rehearsal** writes what would be sent and sends nothing; a **Live** run needs a tick to say you understand, then sends one message to each person with a private link. Each run shows where everyone stands and **never what they answered**. How it works is in `docs/PROFILES.md`.
 
 ## Guarding it
 

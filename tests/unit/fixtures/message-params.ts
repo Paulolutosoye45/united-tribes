@@ -1,3 +1,4 @@
+import { DETAILS_SAMPLES } from "@/lib/messaging/templates-details";
 import { INVITATION_SAMPLES } from "@/lib/messaging/templates-invitation";
 import { LEADER_WELCOME_SAMPLES } from "@/lib/messaging/templates-leader-welcome";
 import { PLACEMENT_SAMPLES } from "@/lib/messaging/templates-placement";
@@ -106,6 +107,7 @@ const OVERRIDES: Record<string, Params> = {
   ...PLACEMENT_SAMPLES,
   ...INVITATION_SAMPLES,
   ...LEADER_WELCOME_SAMPLES,
+  ...DETAILS_SAMPLES,
 };
 
 export function sampleParams(template: string): Params {

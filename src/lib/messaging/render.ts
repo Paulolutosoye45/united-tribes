@@ -37,6 +37,7 @@ export function buildContext(msg: ClaimedMessage, site: string): Context {
     first,
     link: (path) => `${base}${path.startsWith("/") ? path : `/${path}`}`,
     reply: (outcome) => (msg.reply_token ? `${base}/r/${msg.reply_token}?o=${outcome}` : null),
+    token: msg.reply_token,
   };
 }
 
@@ -172,6 +173,8 @@ export type RenderedWhatsApp = {
   vars: string[];
   /** One entry per quick-reply button, in order: what comes back to us when the person taps it. */
   quickReplyPayloads: string[];
+  /** The button that opens a private link: its place among the buttons, and the part of the address that is this message's own. */
+  urlButton?: { index: number; token: string };
 };
 
 export function renderWhatsApp(msg: ClaimedMessage, site: string): RenderedWhatsApp {
@@ -184,9 +187,10 @@ export function renderWhatsApp(msg: ClaimedMessage, site: string): RenderedWhats
   );
   // Meta rejects a variable with line breaks, tabs, or more than four spaces in a row, and any empty one.
   return {
-    name: whatsappTemplateName(def.key),
+    name: whatsappTemplateName(def.whatsappAs ?? def.key),
     vars: content.vars.map((v) => flat(v).slice(0, 600)),
     quickReplyPayloads: payloads,
+    ...(content.urlButton ? { urlButton: { index: quick.length, token: content.urlButton.token } } : {}),
   };
 }
 
@@ -200,9 +204,13 @@ export function metaTemplateDefinition(def: TemplateDef, language: string, sampl
       ...(content.example.length > 0 ? { example: { body_text: [content.example] } } : {}),
     },
   ];
-  if (content.quickReplies?.length) {
-    components.push({ type: "BUTTONS", buttons: content.quickReplies.map((text) => ({ type: "QUICK_REPLY", text })) });
-  }
+  const buttons: unknown[] = [
+    ...(content.quickReplies ?? []).map((text) => ({ type: "QUICK_REPLY", text })),
+    ...(content.urlButton
+      ? [{ type: "URL", text: content.urlButton.label, url: `${content.urlButton.prefix}{{1}}`, example: [`${content.urlButton.prefix}${content.urlButton.example}`] }]
+      : []),
+  ];
+  if (buttons.length > 0) components.push({ type: "BUTTONS", buttons });
   return {
     name: whatsappTemplateName(def.key),
     language,

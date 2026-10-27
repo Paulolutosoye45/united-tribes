@@ -23,10 +23,10 @@ export type NoticeGroupKey =
 /** What the Notifications page says about each group of notices. */
 export const NOTICE_GROUPS: { key: NoticeGroupKey; label: string; who: string; digest: boolean; note: string }[] = [
   { key: "admin", label: "Admins", who: "Everyone with the admin role", digest: true, note: "Deletion requests, messages not going out, role changes, the launch checklist." },
-  { key: "pastors", label: "Pastors", who: "Everyone with the pastor role", digest: true, note: "Applications ready for a decision, Tribe Cards to review, concerns raised by a referee." },
+  { key: "pastors", label: "Pastors", who: "Everyone with the pastor role", digest: true, note: "Applications ready for a decision, Tribe Cards to review, changes to a leader’s stage of life, concerns raised by a referee." },
   { key: "directors", label: "Directors", who: "Everyone with the director role", digest: true, note: "Interviews, offers, members waiting for a leader, the countdown to a season." },
   { key: "care", label: "Care team", who: "The care lead; the directors if there is none; the admins if there are none", digest: true, note: "Call-backs due, a parent's permission waiting for its call, people who asked for someone to reach out. Never a name or a reason." },
-  { key: "coaches", label: "Coaches", who: "Everyone with the coach role", digest: true, note: "A new leader, a Tribe Card submitted, a leader ready for a practice assessment or stuck." },
+  { key: "coaches", label: "Coaches", who: "Everyone with the coach role", digest: true, note: "A new leader, a Tribe Card submitted, a leader ready for a practice assessment or stuck, a leader who has not confirmed their details." },
   { key: "leaders", label: "Leaders", who: "The leader of a tribe, and its assistant", digest: false, note: "Their card approved or sent back, certification, seats, workshops, the question of next season." },
   { key: "champions", label: "Community champions", who: "The champion of each community", digest: false, note: "Their community's month, and members waiting there." },
   { key: "data_lead", label: "Data lead", who: "Everyone with the data lead role", digest: false, note: "Integrity flags and held references of the week, the reporting copy, the week's email." },
@@ -183,6 +183,18 @@ add({
   ],
   button: { label: "Open the model", path: "/growth/model" },
   sample: { path: "/growth/model" },
+});
+
+add({
+  key: "pastor_stage_review", audience: "office", group: "pastors", title: "A leader asked to change their stage of life",
+  who: "Pastors and directors of the leader’s centre", when: "When a leader whose tribe has members asks to change their stage",
+  subject: (p) => `${clean(p.leader, "A leader")} asked to change their ${clean(p.what, "stage of life").toLowerCase()}`,
+  body: (p) => [
+    `${clean(p.leader, "A leader")} asked to change their ${clean(p.what, "stage of life").toLowerCase()}. Their tribe has members, so the change waits for a pastor.`,
+    "Until you decide, nothing changes and nobody is moved. If you approve, the tribe moves to the new stage; the people already in it stay where they are.",
+  ],
+  button: { label: "Open the change", path: "/review/stages" },
+  sample: { leader: "Ngozi", what: "Stage of life", path: "/review/stages" },
 });
 
 add({
@@ -484,6 +496,18 @@ add({
   ],
   button: { label: "Open the card", path: "/review/cards" },
   sample: { leader: "Ngozi", tribe: "Builders Tribe", path: "/review/cards" },
+});
+
+add({
+  key: "coach_details_unanswered", audience: "coach", group: "coaches", title: "A leader has not answered the check of their details",
+  who: "The leader’s coach", when: "A week after the church asked a leader to confirm their details, if they have not answered",
+  subject: (p) => `Please speak to ${clean(p.leader, "your leader")} about their details`,
+  body: (p) => [
+    `${clean(p.leader, "Your leader")} has not yet confirmed the details we hold for their tribe, a week after the church asked.`,
+    "A word from you usually does more than another message. It takes them under a minute.",
+  ],
+  button: { label: "Open my leaders", path: "/coach" },
+  sample: { leader: "Ngozi", path: "/coach" },
 });
 
 add({

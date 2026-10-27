@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PanelTabs } from "@/components/leaders/PanelTabs";
+import { ReviewTabs } from "@/components/leaders/ReviewTabs";
 import { FollowUpList, type FollowUpRow } from "@/components/rhythm/FollowUpList";
 import { RhythmDigest } from "@/components/rhythm/RhythmDigest";
 import { TestimonyReview } from "@/components/rhythm/TestimonyReview";
@@ -56,7 +56,7 @@ export default async function RhythmPage({ searchParams }: { searchParams: Searc
             How every tribe’s week went, built from the leaders’ two-minute logs, the members’ steps and the three check-ins. Nothing a member writes privately appears here.
           </p>
         </div>
-        {hasAnyRole(session.roles, REVIEW_ROLES) ? <PanelTabs /> : null}
+        {hasAnyRole(session.roles, REVIEW_ROLES) ? <ReviewTabs /> : null}
       </header>
 
       {digest ? <RhythmDigest digest={digest} canOpen={canOpen} /> : null}

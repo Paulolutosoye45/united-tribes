@@ -3,6 +3,7 @@ import { OUTREACH_TEMPLATES } from "@/lib/outreach/templates";
 import { NOTICE_TEMPLATES } from "./templates-notices";
 import { INVITATION_TEMPLATES } from "./templates-invitation";
 import { LEADER_WELCOME_TEMPLATES } from "./templates-leader-welcome";
+import { DETAILS_TEMPLATES } from "./templates-details";
 import { PLACEMENT_TEMPLATES } from "./templates-placement";
 import { salutation } from "@/lib/leaders/status";
 import { digestSummary } from "./summary";
@@ -1517,6 +1518,7 @@ export const TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(
     ...PLACEMENT_TEMPLATES,
     ...INVITATION_TEMPLATES,
     ...LEADER_WELCOME_TEMPLATES,
+    ...DETAILS_TEMPLATES,
   ].map((t) => [t.key, signed(t)]),
 );
 

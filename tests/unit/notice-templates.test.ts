@@ -23,12 +23,12 @@ function message(template: string, params: Params, over: Partial<ClaimedMessage[
 }
 
 const read = (file: string) => readFileSync(join(__dirname, "../../supabase/migrations", file), "utf8");
-const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}`;
+const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}`;
 
 describe("the notices, as templates", () => {
-  it("has the 59 notices (the 57 of the blueprint, the one for a new application and the one for an unusual number of named files), each registered with the sender", () => {
-    expect(keys).toHaveLength(59);
-    expect(new Set(keys).size).toBe(59);
+  it("has the 61 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, and the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach), each registered with the sender", () => {
+    expect(keys).toHaveLength(61);
+    expect(new Set(keys).size).toBe(61);
     for (const key of keys) expect(TEMPLATES[key], key).toBeDefined();
     expect(NOTICE_CATALOGUE.map((n) => n.key).sort()).toEqual([...keys].sort());
     expect(Object.keys(NOTICE_SAMPLES).sort()).toEqual([...keys].sort());
@@ -39,6 +39,8 @@ describe("the notices, as templates", () => {
     const notKinds = new Set([
       "admin_attention", "applicant_first", "care_lead", "care_weekly", "data_lead", "data_requests", "leader_first",
       "referee_concern", "referee_concerns", "referee_days", "referee_first",
+      // Profiles stage 1: a function key on the Features switchboard, and a message template (email only, not a notice)
+      "coach_card", "leader_welcome",
     ]);
     const queued = new Set([...SQL.matchAll(/'((?:pastor|director|admin|coach|care|leader|member|applicant|referee|champion|data|staff)_[a-z_]+)'/g)].map((m) => m[1]).filter((k) => !notKinds.has(k)));
     expect([...queued].filter((k) => !keys.includes(k))).toEqual([]);

@@ -992,6 +992,29 @@ describe("locked-down defaults", () => {
       "assistant_my_state",
       "assistant_requests",
       "assistant_decide",
+      // Profiles and the Weekly Rhythm, stage 1. The switchboard and the Details check console each begin god_only() (the platform owner's alone);
+      // the rest answer about the signed-in person only, or what a pastor, director or admin may already read. Everything is Off until the owner moves it.
+      "feature_state",
+      "my_features",
+      "my_page_state",
+      "my_page_answer",
+      "details_check_info",
+      "details_check_answer",
+      "stage_reviews_list",
+      "stage_review_decide",
+      "tribe_stage_status",
+      "features_overview",
+      "god_feature_board",
+      "god_feature_find",
+      "god_feature_set",
+      "god_feature_remove",
+      "god_feature_master",
+      "god_feature_log",
+      "god_details_plan",
+      "god_details_send",
+      "god_details_checks",
+      "god_details_status",
+      "god_details_close",
       // Exports and Reports. The switchboard functions each begin god_only() (the platform owner's alone); the rest check who is asking and
       // whether the pack is on for them. A pack that is Off gives nothing to anyone.
       "export_board",
@@ -1078,6 +1101,12 @@ describe("locked-down defaults", () => {
       "worker_placed_withhold",
       "worker_placement_tick",
       "worker_assistant_tick",
+      // The Details check: the private page for a person with no account, and the heartbeat's step (each needs the sending token, and the link's secret)
+      "worker_details_info",
+      "worker_details_code_send",
+      "worker_details_code_check",
+      "worker_details_answer",
+      "worker_details_tick",
       // A tool that fetches a standing feed link has no account: the secret in the address is the credential, and any wrong secret gets nothing
       "export_feed_read",
       "ping",

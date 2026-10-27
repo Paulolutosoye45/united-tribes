@@ -54,6 +54,11 @@ export type WhatsAppContent = {
   vars: string[];
   /** Quick-reply buttons: the answer is sent back to us without the person typing. */
   quickReplies?: string[];
+  /**
+   * One button that opens a private link. Meta fixes the address when the template is approved and lets one piece of it vary: `prefix` is the
+   * fixed part, `token` the part that changes for each message, `example` what it looks like for the reviewer.
+   */
+  urlButton?: { label: string; prefix: string; token: string; example: string };
 };
 
 export type Context = {
@@ -64,6 +69,8 @@ export type Context = {
   link: (path: string) => string;
   /** The page behind the one-tap links of the Friday message. */
   reply: (outcome: "done" | "partly" | "not_yet") => string | null;
+  /** The private link riding on this message, when it has one (the Details Check). Left out where a context is made without a message. */
+  token?: string | null;
 };
 
 export type TemplateDef = {
@@ -73,6 +80,8 @@ export type TemplateDef = {
   title: string;
   /** Only ever sent by email (a staff alert): it is never put to Meta for approval. The WhatsApp wording still exists so the type is whole. */
   emailOnly?: boolean;
+  /** Sent on WhatsApp under another template's name and wording (a reminder reuses the approved one), so it is never put to Meta on its own. */
+  whatsappAs?: string;
   email: (p: Params, c: Context) => EmailContent;
   sms: (p: Params, c: Context) => string;
   whatsapp: (p: Params, c: Context) => WhatsAppContent;

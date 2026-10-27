@@ -62,6 +62,9 @@ export class WhatsAppTemplateSender implements ChannelProvider {
     rendered.quickReplyPayloads.forEach((payload, index) => {
       components.push({ type: "button", sub_type: "quick_reply", index: String(index), parameters: [{ type: "payload", payload }] });
     });
+    if (rendered.urlButton) {
+      components.push({ type: "button", sub_type: "url", index: String(rendered.urlButton.index), parameters: [{ type: "text", text: rendered.urlButton.token }] });
+    }
     return {
       messaging_product: "whatsapp",
       recipient_type: "individual",

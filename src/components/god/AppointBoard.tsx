@@ -42,12 +42,15 @@ export function AppointBoard({
   communities,
   appointments,
   choose = null,
+  stageNote = false,
 }: {
   tracks: Track[];
   communities: Community[];
   appointments: Appointment[];
   /** What "Let them choose" needs. Null where the database cannot give it, and the page then looks as it always did. */
   choose?: ChooseContext | null;
+  /** The Details check is open: the stage of life here is a suggestion the leader will be asked to confirm. False, and the form is word for word as it was. */
+  stageNote?: boolean;
 }) {
   const d = useDo();
   const [query, setQuery] = useState("");
@@ -252,6 +255,11 @@ export function AppointBoard({
               <strong>A pastor has cleared them for sensitive subjects.</strong> Without this, tribes about a sensitive subject are not offered to them.
             </span>
           </label>
+          {stageNote ? (
+            <p className="t-small text-soft" data-testid="stage-suggestion-note">
+              The stage of life is your suggestion. The leader will be asked to confirm it, and what they confirm is what the church keeps.
+            </p>
+          ) : null}
           {problem ? (
             <p role="alert" className="t-small text-danger">
               {problem}

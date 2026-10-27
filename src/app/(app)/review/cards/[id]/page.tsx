@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CardReviewView } from "@/components/academy/CardReviewView";
+import { StageBanner } from "@/components/profile/StageBanner";
 import { REVIEW_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import type { AssistantSuggestion, CardReview } from "@/lib/academy/types";
 import { isUuid } from "@/lib/leaders/errors";
+import { loadStageStatus } from "@/lib/profile/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Review a Tribe Card" };
@@ -23,6 +25,8 @@ export default async function ReviewCardPage({ params }: { params: Promise<{ id:
     supabase.rpc("tribe_goal_choice_note", { p_tribe: id }),
   ]);
   const card = data as CardReview;
+  // Null unless the Details check is open for this leader, so with it Off the page is as it was.
+  const stage = await loadStageStatus(supabase, id);
   // A leader the owner appointed has no application behind the card. The office is told that, and never by whom.
   const note = appointment.error ? null : (appointment.data as { text?: unknown } | null);
   const appointedNote = note && typeof note.text === "string" && note.text.length <= 200 ? note.text : null;
@@ -48,6 +52,7 @@ export default async function ReviewCardPage({ params }: { params: Promise<{ id:
           {choiceNote}
         </p>
       ) : null}
+      {stage ? <StageBanner status={stage} /> : null}
       <CardReviewView card={card} suggestions={(suggestions.data as AssistantSuggestion[] | null) ?? []} canPair />
     </div>
   );

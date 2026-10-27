@@ -67,6 +67,8 @@ export function welcomeEmail(p: Params, c: Context): EmailContent {
   const community = text(p.community);
   const academy = mode(p.academy, ["required", "optional", "off"]);
   const declaration = mode(p.declaration, ["required", "off"]);
+  // Only when the Details Check is On for this leader and their stage is not yet confirmed (the database says so). With it Off the email is word for word what the pastor approved.
+  const confirmDetails = p.confirm_details === true;
   const name = text(p.signature_name) || WELCOME_DEFAULT_SIGNATURE[0];
   const title = text(p.signature_title) || WELCOME_DEFAULT_SIGNATURE[1];
 
@@ -140,8 +142,10 @@ export function welcomeEmail(p: Params, c: Context): EmailContent {
     paragraphs: [
       "The pastorate at The Covenant Nation asked you to lead a tribe because it trusts you. That trust is the reason you are a leader, and it is why a few promises come with the role.",
       tribeLine,
+      ...(confirmDetails ? ["One thing first, and it takes under a minute: please check the details we hold for your tribe. The button below opens My page, after you sign in."] : []),
       "Here are the steps, in the order you will do them. Each has a picture of the page, with the thing to press circled.",
     ],
+    ...(confirmDetails ? { options: [{ label: "Confirm your details", url: c.link("/my") }] } : {}),
     steps: { title: "Your steps", items: steps.map((s) => ({ title: s.title, body: s.body, image: picture(c, s.image) })) },
     lists: [
       {

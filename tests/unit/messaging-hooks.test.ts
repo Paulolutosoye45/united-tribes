@@ -284,6 +284,39 @@ describe("POST /api/cron/tick", () => {
     expect((await thrown.json()).problems.join(" ")).toContain("exports: could not run");
   });
 
+  it("runs the Details Check's reminders and clean-up each beat, before the messages go out, and a fault in it never stops anything", async () => {
+    process.env.WORKER_TOKEN = TOKEN;
+    process.env.MESSAGING_MODE = "log";
+    const order: string[] = [];
+    rpc.mockImplementation(async (fn: string) => {
+      order.push(fn);
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const ok = await call("POST", TOKEN_HEADER);
+    expect(ok.status).toBe(200);
+    expect((await ok.json()).problems).toEqual([]);
+    expect(rpc.mock.calls.filter(([fn]) => fn === "worker_details_tick")).toHaveLength(1);
+    // a reminder it queues goes out in this same beat
+    expect(order.indexOf("worker_details_tick")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("worker_details_tick")).toBeLessThan(order.indexOf("worker_claim"));
+
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_details_tick") return { data: null, error: { message: "boom" } };
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const bad = await call("POST", TOKEN_HEADER);
+    expect(bad.status).toBe(200);
+    expect((await bad.json()).problems.join(" ")).toContain("details check: boom");
+
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_details_tick") throw new Error("socket closed");
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const thrown = await call("POST", TOKEN_HEADER);
+    expect(thrown.status).toBe(200);
+    expect((await thrown.json()).problems.join(" ")).toContain("details check: could not run");
+  });
+
   it("answers 502 when the database cannot be reached at all", async () => {
     process.env.WORKER_TOKEN = TOKEN;
     rpc.mockResolvedValue({ data: null, error: { message: "connection refused" } });

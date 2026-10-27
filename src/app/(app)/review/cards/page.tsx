@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CardQueue } from "@/components/academy/CardQueue";
-import { PanelTabs } from "@/components/leaders/PanelTabs";
+import { ReviewTabs } from "@/components/leaders/ReviewTabs";
 import { REVIEW_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import type { CardQueueItem } from "@/lib/academy/types";
@@ -25,7 +25,7 @@ export default async function ReviewCardsPage() {
             {waiting > 0 ? ` ${waiting} ${waiting === 1 ? "card is" : "cards are"} waiting.` : ""}
           </p>
         </div>
-        <PanelTabs />
+        <ReviewTabs />
       </header>
       <CardQueue items={items} />
     </div>

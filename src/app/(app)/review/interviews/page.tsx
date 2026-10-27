@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PanelTabs } from "@/components/leaders/PanelTabs";
+import { ReviewTabs } from "@/components/leaders/ReviewTabs";
 import { SlotManager } from "@/components/leaders/SlotManager";
 import { REVIEW_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
@@ -18,7 +18,7 @@ export default async function InterviewTimesPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-4">
-        {canSeeNames ? <PanelTabs /> : null}
+        {canSeeNames ? <ReviewTabs /> : null}
         <h1 className="t-title">Interview times</h1>
         <p className="t-body measure text-soft">
           Each time is one conversation with two panelists. An invited applicant picks one that suits them, and a time can only be booked once. Applicants are only offered times more than a day away.

@@ -48,6 +48,16 @@ async function handle(request: Request) {
     } catch {
       early.push("placement: could not run this time");
     }
+    // The Details check: reminders and the call to a coach come first so they go out in this same beat, and links and codes that have done
+    // their work are forgotten. With the function Off (or the Master pause on) the database does nothing at all. A fault is listed only: it
+    // never changes the answer, so it is kept apart from the faults above that do.
+    const detailsFaults: string[] = [];
+    try {
+      const details = await rpc("worker_details_tick");
+      if (details.error) detailsFaults.push(`details check: ${details.error.message}`);
+    } catch {
+      detailsFaults.push("details check: could not run this time");
+    }
     const summary = await runDispatch({
       rpc,
       providers: providersFromEnv(),
@@ -59,6 +69,7 @@ async function handle(request: Request) {
     // in "problems" but never turns a working tick into a failed one.
     summary.problems.push(...early);
     const status = summary.problems.length > 0 && summary.sent === 0 && summary.claimed === 0 ? 502 : 200;
+    summary.problems.push(...detailsFaults);
     // Reports the database has just made get their opening paragraph. A fault here never stops the messages.
     const reports = await writePendingSummaries(rpc, ai, { budgetMs: 12_000 });
     summary.problems.push(...reports.problems);

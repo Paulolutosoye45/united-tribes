@@ -7,6 +7,7 @@ import { InterviewPicker, type InterviewOptions } from "@/components/leaders/Int
 import { LeaderOffer } from "@/components/leaders/LeaderOffer";
 import { RefereeLinks } from "@/components/leaders/RefereeLinks";
 import { StageList } from "@/components/leaders/StageList";
+import { DetailsStrip } from "@/components/profile/DetailsStrip";
 import { WithdrawApplication } from "@/components/leaders/WithdrawApplication";
 import { buttonClasses } from "@/components/ui/Button";
 import { trainingAsk, trainingButton } from "@/lib/academy/wording";
@@ -25,6 +26,7 @@ import { loadApplyModes, loadMyApplication, loadPipeline } from "@/lib/leaders/s
 import { isDecided, isInReview, stageStates } from "@/lib/leaders/status";
 import { isStepId, minutesLeft, resolveStep, shieldFills } from "@/lib/leaders/steps";
 import { outlineDetails, stageDetails, statusLine } from "@/lib/leaders/wording";
+import { loadMyPage } from "@/lib/profile/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Lead a tribe" };
@@ -49,6 +51,8 @@ export default async function LeadPage() {
   const interviewing = ["interview_invited", "interview_booked", "interviewed"].includes(status);
   const options = interviewing ? ((await supabase.rpc("my_interview_options")).data as InterviewOptions | null) : null;
   const isLeader = session.roles.includes("leader") || session.roles.includes("assistant_leader");
+  // Details waiting for a leader's own confirmation (My page). Zero unless the function is open for them, so with it Off the page is as it was.
+  const toCheck = isLeader ? await loadMyPage(supabase).then((p) => (p.enabled ? p.facts.filter((f) => f.state === "unconfirmed").length : 0)) : 0;
 
   // ------------------------------------------------------------------ appointed
   // A leader the church appointed has no application to show, so the page would call them someone who has never applied. The database
@@ -92,6 +96,8 @@ export default async function LeadPage() {
             </div>
           </div>
         </section>
+
+        <DetailsStrip count={toCheck} />
 
         <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
           <StageList stages={steps} states={steps} />
@@ -255,6 +261,8 @@ export default async function LeadPage() {
           </div>
         </div>
       </section>
+
+      {approved ? <DetailsStrip count={toCheck} /> : null}
 
       {offer ? <LeaderOffer offer={offer} /> : null}
 

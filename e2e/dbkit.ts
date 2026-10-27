@@ -7,12 +7,13 @@ import type { Q, TestDb } from "../tests/db/helpers";
  * situation (a panel, an approved leader) the way the database tests do, then drives the screens in the browser.
  */
 export function testDbFor(admin: Client): TestDb {
-  async function inTransaction<T>(role: string, userId: string | null, fn: (q: Q) => Promise<T>): Promise<T> {
+  async function inTransaction<T>(role: string, userId: string | null, fn: (q: Q) => Promise<T>, session?: string): Promise<T> {
     await admin.query("begin");
     try {
       await admin.query(`set local role ${role}`);
       await admin.query("select set_config('request.jwt.claim.sub', $1, true)", [userId ?? ""]);
-      await admin.query("select set_config('request.jwt.claims', $1, true)", [""]);
+      // The whole token, as the API gives it to the database; empty unless a journey names a sign-in session (the owner's unlock is kept per session).
+      await admin.query("select set_config('request.jwt.claims', $1, true)", [userId && session ? JSON.stringify({ sub: userId, role, session_id: session }) : ""]);
       const result = await fn((sql, params) => admin.query(sql, params));
       await admin.query("commit");
       return result;
@@ -24,7 +25,7 @@ export function testDbFor(admin: Client): TestDb {
   return {
     admin,
     name: "ut_dev",
-    asUser: (userId, fn) => inTransaction("authenticated", userId, fn),
+    asUser: (userId, fn, opts) => inTransaction("authenticated", userId, fn, opts?.session),
     asAnon: (fn) => inTransaction("anon", null, fn),
     async createUser(opts = {}) {
       const email = (opts.email ?? `${randomUUID().slice(0, 8)}@example.org`).toLowerCase();

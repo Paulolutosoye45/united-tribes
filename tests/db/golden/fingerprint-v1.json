@@ -1,0 +1,3733 @@
+{
+  "my_tribe_ada": {
+    "ok": null
+  },
+  "my_tribe_leaderA": {
+    "ok": {
+      "id": "<tribeA>",
+      "god": "Pray daily.",
+      "goal": {
+        "slug": "step-into-a-leadership-role",
+        "title": "Step into a leadership role"
+      },
+      "life": "Take one step a week.",
+      "mode": "in_person",
+      "name": "Alpha Tribe",
+      "role": "leader",
+      "slot": "weeknight-evening",
+      "zone": "mainland",
+      "coach": {
+        "id": "<coach>",
+        "name": "Coach Test"
+      },
+      "fixed": [],
+      "story": "My story.",
+      "track": {
+        "name": "Builders",
+        "slug": "builders"
+      },
+      "leader": {
+        "id": "<leaderA>",
+        "name": "Leader1 Test"
+      },
+      "others": "Call each other.",
+      "season": {
+        "id": "<season>",
+        "name": "Golden season",
+        "starts_on": "<date>"
+      },
+      "status": "approved",
+      "missing": [
+        "story",
+        "god"
+      ],
+      "capacity": 12,
+      "editable": false,
+      "assistant": {
+        "id": "<assistantA>",
+        "name": "Assistant1 Test"
+      },
+      "certified": true,
+      "community": {
+        "name": "Professionals",
+        "slug": "professionals"
+      },
+      "module_ok": false,
+      "place_note": "Near the bridge",
+      "tribe_type": "mixed",
+      "meeting_day": 3,
+      "review_note": null,
+      "reviewed_at": null,
+      "meeting_link": null,
+      "meeting_time": "20:00",
+      "published_at": "<time>",
+      "submitted_at": null,
+      "module_needed": true,
+      "duration_minutes": 75
+    }
+  },
+  "my_tribe_assistantA": {
+    "ok": {
+      "id": "<tribeA>",
+      "god": "Pray daily.",
+      "goal": {
+        "slug": "step-into-a-leadership-role",
+        "title": "Step into a leadership role"
+      },
+      "life": "Take one step a week.",
+      "mode": "in_person",
+      "name": "Alpha Tribe",
+      "role": "assistant",
+      "slot": "weeknight-evening",
+      "zone": "mainland",
+      "coach": {
+        "id": "<coach>",
+        "name": "Coach Test"
+      },
+      "fixed": [],
+      "story": "My story.",
+      "track": {
+        "name": "Builders",
+        "slug": "builders"
+      },
+      "leader": {
+        "id": "<leaderA>",
+        "name": "Leader1 Test"
+      },
+      "others": "Call each other.",
+      "season": {
+        "id": "<season>",
+        "name": "Golden season",
+        "starts_on": "<date>"
+      },
+      "status": "approved",
+      "missing": [
+        "story",
+        "god"
+      ],
+      "capacity": 12,
+      "editable": false,
+      "assistant": {
+        "id": "<assistantA>",
+        "name": "Assistant1 Test"
+      },
+      "certified": true,
+      "community": {
+        "name": "Professionals",
+        "slug": "professionals"
+      },
+      "module_ok": false,
+      "place_note": "Near the bridge",
+      "tribe_type": "mixed",
+      "meeting_day": 3,
+      "review_note": null,
+      "reviewed_at": null,
+      "meeting_link": null,
+      "meeting_time": "20:00",
+      "published_at": "<time>",
+      "submitted_at": null,
+      "module_needed": true,
+      "duration_minutes": 75
+    }
+  },
+  "my_tribe_leaderB": {
+    "ok": {
+      "id": "<tribeB>",
+      "god": "Pray daily.",
+      "goal": {
+        "slug": "step-into-a-leadership-role",
+        "title": "Step into a leadership role"
+      },
+      "life": "Take one step a week.",
+      "mode": "in_person",
+      "name": "Beta Tribe",
+      "role": "leader",
+      "slot": "sunday-afternoon",
+      "zone": "mainland",
+      "coach": null,
+      "fixed": [],
+      "story": "My story.",
+      "track": {
+        "name": "Stewards",
+        "slug": "stewards"
+      },
+      "leader": {
+        "id": "<leaderB>",
+        "name": "Leader2 Test"
+      },
+      "others": "Call each other.",
+      "season": {
+        "id": "<season>",
+        "name": "Golden season",
+        "starts_on": "<date>"
+      },
+      "status": "approved",
+      "missing": [
+        "story",
+        "god"
+      ],
+      "capacity": 12,
+      "editable": false,
+      "assistant": null,
+      "certified": true,
+      "community": {
+        "name": "Professionals",
+        "slug": "professionals"
+      },
+      "module_ok": false,
+      "place_note": "Near the bridge",
+      "tribe_type": "mixed",
+      "meeting_day": 0,
+      "review_note": null,
+      "reviewed_at": null,
+      "meeting_link": null,
+      "meeting_time": "15:00",
+      "published_at": "<time>",
+      "submitted_at": null,
+      "module_needed": true,
+      "duration_minutes": 75
+    }
+  },
+  "my_tribe_eze": {
+    "ok": null
+  },
+  "match_me_eze": {
+    "ok": {
+      "ran": true,
+      "model": "v1",
+      "short": true,
+      "ran_at": "<time>",
+      "season": {
+        "name": "Golden season",
+        "starts_on": "<date>"
+      },
+      "tribes": [
+        {
+          "rank": 1,
+          "label": "excellent",
+          "tribe": {
+            "id": "<tribeA>",
+            "god": "Pray daily.",
+            "goal": "Step into a leadership role",
+            "life": "Take one step a week.",
+            "mode": "in_person",
+            "name": "Alpha Tribe",
+            "open": true,
+            "zone": "mainland",
+            "story": "My story.",
+            "track": "Builders",
+            "others": "Call each other.",
+            "capacity": 12,
+            "community": "Professionals",
+            "place_note": "Near the bridge",
+            "seats_left": 9,
+            "tribe_type": "mixed",
+            "meeting_day": 3,
+            "meeting_time": "20:00",
+            "leader_photo_id": null,
+            "duration_minutes": 75,
+            "season_starts_on": "<date>",
+            "leader_first_name": "Leader1"
+          },
+          "chosen": false,
+          "degree": 93,
+          "reasons": [
+            "goal_same",
+            "stage_same",
+            "community_same"
+          ]
+        }
+      ],
+      "profile": true,
+      "placement": null,
+      "candidates": 1,
+      "on_starter_list": false
+    }
+  },
+  "my_match_eze": {
+    "ok": {
+      "ran": true,
+      "model": "v1",
+      "short": true,
+      "ran_at": "<time>",
+      "season": {
+        "name": "Golden season",
+        "starts_on": "<date>"
+      },
+      "tribes": [
+        {
+          "rank": 1,
+          "label": "excellent",
+          "tribe": {
+            "id": "<tribeA>",
+            "god": "Pray daily.",
+            "goal": "Step into a leadership role",
+            "life": "Take one step a week.",
+            "mode": "in_person",
+            "name": "Alpha Tribe",
+            "open": true,
+            "zone": "mainland",
+            "story": "My story.",
+            "track": "Builders",
+            "others": "Call each other.",
+            "capacity": 12,
+            "community": "Professionals",
+            "place_note": "Near the bridge",
+            "seats_left": 9,
+            "tribe_type": "mixed",
+            "meeting_day": 3,
+            "meeting_time": "20:00",
+            "leader_photo_id": null,
+            "duration_minutes": 75,
+            "season_starts_on": "<date>",
+            "leader_first_name": "Leader1"
+          },
+          "chosen": false,
+          "degree": 93,
+          "reasons": [
+            "goal_same",
+            "stage_same",
+            "community_same"
+          ]
+        }
+      ],
+      "profile": true,
+      "placement": null,
+      "candidates": 1,
+      "on_starter_list": false
+    }
+  },
+  "my_match_ada": {
+    "ok": {
+      "ran": false,
+      "model": null,
+      "short": false,
+      "ran_at": null,
+      "season": {
+        "name": "Golden season",
+        "starts_on": "<date>"
+      },
+      "tribes": [],
+      "profile": true,
+      "placement": {
+        "rank": 1,
+        "label": "excellent",
+        "tribe": {
+          "id": "<tribeA>",
+          "god": "Pray daily.",
+          "goal": "Step into a leadership role",
+          "life": "Take one step a week.",
+          "mode": "in_person",
+          "name": "Alpha Tribe",
+          "open": true,
+          "zone": "mainland",
+          "story": "My story.",
+          "track": "Builders",
+          "others": "Call each other.",
+          "capacity": 12,
+          "community": "Professionals",
+          "place_note": "Near the bridge",
+          "seats_left": 9,
+          "tribe_type": "mixed",
+          "meeting_day": 3,
+          "meeting_time": "20:00",
+          "leader_photo_id": null,
+          "duration_minutes": 75,
+          "season_starts_on": "<date>",
+          "leader_first_name": "Leader1"
+        },
+        "called": false,
+        "degree": 92,
+        "covenant": {},
+        "agreed_at": "<time>",
+        "group_url": null,
+        "joined_at": "<time>",
+        "can_release": false,
+        "season_name": "Golden season",
+        "first_meeting_by": "<date>",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>",
+        "assistant_first_name": "Assistant1"
+      },
+      "candidates": null,
+      "on_starter_list": false
+    }
+  },
+  "match_candidates_eze": {
+    "rows": [
+      {
+        "r_goal": 1,
+        "r_faith": 0.6,
+        "r_place": 1,
+        "r_seats": 9,
+        "r_stage": 1,
+        "r_style": 0.5833333333333334,
+        "r_tribe": "<tribeA>",
+        "r_degree": 93,
+        "r_online": false,
+        "r_rhythm": 0.9,
+        "r_balance": 0.6666666666666666,
+        "r_affinity": 0.5,
+        "r_community": 1,
+        "r_published": "<time>"
+      }
+    ]
+  },
+  "match_card_alpha": {
+    "ok": {
+      "id": "<tribeA>",
+      "god": "Pray daily.",
+      "goal": "Step into a leadership role",
+      "life": "Take one step a week.",
+      "mode": "in_person",
+      "name": "Alpha Tribe",
+      "open": true,
+      "zone": "mainland",
+      "story": "My story.",
+      "track": "Builders",
+      "others": "Call each other.",
+      "capacity": 12,
+      "community": "Professionals",
+      "place_note": "Near the bridge",
+      "seats_left": 9,
+      "tribe_type": "mixed",
+      "meeting_day": 3,
+      "meeting_time": "20:00",
+      "leader_photo_id": null,
+      "duration_minutes": 75,
+      "season_starts_on": "<date>",
+      "leader_first_name": "Leader1"
+    }
+  },
+  "match_card_beta": {
+    "ok": {
+      "id": "<tribeB>",
+      "god": "Pray daily.",
+      "goal": "Step into a leadership role",
+      "life": "Take one step a week.",
+      "mode": "in_person",
+      "name": "Beta Tribe",
+      "open": true,
+      "zone": "mainland",
+      "story": "My story.",
+      "track": "Stewards",
+      "others": "Call each other.",
+      "capacity": 12,
+      "community": "Professionals",
+      "place_note": "Near the bridge",
+      "seats_left": 11,
+      "tribe_type": "mixed",
+      "meeting_day": 0,
+      "meeting_time": "15:00",
+      "leader_photo_id": null,
+      "duration_minutes": 75,
+      "season_starts_on": "<date>",
+      "leader_first_name": "Leader2"
+    }
+  },
+  "tribe_roster_alpha_by_leaderA": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "status": "approved",
+        "can_edit": true,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 3,
+        "meeting_time": "20:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<ada>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<bola>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<chidi>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "tribe_roster_marked_alpha_by_leaderA": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "status": "approved",
+        "can_edit": true,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 3,
+        "meeting_time": "20:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<ada>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<bola>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<chidi>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "tribe_roster_alpha_by_director": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "status": "approved",
+        "can_edit": false,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 3,
+        "meeting_time": "20:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<ada>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<bola>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<chidi>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "tribe_roster_marked_alpha_by_director": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "status": "approved",
+        "can_edit": false,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 3,
+        "meeting_time": "20:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<ada>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<bola>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<chidi>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "tribe_roster_alpha_by_coach": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "status": "approved",
+        "can_edit": false,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 3,
+        "meeting_time": "20:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<ada>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<bola>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<chidi>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "tribe_roster_marked_alpha_by_coach": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "status": "approved",
+        "can_edit": false,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 3,
+        "meeting_time": "20:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<ada>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<bola>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<chidi>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "tribe_roster_alpha_by_admin": {
+    "refused": "42501",
+    "message": "You do not run this tribe"
+  },
+  "tribe_roster_marked_alpha_by_admin": {
+    "refused": "42501",
+    "message": "You do not run this tribe"
+  },
+  "tribe_roster_alpha_by_pastor": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "status": "approved",
+        "can_edit": false,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 3,
+        "meeting_time": "20:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<ada>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<bola>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<chidi>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "tribe_roster_marked_alpha_by_pastor": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "status": "approved",
+        "can_edit": false,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 3,
+        "meeting_time": "20:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<ada>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<bola>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<chidi>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "tribe_roster_alpha_by_leaderB": {
+    "refused": "42501",
+    "message": "You do not run this tribe"
+  },
+  "tribe_roster_marked_alpha_by_leaderB": {
+    "refused": "42501",
+    "message": "You do not run this tribe"
+  },
+  "tribe_roster_beta_by_leaderB": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeB>",
+        "name": "Beta Tribe",
+        "status": "approved",
+        "can_edit": true,
+        "capacity": 12,
+        "group_url": null,
+        "meeting_day": 0,
+        "meeting_time": "15:00",
+        "first_meeting_on": null,
+        "season_starts_on": "<date>"
+      },
+      "members": [
+        {
+          "name": "Dayo Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "note_enc": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "person_id": "<dayo>",
+          "first_name": "Dayo",
+          "first_meeting_by": "<date>"
+        }
+      ]
+    }
+  },
+  "dashboard_by_director": {
+    "ok": {
+      "care": {
+        "open": 0,
+        "closed_7d": 0,
+        "escalated": 0,
+        "oldest_open_days": null,
+        "median_days_to_close": null
+      },
+      "scope": "church",
+      "state": "running",
+      "weeks": [
+        {
+          "met": 0,
+          "week": 6,
+          "logged": 0,
+          "current": true,
+          "present": 0,
+          "possible": 0,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 1,
+          "week": 4,
+          "logged": 1,
+          "current": false,
+          "present": 1,
+          "possible": 3,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 1,
+          "week": 5,
+          "logged": 1,
+          "current": false,
+          "present": 1,
+          "possible": 3,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 1,
+          "logged": 2,
+          "current": false,
+          "present": 4,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 2,
+          "logged": 2,
+          "current": false,
+          "present": 3,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 3,
+          "logged": 2,
+          "current": false,
+          "present": 3,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        }
+      ],
+      "funnel": [
+        {
+          "key": "came",
+          "count": 4,
+          "label": "Came to a meeting"
+        },
+        {
+          "key": "chose",
+          "count": 4,
+          "label": "Chose a tribe"
+        },
+        {
+          "key": "finished",
+          "count": 5,
+          "label": "Finished the form"
+        },
+        {
+          "key": "shown",
+          "count": 1,
+          "label": "Were shown tribes"
+        },
+        {
+          "key": "started",
+          "count": 5,
+          "label": "Started the form"
+        },
+        {
+          "key": "thriving",
+          "count": 1,
+          "label": "Thriving"
+        }
+      ],
+      "season": {
+        "id": "<season>",
+        "name": "Golden season",
+        "weeks": 12,
+        "starts_on": "<date>",
+        "weeks_over": 5,
+        "current_week": 6,
+        "meetings_needed": 8
+      },
+      "supply": {
+        "cells": [
+          {
+            "seats": 12,
+            "track": "Builders",
+            "wants": 4,
+            "placed": 3,
+            "community": "Professionals"
+          },
+          {
+            "seats": 12,
+            "track": "Stewards",
+            "wants": 1,
+            "placed": 1,
+            "community": "Professionals"
+          }
+        ],
+        "seats": 24,
+        "unmet": 1,
+        "wants": 5,
+        "placed": 4,
+        "tracks": [
+          "Builders",
+          "Rising",
+          "Sages",
+          "Stewards"
+        ],
+        "communities": [
+          "Business & Entrepreneurship",
+          "Consulting",
+          "Creative Economy",
+          "Education",
+          "Global Citizens",
+          "Health, Fitness & Sports",
+          "In-between Jobs",
+          "Marriage & Relationships",
+          "Medical & Healthcare",
+          "Parents & Family",
+          "Professionals"
+        ]
+      },
+      "tribes": [
+        {
+          "held": 3,
+          "name": "Beta Tribe",
+          "coach": null,
+          "track": "Stewards",
+          "gain_n": 0,
+          "leader": "Leader2 Test",
+          "members": 1,
+          "verdict": "at_risk",
+          "capacity": 12,
+          "gain_avg": null,
+          "thriving": 0,
+          "tribe_id": "<tribeB>",
+          "community": "Professionals",
+          "gain_share": null,
+          "thriving_rate": 0,
+          "attendance_rate": 1,
+          "steps_done_rate": null
+        },
+        {
+          "held": 5,
+          "name": "Alpha Tribe",
+          "coach": "Coach Test",
+          "track": "Builders",
+          "gain_n": 2,
+          "leader": "Leader1 Test",
+          "members": 3,
+          "verdict": "at_risk",
+          "capacity": 12,
+          "gain_avg": null,
+          "thriving": 1,
+          "tribe_id": "<tribeA>",
+          "community": "Professionals",
+          "gain_share": null,
+          "thriving_rate": 0.333,
+          "attendance_rate": 0.6,
+          "steps_done_rate": null
+        }
+      ],
+      "seasons": [
+        {
+          "id": "<id>",
+          "name": "Season 1, 2027 (provisional)",
+          "weeks": 12,
+          "starts_on": "<date>"
+        },
+        {
+          "id": "<season>",
+          "name": "Golden season",
+          "weeks": 12,
+          "starts_on": "<date>"
+        }
+      ],
+      "targets": {
+        "ai_keep": 0.7,
+        "gain_min": 2,
+        "min_cell": 5,
+        "care_days": 7,
+        "match_gap": 0.05,
+        "min_weeks": 3,
+        "assistants": 1,
+        "swap_weeks": 4,
+        "word_habit": 0.7,
+        "min_answers": 3,
+        "attend_share": 0.6666666666666666,
+        "connect_days": 14,
+        "form_minutes": 6,
+        "belonging_min": 4,
+        "care_resolved": 0.95,
+        "retrain_after": 300,
+        "thriving_rate": 0.85,
+        "word_days_min": 4,
+        "effective_gain": 0.7,
+        "form_completion": 0.85,
+        "effective_thriving": 0.8,
+        "connect_days_season": 7
+      },
+      "accuracy": {
+        "bands": [
+          {
+            "n": 0,
+            "key": "good",
+            "sort": 3,
+            "label": "Good (60–69)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 2,
+            "key": "excellent",
+            "sort": 1,
+            "label": "Excellent (85–100)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 2,
+            "key": "strong",
+            "sort": 2,
+            "label": "Strong (70–84)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          }
+        ],
+        "ranks": [
+          {
+            "n": 0,
+            "rank": 2,
+            "label": "Their second card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 0,
+            "rank": 3,
+            "label": "Their third card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 4,
+            "rank": 1,
+            "label": "Their first card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          }
+        ],
+        "completed": 0,
+        "retrain_after": 300,
+        "average_degree": 83
+      },
+      "headline": {
+        "base_n": 3,
+        "gain_n": 2,
+        "tribes": 2,
+        "members": 4,
+        "base_avg": 9,
+        "gain_avg": null,
+        "measured": true,
+        "thriving": 1,
+        "verdicts": {
+          "close": 0,
+          "at_risk": 2,
+          "not_yet": 0,
+          "effective": 0,
+          "on_course": 0
+        },
+        "ever_came": 4,
+        "gain_share": null,
+        "latest_avg": 9,
+        "checkin_rate": null,
+        "still_coming": 3,
+        "thriving_rate": 0.25,
+        "attendance_rate": 0.667,
+        "steps_done_rate": null
+      },
+      "communities": [
+        {
+          "members": 4,
+          "gain_avg": null,
+          "community": "Professionals",
+          "thriving_rate": null
+        }
+      ],
+      "testimonies": {
+        "tribe": 0,
+        "church": 0,
+        "waiting": 0,
+        "declined": 0
+      }
+    }
+  },
+  "reminders_overview_by_director": {
+    "ok": {
+      "today": {
+        "sent": 0,
+        "skipped": 0,
+        "rehearsed": 0
+      },
+      "recent": [],
+      "journeys": [
+        {
+          "key": "in_tribe",
+          "mode": "rehearsal",
+          "title": "In a tribe, nothing done yet",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your season has begun, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "{tribe} has started its twelve weeks, and you’re part of it.",
+                "This week’s guide is ready, and your first small step is waiting to be chosen."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Open this week"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your first step, in one sentence",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Each week you choose one small step: “When ___, I will ___.” It takes a minute.",
+                "Only you see what you write; your leader sees only whether it’s done. Your tribe meets {meets}."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my step"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your tribe saved you a seat",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Come to the next meeting on {next_meeting}, even if you haven’t done anything else yet. {leader_first} will give you a call this week too.",
+                "Twelve weeks go quickly, and the people in {tribe} are working on the same goal as you."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "See my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "in_the_way",
+                "step_back"
+              ],
+              "pending": null,
+              "subject": "We’ve missed you in {tribe}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If something is in the way, whether the time, the place or something harder, tap below and someone from the care team will reach out.",
+                "If you need to step back this season, you can tell us that too.",
+                "This is our last email about getting started; from here {leader_first} will stay in touch personally."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": null
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 4,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            10,
+            14,
+            3,
+            6
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "leader_application",
+          "mode": "rehearsal",
+          "title": "Started a leader application, not finished",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Thank you for thinking about leading a tribe",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Being willing to walk with others through a season is a gift to this church.",
+                "You’ve started an application to lead a tribe, and it’s saved exactly as you left it."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Continue my application"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "What’s left on your leader application",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Have your two referees’ names and numbers ready: each gets a private link once you send it.",
+                "You can speak your answers instead of typing them.",
+                "You have {parts_left} parts left, about {minutes_left} minutes."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Continue"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Every tribe starts with one person willing to go first",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "The Leader Academy trains every leader, and a coach walks with you, before a single member arrives.",
+                "You don’t need to have it all figured out."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my application"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "not_season",
+                "talk_pastor"
+              ],
+              "pending": null,
+              "subject": "Last reminder about your leader application",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If this isn’t your season to lead, that’s alright, and there are other ways to serve. Tell us with one tap and we won’t ask again.",
+                "This is the last time we’ll remind you. {close_line}"
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my application"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 2,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            10,
+            2,
+            20,
+            5
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "member_form",
+          "mode": "rehearsal",
+          "title": "Started the form, not finished",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "You’re part-way to your tribe, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "About five more minutes and you’ll see three tribes that fit you.",
+                "You started telling us about your season, and your answers are saved just as you left them."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Carry on where I stopped"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Five minutes, and your tribe is waiting",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If a question is unclear, reply to this email and someone on the team will help.",
+                "Nothing you wrote is lost. You can finish on your phone in about five minutes."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my form"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "There’s a seat with your name on it",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "In a tribe of twelve there is someone working on the same thing you are. Finish your form and we’ll introduce you.",
+                "United Tribes exists so that nobody at The Covenant Nation walks through a season alone."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Find my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "help_finish",
+                "not_season"
+              ],
+              "pending": null,
+              "subject": "Your answers will be cleared on {erase_date}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If now isn’t the right time, that’s fine: tell us with one tap and we won’t remind you again.",
+                "This is our last reminder.",
+                "To protect your privacy, an unfinished form is cleared after 30 days, so your answers will be removed on {erase_date}."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my form"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 1,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            1,
+            21,
+            3,
+            7
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "no_tribe",
+          "mode": "rehearsal",
+          "title": "Finished the form, not in a tribe",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your three tribes are ready, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Thank you for finishing your form.",
+                "We found three tribes that fit your season, each with how well it matches you and why. Have a look and choose the one you’d love to walk with."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "See my tribes"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Choosing a tribe takes two minutes",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "A tribe holds twelve, so your favourite may fill. You can change your mind any time before the season starts on {season_starts}.",
+                "Open a tribe to see who leads it, when and where it meets, and what it hopes for by week 12."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "{tribe_1} still has a seat for you",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Joining before the first meeting means you start the season together.",
+                "Your best match, {tribe_1}, led by {leader_first}, has {seats_left} seats left."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "none_fit",
+                "not_season"
+              ],
+              "pending": null,
+              "subject": "Last call to join a tribe this season",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If none of your three tribes feels right, tell us and we’ll look again. If this isn’t your season, that’s fine too.",
+                "Joining closes on {joining_closes}; after that the next chance is next season."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 3,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            12,
+            2,
+            20,
+            6
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        }
+      ],
+      "settings": {
+        "master_on": true,
+        "church_name": "The Covenant Nation",
+        "holdout_pct": 10,
+        "cap_gap_days": 2,
+        "bulk_end_hour": 20,
+        "church_address": "Iganmu, Lagos, Nigeria",
+        "bulk_per_minute": 300,
+        "bulk_start_hour": 8,
+        "reminder_end_hour": 19,
+        "sunday_start_hour": 14,
+        "approval_threshold": 200,
+        "cap_reminders_week": 2,
+        "joining_closes_days": 14,
+        "reminder_start_hour": 9,
+        "applications_close_on": null,
+        "cap_nonessential_week": 3
+      },
+      "asks_open": 0,
+      "can_change": true,
+      "can_edit_words": true,
+      "can_see_people": true,
+      "can_approve_words": false
+    }
+  },
+  "dashboard_by_admin": {
+    "ok": {
+      "care": {
+        "open": 0,
+        "closed_7d": 0,
+        "escalated": 0,
+        "oldest_open_days": null,
+        "median_days_to_close": null
+      },
+      "scope": "church",
+      "state": "running",
+      "weeks": [
+        {
+          "met": 0,
+          "week": 6,
+          "logged": 0,
+          "current": true,
+          "present": 0,
+          "possible": 0,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 1,
+          "week": 4,
+          "logged": 1,
+          "current": false,
+          "present": 1,
+          "possible": 3,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 1,
+          "week": 5,
+          "logged": 1,
+          "current": false,
+          "present": 1,
+          "possible": 3,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 1,
+          "logged": 2,
+          "current": false,
+          "present": 4,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 2,
+          "logged": 2,
+          "current": false,
+          "present": 3,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 3,
+          "logged": 2,
+          "current": false,
+          "present": 3,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        }
+      ],
+      "funnel": [
+        {
+          "key": "came",
+          "count": 4,
+          "label": "Came to a meeting"
+        },
+        {
+          "key": "chose",
+          "count": 4,
+          "label": "Chose a tribe"
+        },
+        {
+          "key": "finished",
+          "count": 5,
+          "label": "Finished the form"
+        },
+        {
+          "key": "shown",
+          "count": 1,
+          "label": "Were shown tribes"
+        },
+        {
+          "key": "started",
+          "count": 5,
+          "label": "Started the form"
+        },
+        {
+          "key": "thriving",
+          "count": 1,
+          "label": "Thriving"
+        }
+      ],
+      "season": {
+        "id": "<season>",
+        "name": "Golden season",
+        "weeks": 12,
+        "starts_on": "<date>",
+        "weeks_over": 5,
+        "current_week": 6,
+        "meetings_needed": 8
+      },
+      "supply": {
+        "cells": [
+          {
+            "seats": 12,
+            "track": "Builders",
+            "wants": 4,
+            "placed": 3,
+            "community": "Professionals"
+          },
+          {
+            "seats": 12,
+            "track": "Stewards",
+            "wants": 1,
+            "placed": 1,
+            "community": "Professionals"
+          }
+        ],
+        "seats": 24,
+        "unmet": 1,
+        "wants": 5,
+        "placed": 4,
+        "tracks": [
+          "Builders",
+          "Rising",
+          "Sages",
+          "Stewards"
+        ],
+        "communities": [
+          "Business & Entrepreneurship",
+          "Consulting",
+          "Creative Economy",
+          "Education",
+          "Global Citizens",
+          "Health, Fitness & Sports",
+          "In-between Jobs",
+          "Marriage & Relationships",
+          "Medical & Healthcare",
+          "Parents & Family",
+          "Professionals"
+        ]
+      },
+      "tribes": [
+        {
+          "held": 3,
+          "name": "Beta Tribe",
+          "coach": null,
+          "track": "Stewards",
+          "gain_n": 0,
+          "leader": "Leader2 Test",
+          "members": 1,
+          "verdict": "at_risk",
+          "capacity": 12,
+          "gain_avg": null,
+          "thriving": 0,
+          "tribe_id": "<tribeB>",
+          "community": "Professionals",
+          "gain_share": null,
+          "thriving_rate": 0,
+          "attendance_rate": 1,
+          "steps_done_rate": null
+        },
+        {
+          "held": 5,
+          "name": "Alpha Tribe",
+          "coach": "Coach Test",
+          "track": "Builders",
+          "gain_n": 2,
+          "leader": "Leader1 Test",
+          "members": 3,
+          "verdict": "at_risk",
+          "capacity": 12,
+          "gain_avg": null,
+          "thriving": 1,
+          "tribe_id": "<tribeA>",
+          "community": "Professionals",
+          "gain_share": null,
+          "thriving_rate": 0.333,
+          "attendance_rate": 0.6,
+          "steps_done_rate": null
+        }
+      ],
+      "seasons": [
+        {
+          "id": "<id>",
+          "name": "Season 1, 2027 (provisional)",
+          "weeks": 12,
+          "starts_on": "<date>"
+        },
+        {
+          "id": "<season>",
+          "name": "Golden season",
+          "weeks": 12,
+          "starts_on": "<date>"
+        }
+      ],
+      "targets": {
+        "ai_keep": 0.7,
+        "gain_min": 2,
+        "min_cell": 5,
+        "care_days": 7,
+        "match_gap": 0.05,
+        "min_weeks": 3,
+        "assistants": 1,
+        "swap_weeks": 4,
+        "word_habit": 0.7,
+        "min_answers": 3,
+        "attend_share": 0.6666666666666666,
+        "connect_days": 14,
+        "form_minutes": 6,
+        "belonging_min": 4,
+        "care_resolved": 0.95,
+        "retrain_after": 300,
+        "thriving_rate": 0.85,
+        "word_days_min": 4,
+        "effective_gain": 0.7,
+        "form_completion": 0.85,
+        "effective_thriving": 0.8,
+        "connect_days_season": 7
+      },
+      "accuracy": {
+        "bands": [
+          {
+            "n": 0,
+            "key": "good",
+            "sort": 3,
+            "label": "Good (60–69)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 2,
+            "key": "excellent",
+            "sort": 1,
+            "label": "Excellent (85–100)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 2,
+            "key": "strong",
+            "sort": 2,
+            "label": "Strong (70–84)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          }
+        ],
+        "ranks": [
+          {
+            "n": 0,
+            "rank": 2,
+            "label": "Their second card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 0,
+            "rank": 3,
+            "label": "Their third card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 4,
+            "rank": 1,
+            "label": "Their first card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          }
+        ],
+        "completed": 0,
+        "retrain_after": 300,
+        "average_degree": 83
+      },
+      "headline": {
+        "base_n": 3,
+        "gain_n": 2,
+        "tribes": 2,
+        "members": 4,
+        "base_avg": 9,
+        "gain_avg": null,
+        "measured": true,
+        "thriving": 1,
+        "verdicts": {
+          "close": 0,
+          "at_risk": 2,
+          "not_yet": 0,
+          "effective": 0,
+          "on_course": 0
+        },
+        "ever_came": 4,
+        "gain_share": null,
+        "latest_avg": 9,
+        "checkin_rate": null,
+        "still_coming": 3,
+        "thriving_rate": 0.25,
+        "attendance_rate": 0.667,
+        "steps_done_rate": null
+      },
+      "communities": [
+        {
+          "members": 4,
+          "gain_avg": null,
+          "community": "Professionals",
+          "thriving_rate": null
+        }
+      ],
+      "testimonies": {
+        "tribe": 0,
+        "church": 0,
+        "waiting": 0,
+        "declined": 0
+      }
+    }
+  },
+  "reminders_overview_by_admin": {
+    "ok": {
+      "today": {
+        "sent": 0,
+        "skipped": 0,
+        "rehearsed": 0
+      },
+      "recent": [],
+      "journeys": [
+        {
+          "key": "in_tribe",
+          "mode": "rehearsal",
+          "title": "In a tribe, nothing done yet",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your season has begun, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "{tribe} has started its twelve weeks, and you’re part of it.",
+                "This week’s guide is ready, and your first small step is waiting to be chosen."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Open this week"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your first step, in one sentence",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Each week you choose one small step: “When ___, I will ___.” It takes a minute.",
+                "Only you see what you write; your leader sees only whether it’s done. Your tribe meets {meets}."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my step"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your tribe saved you a seat",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Come to the next meeting on {next_meeting}, even if you haven’t done anything else yet. {leader_first} will give you a call this week too.",
+                "Twelve weeks go quickly, and the people in {tribe} are working on the same goal as you."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "See my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "in_the_way",
+                "step_back"
+              ],
+              "pending": null,
+              "subject": "We’ve missed you in {tribe}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If something is in the way, whether the time, the place or something harder, tap below and someone from the care team will reach out.",
+                "If you need to step back this season, you can tell us that too.",
+                "This is our last email about getting started; from here {leader_first} will stay in touch personally."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": null
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 4,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            10,
+            14,
+            3,
+            6
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "leader_application",
+          "mode": "rehearsal",
+          "title": "Started a leader application, not finished",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Thank you for thinking about leading a tribe",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Being willing to walk with others through a season is a gift to this church.",
+                "You’ve started an application to lead a tribe, and it’s saved exactly as you left it."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Continue my application"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "What’s left on your leader application",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Have your two referees’ names and numbers ready: each gets a private link once you send it.",
+                "You can speak your answers instead of typing them.",
+                "You have {parts_left} parts left, about {minutes_left} minutes."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Continue"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Every tribe starts with one person willing to go first",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "The Leader Academy trains every leader, and a coach walks with you, before a single member arrives.",
+                "You don’t need to have it all figured out."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my application"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "not_season",
+                "talk_pastor"
+              ],
+              "pending": null,
+              "subject": "Last reminder about your leader application",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If this isn’t your season to lead, that’s alright, and there are other ways to serve. Tell us with one tap and we won’t ask again.",
+                "This is the last time we’ll remind you. {close_line}"
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my application"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 2,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            10,
+            2,
+            20,
+            5
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "member_form",
+          "mode": "rehearsal",
+          "title": "Started the form, not finished",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "You’re part-way to your tribe, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "About five more minutes and you’ll see three tribes that fit you.",
+                "You started telling us about your season, and your answers are saved just as you left them."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Carry on where I stopped"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Five minutes, and your tribe is waiting",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If a question is unclear, reply to this email and someone on the team will help.",
+                "Nothing you wrote is lost. You can finish on your phone in about five minutes."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my form"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "There’s a seat with your name on it",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "In a tribe of twelve there is someone working on the same thing you are. Finish your form and we’ll introduce you.",
+                "United Tribes exists so that nobody at The Covenant Nation walks through a season alone."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Find my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "help_finish",
+                "not_season"
+              ],
+              "pending": null,
+              "subject": "Your answers will be cleared on {erase_date}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If now isn’t the right time, that’s fine: tell us with one tap and we won’t remind you again.",
+                "This is our last reminder.",
+                "To protect your privacy, an unfinished form is cleared after 30 days, so your answers will be removed on {erase_date}."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my form"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 1,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            1,
+            21,
+            3,
+            7
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "no_tribe",
+          "mode": "rehearsal",
+          "title": "Finished the form, not in a tribe",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your three tribes are ready, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Thank you for finishing your form.",
+                "We found three tribes that fit your season, each with how well it matches you and why. Have a look and choose the one you’d love to walk with."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "See my tribes"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Choosing a tribe takes two minutes",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "A tribe holds twelve, so your favourite may fill. You can change your mind any time before the season starts on {season_starts}.",
+                "Open a tribe to see who leads it, when and where it meets, and what it hopes for by week 12."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "{tribe_1} still has a seat for you",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Joining before the first meeting means you start the season together.",
+                "Your best match, {tribe_1}, led by {leader_first}, has {seats_left} seats left."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "none_fit",
+                "not_season"
+              ],
+              "pending": null,
+              "subject": "Last call to join a tribe this season",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If none of your three tribes feels right, tell us and we’ll look again. If this isn’t your season, that’s fine too.",
+                "Joining closes on {joining_closes}; after that the next chance is next season."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 3,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            12,
+            2,
+            20,
+            6
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        }
+      ],
+      "settings": {
+        "master_on": true,
+        "church_name": "The Covenant Nation",
+        "holdout_pct": 10,
+        "cap_gap_days": 2,
+        "bulk_end_hour": 20,
+        "church_address": "Iganmu, Lagos, Nigeria",
+        "bulk_per_minute": 300,
+        "bulk_start_hour": 8,
+        "reminder_end_hour": 19,
+        "sunday_start_hour": 14,
+        "approval_threshold": 200,
+        "cap_reminders_week": 2,
+        "joining_closes_days": 14,
+        "reminder_start_hour": 9,
+        "applications_close_on": null,
+        "cap_nonessential_week": 3
+      },
+      "asks_open": 0,
+      "can_change": true,
+      "can_edit_words": true,
+      "can_see_people": true,
+      "can_approve_words": false
+    }
+  },
+  "dashboard_by_pastor": {
+    "ok": {
+      "care": {
+        "open": 0,
+        "closed_7d": 0,
+        "escalated": 0,
+        "oldest_open_days": null,
+        "median_days_to_close": null
+      },
+      "scope": "church",
+      "state": "running",
+      "weeks": [
+        {
+          "met": 0,
+          "week": 6,
+          "logged": 0,
+          "current": true,
+          "present": 0,
+          "possible": 0,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 1,
+          "week": 4,
+          "logged": 1,
+          "current": false,
+          "present": 1,
+          "possible": 3,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 1,
+          "week": 5,
+          "logged": 1,
+          "current": false,
+          "present": 1,
+          "possible": 3,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 1,
+          "logged": 2,
+          "current": false,
+          "present": 4,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 2,
+          "logged": 2,
+          "current": false,
+          "present": 3,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        },
+        {
+          "met": 2,
+          "week": 3,
+          "logged": 2,
+          "current": false,
+          "present": 3,
+          "possible": 4,
+          "steps_set": 0,
+          "steps_done": 0,
+          "steps_checked": 0
+        }
+      ],
+      "funnel": [
+        {
+          "key": "came",
+          "count": 4,
+          "label": "Came to a meeting"
+        },
+        {
+          "key": "chose",
+          "count": 4,
+          "label": "Chose a tribe"
+        },
+        {
+          "key": "finished",
+          "count": 5,
+          "label": "Finished the form"
+        },
+        {
+          "key": "shown",
+          "count": 1,
+          "label": "Were shown tribes"
+        },
+        {
+          "key": "started",
+          "count": 5,
+          "label": "Started the form"
+        },
+        {
+          "key": "thriving",
+          "count": 1,
+          "label": "Thriving"
+        }
+      ],
+      "season": {
+        "id": "<season>",
+        "name": "Golden season",
+        "weeks": 12,
+        "starts_on": "<date>",
+        "weeks_over": 5,
+        "current_week": 6,
+        "meetings_needed": 8
+      },
+      "supply": {
+        "cells": [
+          {
+            "seats": 12,
+            "track": "Builders",
+            "wants": 4,
+            "placed": 3,
+            "community": "Professionals"
+          },
+          {
+            "seats": 12,
+            "track": "Stewards",
+            "wants": 1,
+            "placed": 1,
+            "community": "Professionals"
+          }
+        ],
+        "seats": 24,
+        "unmet": 1,
+        "wants": 5,
+        "placed": 4,
+        "tracks": [
+          "Builders",
+          "Rising",
+          "Sages",
+          "Stewards"
+        ],
+        "communities": [
+          "Business & Entrepreneurship",
+          "Consulting",
+          "Creative Economy",
+          "Education",
+          "Global Citizens",
+          "Health, Fitness & Sports",
+          "In-between Jobs",
+          "Marriage & Relationships",
+          "Medical & Healthcare",
+          "Parents & Family",
+          "Professionals"
+        ]
+      },
+      "tribes": [
+        {
+          "held": 3,
+          "name": "Beta Tribe",
+          "coach": null,
+          "track": "Stewards",
+          "gain_n": 0,
+          "leader": "Leader2 Test",
+          "members": 1,
+          "verdict": "at_risk",
+          "capacity": 12,
+          "gain_avg": null,
+          "thriving": 0,
+          "tribe_id": "<tribeB>",
+          "community": "Professionals",
+          "gain_share": null,
+          "thriving_rate": 0,
+          "attendance_rate": 1,
+          "steps_done_rate": null
+        },
+        {
+          "held": 5,
+          "name": "Alpha Tribe",
+          "coach": "Coach Test",
+          "track": "Builders",
+          "gain_n": 2,
+          "leader": "Leader1 Test",
+          "members": 3,
+          "verdict": "at_risk",
+          "capacity": 12,
+          "gain_avg": null,
+          "thriving": 1,
+          "tribe_id": "<tribeA>",
+          "community": "Professionals",
+          "gain_share": null,
+          "thriving_rate": 0.333,
+          "attendance_rate": 0.6,
+          "steps_done_rate": null
+        }
+      ],
+      "seasons": [
+        {
+          "id": "<id>",
+          "name": "Season 1, 2027 (provisional)",
+          "weeks": 12,
+          "starts_on": "<date>"
+        },
+        {
+          "id": "<season>",
+          "name": "Golden season",
+          "weeks": 12,
+          "starts_on": "<date>"
+        }
+      ],
+      "targets": {
+        "ai_keep": 0.7,
+        "gain_min": 2,
+        "min_cell": 5,
+        "care_days": 7,
+        "match_gap": 0.05,
+        "min_weeks": 3,
+        "assistants": 1,
+        "swap_weeks": 4,
+        "word_habit": 0.7,
+        "min_answers": 3,
+        "attend_share": 0.6666666666666666,
+        "connect_days": 14,
+        "form_minutes": 6,
+        "belonging_min": 4,
+        "care_resolved": 0.95,
+        "retrain_after": 300,
+        "thriving_rate": 0.85,
+        "word_days_min": 4,
+        "effective_gain": 0.7,
+        "form_completion": 0.85,
+        "effective_thriving": 0.8,
+        "connect_days_season": 7
+      },
+      "accuracy": {
+        "bands": [
+          {
+            "n": 0,
+            "key": "good",
+            "sort": 3,
+            "label": "Good (60–69)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 2,
+            "key": "excellent",
+            "sort": 1,
+            "label": "Excellent (85–100)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 2,
+            "key": "strong",
+            "sort": 2,
+            "label": "Strong (70–84)",
+            "thriving_rate": null,
+            "attendance_rate": null
+          }
+        ],
+        "ranks": [
+          {
+            "n": 0,
+            "rank": 2,
+            "label": "Their second card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 0,
+            "rank": 3,
+            "label": "Their third card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          },
+          {
+            "n": 4,
+            "rank": 1,
+            "label": "Their first card",
+            "thriving_rate": null,
+            "attendance_rate": null
+          }
+        ],
+        "completed": 0,
+        "retrain_after": 300,
+        "average_degree": 83
+      },
+      "headline": {
+        "base_n": 3,
+        "gain_n": 2,
+        "tribes": 2,
+        "members": 4,
+        "base_avg": 9,
+        "gain_avg": null,
+        "measured": true,
+        "thriving": 1,
+        "verdicts": {
+          "close": 0,
+          "at_risk": 2,
+          "not_yet": 0,
+          "effective": 0,
+          "on_course": 0
+        },
+        "ever_came": 4,
+        "gain_share": null,
+        "latest_avg": 9,
+        "checkin_rate": null,
+        "still_coming": 3,
+        "thriving_rate": 0.25,
+        "attendance_rate": 0.667,
+        "steps_done_rate": null
+      },
+      "communities": [
+        {
+          "members": 4,
+          "gain_avg": null,
+          "community": "Professionals",
+          "thriving_rate": null
+        }
+      ],
+      "testimonies": {
+        "tribe": 0,
+        "church": 0,
+        "waiting": 0,
+        "declined": 0
+      }
+    }
+  },
+  "reminders_overview_by_pastor": {
+    "ok": {
+      "today": {
+        "sent": 0,
+        "skipped": 0,
+        "rehearsed": 0
+      },
+      "recent": [],
+      "journeys": [
+        {
+          "key": "in_tribe",
+          "mode": "rehearsal",
+          "title": "In a tribe, nothing done yet",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your season has begun, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "{tribe} has started its twelve weeks, and you’re part of it.",
+                "This week’s guide is ready, and your first small step is waiting to be chosen."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Open this week"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your first step, in one sentence",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Each week you choose one small step: “When ___, I will ___.” It takes a minute.",
+                "Only you see what you write; your leader sees only whether it’s done. Your tribe meets {meets}."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my step"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your tribe saved you a seat",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Come to the next meeting on {next_meeting}, even if you haven’t done anything else yet. {leader_first} will give you a call this week too.",
+                "Twelve weeks go quickly, and the people in {tribe} are working on the same goal as you."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "See my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "in_the_way",
+                "step_back"
+              ],
+              "pending": null,
+              "subject": "We’ve missed you in {tribe}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If something is in the way, whether the time, the place or something harder, tap below and someone from the care team will reach out.",
+                "If you need to step back this season, you can tell us that too.",
+                "This is our last email about getting started; from here {leader_first} will stay in touch personally."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": null
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 4,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            10,
+            14,
+            3,
+            6
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "leader_application",
+          "mode": "rehearsal",
+          "title": "Started a leader application, not finished",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Thank you for thinking about leading a tribe",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Being willing to walk with others through a season is a gift to this church.",
+                "You’ve started an application to lead a tribe, and it’s saved exactly as you left it."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Continue my application"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "What’s left on your leader application",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Have your two referees’ names and numbers ready: each gets a private link once you send it.",
+                "You can speak your answers instead of typing them.",
+                "You have {parts_left} parts left, about {minutes_left} minutes."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Continue"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Every tribe starts with one person willing to go first",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "The Leader Academy trains every leader, and a coach walks with you, before a single member arrives.",
+                "You don’t need to have it all figured out."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my application"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "not_season",
+                "talk_pastor"
+              ],
+              "pending": null,
+              "subject": "Last reminder about your leader application",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If this isn’t your season to lead, that’s alright, and there are other ways to serve. Tell us with one tap and we won’t ask again.",
+                "This is the last time we’ll remind you. {close_line}"
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my application"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 2,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            10,
+            2,
+            20,
+            5
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "member_form",
+          "mode": "rehearsal",
+          "title": "Started the form, not finished",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "You’re part-way to your tribe, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "About five more minutes and you’ll see three tribes that fit you.",
+                "You started telling us about your season, and your answers are saved just as you left them."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Carry on where I stopped"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Five minutes, and your tribe is waiting",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If a question is unclear, reply to this email and someone on the team will help.",
+                "Nothing you wrote is lost. You can finish on your phone in about five minutes."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my form"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "There’s a seat with your name on it",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "In a tribe of twelve there is someone working on the same thing you are. Finish your form and we’ll introduce you.",
+                "United Tribes exists so that nobody at The Covenant Nation walks through a season alone."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Find my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "help_finish",
+                "not_season"
+              ],
+              "pending": null,
+              "subject": "Your answers will be cleared on {erase_date}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If now isn’t the right time, that’s fine: tell us with one tap and we won’t remind you again.",
+                "This is our last reminder.",
+                "To protect your privacy, an unfinished form is cleared after 30 days, so your answers will be removed on {erase_date}."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Finish my form"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 1,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            1,
+            21,
+            3,
+            7
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        },
+        {
+          "key": "no_tribe",
+          "mode": "rehearsal",
+          "title": "Finished the form, not in a tribe",
+          "active": 0,
+          "emails": [
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 1,
+              "tone": "warm",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Your three tribes are ready, {first_name}",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Thank you for finishing your form.",
+                "We found three tribes that fit your season, each with how well it matches you and why. Have a look and choose the one you’d love to walk with."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "See my tribes"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 2,
+              "tone": "practical",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "Choosing a tribe takes two minutes",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "A tribe holds twelve, so your favourite may fill. You can change your mind any time before the season starts on {season_starts}.",
+                "Open a tribe to see who leads it, when and where it meets, and what it hopes for by week 12."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 3,
+              "tone": "encouraging",
+              "unsub": 0,
+              "actions": [],
+              "pending": null,
+              "subject": "{tribe_1} still has a seat for you",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "Joining before the first meeting means you start the season together.",
+                "Your best match, {tribe_1}, led by {leader_first}, has {seats_left} seats left."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            },
+            {
+              "id": "<id>",
+              "sent": 0,
+              "step": 4,
+              "tone": "honest",
+              "unsub": 0,
+              "actions": [
+                "none_fit",
+                "not_season"
+              ],
+              "pending": null,
+              "subject": "Last call to join a tribe this season",
+              "version": 1,
+              "acted_7d": 0,
+              "paragraphs": [
+                "If none of your three tribes feels right, tell us and we’ll look again. If this isn’t your season, that’s fine too.",
+                "Joining closes on {joining_closes}; after that the next chance is next season."
+              ],
+              "approved_at": "<time>",
+              "approved_by": null,
+              "button_label": "Choose my tribe"
+            }
+          ],
+          "helped": 0,
+          "holdout": {
+            "acted": 0,
+            "people": 0
+          },
+          "reasons": {},
+          "treated": {
+            "acted": 0,
+            "people": 0
+          },
+          "position": 3,
+          "acted_30d": 0,
+          "paused_at": null,
+          "unsub_30d": 0,
+          "day_offsets": [
+            12,
+            2,
+            20,
+            6
+          ],
+          "entered_30d": 0,
+          "paused_reason": null,
+          "complaints_30d": 0,
+          "not_season_30d": 0,
+          "rehearsal_would_send": 0
+        }
+      ],
+      "settings": {
+        "master_on": true,
+        "church_name": "The Covenant Nation",
+        "holdout_pct": 10,
+        "cap_gap_days": 2,
+        "bulk_end_hour": 20,
+        "church_address": "Iganmu, Lagos, Nigeria",
+        "bulk_per_minute": 300,
+        "bulk_start_hour": 8,
+        "reminder_end_hour": 19,
+        "sunday_start_hour": 14,
+        "approval_threshold": 200,
+        "cap_reminders_week": 2,
+        "joining_closes_days": 14,
+        "reminder_start_hour": 9,
+        "applications_close_on": null,
+        "cap_nonessential_week": 3
+      },
+      "asks_open": 0,
+      "can_change": false,
+      "can_edit_words": true,
+      "can_see_people": true,
+      "can_approve_words": true
+    }
+  },
+  "kpi_members": {
+    "rows": [
+      {
+        "km_set": 0,
+        "km_base": 9,
+        "km_done": 0,
+        "km_gain": 0,
+        "km_rank": 1,
+        "km_tribe": "<tribeA>",
+        "km_degree": 80,
+        "km_latest": 9,
+        "km_person": "<bola>",
+        "km_recent": 1,
+        "km_checked": 0,
+        "km_attended": 3,
+        "km_measured": true,
+        "km_thriving": false,
+        "km_belonging": 3,
+        "km_latest_week": 6
+      },
+      {
+        "km_set": 0,
+        "km_base": 9,
+        "km_done": 0,
+        "km_gain": 0,
+        "km_rank": 1,
+        "km_tribe": "<tribeA>",
+        "km_degree": 92,
+        "km_latest": 9,
+        "km_person": "<ada>",
+        "km_recent": 3,
+        "km_checked": 0,
+        "km_attended": 5,
+        "km_measured": true,
+        "km_thriving": true,
+        "km_belonging": 4,
+        "km_latest_week": 6
+      },
+      {
+        "km_set": 0,
+        "km_base": 9,
+        "km_done": 0,
+        "km_gain": null,
+        "km_rank": 1,
+        "km_tribe": "<tribeA>",
+        "km_degree": 71,
+        "km_latest": 9,
+        "km_person": "<chidi>",
+        "km_recent": 0,
+        "km_checked": 0,
+        "km_attended": 1,
+        "km_measured": true,
+        "km_thriving": false,
+        "km_belonging": 2,
+        "km_latest_week": 1
+      },
+      {
+        "km_set": 0,
+        "km_base": null,
+        "km_done": 0,
+        "km_gain": null,
+        "km_rank": 1,
+        "km_tribe": "<tribeB>",
+        "km_degree": 88,
+        "km_latest": null,
+        "km_person": "<dayo>",
+        "km_recent": 1,
+        "km_checked": 0,
+        "km_attended": 3,
+        "km_measured": true,
+        "km_thriving": false,
+        "km_belonging": null,
+        "km_latest_week": null
+      }
+    ]
+  },
+  "kpi_tribes": {
+    "rows": [
+      {
+        "kc_set": 0,
+        "kc_done": 0,
+        "kc_ever": 1,
+        "kc_held": 3,
+        "kc_tribe": "<tribeB>",
+        "kc_base_n": 0,
+        "kc_gain_n": 0,
+        "kc_recent": 1,
+        "kc_checked": 0,
+        "kc_gain_ok": 0,
+        "kc_members": 1,
+        "kc_present": 3,
+        "kc_verdict": "at_risk",
+        "kc_base_avg": null,
+        "kc_gain_avg": null,
+        "kc_latest_n": 0,
+        "kc_measured": true,
+        "kc_possible": 3,
+        "kc_thriving": 0,
+        "kc_latest_avg": null
+      },
+      {
+        "kc_set": 0,
+        "kc_done": 0,
+        "kc_ever": 3,
+        "kc_held": 5,
+        "kc_tribe": "<tribeA>",
+        "kc_base_n": 3,
+        "kc_gain_n": 2,
+        "kc_recent": 2,
+        "kc_checked": 0,
+        "kc_gain_ok": 0,
+        "kc_members": 3,
+        "kc_present": 9,
+        "kc_verdict": "at_risk",
+        "kc_base_avg": 9,
+        "kc_gain_avg": 0,
+        "kc_latest_n": 3,
+        "kc_measured": true,
+        "kc_possible": 15,
+        "kc_thriving": 1,
+        "kc_latest_avg": 9
+      }
+    ]
+  },
+  "report_movement": {
+    "ok": null
+  },
+  "application_readiness": {
+    "ok": {
+      "band": null,
+      "gates": {
+        "goal_declared": false,
+        "open_concerns": 0,
+        "references_held": 0,
+        "references_clean": false,
+        "references_unverified": 0,
+        "pastor_or_unit_head_referee": false
+      },
+      "modes": {
+        "interview": "required",
+        "references": "required"
+      },
+      "calling": null,
+      "counted": [],
+      "missing": [
+        {
+          "why": "not_received",
+          "part": "calling"
+        },
+        {
+          "why": "not_received",
+          "part": "scenarios"
+        },
+        {
+          "why": "not_received",
+          "part": "references"
+        },
+        {
+          "why": "not_received",
+          "part": "interview"
+        }
+      ],
+      "weights": {
+        "calling": 30,
+        "interview": 0,
+        "scenarios": 25,
+        "references": 0
+      },
+      "evidence": "reduced",
+      "interview": null,
+      "readiness": null,
+      "scenarios": null,
+      "references": null,
+      "calling_source": "people",
+      "calling_reviews": 0,
+      "interview_reviews": 0,
+      "references_received": 0
+    }
+  },
+  "export_tribe_sheet_by_leaderA": {
+    "ok": {
+      "tribe": {
+        "id": "<tribeA>",
+        "name": "Alpha Tribe",
+        "season": "Golden season",
+        "community": "Professionals"
+      },
+      "members": [
+        {
+          "name": "Ada Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "first_name": "Ada",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Bola Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "first_name": "Bola",
+          "first_meeting_by": "<date>"
+        },
+        {
+          "name": "Chidi Test",
+          "roles": [],
+          "called": false,
+          "success": null,
+          "whatsapp": null,
+          "called_at": null,
+          "joined_at": "<time>",
+          "first_name": "Chidi",
+          "first_meeting_by": "<date>"
+        }
+      ],
+      "young_count": 0
+    }
+  },
+  "export_tribe_sheet_by_leaderB": {
+    "refused": "42501",
+    "message": "You can make this file for the tribe you lead or assist"
+  },
+  "export_leaders_roster_by_director": {
+    "ok": {
+      "rows": [
+        {
+          "coach": "Coach Test",
+          "track": "Builders",
+          "tribe": "Alpha Tribe",
+          "leader": "Leader1 Test",
+          "status": "approved",
+          "members": 3,
+          "assistant": "Assistant1 Test",
+          "community": "Professionals",
+          "leader_certified": true,
+          "assistant_certified": true
+        },
+        {
+          "coach": null,
+          "track": "Stewards",
+          "tribe": "Beta Tribe",
+          "leader": "Leader2 Test",
+          "status": "approved",
+          "members": 1,
+          "assistant": null,
+          "community": "Professionals",
+          "leader_certified": true,
+          "assistant_certified": null
+        },
+        {
+          "coach": null,
+          "track": "Builders",
+          "tribe": "Gamma Tribe",
+          "leader": "Leader3 Test",
+          "status": "approved",
+          "members": 0,
+          "assistant": null,
+          "community": "Professionals",
+          "leader_certified": false,
+          "assistant_certified": null
+        }
+      ],
+      "season": "Golden season"
+    }
+  },
+  "tribes": [
+    {
+      "id": "<tribeA>",
+      "name": "Alpha Tribe",
+      "status": "approved",
+      "has_track": true,
+      "published": true,
+      "capacity": 12
+    },
+    {
+      "id": "<tribeB>",
+      "name": "Beta Tribe",
+      "status": "approved",
+      "has_track": true,
+      "published": true,
+      "capacity": 12
+    },
+    {
+      "id": "<tribeC>",
+      "name": "Gamma Tribe",
+      "status": "approved",
+      "has_track": true,
+      "published": true,
+      "capacity": 12
+    }
+  ],
+  "seats": [
+    {
+      "tribe_id": "tribeA",
+      "person_id": "ada",
+      "status": "active",
+      "degree": 92,
+      "contact_withheld": false
+    },
+    {
+      "tribe_id": "tribeA",
+      "person_id": "bola",
+      "status": "active",
+      "degree": 80,
+      "contact_withheld": false
+    },
+    {
+      "tribe_id": "tribeA",
+      "person_id": "chidi",
+      "status": "active",
+      "degree": 71,
+      "contact_withheld": false
+    },
+    {
+      "tribe_id": "tribeB",
+      "person_id": "dayo",
+      "status": "active",
+      "degree": 88,
+      "contact_withheld": false
+    }
+  ],
+  "welcome_message": [
+    {
+      "template": "leader_welcome",
+      "params": {
+        "goal": "Grow",
+        "choose": false
+      },
+      "urgency": "normal",
+      "force_channel": null,
+      "dedupe_key": "golden-welcome",
+      "status": "queued",
+      "channel": null
+    }
+  ]
+}

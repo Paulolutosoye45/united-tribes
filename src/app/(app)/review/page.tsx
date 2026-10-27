@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PanelTabs } from "@/components/leaders/PanelTabs";
+import { ReviewTabs } from "@/components/leaders/ReviewTabs";
 import { ReviewQueue } from "@/components/leaders/ReviewQueue";
 import { REVIEW_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
@@ -50,7 +50,7 @@ export default async function ReviewPage() {
             Read each application, score what you read, and see your colleagues’ scores once you have submitted yours. Only a pastor makes the final decision.
           </p>
         </div>
-        <PanelTabs />
+        <ReviewTabs />
       </header>
 
       {tiles.length > 0 ? (
