@@ -12,7 +12,7 @@ OUT="${REHEARSAL_OUT:-/tmp/ut-rehearsal}"
 mkdir -p "$OUT"
 
 # Tests written for the rework itself: they check the new behaviour, so they are not part of the original suite.
-NEW='academy-switch|card-templates|card-templates-all|god-oversight|notices|notices-rollback|notices-application-sent|my-appointment|leader-appointments|leader-board|leader-fit|leader-fit-screen|matrix|pipeline|rollback|static-checks|switchboard|switchboard-journeys|placement-scorer|placement-plan|placement-send|placement-undo|placement-leaders|placement-rollback|placement-scale|assistant-recommendations|invitation-email|goal-unlock|goal-unlock-rollback|exports|exports-rollback|profiles-switchboard|profiles-facts|profiles-details|profiles-rollback|fingerprint|profile-readers'
+NEW='academy-switch|card-templates|card-templates-all|god-oversight|notices|notices-rollback|notices-application-sent|my-appointment|my-leading|leader-appointments|leader-board|leader-fit|leader-fit-screen|matrix|pipeline|rollback|static-checks|switchboard|switchboard-journeys|placement-scorer|placement-plan|placement-send|placement-undo|placement-leaders|placement-rollback|placement-scale|assistant-recommendations|invitation-email|goal-unlock|goal-unlock-rollback|exports|exports-rollback|profiles-switchboard|profiles-facts|profiles-details|profiles-rollback|fingerprint|profile-readers'
 FILES=()
 for f in tests/db/*.test.ts; do
   name="$(basename "$f" .test.ts)"

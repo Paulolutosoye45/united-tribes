@@ -102,6 +102,18 @@ application before they were appointed sees the appointed page, with a card offe
 appointed they cannot start a new application (a guard in the database, and the apply page sends them back to Lead); after **Step down** they
 can. Checked by `tests/db/my-appointment.test.ts`, `tests/unit/leader-appointed.test.ts` and journey 24.
 
+**A leader who leads a tribe, however they came to lead.** The Lead page used to decide what to show from the leader's application or an
+active appointment only. A leader whose role was given directly (an invitation with the leader role, for example) has neither, so the page
+called them someone who had never applied: *"Lead another tribe. Start my application."*, with an approved Tribe Card and members behind it.
+The same happened to an appointed leader on a database without `my_appointment()`. The page now also asks `my_leading()`, one read-only
+function that returns the tribe the signed-in leader leads (or, for an assistant leader, the one they assist), where its card stands, how many
+people have joined and whether they are certified. The count is read through the leader's own list, so a member the church placed is not
+counted before they are told. Such a leader sees *"You lead <their tribe>."* with **My Tribe Card** and **This week**, and, once the card is
+approved, **Who has joined** with the people by name. They are not offered an application and are not told how they came to lead. A leader
+who began an application for a second tribe still picks it up, with their own tribe one tap away. Leaders approved through an application,
+and appointed leaders, keep their pages and now see **Who has joined** too. The **My tribe** tab shows a leader a card for the tribe they lead
+above the member flow. Checked by `tests/db/my-leading.test.ts`, `tests/unit/leader-leading.test.ts` and journey 37.
+
 **Stepping down.** On an appointment, **Step down** (with an optional reason) ends it. A tribe with no members joined is closed. If members
 have joined, **nothing happens** and the page says how many: a pastor moves them to another tribe first. The leader role goes back only if
 the appointment gave it and the person has nothing else to lead and no approved application. **A certificate is never withdrawn.**

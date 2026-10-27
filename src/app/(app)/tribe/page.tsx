@@ -5,10 +5,12 @@ import { PlacedBanner } from "@/components/matching/PlacedBanner";
 import { PlacementView } from "@/components/matching/PlacementView";
 import { SwapCard } from "@/components/growth/SwapCard";
 import { TeenWaiting } from "@/components/guardian/TeenWaiting";
+import { LeadingStrip } from "@/components/leaders/LeadingTribe";
 import { WeekView } from "@/components/rhythm/WeekView";
 import { buttonClasses } from "@/components/ui/Button";
 import { requireSession } from "@/lib/auth/session";
 import { loadMyGuardian, loadMySwap } from "@/lib/growth/server";
+import { loadMyLeading } from "@/lib/leaders/server";
 import { loadMatches } from "@/lib/matching/server";
 import { loadMyPlacement } from "@/lib/placement/server";
 import { loadMyProgress, loadWordDays } from "@/lib/dashboard/server";
@@ -51,6 +53,11 @@ export default async function TribePage({ searchParams }: { searchParams: Search
     return <TeenWaiting guardian={guardian} name={session.person.preferredName ?? session.person.fullName} />;
   }
 
+  // A leader who leads a tribe sees it first: this tab is where members find theirs, and a leader's people are not here. Nothing for anyone else.
+  const isLeader = session.roles.includes("leader") || session.roles.includes("assistant_leader");
+  const leading = isLeader ? await loadMyLeading(supabase) : null;
+  const strip = leading ? <LeadingStrip leading={leading} /> : null;
+
   const match = await loadMatches(supabase);
 
   if (match?.placement) {
@@ -58,6 +65,7 @@ export default async function TribePage({ searchParams }: { searchParams: Search
     const placedByChurch = await loadMyPlacement(supabase);
     return (
       <div className="flex flex-col gap-8">
+        {strip}
         {placedByChurch?.active ? <PlacedBanner state={placedByChurch} /> : null}
         <PlacementView placement={match.placement} justJoined={joined === "1"} />
       </div>
@@ -67,6 +75,7 @@ export default async function TribePage({ searchParams }: { searchParams: Search
   if (!match?.profile) {
     return (
       <div className="flex flex-col gap-8">
+        {strip}
         <header className="flex flex-col gap-3">
           <h1 className="t-title">Find your tribe</h1>
           <p className="t-body measure text-soft">Tell us about your season and your goal first. It takes about four minutes, and then we show you three tribes that fit, each with its own score.</p>
@@ -80,5 +89,12 @@ export default async function TribePage({ searchParams }: { searchParams: Search
     );
   }
 
-  return <MatchList match={match} />;
+  return strip ? (
+    <div className="flex flex-col gap-8">
+      {strip}
+      <MatchList match={match} />
+    </div>
+  ) : (
+    <MatchList match={match} />
+  );
 }

@@ -3,6 +3,7 @@ import type { Catalogue } from "@/components/intake/types";
 import { loadCatalogue } from "@/lib/intake/server";
 import type { createClient } from "@/lib/supabase/server";
 import { parseLeaderAnswers, type LeaderAnswers } from "./answers";
+import { parseLeadingPeople, parseMyLeading, type LeadingPerson, type MyLeading } from "./leading";
 import { DEFAULT_MODES, modesFromPipeline, parseModes, type StageModes } from "./modes";
 import { DEFAULT_PIPELINE, parsePipeline, type Pipeline } from "./pipeline";
 
@@ -142,4 +143,27 @@ export async function loadMyApplication(
       changes: typeof r.changes === "number" ? r.changes : 0,
     })),
   };
+}
+
+/**
+ * The tribe the signed-in leader leads, however they came to lead it. Null when they lead nothing, and when the database cannot be asked
+ * (or does not have the function yet): the Lead page is then exactly as it was.
+ */
+export async function loadMyLeading(supabase: Supabase): Promise<MyLeading | null> {
+  try {
+    const { data, error } = await supabase.rpc("my_leading");
+    return error ? null : parseMyLeading(data);
+  } catch {
+    return null;
+  }
+}
+
+/** The people who have joined a tribe, through the leader's own list, so that its rules about who is shown apply. Null when it cannot be read. */
+export async function loadLeadingPeople(supabase: Supabase, tribeId: string): Promise<LeadingPerson[] | null> {
+  try {
+    const { data, error } = await supabase.rpc("tribe_roster_marked", { p_tribe: tribeId });
+    return error ? null : parseLeadingPeople(data);
+  } catch {
+    return null;
+  }
 }

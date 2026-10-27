@@ -5,6 +5,7 @@ import { ShieldProgress } from "@/components/brand/ShieldProgress";
 import { FirstCheckPanel } from "@/components/leaders/FirstCheckPanel";
 import { InterviewPicker, type InterviewOptions } from "@/components/leaders/InterviewPicker";
 import { LeaderOffer } from "@/components/leaders/LeaderOffer";
+import { LeadingPeople, LeadingStrip } from "@/components/leaders/LeadingTribe";
 import { RefereeLinks } from "@/components/leaders/RefereeLinks";
 import { StageList } from "@/components/leaders/StageList";
 import { DetailsStrip } from "@/components/profile/DetailsStrip";
@@ -19,10 +20,11 @@ import type { StageModes } from "@/lib/leaders/modes";
 import { WIRED, type EligibilityKey } from "@/lib/leaders/pipeline";
 import type { StageState } from "@/lib/leaders/status";
 import { parseMyOffer } from "@/lib/leaders/board";
+import { leadingFills, leadingLine, leadingTitle } from "@/lib/leaders/leading";
 import { LEADER_CONSENT_AI } from "@/lib/leaders/consent";
 import { readFirstCheckStatus } from "@/lib/leaders/quality/status";
 import { BROWSER_COOKIE, traceOf } from "@/lib/leaders/referee/trace";
-import { loadApplyModes, loadMyApplication, loadPipeline } from "@/lib/leaders/server";
+import { loadApplyModes, loadLeadingPeople, loadMyApplication, loadMyLeading, loadPipeline } from "@/lib/leaders/server";
 import { isDecided, isInReview, stageStates } from "@/lib/leaders/status";
 import { isStepId, minutesLeft, resolveStep, shieldFills } from "@/lib/leaders/steps";
 import { outlineDetails, stageDetails, statusLine } from "@/lib/leaders/wording";
@@ -53,6 +55,10 @@ export default async function LeadPage() {
   const isLeader = session.roles.includes("leader") || session.roles.includes("assistant_leader");
   // Details waiting for a leader's own confirmation (My page). Zero unless the function is open for them, so with it Off the page is as it was.
   const toCheck = isLeader ? await loadMyPage(supabase).then((p) => (p.enabled ? p.facts.filter((f) => f.state === "unconfirmed").length : 0)) : 0;
+  // The tribe a leader leads, and the people who have joined it, however they came to lead (an application, an appointment, or the role given
+  // directly). Null for anyone who leads nothing, and when the database cannot say: the page is then as it was.
+  const leading = isLeader ? await loadMyLeading(supabase) : null;
+  const people = leading && leading.tribeStatus === "approved" ? await loadLeadingPeople(supabase, leading.tribeId) : null;
 
   // ------------------------------------------------------------------ appointed
   // A leader the church appointed has no application to show, so the page would call them someone who has never applied. The database
@@ -99,6 +105,8 @@ export default async function LeadPage() {
 
         <DetailsStrip count={toCheck} />
 
+        {leading && people ? <LeadingPeople leading={leading} people={people} /> : null}
+
         <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
           <StageList stages={steps} states={steps} />
           {leftover ? (
@@ -116,6 +124,50 @@ export default async function LeadPage() {
             </section>
           ) : null}
         </div>
+      </div>
+    );
+  }
+
+  // ------------------------------------------------------------------ leads a tribe, no application and no appointment
+  // A leader whose role was given directly has neither, so the page would call them someone who has never applied and offer them an
+  // application. They lead a tribe: say so, and show what is true for them.
+  if (!application && leading) {
+    const mine = await loadMyAcademy(supabase);
+    const trainingDone = mine ? trainingFinished(mine.state, training) : false;
+    const trained = leading.certified || trainingDone;
+    const links = [
+      ...(trainingTo && !trained ? [trainingTo] : []),
+      { label: leading.role === "leader" ? "My Tribe Card" : "Read the Tribe Card", href: "/lead/tribe" },
+      { label: "This week", href: "/lead/week" },
+    ];
+    const fills = leadingFills(leading);
+    return (
+      <div className="flex flex-col gap-8">
+        <section aria-labelledby="status-heading" data-testid="leading" className="night rise-in rounded-[var(--radius-sheet)] p-6 sm:p-10">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex max-w-[34rem] flex-col gap-3">
+              <p className="t-small text-white/70">Your tribe</p>
+              <h1 id="status-heading" className="t-title pr-14 sm:pr-0">
+                {leadingTitle(leading)}
+              </h1>
+              <p className="t-body text-white/80">{leadingLine(leading)}</p>
+              <div className="mt-1 flex flex-wrap gap-3">
+                {links.map((l, i) => (
+                  <Link key={l.href} href={l.href} className={buttonClasses(i === 0 ? { className: "px-8" } : { variant: "night", className: "px-6" })}>
+                    <span className="relative">{l.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <div className="absolute right-5 top-5 origin-top-right scale-50 sm:static sm:shrink-0 sm:scale-100">
+              <ShieldProgress fills={fills} size={104} tone="light" label="Your tribe" done={fills.every((f) => f === 1)} />
+            </div>
+          </div>
+        </section>
+
+        <DetailsStrip count={toCheck} />
+
+        {people ? <LeadingPeople leading={leading} people={people} /> : null}
       </div>
     );
   }
@@ -164,6 +216,7 @@ export default async function LeadPage() {
           note="Only the review panel will see it."
           fills={shieldFills(step, modes)}
         />
+        {leading ? <LeadingStrip leading={leading} /> : null}
         <div>
           <WithdrawApplication appId={application.id} sent={false} />
         </div>
@@ -180,6 +233,7 @@ export default async function LeadPage() {
           <h1 className="t-title">Not yet, and that is okay.</h1>
           <p className="t-body measure text-soft">Leading asks a lot, so we open it when each of these is in place. Here is what to do for the ones that are not yet.</p>
         </header>
+        {leading ? <LeadingStrip leading={leading} /> : null}
         <ul className="stagger flex flex-col gap-3">
           {failed.map((item, i) => (
             <li key={item.id} style={{ ["--i" as string]: i }} className="card p-5">
@@ -263,6 +317,10 @@ export default async function LeadPage() {
       </section>
 
       {approved ? <DetailsStrip count={toCheck} /> : null}
+
+      {approved && leading && people ? <LeadingPeople leading={leading} people={people} /> : null}
+
+      {!approved && leading ? <LeadingStrip leading={leading} /> : null}
 
       {offer ? <LeaderOffer offer={offer} /> : null}
 
