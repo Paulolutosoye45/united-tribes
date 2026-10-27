@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
   // The mail library talks to your own mail server over a plain network connection; it runs as an ordinary Node package on the server,
   // not bundled into the build.
   serverExternalPackages: ["nodemailer"],
+  // The How-to Library's pictures are read from disk by the route that checks who may see them, so a standalone build has to carry them.
+  outputFileTracingIncludes: {
+    "/guides/p/[guide]/[file]": ["./content/guides/pictures/**/*"],
+  },
   turbopack: {
     rules: {
       "*.css": {

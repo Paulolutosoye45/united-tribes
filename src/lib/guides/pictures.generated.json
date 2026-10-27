@@ -1,0 +1,3428 @@
+{
+  "sign-in": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-sign-in": {
+        "id": "open-sign-in",
+        "width": 780,
+        "height": 1150,
+        "hash": "1818655b",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 4.62,
+            "y": 5.65,
+            "w": 90.77,
+            "h": 7.44,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Start here",
+          "x": 95.39,
+          "y": 9.37
+        }
+      },
+      "type-email": {
+        "id": "type-email",
+        "width": 780,
+        "height": 870,
+        "hash": "0cb6d53e",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 4.62,
+            "y": 53.04,
+            "w": 90.77,
+            "h": 15.63,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your email",
+          "x": 95.39,
+          "y": 60.85
+        }
+      },
+      "ask-for-code": {
+        "id": "ask-for-code",
+        "width": 780,
+        "height": 870,
+        "hash": "0cb6d53e",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 4.62,
+            "y": 73.27,
+            "w": 90.77,
+            "h": 15.63,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 95.39,
+          "y": 81.08
+        }
+      },
+      "type-code": {
+        "id": "type-code",
+        "width": 780,
+        "height": 986,
+        "hash": "841185ba",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 4.62,
+            "y": 6.59,
+            "w": 90.77,
+            "h": 38.21,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Six numbers",
+          "x": 95.39,
+          "y": 25.7
+        }
+      },
+      "whatsapp": {
+        "id": "whatsapp",
+        "width": 780,
+        "height": 870,
+        "hash": "97db3676",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 48.97,
+            "y": 29.69,
+            "w": 45.38,
+            "h": 13.79,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Or here",
+          "x": 94.35,
+          "y": 36.59
+        }
+      },
+      "google": {
+        "id": "google",
+        "width": 780,
+        "height": 918,
+        "hash": "881dae5b",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 4.62,
+            "y": 7.16,
+            "w": 90.77,
+            "h": 14.81,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Or here",
+          "x": 95.39,
+          "y": 14.57
+        }
+      },
+      "you-are-in": {
+        "id": "you-are-in",
+        "width": 780,
+        "height": 720,
+        "hash": "4799a0e0",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 9.1,
+            "w": 80.51,
+            "h": 18.89,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Next step",
+          "x": 90.25,
+          "y": 18.55
+        }
+      }
+    }
+  },
+  "find-your-tribe": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "start": {
+        "id": "start",
+        "width": 780,
+        "height": 828,
+        "hash": "a7bd201c",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 50.71,
+            "w": 29.5,
+            "h": 16.43,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 33.09,
+          "y": 58.92
+        }
+      },
+      "agree": {
+        "id": "agree",
+        "width": 780,
+        "height": 1688,
+        "hash": "113ff527",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 34.26,
+            "w": 92.82,
+            "h": 17.81,
+            "tone": "main"
+          },
+          {
+            "x": 3.59,
+            "y": 91.23,
+            "w": 92.82,
+            "h": 8.06,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Tick this",
+          "x": 96.41,
+          "y": 43.16
+        }
+      },
+      "age": {
+        "id": "age",
+        "width": 780,
+        "height": 1688,
+        "hash": "bf1a83cc",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 33.5,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your age",
+          "x": 96.41,
+          "y": 27.53
+        }
+      },
+      "where": {
+        "id": "where",
+        "width": 780,
+        "height": 1688,
+        "hash": "fdf75736",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 31.25,
+            "w": 92.82,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Type here",
+          "x": 96.41,
+          "y": 35.28
+        }
+      },
+      "story": {
+        "id": "story",
+        "width": 780,
+        "height": 1688,
+        "hash": "3b9f62ce",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 34.19,
+            "w": 92.82,
+            "h": 26.11,
+            "tone": "main"
+          },
+          {
+            "x": 78.97,
+            "y": 52.25,
+            "w": 14.36,
+            "h": 6.64,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Your words",
+          "x": 96.41,
+          "y": 47.24
+        }
+      },
+      "heard": {
+        "id": "heard",
+        "width": 780,
+        "height": 1688,
+        "hash": "b64f2bf1",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Check",
+          "x": 96.41,
+          "y": 13.2
+        }
+      },
+      "community": {
+        "id": "community",
+        "width": 780,
+        "height": 1688,
+        "hash": "f9f26206",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 35.38,
+            "w": 92.82,
+            "h": 12.39,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your choice",
+          "x": 96.41,
+          "y": 41.58
+        }
+      },
+      "goal": {
+        "id": "goal",
+        "width": 780,
+        "height": 1688,
+        "hash": "a5261f38",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 82.93,
+            "w": 92.82,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your goal",
+          "x": 96.41,
+          "y": 86.96
+        }
+      },
+      "rhythm": {
+        "id": "rhythm",
+        "width": 780,
+        "height": 1688,
+        "hash": "13f36bf2",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 29.2,
+            "w": 92.82,
+            "h": 7.82,
+            "tone": "main"
+          },
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "How, then when",
+          "x": 96.41,
+          "y": 33.11
+        }
+      },
+      "care": {
+        "id": "care",
+        "width": 780,
+        "height": 1688,
+        "hash": "42e1da45",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 8.25,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Private",
+          "x": 96.41,
+          "y": 14.9
+        }
+      },
+      "save": {
+        "id": "save",
+        "width": 780,
+        "height": 1688,
+        "hash": "89c9fbde",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 21.03,
+            "y": 91.11,
+            "w": 75.38,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 96.41,
+          "y": 95.14
+        }
+      },
+      "three-tribes": {
+        "id": "three-tribes",
+        "width": 780,
+        "height": 1280,
+        "hash": "fb5d98b2",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 5,
+            "w": 92.82,
+            "h": 6.68,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your tribes",
+          "x": 96.41,
+          "y": 8.34
+        }
+      }
+    }
+  },
+  "join-your-tribe": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "read-the-three": {
+        "id": "read-the-three",
+        "width": 780,
+        "height": 1520,
+        "hash": "344919e8",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 4.34,
+            "w": 92.82,
+            "h": 94.35,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "A tribe",
+          "x": 96.41,
+          "y": 51.52
+        }
+      },
+      "why-it-fits": {
+        "id": "why-it-fits",
+        "width": 780,
+        "height": 1468,
+        "hash": "662a0410",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.72,
+            "y": 25.2,
+            "w": 82.56,
+            "h": 4.4,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Why",
+          "x": 91.28,
+          "y": 27.4
+        }
+      },
+      "meets": {
+        "id": "meets",
+        "width": 780,
+        "height": 1468,
+        "hash": "662a0410",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.72,
+            "y": 59.09,
+            "w": 14.61,
+            "h": 11.78,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Can you come?",
+          "x": 23.33,
+          "y": 64.98
+        }
+      },
+      "choose-it": {
+        "id": "choose-it",
+        "width": 780,
+        "height": 1476,
+        "hash": "7fb23ac6",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.72,
+            "y": 86.45,
+            "w": 82.56,
+            "h": 9.21,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 91.28,
+          "y": 91.06
+        }
+      },
+      "success-picture": {
+        "id": "success-picture",
+        "width": 780,
+        "height": 720,
+        "hash": "adf51083",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 8.93,
+            "w": 82.05,
+            "h": 10.28,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "The goal",
+          "x": 91.02,
+          "y": 14.07
+        }
+      },
+      "covenant": {
+        "id": "covenant",
+        "width": 780,
+        "height": 1040,
+        "hash": "15ba10f2",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 10.49,
+            "w": 82.05,
+            "h": 7.12,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Four promises",
+          "x": 91.02,
+          "y": 14.05
+        }
+      },
+      "join": {
+        "id": "join",
+        "width": 780,
+        "height": 720,
+        "hash": "93a2611a",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 9.19,
+            "w": 8.21,
+            "h": 8.89,
+            "tone": "main"
+          },
+          {
+            "x": 3.59,
+            "y": 47.02,
+            "w": 92.82,
+            "h": 18.89,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Tick",
+          "x": 17.18,
+          "y": 13.63
+        }
+      },
+      "look-again": {
+        "id": "look-again",
+        "width": 780,
+        "height": 720,
+        "hash": "fb44d419",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 28.98,
+            "w": 84.99,
+            "h": 16.67,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Not right?",
+          "x": 88.58,
+          "y": 37.31
+        }
+      }
+    }
+  },
+  "your-week": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-tribe": {
+        "id": "open-tribe",
+        "width": 780,
+        "height": 1688,
+        "hash": "1d9598ab",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 33.76,
+            "y": 90.4,
+            "w": 32.48,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 66.24,
+          "y": 94.43
+        }
+      },
+      "this-week": {
+        "id": "this-week",
+        "width": 780,
+        "height": 720,
+        "hash": "1d52f08b",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 15.16,
+            "w": 53.85,
+            "h": 20.43,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "This week",
+          "x": 63.59,
+          "y": 25.38
+        }
+      },
+      "for-you-now": {
+        "id": "for-you-now",
+        "width": 780,
+        "height": 720,
+        "hash": "d45c3228",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 8.98,
+            "w": 82.05,
+            "h": 34.89,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Start here",
+          "x": 91.02,
+          "y": 26.43
+        }
+      },
+      "where-starting": {
+        "id": "where-starting",
+        "width": 780,
+        "height": 720,
+        "hash": "dcd53c6c",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 9.08,
+            "w": 82.05,
+            "h": 10.28,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Five taps",
+          "x": 91.02,
+          "y": 14.22
+        }
+      },
+      "your-step": {
+        "id": "your-step",
+        "width": 780,
+        "height": 1078,
+        "hash": "ebb2f2ba",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 5.97,
+            "w": 82.05,
+            "h": 87.92,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your step",
+          "x": 91.02,
+          "y": 49.93
+        }
+      },
+      "word-days": {
+        "id": "word-days",
+        "width": 780,
+        "height": 720,
+        "hash": "30a7ee78",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 8.91,
+            "w": 82.05,
+            "h": 10.28,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tap a number",
+          "x": 91.02,
+          "y": 14.05
+        }
+      },
+      "come-ready": {
+        "id": "come-ready",
+        "width": 780,
+        "height": 720,
+        "hash": "816234c6",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 11.74,
+            "w": 82.05,
+            "h": 10.28,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Before you meet",
+          "x": 91.02,
+          "y": 16.88
+        }
+      },
+      "twelve-weeks": {
+        "id": "twelve-weeks",
+        "width": 780,
+        "height": 720,
+        "hash": "8638a3ea",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 9.05,
+            "w": 48.11,
+            "h": 10.28,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tap a week",
+          "x": 57.08,
+          "y": 14.19
+        }
+      },
+      "different-tribe": {
+        "id": "different-tribe",
+        "width": 780,
+        "height": 720,
+        "hash": "563ff9fe",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 45.86,
+            "w": 52.83,
+            "h": 14.44,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "If needed",
+          "x": 61.8,
+          "y": 53.08
+        }
+      }
+    }
+  },
+  "share-a-testimony": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-testimonies": {
+        "id": "open-testimonies",
+        "width": 780,
+        "height": 720,
+        "hash": "b9d77d93",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 54.08,
+            "w": 36.11,
+            "h": 16.67,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 45.08,
+          "y": 62.41
+        }
+      },
+      "write": {
+        "id": "write",
+        "width": 780,
+        "height": 720,
+        "hash": "6c684e92",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 17.19,
+            "w": 82.05,
+            "h": 55,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "In your words",
+          "x": 91.02,
+          "y": 44.69
+        }
+      },
+      "who-reads": {
+        "id": "who-reads",
+        "width": 780,
+        "height": 880,
+        "hash": "6d4121b9",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 7.9,
+            "w": 82.05,
+            "h": 49.02,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your choice",
+          "x": 91.02,
+          "y": 32.41
+        }
+      },
+      "how-name-shows": {
+        "id": "how-name-shows",
+        "width": 780,
+        "height": 880,
+        "hash": "5f948e0a",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 7.83,
+            "w": 82.05,
+            "h": 52,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your choice",
+          "x": 91.02,
+          "y": 33.83
+        }
+      },
+      "send": {
+        "id": "send",
+        "width": 780,
+        "height": 720,
+        "hash": "6a03a52e",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 20.9,
+            "w": 42.88,
+            "h": 16.67,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 51.85,
+          "y": 29.23
+        }
+      }
+    }
+  },
+  "your-information": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-privacy": {
+        "id": "open-privacy",
+        "width": 780,
+        "height": 1688,
+        "hash": "985c433a",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 23.85,
+            "y": 27.14,
+            "w": 68.21,
+            "h": 7.11,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 92.06,
+          "y": 30.7
+        }
+      },
+      "how-we-reach-you": {
+        "id": "how-we-reach-you",
+        "width": 780,
+        "height": 1040,
+        "hash": "31c3a5af",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.72,
+            "w": 92.82,
+            "h": 7.12,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your choice",
+          "x": 96.41,
+          "y": 10.28
+        }
+      },
+      "emails": {
+        "id": "emails",
+        "width": 780,
+        "height": 960,
+        "hash": "70432038",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 7.15,
+            "w": 92.82,
+            "h": 7.71,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tick or untick",
+          "x": 96.41,
+          "y": 11.01
+        }
+      },
+      "delete-answers": {
+        "id": "delete-answers",
+        "width": 780,
+        "height": 720,
+        "hash": "d51ef0b1",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 54.43,
+            "w": 49.09,
+            "h": 16.67,
+            "tone": "main"
+          },
+          {
+            "x": 8.97,
+            "y": 37.76,
+            "w": 51.33,
+            "h": 16.67,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Only if you want to",
+          "x": 58.06,
+          "y": 62.77
+        }
+      },
+      "download": {
+        "id": "download",
+        "width": 780,
+        "height": 898,
+        "hash": "efeeb1fc",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 33.85,
+            "w": 48.42,
+            "h": 13.36,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your copy",
+          "x": 57.39,
+          "y": 40.53
+        }
+      },
+      "ask-delete": {
+        "id": "ask-delete",
+        "width": 780,
+        "height": 904,
+        "hash": "997c1a68",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 79.57,
+            "w": 75.05,
+            "h": 13.27,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Think first",
+          "x": 84.02,
+          "y": 86.2
+        }
+      },
+      "send-request": {
+        "id": "send-request",
+        "width": 780,
+        "height": 906,
+        "hash": "07d3473f",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 60.56,
+            "w": 45.29,
+            "h": 13.25,
+            "tone": "main"
+          },
+          {
+            "x": 8.97,
+            "y": 73.81,
+            "w": 45.45,
+            "h": 13.25,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Send",
+          "x": 54.26,
+          "y": 67.19
+        }
+      },
+      "office-answers": {
+        "id": "office-answers",
+        "width": 780,
+        "height": 952,
+        "hash": "6ac2d812",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 80.66,
+            "w": 53.91,
+            "h": 12.61,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Until they answer",
+          "x": 62.88,
+          "y": 86.97
+        }
+      }
+    }
+  },
+  "apply-to-lead": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-lead": {
+        "id": "open-lead",
+        "width": 780,
+        "height": 720,
+        "hash": "1b3ed3e0",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 9.5,
+            "w": 59.72,
+            "h": 18.89,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 69.46,
+          "y": 18.95
+        }
+      },
+      "welcome": {
+        "id": "welcome",
+        "width": 780,
+        "height": 1688,
+        "hash": "314fc365",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 91.23,
+            "w": 92.82,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tick, then press",
+          "x": 96.41,
+          "y": 95.26
+        }
+      },
+      "eligibility": {
+        "id": "eligibility",
+        "width": 780,
+        "height": 1688,
+        "hash": "3b6768cd",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Seven taps",
+          "x": 96.41,
+          "y": 13.2
+        }
+      },
+      "contact": {
+        "id": "contact",
+        "width": 780,
+        "height": 1688,
+        "hash": "ee1e0bc2",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 31.25,
+            "w": 92.82,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your number",
+          "x": 96.41,
+          "y": 35.28
+        }
+      },
+      "track": {
+        "id": "track",
+        "width": 780,
+        "height": 1688,
+        "hash": "9062bbd9",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tap one",
+          "x": 96.41,
+          "y": 13.2
+        }
+      },
+      "community": {
+        "id": "community",
+        "width": 780,
+        "height": 1688,
+        "hash": "1583fad3",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 8.25,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tap one",
+          "x": 96.41,
+          "y": 14.9
+        }
+      },
+      "goal": {
+        "id": "goal",
+        "width": 780,
+        "height": 1688,
+        "hash": "a2611da8",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 8.25,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tap one",
+          "x": 96.41,
+          "y": 14.9
+        }
+      },
+      "goal-story": {
+        "id": "goal-story",
+        "width": 780,
+        "height": 1688,
+        "hash": "48ddacb8",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 36.98,
+            "w": 92.82,
+            "h": 29.35,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "In your words",
+          "x": 96.41,
+          "y": 51.66
+        }
+      },
+      "why": {
+        "id": "why",
+        "width": 780,
+        "height": 1688,
+        "hash": "4f4053c3",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 31.25,
+            "w": 92.82,
+            "h": 29.35,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "In your words",
+          "x": 96.41,
+          "y": 45.92
+        }
+      },
+      "walked": {
+        "id": "walked",
+        "width": 780,
+        "height": 1688,
+        "hash": "590793be",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 35.15,
+            "w": 92.82,
+            "h": 29.35,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "A real time",
+          "x": 96.41,
+          "y": 49.83
+        }
+      },
+      "walk": {
+        "id": "walk",
+        "width": 780,
+        "height": 1688,
+        "hash": "f3f06d8c",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 8.25,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Honest, not high",
+          "x": 96.41,
+          "y": 14.9
+        }
+      },
+      "obstacles": {
+        "id": "obstacles",
+        "width": 780,
+        "height": 1688,
+        "hash": "6622ae63",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 34.67,
+            "w": 92.82,
+            "h": 29.35,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Be plain",
+          "x": 96.41,
+          "y": 49.34
+        }
+      },
+      "situations": {
+        "id": "situations",
+        "width": 780,
+        "height": 1688,
+        "hash": "7c170ca7",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Best and worst",
+          "x": 96.41,
+          "y": 13.2
+        }
+      },
+      "style": {
+        "id": "style",
+        "width": 780,
+        "height": 1688,
+        "hash": "98d53aa9",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Six taps",
+          "x": 96.41,
+          "y": 13.2
+        }
+      },
+      "lead-best": {
+        "id": "lead-best",
+        "width": 780,
+        "height": 1688,
+        "hash": "4312f7fb",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tap one",
+          "x": 96.41,
+          "y": 13.2
+        }
+      },
+      "ref1": {
+        "id": "ref1",
+        "width": 780,
+        "height": 1688,
+        "hash": "be63e728",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Their details",
+          "x": 96.41,
+          "y": 13.2
+        }
+      },
+      "ref2": {
+        "id": "ref2",
+        "width": 780,
+        "height": 1688,
+        "hash": "efc663a8",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.78,
+            "w": 92.82,
+            "h": 4.84,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Their details",
+          "x": 96.41,
+          "y": 13.2
+        }
+      },
+      "review": {
+        "id": "review",
+        "width": 780,
+        "height": 1688,
+        "hash": "76ddad05",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 21.03,
+            "y": 91.23,
+            "w": 75.38,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Last step",
+          "x": 96.41,
+          "y": 95.26
+        }
+      },
+      "sent": {
+        "id": "sent",
+        "width": 780,
+        "height": 1688,
+        "hash": "51a04f6d",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 4.62,
+            "y": 81.75,
+            "w": 90.77,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 95.39,
+          "y": 85.78
+        }
+      }
+    }
+  },
+  "after-you-apply": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "where-it-stands": {
+        "id": "where-it-stands",
+        "width": 780,
+        "height": 1688,
+        "hash": "68a718f1",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 16.98,
+            "w": 80.51,
+            "h": 8.71,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your stage",
+          "x": 90.25,
+          "y": 21.34
+        }
+      },
+      "send-requests": {
+        "id": "send-requests",
+        "width": 780,
+        "height": 1194,
+        "hash": "7b1f5bd9",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 28.1,
+            "w": 62.2,
+            "h": 10.05,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press, once each",
+          "x": 71.17,
+          "y": 33.13
+        }
+      },
+      "watch": {
+        "id": "watch",
+        "width": 780,
+        "height": 988,
+        "hash": "9a5d0051",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 46.11,
+            "w": 34.34,
+            "h": 12.15,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Sent",
+          "x": 43.31,
+          "y": 52.19
+        }
+      },
+      "invited": {
+        "id": "invited",
+        "width": 780,
+        "height": 720,
+        "hash": "f12d2ce5",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 5.18,
+            "w": 92.82,
+            "h": 10.28,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "You are invited",
+          "x": 96.41,
+          "y": 10.32
+        }
+      },
+      "book": {
+        "id": "book",
+        "width": 780,
+        "height": 1446,
+        "hash": "f1e89c06",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 86.16,
+            "w": 92.82,
+            "h": 9.41,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 96.41,
+          "y": 90.86
+        }
+      },
+      "booked": {
+        "id": "booked",
+        "width": 780,
+        "height": 720,
+        "hash": "b5e2386a",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 5.25,
+            "w": 92.82,
+            "h": 10.28,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Booked",
+          "x": 96.41,
+          "y": 10.39
+        }
+      },
+      "approved": {
+        "id": "approved",
+        "width": 780,
+        "height": 1688,
+        "hash": "d48eb16c",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 16.98,
+            "w": 80.51,
+            "h": 5.07,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Welcome",
+          "x": 90.25,
+          "y": 19.52
+        }
+      },
+      "offer": {
+        "id": "offer",
+        "width": 780,
+        "height": 970,
+        "hash": "dab70f19",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10.77,
+            "y": 80.64,
+            "w": 37.77,
+            "h": 12.37,
+            "tone": "main"
+          },
+          {
+            "x": 48.54,
+            "y": 80.64,
+            "w": 37.65,
+            "h": 12.37,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Your answer",
+          "x": 48.54,
+          "y": 86.83
+        }
+      },
+      "not-approved": {
+        "id": "not-approved",
+        "width": 780,
+        "height": 720,
+        "hash": "c6bad669",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10,
+            "y": 9.28,
+            "w": 80,
+            "h": 10.28,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "A note for you",
+          "x": 90,
+          "y": 14.42
+        }
+      }
+    }
+  },
+  "leader-academy": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-training": {
+        "id": "open-training",
+        "width": 780,
+        "height": 1120,
+        "hash": "6e89543b",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 40.51,
+            "w": 53.4,
+            "h": 12.14,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 63.14,
+          "y": 46.58
+        }
+      },
+      "what-it-needs": {
+        "id": "what-it-needs",
+        "width": 780,
+        "height": 1040,
+        "hash": "cf5b1507",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 72.03,
+            "w": 92.82,
+            "h": 7.12,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your list",
+          "x": 96.41,
+          "y": 75.59
+        }
+      },
+      "start-module": {
+        "id": "start-module",
+        "width": 780,
+        "height": 1688,
+        "hash": "50e51229",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 46.63,
+            "w": 29.5,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 39.24,
+          "y": 50.66
+        }
+      },
+      "read": {
+        "id": "read",
+        "width": 780,
+        "height": 840,
+        "hash": "60a0ce70",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 8.1,
+            "w": 92.82,
+            "h": 10.18,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Module 1",
+          "x": 96.41,
+          "y": 13.19
+        }
+      },
+      "declaration-opens": {
+        "id": "declaration-opens",
+        "width": 780,
+        "height": 1688,
+        "hash": "8567ba2d",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 46.63,
+            "w": 47.21,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 56.95,
+          "y": 50.66
+        }
+      },
+      "declaration-sign": {
+        "id": "declaration-sign",
+        "width": 780,
+        "height": 1688,
+        "hash": "0708864d",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 77.44,
+            "w": 54.94,
+            "h": 8.06,
+            "tone": "main"
+          },
+          {
+            "x": 3.59,
+            "y": 67.97,
+            "w": 92.82,
+            "h": 8.06,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 58.53,
+          "y": 81.47
+        }
+      },
+      "declaration-signed": {
+        "id": "declaration-signed",
+        "width": 780,
+        "height": 944,
+        "hash": "5b7d2201",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 21.04,
+            "y": 46.3,
+            "w": 57.91,
+            "h": 9.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Done",
+          "x": 78.95,
+          "y": 50.83
+        }
+      },
+      "booked": {
+        "id": "booked",
+        "width": 780,
+        "height": 1472,
+        "hash": "8c064ff7",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 13.33,
+            "y": 31.95,
+            "w": 23.71,
+            "h": 7.07,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Booked",
+          "x": 37.04,
+          "y": 35.48
+        }
+      },
+      "practice": {
+        "id": "practice",
+        "width": 780,
+        "height": 1520,
+        "hash": "ddd65bcb",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10,
+            "y": 65.9,
+            "w": 42.69,
+            "h": 4.87,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "From your coach",
+          "x": 52.69,
+          "y": 68.34
+        }
+      },
+      "then-card": {
+        "id": "then-card",
+        "width": 780,
+        "height": 1120,
+        "hash": "1a3788bd",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 52.65,
+            "w": 43.01,
+            "h": 12.14,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Next",
+          "x": 52.75,
+          "y": 58.72
+        }
+      },
+      "quiz-start": {
+        "id": "quiz-start",
+        "width": 780,
+        "height": 720,
+        "hash": "8c239a34",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 41.3,
+            "w": 82.05,
+            "h": 18.89,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 91.02,
+          "y": 50.74
+        }
+      },
+      "quiz": {
+        "id": "quiz",
+        "width": 780,
+        "height": 1688,
+        "hash": "2a35895d",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 40.48,
+            "w": 92.82,
+            "h": 39.53,
+            "tone": "main"
+          },
+          {
+            "x": 36.85,
+            "y": 80.96,
+            "w": 59.56,
+            "h": 8.06,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Tap one",
+          "x": 96.41,
+          "y": 60.24
+        }
+      },
+      "badges": {
+        "id": "badges",
+        "width": 780,
+        "height": 840,
+        "hash": "91214eab",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 13.07,
+            "w": 92.82,
+            "h": 55.69,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Five passed",
+          "x": 96.41,
+          "y": 40.91
+        }
+      },
+      "declaration-read": {
+        "id": "declaration-read",
+        "width": 780,
+        "height": 1200,
+        "hash": "5b99726f",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 5.67,
+            "w": 92.82,
+            "h": 7.13,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Eight promises",
+          "x": 96.41,
+          "y": 9.23
+        }
+      },
+      "workshops": {
+        "id": "workshops",
+        "width": 780,
+        "height": 1120,
+        "hash": "90975a45",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.22,
+            "w": 92.82,
+            "h": 6.61,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Two workshops",
+          "x": 96.41,
+          "y": 9.53
+        }
+      }
+    }
+  },
+  "run-your-week": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-week": {
+        "id": "open-week",
+        "width": 780,
+        "height": 1040,
+        "hash": "2ac42ec6",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10,
+            "y": 43.11,
+            "w": 42.14,
+            "h": 11.54,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 52.14,
+          "y": 48.88
+        }
+      },
+      "top": {
+        "id": "top",
+        "width": 780,
+        "height": 1688,
+        "hash": "0b368a85",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 19.86,
+            "w": 80.51,
+            "h": 5.07,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "This week",
+          "x": 90.25,
+          "y": 22.39
+        }
+      },
+      "prepare": {
+        "id": "prepare",
+        "width": 780,
+        "height": 1200,
+        "hash": "4575fdc5",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 12.36,
+            "w": 92.82,
+            "h": 6.17,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "The plan",
+          "x": 96.41,
+          "y": 15.45
+        }
+      },
+      "log-open": {
+        "id": "log-open",
+        "width": 780,
+        "height": 1688,
+        "hash": "0b368a85",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 38.86,
+            "w": 39.93,
+            "h": 6.16,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 49.67,
+          "y": 41.94
+        }
+      },
+      "log-highlight": {
+        "id": "log-highlight",
+        "width": 780,
+        "height": 840,
+        "hash": "cc056ae7",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 9.02,
+            "w": 82.05,
+            "h": 28.57,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "A line or two",
+          "x": 91.02,
+          "y": 23.3
+        }
+      },
+      "calls": {
+        "id": "calls",
+        "width": 780,
+        "height": 1120,
+        "hash": "4f01895c",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.22,
+            "w": 92.82,
+            "h": 6.61,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Call first",
+          "x": 96.41,
+          "y": 9.53
+        }
+      },
+      "record-call": {
+        "id": "record-call",
+        "width": 780,
+        "height": 1370,
+        "hash": "1798a817",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 7.95,
+            "y": 41.41,
+            "w": 84.1,
+            "h": 25.11,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Choose one",
+          "x": 92.05,
+          "y": 53.96
+        }
+      },
+      "worried": {
+        "id": "worried",
+        "width": 780,
+        "height": 920,
+        "hash": "c375166f",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 46.66,
+            "w": 61.87,
+            "h": 11.3,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 65.46,
+          "y": 52.31
+        }
+      },
+      "testimonies": {
+        "id": "testimonies",
+        "width": 780,
+        "height": 1280,
+        "hash": "f9fd61d3",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 5.42,
+            "w": 92.82,
+            "h": 5.78,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your decision",
+          "x": 96.41,
+          "y": 8.31
+        }
+      },
+      "success-picture": {
+        "id": "success-picture",
+        "width": 780,
+        "height": 1280,
+        "hash": "e63cec48",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 5.46,
+            "w": 82.05,
+            "h": 5.78,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "By week 2",
+          "x": 91.02,
+          "y": 8.35
+        }
+      },
+      "log-marks": {
+        "id": "log-marks",
+        "width": 780,
+        "height": 1240,
+        "hash": "1429f5c0",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 21.65,
+            "w": 82.05,
+            "h": 10.65,
+            "tone": "main"
+          },
+          {
+            "x": 8.97,
+            "y": 37.51,
+            "w": 82.05,
+            "h": 21.34,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Who came",
+          "x": 91.02,
+          "y": 26.97
+        }
+      },
+      "log-save": {
+        "id": "log-save",
+        "width": 780,
+        "height": 840,
+        "hash": "1a4328c7",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 70.23,
+            "w": 36.12,
+            "h": 14.29,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 45.09,
+          "y": 77.38
+        }
+      }
+    }
+  },
+  "your-tribes-season": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-season": {
+        "id": "open-season",
+        "width": 780,
+        "height": 1688,
+        "hash": "0b368a85",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 33.62,
+            "y": 33.17,
+            "w": 42.74,
+            "h": 6.16,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 76.36,
+          "y": 36.25
+        }
+      },
+      "headline": {
+        "id": "headline",
+        "width": 780,
+        "height": 720,
+        "hash": "1f60059f",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 31.83,
+            "w": 80.51,
+            "h": 11.88,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your season",
+          "x": 90.25,
+          "y": 37.77
+        }
+      },
+      "numbers": {
+        "id": "numbers",
+        "width": 780,
+        "height": 962,
+        "hash": "a1537cc7",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 7.14,
+            "w": 92.82,
+            "h": 80.73,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Three numbers",
+          "x": 96.41,
+          "y": 47.51
+        }
+      },
+      "week-by-week": {
+        "id": "week-by-week",
+        "width": 780,
+        "height": 840,
+        "hash": "f02bb752",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 8.26,
+            "w": 92.82,
+            "h": 66.02,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Week by week",
+          "x": 96.41,
+          "y": 41.27
+        }
+      },
+      "people": {
+        "id": "people",
+        "width": 780,
+        "height": 1280,
+        "hash": "c807bae7",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 5.46,
+            "w": 92.82,
+            "h": 5.78,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your people",
+          "x": 96.41,
+          "y": 8.35
+        }
+      },
+      "back": {
+        "id": "back",
+        "width": 780,
+        "height": 720,
+        "hash": "82262efa",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 49.37,
+            "w": 46.39,
+            "h": 16.67,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 49.98,
+          "y": 57.7
+        }
+      }
+    }
+  },
+  "appointed-to-lead": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "appointed": {
+        "id": "appointed",
+        "width": 780,
+        "height": 840,
+        "hash": "95a945ef",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 8.17,
+            "w": 80.51,
+            "h": 32.16,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your role",
+          "x": 90.25,
+          "y": 24.25
+        }
+      },
+      "where-you-are": {
+        "id": "where-you-are",
+        "width": 780,
+        "height": 1040,
+        "hash": "fae56761",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.68,
+            "w": 92.82,
+            "h": 7.12,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Four steps",
+          "x": 96.41,
+          "y": 10.24
+        }
+      },
+      "open-card": {
+        "id": "open-card",
+        "width": 780,
+        "height": 1688,
+        "hash": "19b8caa1",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 51.75,
+            "w": 43.01,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 52.75,
+          "y": 55.78
+        }
+      },
+      "already-filled": {
+        "id": "already-filled",
+        "width": 780,
+        "height": 1040,
+        "hash": "c37208d3",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 10.42,
+            "w": 82.05,
+            "h": 7.12,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Already set",
+          "x": 91.02,
+          "y": 13.98
+        }
+      },
+      "when-where": {
+        "id": "when-where",
+        "width": 780,
+        "height": 1360,
+        "hash": "4104e992",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 5.14,
+            "w": 82.05,
+            "h": 5.44,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Day and time",
+          "x": 91.02,
+          "y": 7.86
+        }
+      },
+      "send-card": {
+        "id": "send-card",
+        "width": 780,
+        "height": 920,
+        "hash": "f3a48c7b",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 7.45,
+            "w": 55.24,
+            "h": 8.04,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Last step",
+          "x": 64.21,
+          "y": 11.47
+        }
+      },
+      "where-you-meet": {
+        "id": "where-you-meet",
+        "width": 780,
+        "height": 840,
+        "hash": "ba7ccc9a",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 8.32,
+            "w": 82.05,
+            "h": 8.81,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Link or place",
+          "x": 91.02,
+          "y": 12.73
+        }
+      },
+      "members": {
+        "id": "members",
+        "width": 780,
+        "height": 1280,
+        "hash": "58867f2c",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 5.33,
+            "w": 92.82,
+            "h": 5.78,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your members",
+          "x": 96.41,
+          "y": 8.22
+        }
+      },
+      "welcome": {
+        "id": "welcome",
+        "width": 780,
+        "height": 1040,
+        "hash": "36a885de",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 7.95,
+            "y": 29.62,
+            "w": 52.1,
+            "h": 10,
+            "tone": "main"
+          },
+          {
+            "x": 7.95,
+            "y": 39.23,
+            "w": 50.6,
+            "h": 10,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Say hello",
+          "x": 60.05,
+          "y": 34.62
+        }
+      },
+      "group-link": {
+        "id": "group-link",
+        "width": 780,
+        "height": 1040,
+        "hash": "096ad836",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 6.67,
+            "w": 82.05,
+            "h": 7.08,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Link and date",
+          "x": 91.02,
+          "y": 10.21
+        }
+      },
+      "assistant": {
+        "id": "assistant",
+        "width": 780,
+        "height": 1120,
+        "hash": "fbf0ecc2",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 6.14,
+            "w": 82.05,
+            "h": 6.61,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Optional",
+          "x": 91.02,
+          "y": 9.45
+        }
+      }
+    }
+  },
+  "assistant-leader": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open-week": {
+        "id": "open-week",
+        "width": 780,
+        "height": 1040,
+        "hash": "77a5d792",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10,
+            "y": 43.11,
+            "w": 42.14,
+            "h": 11.54,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 52.14,
+          "y": 48.88
+        }
+      },
+      "top": {
+        "id": "top",
+        "width": 780,
+        "height": 1688,
+        "hash": "91ee9c1d",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 19.86,
+            "w": 80.51,
+            "h": 5.07,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "This week",
+          "x": 90.25,
+          "y": 22.39
+        }
+      },
+      "open-care": {
+        "id": "open-care",
+        "width": 780,
+        "height": 840,
+        "hash": "cf23335c",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10,
+            "y": 43.99,
+            "w": 43.57,
+            "h": 14.29,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 53.57,
+          "y": 51.14
+        }
+      },
+      "read-task": {
+        "id": "read-task",
+        "width": 780,
+        "height": 1280,
+        "hash": "2b7942d2",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 5.43,
+            "w": 92.82,
+            "h": 5.78,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your tasks",
+          "x": 96.41,
+          "y": 8.32
+        }
+      },
+      "mark-done": {
+        "id": "mark-done",
+        "width": 780,
+        "height": 1040,
+        "hash": "510b2428",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 69.61,
+            "w": 34.71,
+            "h": 10,
+            "tone": "main"
+          },
+          {
+            "x": 8.97,
+            "y": 37.39,
+            "w": 30.33,
+            "h": 10,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 43.68,
+          "y": 74.61
+        }
+      },
+      "not-needed": {
+        "id": "not-needed",
+        "width": 780,
+        "height": 1040,
+        "hash": "307a014f",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 69.42,
+            "w": 37.26,
+            "h": 10,
+            "tone": "main"
+          },
+          {
+            "x": 38.79,
+            "y": 37.39,
+            "w": 31.72,
+            "h": 10,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 46.23,
+          "y": 74.42
+        }
+      },
+      "calls": {
+        "id": "calls",
+        "width": 780,
+        "height": 1120,
+        "hash": "02914c40",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.19,
+            "w": 92.82,
+            "h": 6.61,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Call first",
+          "x": 96.41,
+          "y": 9.5
+        }
+      },
+      "log": {
+        "id": "log",
+        "width": 780,
+        "height": 1240,
+        "hash": "2b08ae5a",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 21.62,
+            "w": 82.05,
+            "h": 10.65,
+            "tone": "main"
+          },
+          {
+            "x": 8.97,
+            "y": 37.47,
+            "w": 82.05,
+            "h": 21.34,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Who came",
+          "x": 91.02,
+          "y": 26.95
+        }
+      }
+    }
+  },
+  "give-a-reference": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open": {
+        "id": "open",
+        "width": 780,
+        "height": 1688,
+        "hash": "27c89c97",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.59,
+            "w": 92.82,
+            "h": 8.71,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Their name",
+          "x": 96.41,
+          "y": 10.95
+        }
+      },
+      "send-code": {
+        "id": "send-code",
+        "width": 780,
+        "height": 1688,
+        "hash": "27c89c97",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10,
+            "y": 65.83,
+            "w": 80,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 90,
+          "y": 69.86
+        }
+      },
+      "enter-code": {
+        "id": "enter-code",
+        "width": 780,
+        "height": 1688,
+        "hash": "f1d28ef3",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10,
+            "y": 56.31,
+            "w": 80,
+            "h": 9,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your code",
+          "x": 90,
+          "y": 60.81
+        }
+      },
+      "rate": {
+        "id": "rate",
+        "width": 780,
+        "height": 960,
+        "hash": "566b4350",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 23.76,
+            "w": 82.05,
+            "h": 57.37,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tap a number",
+          "x": 91.02,
+          "y": 52.45
+        }
+      },
+      "concern": {
+        "id": "concern",
+        "width": 780,
+        "height": 840,
+        "hash": "116533ef",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 32.08,
+            "w": 82.05,
+            "h": 15.71,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your choice",
+          "x": 91.02,
+          "y": 39.94
+        }
+      },
+      "send": {
+        "id": "send",
+        "width": 780,
+        "height": 840,
+        "hash": "7b0740c0",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 60.65,
+            "w": 92.82,
+            "h": 16.19,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 96.41,
+          "y": 68.75
+        }
+      },
+      "thanks": {
+        "id": "thanks",
+        "width": 780,
+        "height": 1688,
+        "hash": "2bb032ba",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 71.01,
+            "w": 80.51,
+            "h": 5.07,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Done",
+          "x": 90.25,
+          "y": 73.55
+        }
+      }
+    }
+  },
+  "parent-permission": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open": {
+        "id": "open",
+        "width": 780,
+        "height": 1688,
+        "hash": "e70fa17f",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.59,
+            "w": 92.82,
+            "h": 5.07,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your child",
+          "x": 96.41,
+          "y": 9.13
+        }
+      },
+      "read": {
+        "id": "read",
+        "width": 780,
+        "height": 1400,
+        "hash": "d30520c0",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 2.68,
+            "w": 82.05,
+            "h": 5.29,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Nine points",
+          "x": 91.02,
+          "y": 5.33
+        }
+      },
+      "care-team": {
+        "id": "care-team",
+        "width": 780,
+        "height": 1040,
+        "hash": "8f7038ad",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 18.72,
+            "y": 29.74,
+            "w": 72.31,
+            "h": 30.92,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "We will call",
+          "x": 91.03,
+          "y": 45.2
+        }
+      },
+      "confirm": {
+        "id": "confirm",
+        "width": 780,
+        "height": 840,
+        "hash": "4ea82b90",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 31.95,
+            "w": 8.21,
+            "h": 7.62,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Tick",
+          "x": 17.18,
+          "y": 35.76
+        }
+      },
+      "note": {
+        "id": "note",
+        "width": 780,
+        "height": 840,
+        "hash": "efabc3bf",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 27.37,
+            "w": 92.82,
+            "h": 33.33,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Optional",
+          "x": 96.41,
+          "y": 44.03
+        }
+      },
+      "answer": {
+        "id": "answer",
+        "width": 780,
+        "height": 898,
+        "hash": "f3e00942",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 56.63,
+            "w": 92.82,
+            "h": 15.14,
+            "tone": "main"
+          },
+          {
+            "x": 3.59,
+            "y": 71.77,
+            "w": 92.82,
+            "h": 15.14,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Your answer",
+          "x": 96.41,
+          "y": 64.2
+        }
+      },
+      "thanks": {
+        "id": "thanks",
+        "width": 780,
+        "height": 1688,
+        "hash": "1460e839",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 9.74,
+            "y": 53.93,
+            "w": 80.51,
+            "h": 8.71,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Done",
+          "x": 90.25,
+          "y": 58.28
+        }
+      },
+      "their-tribe": {
+        "id": "their-tribe",
+        "width": 780,
+        "height": 920,
+        "hash": "46da0601",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 7.52,
+            "w": 82.05,
+            "h": 8.04,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Their tribe",
+          "x": 91.02,
+          "y": 11.54
+        }
+      },
+      "take-back": {
+        "id": "take-back",
+        "width": 780,
+        "height": 1040,
+        "hash": "ea395d54",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 61.8,
+            "w": 82.05,
+            "h": 11.54,
+            "tone": "main"
+          },
+          {
+            "x": 8.97,
+            "y": 73.34,
+            "w": 82.05,
+            "h": 11.54,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Only if you wish",
+          "x": 91.02,
+          "y": 67.57
+        }
+      }
+    }
+  },
+  "you-have-been-placed": {
+    "madeOn": "2026-10-26",
+    "pictures": {
+      "open": {
+        "id": "open",
+        "width": 780,
+        "height": 1688,
+        "hash": "f84639fb",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.59,
+            "w": 92.82,
+            "h": 5.07,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your tribe",
+          "x": 96.41,
+          "y": 9.13
+        }
+      },
+      "tribe": {
+        "id": "tribe",
+        "width": 780,
+        "height": 920,
+        "hash": "05f7b8c8",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 10,
+            "y": 7.55,
+            "w": 80,
+            "h": 8.04,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your tribe",
+          "x": 90,
+          "y": 11.57
+        }
+      },
+      "purpose": {
+        "id": "purpose",
+        "width": 780,
+        "height": 1040,
+        "hash": "cdbb8f47",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 6.64,
+            "w": 92.82,
+            "h": 33.92,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Read both",
+          "x": 96.41,
+          "y": 23.6
+        }
+      },
+      "details": {
+        "id": "details",
+        "width": 780,
+        "height": 840,
+        "hash": "330638bb",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 8.12,
+            "w": 92.82,
+            "h": 8.81,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your details",
+          "x": 96.41,
+          "y": 12.52
+        }
+      },
+      "yes": {
+        "id": "yes",
+        "width": 780,
+        "height": 840,
+        "hash": "6ac48c5e",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 27.26,
+            "w": 92.82,
+            "h": 16.19,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 96.41,
+          "y": 35.36
+        }
+      },
+      "said-yes": {
+        "id": "said-yes",
+        "width": 780,
+        "height": 840,
+        "hash": "a028e2f1",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 27.35,
+            "w": 92.82,
+            "h": 8.76,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Done",
+          "x": 96.41,
+          "y": 31.73
+        }
+      },
+      "other-tribes": {
+        "id": "other-tribes",
+        "width": 780,
+        "height": 840,
+        "hash": "d6625460",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 27.3,
+            "w": 92.82,
+            "h": 16.19,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Only if needed",
+          "x": 96.41,
+          "y": 35.4
+        }
+      },
+      "withhold": {
+        "id": "withhold",
+        "width": 780,
+        "height": 840,
+        "hash": "2551ec09",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 38.16,
+            "w": 92.82,
+            "h": 16.19,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "If you prefer",
+          "x": 96.41,
+          "y": 46.25
+        }
+      },
+      "signed-in": {
+        "id": "signed-in",
+        "width": 780,
+        "height": 720,
+        "hash": "cd77a67e",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 69.49,
+            "w": 84.97,
+            "h": 13.69,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Signed in",
+          "x": 88.56,
+          "y": 76.33
+        }
+      }
+    }
+  }
+}

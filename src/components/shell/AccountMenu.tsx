@@ -109,6 +109,13 @@ export function AccountMenu({ name, email, roleLabel, centres = null }: Props) {
           ) : null}
           <div className="mt-4 border-t border-line pt-2">
             <Link
+              href="/guides"
+              onClick={() => setOpen(false)}
+              className="press flex h-12 items-center rounded-[var(--radius-control)] px-3 font-medium hover:bg-surface"
+            >
+              How-to guides
+            </Link>
+            <Link
               href="/profile"
               onClick={() => setOpen(false)}
               className="press flex h-12 items-center rounded-[var(--radius-control)] px-3 font-medium hover:bg-surface"

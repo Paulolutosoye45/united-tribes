@@ -4,6 +4,8 @@ import { Crest } from "@/components/brand/Crest";
 import { canSwitchCentre, getMyCentres } from "@/lib/auth/centres";
 import { ROLE_LABELS, navFor, primaryRole } from "@/lib/auth/roles";
 import type { Session } from "@/lib/auth/session";
+import { HelpLink } from "@/components/guides/HelpLink";
+import { helpEntriesFor } from "@/lib/guides/context";
 import { AccountMenu } from "./AccountMenu";
 import { BottomTabs, TopNav } from "./NavLinks";
 
@@ -18,6 +20,7 @@ export async function AppShell({ session, children }: { session: Session; childr
   const mine = session.roles.some((r) => r !== "member") ? await getMyCentres() : null;
   const centres = canSwitchCentre(mine) ? { current: mine.current?.id ?? null, list: mine.centres.filter((c) => c.active) } : null;
   const name = session.person.fullName ?? displayName(session.person);
+  const help = helpEntriesFor(session.roles);
 
   return (
     <div className="min-h-dvh bg-page">
@@ -37,7 +40,8 @@ export async function AppShell({ session, children }: { session: Session; childr
             </span>
           </Link>
           <TopNav items={items} />
-          <div className="col-start-3 flex justify-end">
+          <div className="col-start-3 flex items-center justify-end gap-2">
+            <HelpLink entries={help} />
             <AccountMenu
               name={name}
               email={session.person.email}
