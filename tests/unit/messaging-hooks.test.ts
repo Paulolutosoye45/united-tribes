@@ -254,6 +254,36 @@ describe("POST /api/cron/tick", () => {
     expect((await t.json()).problems.join(" ")).toContain("activity summaries: could not refresh");
   });
 
+  it("runs the daily export clean-up each beat through its own door, and a fault in it never stops anything", async () => {
+    process.env.WORKER_TOKEN = TOKEN;
+    process.env.MESSAGING_MODE = "log";
+    rpc.mockImplementation(async (fn: string) => (fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null }));
+    const ok = await call("POST", TOKEN_HEADER);
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toMatchObject({ exportsSwept: true, problems: [] });
+    expect(rpc.mock.calls.filter(([fn]) => fn === "worker_export_sweep")).toHaveLength(1);
+
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_export_sweep") return { data: null, error: { message: "boom" } };
+      if (fn === "worker_claim") return { data: [], error: null };
+      return { data: { queued: 0 }, error: null };
+    });
+    const bad = await call("POST", TOKEN_HEADER);
+    expect(bad.status).toBe(200);
+    const body = await bad.json();
+    expect(body.exportsSwept).toBe(false);
+    expect(body.problems.join(" ")).toContain("exports: boom");
+
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_export_sweep") throw new Error("socket closed");
+      if (fn === "worker_claim") return { data: [], error: null };
+      return { data: { queued: 0 }, error: null };
+    });
+    const thrown = await call("POST", TOKEN_HEADER);
+    expect(thrown.status).toBe(200);
+    expect((await thrown.json()).problems.join(" ")).toContain("exports: could not run");
+  });
+
   it("answers 502 when the database cannot be reached at all", async () => {
     process.env.WORKER_TOKEN = TOKEN;
     rpc.mockResolvedValue({ data: null, error: { message: "connection refused" } });

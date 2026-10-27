@@ -99,6 +99,14 @@ const ACTIONS: Record<string, string> = {
   "worker_token.created": "made a sending token",
   "worker_token.revoked": "revoked a sending token",
   "bi.refreshed": "refreshed the reporting copy",
+  // Exports and Reports. A switch is only ever moved by the owner; the other lines say a file was asked for, never what was in it.
+  "export.prepared": "asked for an export file",
+  "export.withdrawn": "deleted an export link",
+  "export.switch": "moved an export switch",
+  "export.feed_made": "made a standing data link",
+  "export.feed_renewed": "renewed a standing data link",
+  "export.feed_revoked": "revoked a standing data link",
+  "retention.export_log": "cleared old lines from the export log",
   // The owner's own looks at the activity dashboard, shown in the audit trail as "You".
   "activity.viewed": "looked at a tab of the activity dashboard",
   "activity.exported": "exported the audit trail",

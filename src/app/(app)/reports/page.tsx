@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ExportEntrance } from "@/components/exports/ExportEntrance";
 import { MakeReportForm } from "@/components/reports/MakeReportForm";
 import { Badge } from "@/components/ui/Badge";
 import { formatShortDate, lagosDateKey } from "@/lib/dates";
@@ -55,6 +56,8 @@ export default async function ReportsPage() {
             : "The monthly report for your community. Open one to read it, reword its summary, or print it as a PDF."}
         </p>
       </header>
+
+      <ExportEntrance packs={["programme_report", "pastorate_one_pager", "community_report"]} />
 
       {office ? <MakeReportForm communities={communities} defaultMonth={previousMonth(today)} maxMonth={today.slice(0, 7)} /> : null}
 

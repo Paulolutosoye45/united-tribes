@@ -194,6 +194,10 @@ Reading is itself recorded in the owner's record ("You read the messages sent to
 Tests: `tests/db/god-oversight.test.ts` (31) and journey `26-god-oversight` (51 checks: every desk and every screen on it opens for the owner and
 not for an administrator, the held messages show nothing, the owner's record names what she looked at, and none of it is in the office's log).
 
+## Exports and Reports (`/god/exports`)
+
+The **Exports** tab is the only place any switch for exports and reports can be moved. An administrator, a director and a pastor cannot, and the database refuses them if they call it directly. It holds a position for each of the fourteen packs (Off, Rehearsal, Limited, On), the formats and ways in, the two stops (*Pause all exports*, *Stop all People files*), the testers, the day the impact assessment was signed, the number that counts as unusual use, the log of every change, and the log of files made (who, which pack, why, how many rows; never what was in a file). Everything starts Off. How it works is in `docs/EXPORTS.md`.
+
 ## Guarding it
 
 | Rule | Detail |

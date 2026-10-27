@@ -23,21 +23,21 @@ function message(template: string, params: Params, over: Partial<ClaimedMessage[
 }
 
 const read = (file: string) => readFileSync(join(__dirname, "../../supabase/migrations", file), "utf8");
-const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}`;
+const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}`;
 
 describe("the notices, as templates", () => {
-  it("has the 58 notices (the 57 of the blueprint and the one for a new application), each registered with the sender", () => {
-    expect(keys).toHaveLength(58);
-    expect(new Set(keys).size).toBe(58);
+  it("has the 59 notices (the 57 of the blueprint, the one for a new application and the one for an unusual number of named files), each registered with the sender", () => {
+    expect(keys).toHaveLength(59);
+    expect(new Set(keys).size).toBe(59);
     for (const key of keys) expect(TEMPLATES[key], key).toBeDefined();
     expect(NOTICE_CATALOGUE.map((n) => n.key).sort()).toEqual([...keys].sort());
     expect(Object.keys(NOTICE_SAMPLES).sort()).toEqual([...keys].sort());
   });
 
   it("matches the database: every kind it queues has wording, and every wording is queued by something", () => {
-    // Names in the SQL that look like a kind but are a function, a role, a row of the Admin list or a field of the params.
+    // Names in the SQL that look like a kind but are a function, a role, a row of the Admin list, a field of the params or a table of the feeds.
     const notKinds = new Set([
-      "admin_attention", "applicant_first", "care_lead", "data_lead", "data_requests", "leader_first",
+      "admin_attention", "applicant_first", "care_lead", "care_weekly", "data_lead", "data_requests", "leader_first",
       "referee_concern", "referee_concerns", "referee_days", "referee_first",
     ]);
     const queued = new Set([...SQL.matchAll(/'((?:pastor|director|admin|coach|care|leader|member|applicant|referee|champion|data|staff)_[a-z_]+)'/g)].map((m) => m[1]).filter((k) => !notKinds.has(k)));

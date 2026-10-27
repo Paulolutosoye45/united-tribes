@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { ExportEntrance } from "@/components/exports/ExportEntrance";
 import { DASHBOARD_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { loadDashboard, loadInsight } from "@/lib/dashboard/server";
@@ -28,6 +29,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
             : "How your tribes are doing, built from your leaders’ logs and the members’ check-ins."}
         </p>
       </header>
+      <ExportEntrance packs={["my_tribes_glance", "tribes_health", "supply_demand", "programme_report", "pastorate_one_pager"]} season={seasonId} />
       {d ? <DashboardView d={d} canOpen={hasAnyRole(session.roles, ["pastor", "director", "coach"])} insight={insight} /> : <p className="t-body text-soft">The dashboard could not be loaded. Try again in a moment.</p>}
     </div>
   );

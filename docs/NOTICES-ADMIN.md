@@ -83,7 +83,7 @@ No name of a person in need, no note, score or reason, no referee's words, no se
 
 ### The groups and their notices
 
-There are **58 notices**: 57 for events and checks, and the summary.
+There are **59 notices**: 58 for events and checks, and the summary.
 
 **Admins** (a summary by default): a new leader application was sent *(right away; also to the directors)*; a deletion request came in; a deletion request is nearly due *(right away; 7 and 2 days before the 30-day deadline)*; messages are failing; messages are not going out *(right away)*; someone's role changed *(right away)*; how the week's email went (Mondays); the reporting copy did not refresh; launch steps are still open before a season; you now hold a new role *(right away, to the person)*.
 
@@ -99,7 +99,7 @@ There are **58 notices**: 57 for events and checks, and the summary.
 
 **Community champions**: your community this month (the 1st); members are waiting in your community (Mondays).
 
-**Data lead**: the week's integrity flags and held references (Mondays, when there is something).
+**Data lead**: the week's integrity flags and held references (Mondays, when there is something); an unusual number of named files from one person in an hour *(right away, from the Exports feature; it says the role and the number, never the person or what was in the files)*.
 
 **Members** (never anyone under 18): your tribe's meeting has changed (after 30 quiet minutes); your testimony was shared (without a word of it); we received your deletion request; your information has been deleted (sent to the address they used, which is wiped after).
 

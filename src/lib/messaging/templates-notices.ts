@@ -434,6 +434,18 @@ add({
   sample: { flags: 4, holds: 2, path: "/admin/referees" },
 });
 
+add({
+  key: "data_unusual_export", audience: "office", group: "data_lead", title: "An unusual number of named files",
+  who: "The data lead", when: "When one person makes more than the set number of named files in an hour",
+  subject: (p) => `${many(count(p, "count", 6), "named file")} in an hour from one ${roleLabel(p.role, "person")}`,
+  body: (p) => [
+    `One ${roleLabel(p.role, "person")} made ${many(count(p, "count", 6), "named file")} in the last hour. The notice is set for more than ${count(p, "per_hour", 5)}. The latest was the ${clean(p.pack, "named file")}.`,
+    "It may be perfectly ordinary. If you have any doubt, ask them, and tell the owner, who can limit the file.",
+  ],
+  button: { label: "Open the admin hub", path: "/admin" },
+  sample: { count: 6, per_hour: 5, pack: "Tribe sheet", role: "leader", path: "/admin" },
+});
+
 // ---------------------------------------------------------------------------
 // Coaches
 // ---------------------------------------------------------------------------

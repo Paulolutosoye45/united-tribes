@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TribeBuilder } from "@/components/academy/TribeBuilder";
+import { ExportEntrance } from "@/components/exports/ExportEntrance";
 import { TribePreview } from "@/components/academy/TribePreview";
 import { MeetingLink } from "@/components/academy/MeetingLink";
 import { StartCard } from "@/components/academy/StartCard";
@@ -91,6 +92,7 @@ export default async function TribePage() {
       {card.status === "approved" ? (
         <MeetingLink tribeId={card.id} link={card.meeting_link ?? null} placeNote={card.place_note} online={card.mode !== "in_person"} />
       ) : null}
+      {card.status === "approved" ? <ExportEntrance packs={["tribe_sheet", "attendance_register"]} tribe={card.id} /> : null}
       {roster ? <TribeOnboarding roster={roster} leaderFirstName={firstName(card.leader.name)} /> : null}
       {assistantState ? <AssistantRecommend tribeId={card.id} state={assistantState} /> : null}
       {card.role === "leader" ? (

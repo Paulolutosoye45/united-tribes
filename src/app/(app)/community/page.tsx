@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 import { CommunityView } from "@/components/community/CommunityView";
+import { ExportEntrance } from "@/components/exports/ExportEntrance";
 import { ANNOUNCE_ROLES, COMMUNITY_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { loadCommunityPage } from "@/lib/dashboard/server";
@@ -33,6 +34,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: Se
           </div>
         ) : null}
       </header>
+      <ExportEntrance packs={["community_report"]} community={page?.community?.id ?? null} season={isUuid(season) ? season : null} />
       {page ? <CommunityView page={page} /> : <p className="t-body text-soft">This page could not be loaded. If you were just appointed a community champion, sign out and in again.</p>}
     </div>
   );

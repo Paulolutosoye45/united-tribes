@@ -96,6 +96,16 @@ async function handle(request: Request) {
     } catch {
       summary.problems.push("notices: could not run this time");
     }
+    // Exports and Reports: the export log and its switch log are kept for two years, and ended standing links go a month after they end.
+    // Once a day. It has its own door, and a fault is listed but never stops anything above.
+    let exportsSwept = false;
+    try {
+      const swept = await rpc("worker_export_sweep");
+      if (swept.error) summary.problems.push(`exports: ${swept.error.message}`);
+      else exportsSwept = true;
+    } catch {
+      summary.problems.push("exports: could not run this time");
+    }
     // WhatsApp sign-in: how the sending number is, and the housekeeping behind the limits and the breaker.
     let signin: { status: string | null; signal: string | null } | null = null;
     if (whatsappSignInEnabled()) {
@@ -105,7 +115,7 @@ async function handle(request: Request) {
     }
     // A daily job that failed (the numbers, the clean-up) is listed too, so a monitor on this endpoint hears of it.
     summary.problems.push(...dailyJobFaults(summary.calendar));
-    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, signin, placement }, { status, headers: NO_STORE });
+    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, exportsSwept, signin, placement }, { status, headers: NO_STORE });
   } catch (error) {
     console.error("cron tick failed", error instanceof Error ? error.message : "unknown");
     return Response.json({ error: "tick failed" }, { status: 500, headers: NO_STORE });

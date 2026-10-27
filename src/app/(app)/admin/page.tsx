@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NeedsAttention } from "@/components/admin/NeedsAttention";
+import { ExportEntrance } from "@/components/exports/ExportEntrance";
 import { loadAttention } from "@/lib/admin/notices-server";
 import { canOpenDashboard, hatsOf, noticeWarnings, shortcutsFor } from "@/lib/admin/today";
 import { OFFICE_ROLES, ROLE_LABELS } from "@/lib/auth/roles";
@@ -33,6 +34,8 @@ export default async function AdminPage() {
             : "What is waiting for you. Everything else is in the menu."}
         </p>
       </header>
+
+      <ExportEntrance packs={["leaders_roster", "people_roles", "message_volumes", "insight_feeds", "programme_report", "pastorate_one_pager"]} />
 
       {att ? (
         <NeedsAttention rows={att.rows} roles={session.roles} />

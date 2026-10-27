@@ -992,6 +992,31 @@ describe("locked-down defaults", () => {
       "assistant_my_state",
       "assistant_requests",
       "assistant_decide",
+      // Exports and Reports. The switchboard functions each begin god_only() (the platform owner's alone); the rest check who is asking and
+      // whether the pack is on for them. A pack that is Off gives nothing to anyone.
+      "export_board",
+      "export_pack_preview",
+      "export_pack_set",
+      "export_settings_save",
+      "export_tester_set",
+      "export_log_list",
+      "export_options",
+      "export_prepare",
+      "export_open",
+      "export_done",
+      "export_withdraw",
+      "my_exports",
+      "export_tribe_sheet",
+      "export_attendance_register",
+      "export_leaders_roster",
+      "export_people_roles",
+      "export_message_volumes",
+      "export_insight_table",
+      "export_feed_create",
+      "export_feed_list",
+      "export_feed_renew",
+      "export_feed_revoke",
+      "export_feed_read",
     ]);
     // The only things someone who is not signed in may do: open a referee or guardian link and
     // answer it, and the sending service's calls. Each needs a secret: the link's, or the sending token.
@@ -1044,6 +1069,8 @@ describe("locked-down defaults", () => {
       "worker_activity_refresh",
       // The heartbeat sweeps for the team's timed notices and summaries (needs the sending token)
       "worker_notice_sweep",
+      // The heartbeat clears the export log once it is two years old (needs the sending token)
+      "worker_export_sweep",
       // The private "your tribe" page and the heartbeat's placement and assistant steps (each needs the sending token or the link's secret)
       "worker_placed_change",
       "worker_placed_confirm",
@@ -1051,6 +1078,8 @@ describe("locked-down defaults", () => {
       "worker_placed_withhold",
       "worker_placement_tick",
       "worker_assistant_tick",
+      // A tool that fetches a standing feed link has no account: the secret in the address is the credential, and any wrong secret gets nothing
+      "export_feed_read",
       "ping",
     ]);
     const { rows } = await db.admin.query(`

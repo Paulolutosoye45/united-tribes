@@ -4,8 +4,11 @@ import { buildCsp, cspHeaderName, makeNonce } from "@/lib/security/csp";
 import { turnstileScriptUrl, turnstileSiteKey } from "@/lib/security/turnstile";
 import { updateSession } from "@/lib/supabase/proxy";
 
-/** Pages anyone can open without signing in. */
-const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/design", "/brand", "/icon", "/apple-icon", "/privacy", "/reference", "/r", "/placed", "/e", "/guardian", "/guides", "/manifest.webmanifest", "/sw.js", "/offline"];
+/**
+ * Pages anyone can open without signing in. "/feeds" is a standing data link for a reporting tool: it has no account, and the secret in
+ * the address is the credential, checked by the database (which also gives the same "not found" for every fault).
+ */
+const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/design", "/brand", "/icon", "/apple-icon", "/privacy", "/reference", "/r", "/placed", "/e", "/guardian", "/guides", "/feeds", "/manifest.webmanifest", "/sw.js", "/offline", "/tutorial"];
 
 /**
  * Called by a service, not a person: the sign-in hook, the scheduler, the monitor, the message providers, and the optional
