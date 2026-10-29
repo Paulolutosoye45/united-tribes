@@ -32,10 +32,14 @@ export type Settings = {
   reminderDays: number;
   /** The lowest Degree of Compatibility the active model lets through. Set by the pastor's model, not here. */
   floor: number;
+  /** Whether a tribe's WhatsApp group link waits until the member has answered about sharing their number. */
+  holdGroupLink: boolean;
+  /** When the heartbeat last ran, so the owner can see it is running. Null when it never has. */
+  lastTickAt: string | null;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
-  mode: "off", graceDays: 7, seatsFree: 1, minTribe: 5, pacePerHour: 100, sendFrom: 9, sendUntil: 19, holdHours: 24, reminderDays: 5, floor: 60,
+  mode: "off", graceDays: 7, seatsFree: 1, minTribe: 5, pacePerHour: 100, sendFrom: 9, sendUntil: 19, holdHours: 24, reminderDays: 5, floor: 60, holdGroupLink: true, lastTickAt: null,
 };
 
 export function parseSettings(json: unknown): Settings | null {
@@ -46,6 +50,8 @@ export function parseSettings(json: unknown): Settings | null {
     mode,
     graceDays: int(json.grace_days), seatsFree: int(json.seats_free), minTribe: int(json.min_tribe), pacePerHour: int(json.pace_per_hour),
     sendFrom: int(json.send_from), sendUntil: int(json.send_until), holdHours: int(json.hold_hours), reminderDays: int(json.reminder_days), floor: int(json.floor),
+    // an older database has no such setting: the safe way (holding the link) is the default
+    holdGroupLink: json.hold_group_link !== false, lastTickAt: strOrNull(json.last_tick_at),
   };
 }
 
@@ -96,6 +102,10 @@ export function parseOverview(json: unknown): Overview | null {
   };
 }
 
+/** Where a tribe's leader stands, in the words of the God Mode board. */
+export type TeamState = "rehearsal" | "told" | "opened" | "cancelled" | "placing" | "waiting" | "holding" | "none_sent" | "due";
+export const TEAM_STATES: TeamState[] = ["rehearsal", "told", "opened", "cancelled", "placing", "waiting", "holding", "none_sent", "due"];
+
 export type Team = {
   tribe: string;
   name: string;
@@ -112,6 +122,16 @@ export type Team = {
   withheld: number;
   changed: number;
   fit: Record<string, number>;
+  /** Member emails sent, still waiting to go, and failed or never made. */
+  sent: number;
+  waiting: number;
+  failed: number;
+  /** Members whose own day has not yet passed, and members whose details are not yet open for any reason. */
+  holding: number;
+  unanswered: number;
+  opensAt: string | null;
+  state: TeamState;
+  contactOpenedAt: string | null;
 };
 
 export type RunView = {
@@ -121,6 +141,9 @@ export type RunView = {
     graceDays: number; seatsFree: number; minTribe: number; pacePerHour: number; sendFrom: number; sendUntil: number; holdHours: number;
     scopeCommunity: string | null; scopeZone: string | null; season: string | null;
   };
+  /** When the heartbeat last ran, and the switch's position now: a run can only finish telling leaders when the heartbeat runs. */
+  heartbeatAt: string | null;
+  mode: PlacementMode;
   counts: Record<string, number>;
   reasons: { status: string; reason: string; n: number }[];
   fit: Record<string, number>;
@@ -144,6 +167,8 @@ export function parseRunView(json: unknown): RunView | null {
       sendFrom: int(r.send_from), sendUntil: int(r.send_until), holdHours: int(r.hold_hours),
       scopeCommunity: strOrNull(r.scope_community), scopeZone: strOrNull(r.scope_zone), season: strOrNull(r.season),
     },
+    heartbeatAt: strOrNull(json.heartbeat_at),
+    mode: MODES.find((m) => m === json.mode) ?? "off",
     counts: counts(json.counts),
     reasons: arr(json.reasons).flatMap((x) => (isObject(x) ? [{ status: str(x.status), reason: str(x.reason), n: int(x.n) }] : [])),
     fit: counts(json.fit),
@@ -153,10 +178,13 @@ export function parseRunView(json: unknown): RunView | null {
       const tribe = uuid(t.tribe);
       if (!tribe) return [];
       const d = t.decision;
+      const state = TEAM_STATES.find((x) => x === t.state) ?? "due";
       return [{
         tribe, name: str(t.name), leaderFirst: str(t.leader_first), capacity: int(t.capacity), activeBefore: int(t.active_before), proposed: int(t.proposed),
         small: t.small === true, decision: d === "keep" || d === "hold" || d === "retry" ? d : null, mailQueuedAt: strOrNull(t.mail_queued_at),
         cancelledAt: strOrNull(t.cancelled_at), placed: int(t.placed), confirmed: int(t.confirmed), withheld: int(t.withheld), changed: int(t.changed), fit: counts(t.fit),
+        sent: int(t.sent), waiting: int(t.waiting), failed: int(t.failed), holding: int(t.holding), unanswered: int(t.unanswered), opensAt: strOrNull(t.opens_at),
+        state, contactOpenedAt: strOrNull(t.contact_opened_at),
       }];
     }),
     results: {
@@ -292,6 +320,14 @@ export type PlacedState = {
   canChange: boolean;
   fit: string;
   hasWhatsapp: boolean;
+  /** Whether the leader has this member's contact yet: open, or holding until a date, or waiting for the member's email. */
+  contact: "open" | "withheld" | "holding" | "waiting" | "not_reached";
+  contactOpensAt: string | null;
+  /** True once the clock or God Mode has opened the member's details: the only time "don't share my details" comes too late. */
+  contactLate: boolean;
+  /** The WhatsApp group shows everyone in it your number, so its link appears only once the member has answered; when it will, if known. */
+  groupVisible: boolean;
+  groupOpensAt: string | null;
   tribe: {
     name: string; leaderFirst: string; assistantFirst: string | null; meetingDay: number; meetingTime: string; mode: string; placeNote: string;
     groupUrl: string | null; firstMeetingBy: string | null; season: string; startsOn: string; god: string; others: string; life: string;
@@ -311,6 +347,12 @@ export function parsePlaced(json: unknown): PlacedState | null {
     canChange: json.can_change === true,
     fit: str(json.fit),
     hasWhatsapp: json.has_whatsapp === true,
+    contact: (["open", "withheld", "holding", "waiting", "not_reached"] as const).find((x) => x === json.contact) ?? (json.withheld === true ? "withheld" : "open"),
+    contactOpensAt: strOrNull(json.contact_opens_at),
+    contactLate: json.contact_late === true,
+    // an older database has no such field and always showed the link
+    groupVisible: json.group_visible !== false,
+    groupOpensAt: strOrNull(json.group_opens_at),
     tribe: {
       name: str(t.name), leaderFirst: str(t.leader_first), assistantFirst: strOrNull(t.assistant_first), meetingDay: int(t.meeting_day), meetingTime: str(t.meeting_time),
       mode: str(t.mode), placeNote: str(t.place_note), groupUrl: strOrNull(t.group_url), firstMeetingBy: strOrNull(t.first_meeting_by),

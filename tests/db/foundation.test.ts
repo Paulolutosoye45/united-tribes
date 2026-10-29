@@ -970,6 +970,8 @@ describe("locked-down defaults", () => {
       "placement_leaders_options",
       "placement_leaders_plan",
       "placement_leaders_view",
+      "placement_open_all",
+      "placement_open_now",
       "placement_options",
       "placement_overview",
       "placement_resolve_small",

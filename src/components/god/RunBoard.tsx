@@ -7,6 +7,8 @@ import {
   approveRunAction,
   cancelRunAction,
   itemsAction,
+  openAllAction,
+  openNowAction,
   optionsAction,
   placeRunAction,
   resolveSmallAction,
@@ -17,9 +19,9 @@ import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { formatShortDate } from "@/lib/dates";
+import { formatLagosDay, formatLagosTime, formatShortDate } from "@/lib/dates";
 import type { RunItem, RunView, Team, TribeOption } from "@/lib/placement/types";
-import { PHASE_TEXT, PLAN_PROMISES, RUN_STATUS_TEXT, STATUS_TEXT, ZONE_TEXT, count, hourText, pluralise, reasonText } from "@/lib/placement/wording";
+import { HEARTBEAT_HINT, PHASE_TEXT, PLAN_PROMISES, RUN_STATUS_TEXT, STATUS_TEXT, TEAM_STATE_TEXT, ZONE_TEXT, count, hourText, pluralise, reasonText } from "@/lib/placement/wording";
 import { useRouter } from "next/navigation";
 
 const FIT_ORDER = ["excellent", "strong", "good"] as const;
@@ -260,16 +262,63 @@ function Small({ teams, runId }: { teams: Team[]; runId: string }) {
   );
 }
 
-function Teams({ teams }: { teams: Team[] }) {
+/** A tribe whose leader has not yet been given the team, and whose members have all been placed: the ones "Open now" can act on. */
+const OPENABLE: ReadonlySet<Team["state"]> = new Set(["waiting", "holding", "none_sent", "due"]);
+
+const dayAndTime = (iso: string) => `${formatLagosDay(iso)}, ${formatLagosTime(iso)}`;
+
+function Teams({ teams, live = null }: { teams: Team[]; live?: { runId: string } | null }) {
+  const router = useRouter();
+  const d = useDo();
+  const [asking, setAsking] = useState<string | "all" | null>(null);
+  const [said, setSaid] = useState<string | null>(null);
   const rows = teams.filter((t) => t.proposed > 0 || t.placed > 0);
   if (rows.length === 0) return null;
+  const openable = live ? rows.filter((t) => OPENABLE.has(t.state)) : [];
+  const target = asking && asking !== "all" ? rows.find((t) => t.tribe === asking) : null;
+  const unansweredAll = openable.reduce((n, t) => n + t.unanswered, 0);
+
+  async function openOne(t: Team) {
+    if (!live) return;
+    const ok = await d.go(`open-${t.tribe}`, async () => {
+      const r = await openNowAction(live.runId, t.tribe);
+      if (r.ok) setSaid(r.already ? `${t.name} had already been opened.` : `${t.name} is open. ${t.leaderFirst || "The leader"} has been given ${pluralise(r.shared, "member")}’s details and is emailed their team.`);
+      return r.ok ? { ok: true as const } : r;
+    });
+    if (ok) {
+      setAsking(null);
+      router.refresh();
+    }
+  }
+
+  async function openEvery() {
+    if (!live) return;
+    const ok = await d.go("open-all", async () => {
+      const r = await openAllAction(live.runId);
+      if (r.ok) setSaid(`${pluralise(r.tribes, "tribe")} opened. ${pluralise(r.shared, "member")}’s details were given to their leaders.`);
+      return r.ok ? { ok: true as const } : r;
+    });
+    if (ok) {
+      setAsking(null);
+      router.refresh();
+    }
+  }
+
   return (
     <section aria-labelledby="teams-heading" className="flex flex-col gap-3" data-testid="plan-teams">
-      <h2 id="teams-heading" className="t-heading">
-        Tribe by tribe
-      </h2>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 id="teams-heading" className="t-heading">
+          Tribe by tribe
+        </h2>
+        {live && openable.length > 0 ? (
+          <Button size="sm" variant="quiet" onClick={() => setAsking("all")} data-testid="open-all">
+            Open all
+          </Button>
+        ) : null}
+      </div>
+      <Notice error={d.error} saved={said} />
       <div className="overflow-x-auto rounded-[var(--radius-control)] border border-line">
-        <table className="t-small w-full min-w-[34rem] text-left">
+        <table className={`t-small w-full text-left ${live ? "min-w-[52rem]" : "min-w-[34rem]"}`}>
           <caption className="sr-only">Each tribe with the members the plan gives it</caption>
           <thead className="bg-surface-strong">
             <tr>
@@ -278,30 +327,101 @@ function Teams({ teams }: { teams: Team[] }) {
               <th scope="col" className="p-3 text-right">Seats</th>
               <th scope="col" className="p-3 text-right">New</th>
               <th scope="col" className="p-3">Fit</th>
+              {live ? <th scope="col" className="p-3">Member emails</th> : null}
+              {live ? <th scope="col" className="p-3">Where it stands</th> : null}
+              {live ? <th scope="col" className="p-3"><span className="sr-only">Open now</span></th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {rows.map((t) => (
-              <tr key={t.tribe}>
-                <th scope="row" className="p-3 font-semibold">
-                  <Link href={`/god/tribes/${t.tribe}`} className="underline underline-offset-4">
-                    {t.name}
-                  </Link>
-                </th>
-                <td className="p-3">{t.leaderFirst}</td>
-                <td className="p-3 text-right tabular-nums">
-                  {count(t.activeBefore + t.proposed)} / {count(t.capacity)}
-                </td>
-                <td className="p-3 text-right tabular-nums">{count(t.proposed || t.placed)}</td>
-                <td className="p-3 text-soft">
-                  {FIT_ORDER.filter((k) => t.fit[k]).map((k) => `${count(t.fit[k])} ${k}`).join(", ") || "-"}
-                  {t.small ? " · too small" : ""}
-                </td>
-              </tr>
-            ))}
+            {rows.map((t) => {
+              const st = TEAM_STATE_TEXT[t.state] ?? TEAM_STATE_TEXT.due;
+              return (
+                <tr key={t.tribe} data-testid="team-row" data-state={t.state}>
+                  <th scope="row" className="p-3 font-semibold">
+                    <Link href={`/god/tribes/${t.tribe}`} className="underline underline-offset-4">
+                      {t.name}
+                    </Link>
+                  </th>
+                  <td className="p-3">{t.leaderFirst}</td>
+                  <td className="p-3 text-right tabular-nums">
+                    {count(t.activeBefore + t.proposed)} / {count(t.capacity)}
+                  </td>
+                  <td className="p-3 text-right tabular-nums">{count(t.proposed || t.placed)}</td>
+                  <td className="p-3 text-soft">
+                    {FIT_ORDER.filter((k) => t.fit[k]).map((k) => `${count(t.fit[k])} ${k}`).join(", ") || "-"}
+                    {t.small ? " · too small" : ""}
+                  </td>
+                  {live ? (
+                    <td className="p-3 text-soft tabular-nums" data-testid="team-emails">
+                      {count(t.sent)} sent · {count(t.waiting)} waiting · {count(t.failed)} failed
+                    </td>
+                  ) : null}
+                  {live ? (
+                    <td className="p-3">
+                      <span className="font-semibold" data-testid="team-state">{st.label}</span>
+                      <span className="block text-soft">
+                        {t.state === "holding" && t.opensAt ? `Opens ${dayAndTime(t.opensAt)}` : st.line}
+                        {t.unanswered > 0 && OPENABLE.has(t.state) ? ` ${pluralise(t.unanswered, "member")} yet to answer.` : ""}
+                      </span>
+                    </td>
+                  ) : null}
+                  {live ? (
+                    <td className="p-3 text-right">
+                      {OPENABLE.has(t.state) ? (
+                        <Button size="sm" variant="quiet" loading={d.busy === `open-${t.tribe}`} onClick={() => setAsking(t.tribe)} data-testid="open-now">
+                          Open now
+                        </Button>
+                      ) : null}
+                    </td>
+                  ) : null}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+      {live && asking === "all" ? (
+        <div role="alertdialog" aria-labelledby="open-all-sure" className="flex flex-col gap-3 rounded-[var(--radius-control)] bg-gold/20 p-4" data-testid="open-all-confirm">
+          <p id="open-all-sure" className="font-semibold">
+            Open {pluralise(openable.length, "tribe")} now?
+          </p>
+          <p className="t-small">
+            {unansweredAll === 0
+              ? "Every member in these tribes has answered or their day has passed, so this only emails each leader their team now."
+              : `${pluralise(unansweredAll, "member")} who ${unansweredAll === 1 ? "has" : "have"} not answered will have their email and WhatsApp number given to their leader.`}{" "}
+            Members who said “don’t share my details” stay withheld. Each leader is emailed their team, and these tribes can no longer be undone.
+          </p>
+          <div className="flex gap-3">
+            <Button size="md" variant="solid" loading={d.busy === "open-all"} onClick={() => void openEvery()}>
+              Yes, open them
+            </Button>
+            <Button size="md" variant="ghost" onClick={() => setAsking(null)}>
+              Not yet
+            </Button>
+          </div>
+        </div>
+      ) : null}
+      {live && target ? (
+        <div role="alertdialog" aria-labelledby="open-now-sure" className="flex flex-col gap-3 rounded-[var(--radius-control)] bg-gold/20 p-4" data-testid="open-now-confirm">
+          <p id="open-now-sure" className="font-semibold">
+            Open {target.name} now?
+          </p>
+          <p className="t-small">
+            {target.unanswered === 0
+              ? `Everyone in ${target.name} has answered or their day has passed, so this only emails ${target.leaderFirst || "the leader"} their team now.`
+              : `${pluralise(target.unanswered, "member")} who ${target.unanswered === 1 ? "has" : "have"} not answered will have their email and WhatsApp number given to ${target.leaderFirst || "the leader"}.`}{" "}
+            Members who said “don’t share my details” stay withheld. {target.leaderFirst || "The leader"} is emailed their team, and this tribe can no longer be undone.
+          </p>
+          <div className="flex gap-3">
+            <Button size="md" variant="solid" loading={d.busy === `open-${target.tribe}`} onClick={() => void openOne(target)}>
+              Yes, open it
+            </Button>
+            <Button size="md" variant="ghost" onClick={() => setAsking(null)}>
+              Not yet
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -630,15 +750,26 @@ function Results({ view }: { view: RunView }) {
         ) : null}
         {!run.rehearsal ? (
           <p className="t-body text-soft">
-            Leaders told: {count(r.leadersTold)}. Still to be told: {count(r.leadersWaiting)}. Each leader is told {run.holdHours} hours after the last of their members was.
+            Leaders told: {count(r.leadersTold)}. Still to be told: {count(r.leadersWaiting)}. A leader sees everyone placed in their tribe by name from the moment they are placed. Each member’s email and WhatsApp number open {run.holdHours} hours after that member’s email went, or at once when they say yes.
           </p>
         ) : null}
+        {!run.rehearsal ? <Heartbeat at={view.heartbeatAt} mode={view.mode} /> : null}
       </section>
-      <Teams teams={view.teams} />
+      <Teams teams={view.teams} live={run.rehearsal ? null : { runId: run.id }} />
       <People view={view} />
       {canUndo ? <Undo runId={run.id} waiting={r.leadersWaiting} /> : null}
       {run.status === "undone" ? <p className="card t-body p-5 text-soft">This run was undone{run.undoneAt ? ` on ${formatShortDate(run.undoneAt)}` : ""}. Members who had not answered were released. Members who said yes, and tribes whose leader had already been told, stayed as they were.</p> : null}
     </>
+  );
+}
+
+/** When the heartbeat last ran. It sends the waiting emails and tells leaders; if it stops, nothing moves on its own. */
+function Heartbeat({ at, mode }: { at: string | null; mode: RunView["mode"] }) {
+  return (
+    <p className="t-small text-soft" data-testid="heartbeat">
+      Heartbeat last ran: {at ? `${formatLagosDay(at)}, ${formatLagosTime(at)}` : "never"}. {mode === "on" ? "" : `The switch is ${mode === "off" ? "Off" : "Rehearsal"}: the heartbeat still finishes telling leaders for people already placed, and starts nothing new. `}
+      {HEARTBEAT_HINT}
+    </p>
   );
 }
 
@@ -675,7 +806,7 @@ function Undo({ runId, waiting }: { runId: string; waiting: number }) {
         Undo this run
       </h2>
       <p className="t-small text-soft">
-        You can undo until a tribe’s leader has been told. {pluralise(waiting, "tribe")} {waiting === 1 ? "has" : "have"} not been. Members who have not answered are released and their emails stop. Members who said yes stay, and a tribe whose leader has been told stays as it is.
+        You can undo a tribe until its leader has been told, whether by the heartbeat or by Open now. {pluralise(waiting, "tribe")} {waiting === 1 ? "has" : "have"} not been. Members who have not answered are released and their emails stop. Members who said yes stay, and a tribe whose leader has been told stays as it is.
       </p>
       <Notice error={d.error} saved={said} />
       {asking ? (

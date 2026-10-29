@@ -9,9 +9,9 @@ import { useDo } from "@/components/admin/useDo";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Input";
-import { formatShortDate } from "@/lib/dates";
+import { formatLagosDay, formatLagosTime, formatShortDate } from "@/lib/dates";
 import { MODES, type Hold, type Overview, type PlacementMode, type Settings } from "@/lib/placement/types";
-import { MODE_WORDS, PLAN_PROMISES, RUN_STATUS_TEXT, ZONE_TEXT, count, hourText, pluralise } from "@/lib/placement/wording";
+import { HEARTBEAT_HINT, MODE_WORDS, PLAN_PROMISES, RUN_STATUS_TEXT, ZONE_TEXT, count, hourText, pluralise } from "@/lib/placement/wording";
 
 type Community = { id: string; name: string };
 
@@ -23,7 +23,7 @@ export function PlacementHome({ overview, communities, holds }: { overview: Over
   const { settings: s, supply } = overview;
   return (
     <div className="flex flex-col gap-8" data-testid="placement-home">
-      <Switch mode={s.mode} />
+      <Switch mode={s.mode} lastTickAt={s.lastTickAt} />
       <Supply overview={overview} />
       {overview.openRun ? <OpenRun run={overview.openRun} /> : <NewRun settings={s} communities={communities} />}
       <Choices settings={s} />
@@ -33,7 +33,7 @@ export function PlacementHome({ overview, communities, holds }: { overview: Over
   );
 }
 
-function Switch({ mode }: { mode: PlacementMode }) {
+function Switch({ mode, lastTickAt }: { mode: PlacementMode; lastTickAt: string | null }) {
   const d = useDo();
   const [asking, setAsking] = useState(false);
 
@@ -91,6 +91,9 @@ function Switch({ mode }: { mode: PlacementMode }) {
           </div>
         </div>
       ) : null}
+      <p className="t-small text-soft" data-testid="heartbeat">
+        Heartbeat last ran: {lastTickAt ? `${formatLagosDay(lastTickAt)}, ${formatLagosTime(lastTickAt)}` : "never"}. {HEARTBEAT_HINT}
+      </p>
       <Notice error={d.error} saved={d.saved} />
     </section>
   );
@@ -220,10 +223,13 @@ const FIELDS: { key: keyof Settings; column: string; name: string; hint: string;
 function Choices({ settings }: { settings: Settings }) {
   const d = useDo();
   const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(FIELDS.map((f) => [f.key, String(settings[f.key])])));
+  const [holdLink, setHoldLink] = useState(settings.holdGroupLink);
   const changed = FIELDS.filter((f) => vals[f.key] !== String(settings[f.key]));
+  const linkChanged = holdLink !== settings.holdGroupLink;
 
   async function save() {
-    const changes: Record<string, number> = {};
+    const changes: Record<string, number | boolean> = {};
+    if (linkChanged) changes.hold_group_link = holdLink;
     for (const f of changed) {
       const n = Number(vals[f.key]);
       if (vals[f.key].trim() === "" || !Number.isInteger(n) || n < f.min || n > f.max) return d.go("choices", async () => ({ ok: false as const, message: `${f.name}: use a whole number from ${f.min} to ${f.max}.` }));
@@ -246,8 +252,15 @@ function Choices({ settings }: { settings: Settings }) {
             </label>
           ))}
         </div>
+        <label className="flex items-start gap-3" data-testid="hold-group-link">
+          <input type="checkbox" className="mt-1 h-5 w-5" checked={holdLink} onChange={(e) => setHoldLink(e.target.checked)} />
+          <span className="flex flex-col gap-0.5">
+            <span className="text-[0.95rem] font-medium">Hold back the WhatsApp group link until a member has answered</span>
+            <span className="t-small text-soft">Joining a group shows a member’s number to everyone in it, so the link waits until they say yes, agreed on the form, or their day has passed. Untick to give the link in the first email, as before.</span>
+          </span>
+        </label>
         <div className="flex items-center gap-3">
-          <Button size="md" variant="solid" loading={d.busy === "choices"} disabled={changed.length === 0} onClick={() => void save()}>
+          <Button size="md" variant="solid" loading={d.busy === "choices"} disabled={changed.length === 0 && !linkChanged} onClick={() => void save()}>
             Save
           </Button>
         </div>

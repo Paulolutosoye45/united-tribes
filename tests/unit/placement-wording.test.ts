@@ -3,7 +3,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   BULK_PROMISES,
+  LEADER_EMPTY,
+  LEADER_MARKS,
   MODE_WORDS,
+  PLACED_CONTACT_WORDS,
+  TEAM_STATE_TEXT,
   PHASE_TEXT,
   PLACED_PROMISES,
   PLAN_PROMISES,
@@ -16,7 +20,7 @@ import {
   pluralise,
   reasonText,
 } from "@/lib/placement/wording";
-import { DEFAULT_SETTINGS, MODES, parseSettings } from "@/lib/placement/types";
+import { DEFAULT_SETTINGS, MODES, TEAM_STATES, parseSettings } from "@/lib/placement/types";
 
 const sql = readFileSync(
   join(
@@ -125,6 +129,30 @@ describe("the words on the Placement screens", () => {
       expect(line).not.toMatch(/god mode|owner/i);
   });
 
+  it("tells a leader plainly that church-placed members appear by name at once, and the empty page no longer says only “the moment they join”", () => {
+    expect(PLAN_PROMISES.join(" ")).toMatch(/by name, as soon as they are placed/);
+    expect(PLAN_PROMISES.join(" ")).toMatch(/group link follows the same rule/);
+    expect(LEADER_EMPTY).toMatch(/placed in your tribe yet/);
+    expect(LEADER_EMPTY).toMatch(/by name as soon as they are placed/);
+    expect(LEADER_MARKS.yetToAnswer).toBe("Placed by the church, yet to answer");
+    expect(LEADER_MARKS.saidYes).toBe("Said yes");
+  });
+
+  it("warns a member, in the same breath as the group link, that joining a WhatsApp group shows their number", () => {
+    expect(PLACED_CONTACT_WORDS.groupWarning).toMatch(/shows your number to everyone in it/);
+    expect(PLACED_CONTACT_WORDS.groupWhen("Fri 12 Feb")).toMatch(/Fri 12 Feb/);
+    expect(PLACED_CONTACT_WORDS.groupWhen("Fri 12 Feb")).toMatch(/shows your number to everyone in it/);
+    expect(PLACED_CONTACT_WORDS.groupWaiting).toMatch(/shows your number to everyone in it/);
+  });
+
+  it("has a label and a sentence for every state a tribe can be in on the God Mode board, none of which names a member", () => {
+    for (const st of TEAM_STATES) {
+      expect(TEAM_STATE_TEXT[st], st).toBeDefined();
+      expect(TEAM_STATE_TEXT[st].label.length, st).toBeGreaterThan(3);
+      expect(TEAM_STATE_TEXT[st].line.endsWith("."), st).toBe(true);
+    }
+  });
+
   it("writes numbers and hours by hand, the same on the server and in the browser", () => {
     expect(count(0)).toBe("0");
     expect(count(999)).toBe("999");
@@ -171,6 +199,8 @@ describe("reading the settings the database returns", () => {
       holdHours: 24,
       reminderDays: 5,
       floor: 60,
+      holdGroupLink: true,
+      lastTickAt: null,
     });
   });
 

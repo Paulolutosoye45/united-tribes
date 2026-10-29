@@ -11,7 +11,8 @@ import { formatDate, plural } from "@/lib/dates";
 import { GROUP_ROLES } from "@/lib/intake/options";
 import type { Roster } from "@/lib/matching/types";
 import { welcomeMessage } from "@/lib/matching/wording";
-import { cleanWhatsappLink } from "@/lib/helper/whatsapp";
+import { placementMark } from "@/lib/placement/marks";
+import { LEADER_EMPTY } from "@/lib/placement/wording";
 
 /** The leader's welcome work: who has joined, who they have called, the WhatsApp group and the first meeting. */
 export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; leaderFirstName: string }) {
@@ -31,7 +32,7 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
     setSaving(true);
     setSaved(false);
     setError(null);
-     const result = await saveOnboardingAction(tribe.id, cleanWhatsappLink(group), first);
+    const result = await saveOnboardingAction(tribe.id, group, first);
     setSaving(false);
     if (!result.ok) return setError(result.message);
     setSaved(true);
@@ -55,14 +56,16 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
         </h2>
         <p className="t-body measure text-soft">
           {members.length === 0
-            ? "No one has joined yet. Members choose your tribe from the three they are shown, and appear here the moment they join."
+            ? LEADER_EMPTY
             : `${plural(members.length, "member")} of ${tribe.capacity} seats. You have welcomed ${called} of ${members.length}.`}
         </p>
       </div>
 
       {members.length > 0 ? (
         <ul className="stagger flex flex-col gap-3">
-          {members.map((m, i) => (
+          {members.map((m, i) => {
+            const mark = placementMark(m, m.first_name);
+            return (
             <li key={m.person_id} style={{ ["--i" as string]: Math.min(i, 8) }} className="card flex flex-col gap-3 p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -70,7 +73,7 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
                   <p className="t-small text-soft">Joined {formatDate(m.joined_at.slice(0, 10))}</p>
                 </div>
                 <span className="flex flex-wrap items-center gap-2">
-                  {m.placement ? <Badge tone="neutral">{m.placement === "confirmed" ? "Placed by the church · said yes" : "Placed by the church · yet to answer"}</Badge> : null}
+                  {mark ? <Badge tone="neutral">{mark.label}</Badge> : null}
                   {m.called ? <Badge tone="gold">Welcomed</Badge> : <Badge tone="outline">To welcome</Badge>}
                 </span>
               </div>
@@ -102,7 +105,9 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
                   <p className="t-small text-soft">
                     {m.withheld
                       ? `${m.first_name} asked that their number is not shared. They have your details and will reach out. You can message them in the tribe’s WhatsApp group.`
-                      : `No WhatsApp number shared. Ask your coach how to reach ${m.first_name}.`}
+                      : mark?.note && (m.contact === "holding" || m.contact === "waiting" || m.contact === "not_reached")
+                        ? mark.note
+                        : `No WhatsApp number shared. Ask your coach how to reach ${m.first_name}.`}
                   </p>
                 )}
                 {editable ? (
@@ -112,7 +117,8 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
                 ) : null}
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       ) : null}
 
@@ -142,13 +148,6 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
               setGroup(e.target.value);
               setSaved(false);
             }}
-
-              onPaste={(e) => {
-              e.preventDefault();
-              setGroup(cleanWhatsappLink(e.clipboardData.getData('text')));
-              setSaved(false);
-            }}
-            onBlur={() => setGroup((v) => cleanWhatsappLink(v))}
           />
           <Input
             label="First meeting"

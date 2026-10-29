@@ -17,7 +17,7 @@ const NOT_AVAILABLE = { ok: false as const, message: "That page is not available
 type Fail = { ok: false; message: string };
 const bad = (): Fail => ({ ok: false, message: TRY_AGAIN });
 
-const SETTING_KEYS = ["mode", "grace_days", "seats_free", "min_tribe", "pace_per_hour", "send_from", "send_until", "hold_hours", "reminder_days"] as const;
+const SETTING_KEYS = ["mode", "grace_days", "seats_free", "min_tribe", "pace_per_hour", "send_from", "send_until", "hold_hours", "reminder_days", "hold_group_link"] as const;
 
 /** Saves the switch and the church's choices. Only the fields named are sent; the database checks each. */
 export async function saveSettingsAction(changes: Record<string, unknown>): Promise<{ ok: true } | Fail> {
@@ -30,6 +30,9 @@ export async function saveSettingsAction(changes: Record<string, unknown>): Prom
     if (key === "mode") {
       if (v !== "off" && v !== "rehearsal" && v !== "on") return { ok: false, message: "Choose Off, Rehearsal or On." };
       clean.mode = v;
+    } else if (key === "hold_group_link") {
+      if (typeof v !== "boolean") return { ok: false, message: "Choose On or Off." };
+      clean.hold_group_link = v;
     } else {
       if (typeof v !== "number" || !Number.isInteger(v) || v < 0 || v > 9999) return { ok: false, message: "Use whole numbers." };
       clean[key] = v;
@@ -158,4 +161,30 @@ export async function holdClearAction(person: string): Promise<{ ok: true } | Fa
   if (!isUuid(person)) return bad();
   const done = await run("placement_hold_clear", { p_person: person }, PAGES);
   return done.ok ? { ok: true } : done;
+}
+
+const count = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.round(v)) : 0);
+
+/**
+ * Opens one tribe's details to its leader now, and emails the leader their team. Members who said "don't share my details" stay withheld.
+ * `shared` is how many members who had not answered had their email and WhatsApp number given to the leader; `already` means the leader
+ * had been told before.
+ */
+export async function openNowAction(runId: string, tribe: string): Promise<{ ok: true; shared: number; already: boolean } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  if (!isUuid(runId) || !isUuid(tribe)) return bad();
+  const done = (await run("placement_open_now", { p_run: runId, p_tribe: tribe }, PAGES)) as Done<Record<string, unknown> | null>;
+  if (!done.ok) return done;
+  const d = done.data ?? {};
+  return { ok: true, shared: count(d.shared), already: d.already === true };
+}
+
+/** The same for every tribe of the run whose team is fully placed and whose leader has not been told. */
+export async function openAllAction(runId: string): Promise<{ ok: true; tribes: number; shared: number } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  if (!isUuid(runId)) return bad();
+  const done = (await run("placement_open_all", { p_run: runId }, PAGES)) as Done<Record<string, unknown> | null>;
+  if (!done.ok) return done;
+  const d = done.data ?? {};
+  return { ok: true, tribes: count(d.tribes), shared: count(d.shared) };
 }

@@ -80,16 +80,50 @@ export const ZONE_TEXT: Record<string, string> = {
 export const PLACED_PROMISES = {
   confirm: "Your place is confirmed.",
   change: "I will look at other tribes. My place in this one is given up.",
-  withhold: "My leader will not be given my email or my WhatsApp number. They will be told to expect me instead.",
+  withhold: "My leader will see my name, but will not be given my email or my WhatsApp number. They will be told to expect me instead.",
 } as const;
+
+/** The group link, said to a member who has not yet answered about sharing. Joining a WhatsApp group shows your number to everyone in it. */
+export const PLACED_CONTACT_WORDS = {
+  groupWhen: (when: string) => `The tribe’s WhatsApp group link will appear here on ${when}, or as soon as you press “Yes, I’m in”. Joining a WhatsApp group shows your number to everyone in it.`,
+  groupWaiting: "The tribe’s WhatsApp group link will appear here as soon as you press “Yes, I’m in”, or a day after we have emailed you. Joining a WhatsApp group shows your number to everyone in it.",
+  groupWarning: "Joining a WhatsApp group shows your number to everyone in it.",
+} as const;
+
+/** The marks a leader sees beside a church-placed member's name. */
+export const LEADER_MARKS = {
+  yetToAnswer: "Placed by the church, yet to answer",
+  saidYes: "Said yes",
+  details: "Details open",
+  withheld: "Details withheld",
+  notReached: "Not yet reached",
+  opensOn: (date: string) => `Details open ${date}`,
+} as const;
+
+/** The empty page for a leader whose tribe has no one in it yet. */
+export const LEADER_EMPTY =
+  "No one has been placed in your tribe yet. Members who choose your tribe appear here the moment they join. Members the church places appear here by name as soon as they are placed; their email and WhatsApp number follow when each has said yes, or a day after they are told.";
+
+/** What each state on the God Mode board means, in the words of Check 4 in the blueprint. */
+export const TEAM_STATE_TEXT: Record<string, { label: string; line: string }> = {
+  rehearsal: { label: "Rehearsal", line: "A rehearsal. Nobody was seated." },
+  placing: { label: "Still placing", line: "Some members of this tribe are still to be placed." },
+  waiting: { label: "Waiting for emails", line: "At least one member’s email has not gone out yet." },
+  holding: { label: "In the hold", line: "Every email has gone. Some members’ details open when their day has passed." },
+  none_sent: { label: "No email has gone", line: "Every member email failed or was skipped. Fix sending, then ask for a re-send." },
+  due: { label: "Due now", line: "Ready. The leader is told on the next heartbeat." },
+  told: { label: "Leader told", line: "The leader has their team." },
+  opened: { label: "Opened by you", line: "You opened this tribe’s details for the leader." },
+  cancelled: { label: "Cancelled", line: "This tribe’s placement was cancelled." },
+};
 
 /** The line under the consent box on the form. Shown once, before the form is sent. */
 export const TEAM_CONTACT_LINE =
-  "If the church places me in a tribe, my leader may be given my name, my email and my WhatsApp number (if I gave one) a day after I am told. I can say no at any time before then.";
+  "If the church places me in a tribe, my leader will see my name at once, and may be given my email and my WhatsApp number (if I gave one) a day after I am told. I can say no at any time before then.";
 
 export const PLAN_PROMISES = [
   "Members are told their tribe by email, a hundred or so at a time through the day, not all at once.",
-  "Each leader is told who is on their team a day after the last of their members was told. A member who says “don’t share my details” is listed as withheld.",
+  "A leader sees everyone the church places in their tribe, by name, as soon as they are placed. Each member’s email and WhatsApp number open a day after that member was emailed, or at once if they say yes. A member who says “don’t share my details” stays withheld. The tribe’s WhatsApp group link follows the same rule. You can open a tribe early on the run board.",
   "You can undo the whole run until a tribe’s leader has been told. After that, that tribe stays as it is.",
   "Nobody under 18 is placed. Nobody who has not agreed to be matched is placed.",
 ] as const;
@@ -112,3 +146,7 @@ export function hourText(h: number): string {
   const twelve = n % 12 === 0 ? 12 : n % 12;
   return `${twelve}${suffix}`;
 }
+
+/** The heartbeat line on the God Mode pages: when it last ran, in a form that reads the same on the server and in the browser. */
+export const HEARTBEAT_HINT =
+  "The heartbeat sends the waiting emails and tells leaders their team. It should run every few minutes; if the time above is more than an hour old, it is not running.";

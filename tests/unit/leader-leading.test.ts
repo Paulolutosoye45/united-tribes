@@ -39,14 +39,36 @@ describe("reading what the database gives", () => {
         ],
       }),
     ).toEqual([
-      { name: "Ngozi Eze", joinedOn: "2026-10-12", called: true },
-      { name: "Tunde Bello", joinedOn: null, called: false },
+      { name: "Ngozi Eze", joinedOn: "2026-10-12", called: true, mark: null },
+      { name: "Tunde Bello", joinedOn: null, called: false, mark: null },
     ]);
   });
 
   it("is null when the list cannot be read", () => {
     for (const raw of [null, undefined, "x", {}, { members: "no" }]) expect(parseLeadingPeople(raw)).toBeNull();
     expect(parseLeadingPeople({ members: [] })).toEqual([]);
+  });
+});
+
+describe("a leader's list marks the people the church placed", () => {
+  it("lists a church-placed member by name with where their details stand, and carries no number or email", () => {
+    const people = parseLeadingPeople({
+      members: [
+        { name: "Ada Okafor", first_name: "Ada", joined_at: "2026-10-12T09:00:00Z", called: false, placement: "pending", contact: "holding", contact_opens_at: "2026-10-13T10:00:00Z", whatsapp: null },
+        { name: "Bola Ade", first_name: "Bola", joined_at: "2026-10-12", called: false, placement: "confirmed", contact: "open", whatsapp: "+2348030000000" },
+        { name: "Chi Eze", first_name: "Chi", joined_at: "2026-10-12", called: false, placement: "pending", contact: "withheld", withheld: true },
+        { name: "Dayo Bello", first_name: "Dayo", joined_at: "2026-10-12", called: false, placement: "pending", contact: "not_reached" },
+        { name: "Eze Obi", first_name: "Eze", joined_at: "2026-10-12", called: false },
+      ],
+    });
+    expect(people?.map((p) => p.mark)).toEqual([
+      "Placed by the church · yet to answer",
+      "Placed by the church · said yes",
+      "Placed by the church · details withheld",
+      "Placed by the church · not yet reached",
+      null,
+    ]);
+    expect(JSON.stringify(people)).not.toMatch(/\+234|@/);
   });
 });
 

@@ -113,7 +113,7 @@ Each message is written out from believable details and checked for what the off
 | `leader_workshop_tomorrow` | A workshop is tomorrow | Tomorrow: your workshop | 39 | 65 | email only | 2 / 0 | — |
 | `new_member` | Someone joined your tribe: call within 72 hours | Ada joined Builders Tribe | 66 | 98 | `ut_new_member` | 2 / 0 | database |
 | `placement_leader_appointed` | You have been appointed to lead a tribe | You have been appointed to lead a tribe | 113 | 123 | email only | 2 / 0 | database |
-| `placement_your_team` | Who is on your team | Your team: Builders Tribe | 92 | 118 | email only | 2 / 0 | database |
+| `placement_your_team` | Who is on your team | Your team: Builders Tribe | 127 | 118 | email only | 2 / 0 | database |
 | `swap_moved` | A member has moved tribe | Ada is joining your tribe | 60 | 115 | `ut_swap_moved` | 2 / 0 | database |
 | `testimony_waiting` | A testimony is waiting for you | A testimony is waiting for your approval | 40 | 107 | `ut_testimony_waiting` | 2 / 0 | database |
 | `weekly_report` | Saturday: the weekly tribe report | Week 3 report: Builders Tribe | 55 | 111 | `ut_weekly_report` | 2 / 0 | database |
@@ -133,8 +133,8 @@ Each message is written out from believable details and checked for what the off
 | `member_testimony_shared` | Your testimony was shared | Your testimony was shared | 46 | 70 | email only | 2 / 0 | — |
 | `office_message` | An announcement from the church office | Your tribe is waiting, Ada | 45 | 60 | email only | 3 / 0 | app, database |
 | `placement_reminder` | A gentle reminder about the tribe you were placed in | Builders Tribe is holding your place | 80 | 108 | email only | 4 / 0 | database |
-| `placement_withheld` | Your details are kept private; here is how to reach your tribe | Your details are private. Here is how to join | 71 | 113 | email only | 2 / 1 | database |
-| `placement_your_tribe` | The church has placed you in a tribe | A place for you in Builders Tribe | 177 | 131 | email only | 4 / 1 | database |
+| `placement_withheld` | Your details are kept private; here is how to reach your tribe | Your details are private. Here is how to join | 110 | 113 | email only | 2 / 1 | database |
+| `placement_your_tribe` | The church has placed you in a tribe | A place for you in Builders Tribe | 188 | 131 | email only | 4 / 1 | database |
 | `reminder_email` | A reminder from one of the four journeys | You’re part-way to your tribe, Ada | 91 | 88 | email only | 3 / 0 | app, database |
 | `season_complete` | The season is complete | Season 1 is complete | 63 | 108 | `ut_season_complete` | 2 / 0 | database |
 | `season_starts_soon` | The season starts in two days | Your season starts on Sun 14 Feb | 68 | 108 | `ut_season_starts_soon` | 2 / 1 | database |

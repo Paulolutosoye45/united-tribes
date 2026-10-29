@@ -4,6 +4,8 @@
  * tribe, and says nothing about how they came to.
  */
 
+import { placementMark } from "@/lib/placement/marks";
+
 export type LeadingCard = "draft" | "submitted" | "changes_requested" | "approved";
 
 export type MyLeading = {
@@ -18,10 +20,11 @@ export type MyLeading = {
   certified: boolean;
 };
 
-export type LeadingPerson = { name: string; joinedOn: string | null; called: boolean };
+export type LeadingPerson = { name: string; joinedOn: string | null; called: boolean; mark: string | null };
 
 const CARD_STATUSES: readonly string[] = ["draft", "submitted", "changes_requested", "approved"];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const str = (v: unknown): string => (typeof v === "string" ? v : "");
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /** Reads what the database gives (my_leading). Null when the person leads nothing, or the answer is not in the shape expected. Never throws. */
@@ -45,6 +48,10 @@ export function parseLeadingPeople(raw: unknown): LeadingPerson[] | null {
       name: m.name.trim().slice(0, 80),
       joinedOn: typeof m.joined_at === "string" && /^\d{4}-\d{2}-\d{2}/.test(m.joined_at) ? m.joined_at.slice(0, 10) : null,
       called: m.called === true,
+      mark: placementMark(
+        { placement: str(m.placement), contact: str(m.contact), contact_opens_at: str(m.contact_opens_at) || null, withheld: m.withheld === true },
+        typeof m.first_name === "string" ? m.first_name : "",
+      )?.label ?? null,
     });
   }
   return out;

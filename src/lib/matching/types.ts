@@ -88,6 +88,9 @@ export interface RosterMember {
   note_locked: boolean;
   /** Set when the church placed them: waiting for their yes, or said yes. */
   placement?: "pending" | "confirmed";
+  /** For such a member: whether their email and WhatsApp number are open to the leader, or when they will be. */
+  contact?: "open" | "withheld" | "holding" | "waiting" | "not_reached";
+  contact_opens_at?: string | null;
   /** They asked that their WhatsApp number is not shared. They have the leader's details and will reach out. */
   withheld?: boolean;
 }

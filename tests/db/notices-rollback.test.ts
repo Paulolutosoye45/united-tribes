@@ -25,6 +25,16 @@ const LATER_DOWN = fs
   .sort()
   .reverse();
 const DOWN = [...LATER_DOWN, "20261225000200_notice_triggers.down.sql", "20261225000100_notices.down.sql"];
+/**
+ * Functions a later feature puts back to their old text in its own way back (found by name, like the files). That feature changed them on
+ * purpose, so they differ from the baseline while it is applied; the third test below checks that each one is back to the baseline's text
+ * once the way back has run. A function nobody's way back restores is still held to "unchanged".
+ */
+const RESTORED_BY_LATER = new Set(
+  LATER_DOWN.flatMap((f) =>
+    [...fs.readFileSync(path.join(ROLLBACK, f), "utf8").matchAll(/create\s+or\s+replace\s+function\s+public\.([a-z_0-9]+)\s*\(/gi)].map((m) => m[1].toLowerCase()),
+  ),
+);
 
 let db: TestDb;
 let baseline: Client;
@@ -73,7 +83,7 @@ describe("the way back from the team's emails", () => {
   it("is what the migrations added and nothing else: no function that existed before was changed", async () => {
     const base = await functions(baseline);
     before = await functions(db.admin);
-    const changed = [...base].filter(([sig, def]) => before.get(sig) !== def).map(([sig]) => sig);
+    const changed = [...base].filter(([sig, def]) => before.get(sig) !== def && !RESTORED_BY_LATER.has(sig.split("(")[0])).map(([sig]) => sig);
     expect(changed).toEqual([]);
     // …and the new functions are exactly the ones the two migration files create
     const created = new Set<string>();
@@ -113,7 +123,9 @@ describe("the way back from the team's emails", () => {
       // They drop functions and triggers, and do nothing else: no row is touched, no table dropped. A feature built after the notices may
       // need to put data back where it was (the way back from "Let them choose" restores the list of locked parts on the tribes it
       // unlocked), so only the notices' own files are held to "no row is touched"; every file is held to the rest.
-      const code = text.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+      // (A later feature's file may put old function bodies back; what a body does is not what the file does, so bodies are not read here.)
+      const lines = text.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+      const code = LATER_DOWN.includes(f) ? lines.replace(/CREATE OR REPLACE FUNCTION[\s\S]*?\$function\$;/g, "") : lines;
       expect(code, f).not.toMatch(LATER_DOWN.includes(f) ? /\b(delete|truncate|insert)\b\s/i : /\b(delete|truncate|insert|update)\b\s/i);
       expect(code, f).not.toMatch(/\bdrop\s+(table|column|schema)\b/i);
       expect(code, f).not.toMatch(/\balter\s+table\b/i);

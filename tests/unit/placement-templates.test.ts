@@ -186,6 +186,18 @@ describe("Your tribe", () => {
     expect(mail.text).toMatch(/email|WhatsApp/i);
   });
 
+  it("holds the WhatsApp group link back until the member has answered about sharing, and says when it will appear", () => {
+    const base = { ...PLACEMENT_SAMPLES.placement_your_tribe };
+    const held = renderEmail(message("placement_your_tribe", { ...base, group_url: null, group_held: true, hold_hours: 24 }, SECRET), SITE);
+    expect(held.text).not.toContain("chat.whatsapp.com");
+    expect(held.text).toMatch(/link will be on your tribe page/);
+    expect(held.text).toMatch(/in 24 hours/);
+    expect(held.text).toMatch(/shows your number to everyone in it/);
+    const open = renderEmail(message("placement_your_tribe", { ...base, group_url: "https://chat.whatsapp.com/abcdef", group_held: false }, SECRET), SITE);
+    expect(open.text).toContain("https://chat.whatsapp.com/abcdef");
+    expect(open.text).toMatch(/shows your number to everyone in it/);
+  });
+
   it("does not list the other people in the tribe", () => {
     const mail = renderEmail(
       message(
@@ -232,6 +244,29 @@ describe("Your team", () => {
     );
     expect(mail.text).not.toMatch(/Bayo,/);
     expect(mail.text).toMatch(/3 members/);
+  });
+
+  it("lists every member by name at once: a member still in the hold says the day it ends, and one not yet reached says so, without a number", () => {
+    const mail = renderEmail(
+      message("placement_your_team", {
+        tribe: "Builders Tribe",
+        members: [
+          ...members,
+          { name: "Dayo", email: "dayo@example.org", whatsapp: "+2348039999999", withheld: false, state: "holding", opens_on: "2027-02-12" },
+          { name: "Eze", email: "eze@example.org", whatsapp: "+2348038888888", withheld: false, state: "not_reached" },
+          { name: "Funmi", email: "funmi@example.org", whatsapp: "+2348037777777", withheld: false, state: "waiting" },
+        ],
+      }),
+      SITE,
+    );
+    expect(mail.text).toMatch(/6 members/);
+    expect(mail.text).toMatch(/Dayo: details open on /);
+    expect(mail.text).toContain("Eze: not yet reached");
+    expect(mail.text).toContain("Funmi: not yet reached");
+    // a member whose details are not yet open never has a number or an email in the leader's mail, whatever the row carries
+    for (const hidden of ["dayo@example.org", "+2348039999999", "eze@example.org", "+2348038888888", "funmi@example.org", "+2348037777777"])
+      expect(mail.text).not.toContain(hidden);
+    expect(mail.text).toMatch(/appear on your tribe page/);
   });
 
   it("carries only what it is meant to, whatever else the member row holds", () => {

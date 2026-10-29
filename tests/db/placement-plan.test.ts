@@ -83,6 +83,8 @@ describe("the switch", () => {
       hold_hours: 24,
       reminder_days: 5,
       floor: 60,
+      hold_group_link: true, // the WhatsApp group link waits for the member's answer, until God Mode says otherwise
+      last_tick_at: null, // the heartbeat has not run yet
     });
   });
 
@@ -185,6 +187,8 @@ describe("who may use the console", () => {
     ["placement_overview", []],
     ["placement_run_view", [ZERO]],
     ["placement_run_items", [ZERO, null, 10, 0]],
+    ["placement_open_now", [ZERO, ZERO]],
+    ["placement_open_all", [ZERO]],
     ["placement_leaders_plan", ["[]", true]],
     ["placement_leaders_options", [ZERO, ZERO]],
     ["placement_leaders_adjust", [ZERO, ZERO, "remove", null]],
@@ -254,6 +258,9 @@ describe("who may use the console", () => {
       ["placement_place_item", [ZERO, 1]],
       ["placement_place_batch", [ZERO, 10]],
       ["placement_team_mail", [ZERO]],
+      ["placement_team_mail_for", [ZERO, ZERO]],
+      ["placement_contact", [ZERO]],
+      ["placement_group_open", [ZERO]],
       ["placement_tick", []],
       ["placement_token_mint", [ZERO, ZERO, 1]],
       ["placement_do_confirm", [ZERO, "v"]],

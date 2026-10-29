@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MatchList } from "@/components/matching/MatchList";
 import { PlacedBanner } from "@/components/matching/PlacedBanner";
+import { groupNote } from "@/lib/placement/placed";
 import { PlacementView } from "@/components/matching/PlacementView";
 import { SwapCard } from "@/components/growth/SwapCard";
 import { TeenWaiting } from "@/components/guardian/TeenWaiting";
@@ -67,7 +68,7 @@ export default async function TribePage({ searchParams }: { searchParams: Search
       <div className="flex flex-col gap-8">
         {strip}
         {placedByChurch?.active ? <PlacedBanner state={placedByChurch} /> : null}
-        <PlacementView placement={match.placement} justJoined={joined === "1"} />
+        <PlacementView placement={match.placement} justJoined={joined === "1"} groupNote={groupNote(placedByChurch)} />
       </div>
     );
   }

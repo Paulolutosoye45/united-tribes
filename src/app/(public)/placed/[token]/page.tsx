@@ -8,8 +8,9 @@ import { getSupabaseEnv } from "@/lib/env";
 import { formatShortDate } from "@/lib/dates";
 import { AGREEMENT_SENTENCE, COVENANT_PROMISES } from "@/lib/matching/wording";
 import { workerRpc, workerToken } from "@/lib/messaging/worker";
+import { contactLine, groupNote } from "@/lib/placement/placed";
 import { parsePlaced, type PlacedState } from "@/lib/placement/types";
-import { PLACED_PROMISES } from "@/lib/placement/wording";
+import { PLACED_CONTACT_WORDS, PLACED_PROMISES } from "@/lib/placement/wording";
 import { placedAction } from "./actions";
 
 // The link is a secret: keep it out of search results and referrer headers.
@@ -91,7 +92,7 @@ function Page({ state, done, pointed, token, q }: { state: PlacedState; done: Ch
       ) : null}
       {done === "withhold" ? (
         <p role="status" className="card rise-in p-5 font-semibold">
-          {q.late ? "Your leader has already been given your details, so this could not be undone. Tell them if you would rather they did not use them." : "Understood. Your leader will not be given your email or your WhatsApp number."}
+          {q.late ? "Your leader has already been given your details, so this could not be undone. Tell them if you would rather they did not use them." : "Understood. Your leader can see your name, but will not be given your email or your WhatsApp number."}
         </p>
       ) : null}
       {q.started ? <p role="alert" className="rounded-[var(--radius-control)] bg-gold/25 px-4 py-3 font-medium">The season has started, so this place can no longer be given up here. Ask your leader or coach.</p> : null}
@@ -109,9 +110,14 @@ function Page({ state, done, pointed, token, q }: { state: PlacedState; done: Ch
           {state.fit ? <Line label="Fit" value={`${state.fit[0].toUpperCase()}${state.fit.slice(1)} fit for what you asked for`} /> : null}
         </dl>
         {t.groupUrl ? (
-          <a href={t.groupUrl} rel="noopener noreferrer" className="font-semibold underline underline-offset-4">
-            Join the tribe’s WhatsApp group
-          </a>
+          <>
+            <a href={t.groupUrl} rel="noopener noreferrer" className="font-semibold underline underline-offset-4">
+              Join the tribe’s WhatsApp group
+            </a>
+            <p className="t-small text-soft" data-testid="group-warning">{PLACED_CONTACT_WORDS.groupWarning}</p>
+          </>
+        ) : groupNote(state) ? (
+          <p className="t-small text-soft" data-testid="group-held">{groupNote(state)}</p>
         ) : null}
       </section>
 
@@ -146,11 +152,7 @@ function Page({ state, done, pointed, token, q }: { state: PlacedState; done: Ch
           Your details
         </h2>
         <p className="t-body text-soft" data-testid="share-line">
-          {state.withheld
-            ? "You asked us not to share your details. Your leader will not be given your email or your WhatsApp number."
-            : state.leaderTold
-              ? `Your leader has been given your name, your email${state.hasWhatsapp ? " and your WhatsApp number" : ""}.`
-              : `A day after you were told, ${t.leaderFirst} is given your name, your email${state.hasWhatsapp ? " and your WhatsApp number" : ""} so they can say hello. You can stop that below.`}
+          {contactLine(state)}
         </p>
       </section>
 
@@ -161,7 +163,7 @@ function Page({ state, done, pointed, token, q }: { state: PlacedState; done: Ch
           <Answer token={token} choice="confirm" primary pointed={pointed === "confirm"} label="Yes, I’m in" note={PLACED_PROMISES.confirm} sentence={AGREEMENT_SENTENCE} />
         )}
         {state.canChange ? <Answer token={token} choice="change" pointed={pointed === "change"} label="Show me other tribes" note={PLACED_PROMISES.change} /> : null}
-        {!state.withheld && !state.leaderTold ? <Answer token={token} choice="withhold" pointed={pointed === "withhold"} label="Don’t share my details" note={PLACED_PROMISES.withhold} /> : null}
+        {!state.withheld && !state.contactLate ? <Answer token={token} choice="withhold" pointed={pointed === "withhold"} label="Don’t share my details" note={PLACED_PROMISES.withhold} /> : null}
       </section>
 
       <p className="t-small text-soft">

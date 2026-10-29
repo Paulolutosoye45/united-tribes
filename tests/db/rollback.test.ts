@@ -19,6 +19,19 @@ const LAST_BEFORE_REWORK = "20261215000100";
 /** Run in this order: newest first. */
 const DOWN = ["20261221000100_leader_fit_screen.down.sql", "20261218000100_academy_switch.down.sql", "20261217000100_leader_switchboard.down.sql"];
 
+/**
+ * Functions a feature built after the rework puts back to their old text in its own way back (found by name). While that feature is applied
+ * they differ from the baseline on purpose; its own rehearsal (notices-rollback.test.ts runs every later way back) checks they return to it.
+ */
+const RESTORED_BY_LATER = new Set(
+  fs
+    .readdirSync(ROLLBACK)
+    .filter((f) => f.endsWith(".down.sql") && f.slice(0, 14) > "20261221000100")
+    .flatMap((f) =>
+      [...fs.readFileSync(path.join(ROLLBACK, f), "utf8").matchAll(/create\s+or\s+replace\s+function\s+public\.([a-z_0-9]+)\s*\(/gi)].map((m) => m[1].toLowerCase()),
+    ),
+);
+
 let db: TestDb;
 let kit: PipelineKit;
 let env: Env;
@@ -82,7 +95,7 @@ describe("the way back, rehearsed", () => {
 
   it("has revised functions to put back: the database now differs from the baseline in the functions the plan lists", async () => {
     const base = await functions(baseline);
-    const changed = [...base].filter(([sig, def]) => functionsBefore.get(sig) !== def).map(([sig]) => sig.split("(")[0]);
+    const changed = [...base].filter(([sig, def]) => functionsBefore.get(sig) !== def && !RESTORED_BY_LATER.has(sig.split("(")[0])).map(([sig]) => sig.split("(")[0]);
     // 14 from Phase 2, and 10 more from Phase 3 (leader_message_flags is new in Phase 2, and on_application_stage is counted once). The two Phase 6
     // hooks began in Phases 1 and 2, so they are not in the baseline at all.
     expect(changed.length).toBe(14 + 10);
@@ -103,7 +116,7 @@ describe("the way back, rehearsed", () => {
   it("leaves every function exactly as it was before the rework, with only the new functions added", async () => {
     const base = await functions(baseline);
     const now = await functions(db.admin);
-    const different = [...base].filter(([sig, def]) => now.get(sig) !== def).map(([sig]) => sig);
+    const different = [...base].filter(([sig, def]) => now.get(sig) !== def && !RESTORED_BY_LATER.has(sig.split("(")[0])).map(([sig]) => sig);
     expect(different).toEqual([]);
     // what is extra is only what the rework added, by name, in the migration files
     const created = new Set<string>();

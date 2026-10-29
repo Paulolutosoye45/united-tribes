@@ -242,6 +242,7 @@ describe("a run that places people", () => {
       "mode",
       "place_note",
       "group_url",
+      "group_held",
       "first_meeting_by",
       "first_meeting_on",
       "season",
@@ -266,17 +267,29 @@ describe("a run that places people", () => {
     }
   });
 
-  it("keeps each tribe's leader from seeing the placed members until they have been told, and shows a member the church seated as 'pending'", async () => {
+  it("shows each tribe's leader every placed member by name at once, marked 'pending', with no number until that member's own hold ends", async () => {
     const before = await asUser(
       db,
       A.leader.id,
       "tribe_roster_marked",
       A.tribe,
     );
-    expect(
-      before.members.map((m: { person_id: string }) => m.person_id),
-    ).toEqual([selfSeated]);
-    expect(before.members[0]).not.toHaveProperty("placement");
+    const placed = await rows(
+      db,
+      "select person_id from public.tribe_members where tribe_id = $1 and placed_by_run = $2 and status = 'active'",
+      [A.tribe, run],
+    );
+    const ids = before.members.map((m: { person_id: string }) => m.person_id);
+    expect(ids).toContain(selfSeated);
+    expect(ids.length).toBe(placed.length + 1);
+    for (const p of placed) expect(ids).toContain(p.person_id);
+    const self = before.members.find((m: { person_id: string }) => m.person_id === selfSeated);
+    expect(self).not.toHaveProperty("placement");
+    for (const m of before.members) {
+      if (m.person_id === selfSeated) continue;
+      expect(m.placement).toBe("pending");
+      expect(m.whatsapp).toBeNull(); // their emails have not gone out yet, so nobody's contact is open
+    }
     expect(
       (
         await rows(
@@ -315,9 +328,14 @@ describe("a member's private link", () => {
       "active",
       "can_change",
       "confirmed",
+      "contact", // where the leader's view of their contact stands: waiting, holding, open, not_reached or withheld
+      "contact_late", // true once the clock or God Mode has opened it: "don't share" is too late
+      "contact_opens_at",
       "first_name",
       "fit",
       "found",
+      "group_opens_at",
+      "group_visible",
       "has_whatsapp",
       "leader_told",
       "placed_by_church",
@@ -705,20 +723,24 @@ describe("telling each tribe's leader", () => {
     const names = mail.params.members.map((m: { name: string }) => m.name);
     expect(names).toContain("Mem0 Test");
     expect(names).not.toContain("Mem2 Test"); // gave up the seat
-    expect(names).not.toContain("Mem7 Test"); // their email never went out, so they have not had their chance to hold back
     for (const m of mail.params.members) {
       expect(Object.keys(m).sort()).toEqual([
         "email",
         "name",
+        "opens_on",
+        "state",
         "whatsapp",
         "withheld",
       ]);
-      if (m.withheld) expect(m).toMatchObject({ email: null, whatsapp: null });
-      else expect(m.email).toMatch(/@/);
+      if (m.withheld) expect(m).toMatchObject({ email: null, whatsapp: null, state: "withheld" });
+      else if (m.state === "open") expect(m.email).toMatch(/@/);
+      else expect(m).toMatchObject({ email: null, whatsapp: null });
     }
     const byName = Object.fromEntries(
       mail.params.members.map((m: { name: string }) => [m.name, m]),
     );
+    // their email never went out, so they are listed as not yet reached, with no contact: they have not had their chance to hold back
+    expect(byName["Mem7 Test"]).toMatchObject({ state: "not_reached", email: null, whatsapp: null, withheld: false });
     expect(byName["Mem3 Test"].withheld).toBe(true); // said no on the form
     expect(byName["Mem1 Test"].withheld).toBe(true); // said no from the link
     expect(byName["Mem0 Test"].whatsapp).toBe("+2348012345000"); // consented to be contacted there

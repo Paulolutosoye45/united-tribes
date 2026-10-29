@@ -7,9 +7,10 @@
  *    marked as placed by the church and not yet confirmed. Their emails are queued, the leader's is not.
  *  - Opening a member's private link changes nothing. Then, on a phone and with no sign-in: one member says yes, one asks that her
  *    details are not shared, one gives up the place. A fourth, signed in, says yes from the banner on her tribe page.
- *  - The leader's tribe page: a member who agreed on the form has WhatsApp at once; one who has not agreed has none yet; the one who
- *    held back says so. A day after the last member was told the leader and assistant are emailed the team, and the leader now sees the
- *    number. The run page says the leader has been told, and no longer offers Undo.
+ *  - The leader's tribe page: every member the church placed is listed by name at once, marked with where they stand. A member who said
+ *    yes or agreed on the form has WhatsApp; one who has not been reached has none yet; the one who held back says so. A day after the
+ *    members were told the leader and assistant are emailed the team, and the one still waiting now shows their number. The run page
+ *    says the leader has been told, and no longer offers Undo. (Journey 38 covers the group link and God Mode's Open now.)
  *
  * The things that are only arranged here (members with finished forms, the clock moved on by a day) are arranged in the database
  * the way the database tests do it; everything a person does is done in the browser.
@@ -208,7 +209,7 @@ async function main() {
     const m = await newPage(browser, "phone");
     await open(m.page, `/placed/${tokens.bolu}?a=withhold`);
     await m.page.getByRole("button", { name: /Don.t share my details/ }).click();
-    await m.page.getByText(/Your leader will not be given your email or your WhatsApp number/).first().waitFor({ timeout: 15000 });
+    await m.page.getByText(/will not be given your email or your WhatsApp number/).first().waitFor({ timeout: 15000 });
     check((await one("select contact_withheld from public.tribe_members where person_id = $1 and placed_by_run = $2", [bolu.id, runId]))?.contact_withheld === true, "pressing Don’t share my details is recorded");
     check((await n("select count(*)::int n from public.consents where person_id = $1 and purpose = 'team_contact' and granted = false", [bolu.id])) === 1, "…as a refusal that stays on her record");
     await m.ctx.close();
@@ -256,10 +257,23 @@ async function main() {
     const l = await newPage(browser, "desktop");
     await signIn(l.page, A.leader.email, "/lead/tribe");
     await open(l.page, "/lead/tribe");
-    await l.page.getByText("No one has joined yet").waitFor({ timeout: 20000 });
+    await l.page.getByText("Efe Test").first().waitFor({ timeout: 20000 });
     const all = await text(l.page);
-    check(!/Adaeze|Bolu|Dami|Efe/.test(all), "until the leader has been told, the members the church placed are not on their page (they have had no chance to hold back yet)");
-    check(!all.includes("8031230001") && !all.includes("8031230002") && !all.includes("8031230004") && !all.includes("8031230005"), "…nor anyone’s number");
+    check(["Adaeze Test", "Bolu Test", "Dami Test", "Efe Test"].every((nm) => all.includes(nm)), "the moment the church has placed them, the leader sees every member by name");
+    check(!all.includes("Chidi Test") && !all.includes("Folu Test"), "…and not the one who gave the place up, nor the one taken out");
+    check(!/No one has joined yet/.test(all), "…and the page no longer says no one has joined");
+    check(/Placed by the church · said yes/.test(await memberRow(l.page, "Adaeze Test").innerText()) && /Placed by the church · said yes/.test(await memberRow(l.page, "Dami Test").innerText()), "…Adaeze and Dami are marked as having said yes");
+    check(/not yet reached/.test(await memberRow(l.page, "Efe Test").innerText()), "…Efe, whose email has not gone out, is marked not yet reached");
+    check(/details withheld/.test(await memberRow(l.page, "Bolu Test").innerText()), "…and Bolu, who held back, is marked withheld");
+    for (const who of ["Adaeze Test", "Dami Test"]) {
+      check((await memberRow(l.page, who).getByRole("link", { name: "Message on WhatsApp" }).count()) === 1, `…${who.split(" ")[0]} said yes, so can be messaged on WhatsApp at once`);
+    }
+    for (const who of ["Bolu Test", "Efe Test"]) {
+      check((await memberRow(l.page, who).getByRole("link", { name: "Message on WhatsApp" }).count()) === 0, `…${who.split(" ")[0]}’s number is not on the page`);
+    }
+    const html = await l.page.content();
+    check(!html.includes("8031230002") && !html.includes("8031230005"), "…not even in the page’s links");
+    check(/has not been reached yet/.test(await memberRow(l.page, "Efe Test").innerText()), "…and the page says why");
     await shot(l.page, "30-leader-before");
     await l.ctx.close();
   }
@@ -280,7 +294,7 @@ async function main() {
     await open(l.page, "/lead/tribe");
     await l.page.getByText("Dami Test").first().waitFor({ timeout: 20000 });
     const all = await text(l.page);
-    check(/Placed by the church · said yes/.test(all) && /Placed by the church · yet to answer/.test(all), "once the leader has been told, the page lists who the church placed and who has said yes");
+    check(/Placed by the church · said yes/.test(all) && /Placed by the church · details open/.test(all), "once the day has passed, the page lists who said yes and whose details are now open");
     check(!all.includes("Chidi Test") && !all.includes("Folu Test"), "…and not the one who gave the place up, nor the one taken out");
     for (const who of ["Adaeze Test", "Dami Test", "Efe Test"]) {
       check((await memberRow(l.page, who).getByRole("link", { name: "Message on WhatsApp" }).count()) === 1, `…${who.split(" ")[0]} can be messaged on WhatsApp, as the "Your team" email said`);

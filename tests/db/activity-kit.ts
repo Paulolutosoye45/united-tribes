@@ -12,8 +12,8 @@ export const noon = (n: number) => `(((public.today_lagos() - ${n})::timestamp +
 const placeholders = (params: unknown[]) => params.map((_, i) => `$${i + 1}`).join(", ");
 
 /** Sets the platform owner, as the installer would, and unlocks them on one sign-in session. */
-export async function makeOwner(db: TestDb) {
-  const owner = await db.createUser({ email: "owner@example.org" });
+export async function makeOwner(db: TestDb, email = "owner@example.org") {
+  const owner = await db.createUser({ email });
   await db.admin.query("update public.people set full_name = 'The Owner', preferred_name = 'Owner' where id = $1", [owner.id]);
   await db.admin.query("select public.bootstrap_platform_owner($1, $2)", [owner.email, PHRASE]);
   const session = randomUUID();

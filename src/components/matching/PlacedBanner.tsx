@@ -6,6 +6,7 @@ import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { Button } from "@/components/ui/Button";
 import { AGREEMENT_SENTENCE } from "@/lib/matching/wording";
+import { contactLine } from "@/lib/placement/placed";
 import type { PlacedState } from "@/lib/placement/types";
 import { PLACED_PROMISES } from "@/lib/placement/wording";
 
@@ -17,7 +18,8 @@ export function PlacedBanner({ state }: { state: PlacedState }) {
   const d = useDo();
   const [said, setSaid] = useState<string | null>(null);
   const showYes = !state.confirmed;
-  const showHold = !state.withheld && !state.leaderTold;
+  // "Don't share" is open until this member's details have actually opened by the clock or by the church, not until the leader was emailed
+  const showHold = !state.withheld && !state.contactLate;
   if (!showYes && !showHold) return null;
 
   return (
@@ -28,7 +30,7 @@ export function PlacedBanner({ state }: { state: PlacedState }) {
         </h2>
         <p className="t-body text-soft">
           This place is yours. {showYes ? "Say yes to confirm it, or change tribe below. " : ""}
-          {showHold ? `A day after you were told, ${state.tribe.leaderFirst} is given your name, your email${state.hasWhatsapp ? " and your WhatsApp number" : ""}. You can stop that here.` : ""}
+          {showHold ? contactLine(state) : ""}
         </p>
       </div>
       <Notice error={d.error} saved={said ?? d.saved} />
@@ -52,7 +54,7 @@ export function PlacedBanner({ state }: { state: PlacedState }) {
                   "withhold",
                   async () => {
                     const r = await withholdPlacementAction();
-                    if (r.ok) setSaid(r.late ? "Your leader has already been given your details, so this could not be undone." : "Understood. Your leader will not be given your email or your WhatsApp number.");
+                    if (r.ok) setSaid(r.late ? "Your leader has already been given your details, so this could not be undone." : "Understood. Your leader can see your name, but will not be given your email or your WhatsApp number.");
                     return r.ok ? { ok: true as const } : r;
                   },
                 )

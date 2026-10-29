@@ -31,7 +31,7 @@ Nothing is placed, appointed or sent until it is switched on and a person in God
 
 ### What the member receives
 
-An email, **Your tribe**, from the church office: the tribe's name, its leader (and assistant), when and where it meets, the three lines of the Success Picture, and one sentence saying what the leader will be given. It carries three links to a private page, with no sign-in:
+An email, **Your tribe**, from the church office: the tribe's name, its leader (and assistant), when and where it meets, the three lines of the Success Picture, and one sentence saying what the leader will be given. The tribe's WhatsApp group link is in it **only if the member has already answered about sharing** (agreed on the form, or said no there). Joining a WhatsApp group shows your number to everyone in it, so a member who has not answered is told the link will be on their tribe page as soon as they press **Yes, I'm in**, or a day after they were emailed. It carries three links to a private page, with no sign-in:
 
 - **Yes, I'm in** — the member agrees to the Success Picture and the Tribe Covenant, and the seat is confirmed.
 - **Show me other tribes** — the seat is given up and the member is taken to choose.
@@ -39,19 +39,28 @@ An email, **Your tribe**, from the church office: the tribe's name, its leader (
 
 Opening a link changes nothing; the page asks the member to press the button. The links are secrets the database makes (64 characters, kept only as a hash), last 60 days, and stop working the moment the seat is given up. A member who has not answered is sent **one reminder** five days after the first email.
 
-Members are emailed no faster than the pace you set (100 an hour to start), between 9 am and 7 pm Lagos time, in the order they were placed.
+Members are emailed no faster than the pace you set (100 an hour to start), between 9 am and 7 pm Lagos time, **tribe by tribe**: the tribe holding the member hardest to place goes first, and each tribe's emails go out in one block, so a leader waits for their own team and not for the whole run. Who goes to which tribe does not change.
+
+### What the leader sees, and when
+
+One rule, kept in one place (the database function `placement_contact`), for every screen a leader looks at:
+
+- **Names, at once.** The moment a member is placed, the leader and the assistant see them by name on My tribe, the weekly log, the Lead page and the Dashboard, marked *Placed by the church, yet to answer* or *said yes*. Names were never what the hold protected: the member's own email already names the leader.
+- **Email and WhatsApp number, member by member.** A member's details open when that member has said yes, agreed on the form, or their own email went out and the hours you set (24 to start) have passed. A member who said **Don't share my details** is never opened, for anyone, whichever role. A member whose email failed or never went is listed as *not yet reached*, and their details never open by themselves; God Mode can open them (below).
+- **The raw lists apply it too.** The lists themselves (`tribe_roster`, `tribe_week`) now apply the rule, so no screen and no direct call can skip it. A coach, pastor or director still sees what they always saw, except that a member who held back is hidden for everyone.
+- **The group link follows the same rule**, and is a God Mode setting (*Hold back the WhatsApp group link until a member has answered*, on to start). Turn it off and the link is shown at once and goes in every first email, as before.
 
 ### What the leader receives
 
-An email, **Your team**: the name, email and WhatsApp number of each member, and nothing else about them (no answers, no age, no faith journey, no needs, no score). A member who held back is listed by name with *contact withheld; they have your details*.
+An email, **Your team**, listing **every member by name**. A member whose details are open comes with their email and WhatsApp number and nothing else about them (no answers, no age, no faith journey, no needs, no score). A member who held back is listed with *contact withheld; they have your details*; one still in the hold with the day it ends; one whose email has not gone with *not yet reached*.
 
-It is sent **24 hours after the last member of that tribe was told** (the hours are one of the church's choices), so each member has a day to say "don't share my details". If every member of the tribe agreed on the form to share, it goes at once. The assistant leader is sent the same email. Until that email has been queued, the leader's tribe page and weekly page **do not list the members the church placed** (they have not yet had their day to hold back; the page says no one has joined yet). After it, each is listed with a mark that the church placed them, and a member who held back is listed without a WhatsApp number.
+It is queued, tribe by tribe, as soon as nobody in the tribe is still waiting for their email or sitting in the hold, or **72 hours after the tribe's last planned email**, whatever is still stuck, so one stuck email can no longer hold a tribe closed. It is also sent when you press **Open now**. The assistant leader is sent the same email. The switch no longer decides whether a leader is told: with the switch Off or Rehearsal the heartbeat starts nothing new, but it still finishes telling the leaders of people already placed.
 
-On the form, an optional line asks the member to agree that a leader may be given their name, email and WhatsApp number if they are placed. Leaving it empty is the same as the 24-hour wait; saying no later, on the private page, is final.
+On the form, an optional line asks the member to agree that a leader may be given their name, email and WhatsApp number if they are placed. Leaving it empty means the member's own day applies; saying no later, on the private page, holds their details back until they have actually opened (after that it is too late, and the page says so).
 
 ### Undo
 
-You can undo a whole run **until a tribe's leader has been told**. Members who have not answered are released and their emails stop; members who said yes stay; a tribe whose leader has been told stays as it is. Members released by an undo can be placed again in a later run.
+You can undo a whole run **until a tribe's leader has been told**, whether by the heartbeat or by Open now. Members who have not answered are released and their emails stop; members who said yes stay; a tribe whose leader has been told stays as it is. Members released by an undo can be placed again in a later run.
 
 ### The church's choices (Overview → The church's choices)
 
@@ -62,10 +71,24 @@ You can undo a whole run **until a tribe's leader has been told**. Members who h
 | Smallest tribe worth starting | 5 | 4 to 8 |
 | Emails an hour | 100 | 1 to 1,000 |
 | Start / stop sending (hour, Lagos) | 9 / 19 | 6 to 20 / 7 to 21 |
-| Hours before a leader is told | 24 | 0 to 72 |
+| Hours before a member's details open to their leader | 24 | 0 to 72 |
 | Days before the one reminder | 5 | 1 to 14 |
 
-A plan already made keeps the numbers it was made with.
+A plan already made keeps the numbers it was made with. A tick box beside them holds the WhatsApp group link back until a member has answered (on to start).
+
+### The run board: why a tribe is closed, and Open now
+
+Once a run has placed people, the board lists every tribe with its members seated, member emails sent, waiting and failed, how many have not answered, when the last hold ends, and one state in plain words:
+
+| State | Means |
+| --- | --- |
+| Waiting for emails | At least one member's email has not gone out yet |
+| In the hold | Every email has gone; some members' details open when their day has passed (the day is shown) |
+| No email has gone | Every member email failed or was skipped: fix sending, then ask for a re-send |
+| Due now | Ready; the leader is told on the next heartbeat |
+| Leader told / Opened by you | The leader has their team |
+
+Each tribe that is not yet told has **Open now**, and the page has **Open all**. Each asks first and says how many members who have not answered will have their email and number given to the leader. A member who said "Don't share my details" stays withheld. The leader is emailed their team, and that tribe can no longer be undone. A line shows when the heartbeat last ran; if it is more than an hour old, the heartbeat is not running.
 
 ### Why a member was left out
 
@@ -105,4 +128,4 @@ Tried on synthetic data with 5,000 ready members and 600 tribes (see `docs/APPLY
 
 ## What is stored
 
-`placement_settings`, `placement_runs`, `placement_items`, `placement_teams`, `placement_tokens`, `placement_holds`, `placement_leader_runs`, `placement_leader_items` and `assistant_recommendations`; four columns on `tribe_members` (`placed_by_run`, `placement_source`, `confirmed_at`, `contact_withheld`); and one new consent purpose, `team_contact`. Every table has row-level security and no grants: only the functions touch them.
+`placement_settings`, `placement_runs`, `placement_items`, `placement_teams`, `placement_tokens`, `placement_holds`, `placement_leader_runs`, `placement_leader_items` and `assistant_recommendations`; four columns on `tribe_members` (`placed_by_run`, `placement_source`, `confirmed_at`, `contact_withheld`); one new consent purpose, `team_contact`; and, from the placement visibility fix, `placement_teams.contact_opened_at`, `placement_settings.hold_group_link` and `placement_settings.last_tick_at`. Every table has row-level security and no grants: only the functions touch them.

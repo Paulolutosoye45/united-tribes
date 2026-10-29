@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { buttonClasses } from "@/components/ui/Button";
 import { formatDate } from "@/lib/dates";
+import { LEADER_EMPTY } from "@/lib/placement/wording";
 import { leadingLine, leadingTitle, peopleLine, type LeadingPerson, type MyLeading } from "@/lib/leaders/leading";
 
 /**
@@ -42,7 +43,7 @@ export function LeadingPeople({ leading, people }: { leading: MyLeading; people:
           Who has joined
         </h2>
         <p className="t-body text-soft">
-          {people.length === 0 ? "No one has joined yet. Members choose a tribe from the three they are shown, and appear here the moment they join." : peopleLine(people.length)}
+          {people.length === 0 ? LEADER_EMPTY : peopleLine(people.length)}
         </p>
       </div>
       {people.length > 0 ? (
@@ -53,7 +54,10 @@ export function LeadingPeople({ leading, people }: { leading: MyLeading; people:
                 <span className="font-semibold">{p.name}</span>
                 {p.joinedOn ? <span className="t-small ml-2 text-soft">Joined {formatDate(p.joinedOn)}</span> : null}
               </span>
-              {p.called ? <Badge tone="gold">Welcomed</Badge> : <Badge tone="outline">To welcome</Badge>}
+              <span className="flex flex-wrap items-center gap-2">
+                {p.mark ? <Badge tone="neutral">{p.mark}</Badge> : null}
+                {p.called ? <Badge tone="gold">Welcomed</Badge> : <Badge tone="outline">To welcome</Badge>}
+              </span>
             </li>
           ))}
         </ul>

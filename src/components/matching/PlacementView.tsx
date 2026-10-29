@@ -16,7 +16,7 @@ import { TRIBE_TYPE_LINE, COVENANT_PROMISES, LABELS, whenLine, whereLine } from 
 import { SuccessPicture } from "./SuccessPicture";
 
 /** Where a member lands after choosing: the tribe, what happens next, and a way to change their mind before the season. */
-export function PlacementView({ placement, justJoined }: { placement: Placement; justJoined: boolean }) {
+export function PlacementView({ placement, justJoined, groupNote = null }: { placement: Placement; justJoined: boolean; groupNote?: string | null }) {
   const router = useRouter();
   const p = placement;
   const c = p.tribe;
@@ -35,7 +35,9 @@ export function PlacementView({ placement, justJoined }: { placement: Placement;
     {
       title: "Join the WhatsApp group",
       done: false,
-      note: p.group_url ? "Tap the button to join. Everyone in your tribe is there." : `${c.leader_first_name} will put the invite link here soon.`,
+      note: p.group_url
+        ? "Tap the button to join. Everyone in your tribe is there. Joining shows your number to everyone in the group."
+        : (groupNote ?? `${c.leader_first_name} will put the invite link here soon.`),
       action: p.group_url ? (
         <a href={p.group_url} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "solid", size: "md", className: "w-fit" })}>
           <span className="relative">Join the group</span>
