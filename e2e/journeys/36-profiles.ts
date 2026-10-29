@@ -160,8 +160,8 @@ async function main() {
   check(true, "God Mode finds Features in its menu");
   await noOverflow(page, "the Features switchboard on a desktop");
   await shot(page, "36-board-off");
-  check((await page.locator('[data-testid^="feature-"][data-testid$="-open"]').count()) === 3, "three functions can be moved in stage 1; the rest can be read and not moved");
-  for (const key of ["my_page", "details_check", "hold_card"]) {
+  check((await page.locator('[data-testid^="feature-"][data-testid$="-open"]').count()) === 7, "seven functions can be moved (the three of stage 1 and the four of stage 2); the rest can be read and not moved");
+  for (const key of ["my_page", "details_check", "hold_card", "my_details", "my_story", "role_panels", "still_right"]) {
     check(/Off/.test(await page.getByTestId(`feature-${key}`).innerText()), `${key} starts Off`);
   }
   check(/arrives in stage 3/i.test(await page.getByTestId("features-board").innerText()), "the later stages are listed, with when they arrive");

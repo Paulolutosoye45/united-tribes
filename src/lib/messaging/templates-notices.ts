@@ -551,6 +551,18 @@ add({
 });
 
 add({
+  key: "care_age_ask", audience: "care", group: "care", title: "Someone says their age range is not right",
+  who: "The care team", when: "When a person tells the Care Team their age range is wrong in a way the list cannot fix",
+  subject: () => "Someone says their age range is not right",
+  body: () => [
+    "A person has told the Care Team that their age range is not right. Nothing has been changed for them.",
+    "The page has what they wrote. The young people’s rules say who speaks to them, and to a parent or guardian.",
+  ],
+  button: { label: "Open the requests", path: "/care/teens" },
+  sample: { path: "/care/teens" },
+});
+
+add({
   key: "care_asks_waiting", audience: "care", group: "care", title: "People have asked for someone to reach out",
   who: "The care team", when: "Daily, once a request has waited 2 days",
   subject: (p) => `${many(count(p, "count", 0), "person", "people")} asked for someone to reach out`,

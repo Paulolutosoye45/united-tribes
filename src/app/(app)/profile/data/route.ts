@@ -20,16 +20,18 @@ export async function GET(request: Request) {
   if (!session) return new Response("Sign in first.", { status: 401, headers: NO_STORE });
 
   const supabase = await createClient();
-  const [data, sealed] = await Promise.all([
+  const [data, sealed, profile] = await Promise.all([
     supabase.rpc("export_my_data"),
     supabase.from("member_profiles").select("support_enc, leader_note_enc").eq("person_id", session.person.id).maybeSingle(),
+    // My page's part of the file. A database that does not have it yet answers with an error, and the file is then exactly what it was.
+    supabase.rpc("my_profile_export"),
   ]);
   if (data.error || !data.data || typeof data.data !== "object") {
     return new Response("We couldn’t put your file together. Please try again in a moment.", { status: 502, headers: NO_STORE });
   }
 
   const notes = sealed.data ? openPrivate(sealed.data as Record<string, unknown>, session.person.id) : {};
-  const body = JSON.stringify(buildExport(data.data as Record<string, unknown>, notes), null, 2);
+  const body = JSON.stringify(buildExport(data.data as Record<string, unknown>, notes, profile.error ? null : profile.data), null, 2);
   return new Response(body, {
     status: 200,
     headers: {

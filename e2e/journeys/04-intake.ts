@@ -167,6 +167,8 @@ async function main() {
   // rhythm: suggested times
   await page.getByRole("radiogroup", { name: "How you would like to meet" }).getByText("Online", { exact: true }).click();
   await page.waitForFunction(() => document.querySelectorAll("label.choice.suggested").length >= 2, null, { timeout: 5000 });
+  // The Companion ticks them in the render after the suggestions appear, so wait for the ticks rather than read them in the same instant.
+  await page.waitForFunction(() => document.querySelectorAll("label.choice.suggested input:checked").length >= 2, null, { timeout: 5000 }).catch(() => undefined);
   const suggestedTimes = await page.locator("label.choice.suggested input:checked").count();
   check(suggestedTimes >= 2, `${suggestedTimes} meeting times are suggested and already ticked`);
   check(/traffic|evening|weeknight|Sunday/i.test(await page.locator("label.choice.suggested").first().innerText()), "each suggestion says why");

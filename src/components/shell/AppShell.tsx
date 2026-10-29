@@ -6,6 +6,8 @@ import { ROLE_LABELS, navFor, primaryRole } from "@/lib/auth/roles";
 import type { Session } from "@/lib/auth/session";
 import { HelpLink } from "@/components/guides/HelpLink";
 import { helpEntriesFor } from "@/lib/guides/context";
+import { loadMyPageOpen } from "@/lib/profile/server";
+import { createClient } from "@/lib/supabase/server";
 import { AccountMenu } from "./AccountMenu";
 import { BottomTabs, TopNav } from "./NavLinks";
 
@@ -21,6 +23,8 @@ export async function AppShell({ session, children }: { session: Session; childr
   const centres = canSwitchCentre(mine) ? { current: mine.current?.id ?? null, list: mine.centres.filter((c) => c.active) } : null;
   const name = session.person.fullName ?? displayName(session.person);
   const help = helpEntriesFor(session.roles);
+  // The link to My page appears only while My page is open for this person (the owner has no member page)
+  const myPage = owner ? false : await loadMyPageOpen(await createClient());
 
   return (
     <div className="min-h-dvh bg-page">
@@ -47,6 +51,7 @@ export async function AppShell({ session, children }: { session: Session; childr
               email={session.person.email}
               roleLabel={owner ? "Platform owner" : ROLE_LABELS[primaryRole(session.roles)]}
               centres={centres}
+              myPage={myPage}
             />
           </div>
         </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ShieldProgress } from "@/components/brand/ShieldProgress";
+import { StillRightStrip } from "@/components/profile/StillRightStrip";
 import { Journey, type JourneyStep } from "@/components/home/Journey";
 import { NameForm } from "@/components/home/NameForm";
 import { SeasonCard } from "@/components/home/SeasonCard";
@@ -12,6 +13,7 @@ import { requireSession } from "@/lib/auth/session";
 import { loadMyAcademy } from "@/lib/academy/server";
 import { parseAcademyModes, trainingShown } from "@/lib/academy/modes";
 import { loadMatches, readMatch } from "@/lib/matching/server";
+import { loadStillRight } from "@/lib/profile/server";
 import { loadTribeWeek, loadMyCareTasks, loadMyWeek } from "@/lib/rhythm/server";
 import { nudgeLine, weekRange } from "@/lib/rhythm/wording";
 import { loadMyTribe } from "@/lib/academy/server";
@@ -36,7 +38,7 @@ export default async function HomePage() {
   if (session.god === "open") redirect("/god");
   const supabase = await createClient();
 
-  const [season, profile, draft, leaderApp, firstRead, rhythm] = await Promise.all([
+  const [season, profile, draft, leaderApp, firstRead, rhythm, stillRight] = await Promise.all([
     supabase
       .from("seasons")
       .select("name, starts_on, ends_on, weeks, status")
@@ -49,6 +51,8 @@ export default async function HomePage() {
     supabase.from("leader_applications").select("status").eq("person_id", session.person.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     readMatch(supabase),
     loadMyWeek(supabase),
+    // Once a season: the facts that may have moved. Not due (and nothing shown) while the function is Off, and for anyone under 18.
+    loadStillRight(supabase),
   ]);
 
   // The first time someone with a finished form lands here, run the match once so Home can say the tribes are ready.
@@ -126,6 +130,8 @@ export default async function HomePage() {
       </header>
 
       {name ? null : <NameForm />}
+
+      {stillRight.due ? <StillRightStrip season={stillRight.season} items={stillRight.items} /> : null}
 
       {training && academy && !academy.state.certified ? (
         <section aria-label="Your next step" className="night rise-in rounded-[var(--radius-sheet)] p-6 sm:p-10">

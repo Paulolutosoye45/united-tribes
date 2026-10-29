@@ -24,8 +24,61 @@ export type PageFact = {
   last: { event: string; at: string } | null;
 };
 
+/** The facts a person types or picks (layer "facts") and the words they write about themselves (layer "story"). */
+export const DETAIL_KEYS = ["preferred_name", "area", "birthday"] as const;
+export const STORY_KEYS = ["about_me", "gifts", "ask_me", "pray_for_me"] as const;
+export type DetailKey = (typeof DETAIL_KEYS)[number];
+export type StoryKey = (typeof STORY_KEYS)[number];
+
+/** How the field is asked: a short text, a choice from a list, a day and month, or up to three gifts. */
+export type DetailKind = "text" | "choice" | "monthday" | "gifts";
+
+export type PageDetail = {
+  key: DetailKey | StoryKey;
+  label: string;
+  question: string;
+  kind: DetailKind;
+  /** A: saved at once, nothing else moves. B: saved at once, suggested tribes are worked out again from the next look. */
+  changeClass: "A" | "B";
+  /** Empty when nothing has been written. For gifts, the chosen values joined by commas; for a birthday, MM-DD. */
+  value: string;
+  valueLabel: string;
+  at: string | null;
+  options: FactOption[];
+  max: number | null;
+  limit: number | null;
+};
+
+export type PanelLine = { label: string; value: string };
+export type PagePanel = { key: string; title: string; lines: PanelLine[]; link: { label: string; path: string } | null };
+
+/** Where a person's "Ask the church office" stands: waiting for the Care Team, or looked at (with the note they left). */
+export type OfficeStatus = { status: "open" | "done"; askedAt: string; closedAt: string | null; note: string | null };
+
 /** My page. `enabled` false means the function is Off for this person and the screen shows nothing. */
-export type PageState = { enabled: false } | { enabled: true; first: string; facts: PageFact[] };
+export type PageState =
+  | { enabled: false }
+  | { enabled: true; first: string; facts: PageFact[]; details: PageDetail[]; story: PageDetail[]; panels: PagePanel[]; canAsk: boolean; office: OfficeStatus | null };
+
+/** What saving a typed fact or story field says back. */
+export type Saved = { ok: true; outcome: "saved" | "cleared" } | { ok: false; reason: string; message: string | null };
+export type OfficeAsked = { ok: true } | { ok: false; reason: string; message: string | null };
+
+/** The once-a-season strip on Home: the facts that may have moved since the season began. */
+export type StillRightItem = { key: FactKey; label: string; valueLabel: string; options: FactOption[] };
+export type StillRight = { due: false } | { due: true; season: string; items: StillRightItem[] };
+
+/** The Care Team's list of people who said their age range is not right. */
+export type OfficeAsk = {
+  id: string;
+  status: "open" | "done";
+  person: string;
+  held: string;
+  note: string | null;
+  askedAt: string;
+  closedAt: string | null;
+  closingNote: string | null;
+};
 
 export type AnswerAction = "yes" | "change" | "not_me" | "later";
 export type Outcome = "confirmed" | "recorded" | "applied_now" | "pending_review" | "not_me" | "later";

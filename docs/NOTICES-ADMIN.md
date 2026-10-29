@@ -83,7 +83,7 @@ No name of a person in need, no note, score or reason, no referee's words, no se
 
 ### The groups and their notices
 
-There are **61 notices**: 60 for events and checks, and the summary.
+There are **62 notices**: 61 for events and checks, and the summary.
 
 **Admins** (a summary by default): a new leader application was sent *(right away; also to the directors)*; a deletion request came in; a deletion request is nearly due *(right away; 7 and 2 days before the 30-day deadline)*; messages are failing; messages are not going out *(right away)*; someone's role changed *(right away)*; how the week's email went (Mondays); the reporting copy did not refresh; launch steps are still open before a season; you now hold a new role *(right away, to the person)*.
 
@@ -91,7 +91,7 @@ There are **61 notices**: 60 for events and checks, and the summary.
 
 **Directors** (a summary by default): a new leader application was sent *(right away)*; an interview was booked; interviews tomorrow; an interview has no outcome; interview times are running out; a leader offer was answered; an offer has had no answer (once, after 5 days); members are waiting where no leader is ready (Mondays, 8 or more); members finished the form and have no tribe (Mondays); a season is about to open (14, 7 and 2 days before); something has waited too long (weekly, after 14 days for an application or 10 for a card).
 
-**Care team** (a summary by default; never a name or a reason): referee call-backs are due (Mondays); a parent's permission is waiting for its call; people have asked for someone to reach out (after 2 days).
+**Care team** (a summary by default; never a name or a reason): referee call-backs are due (Mondays); a parent's permission is waiting for its call; people have asked for someone to reach out (after 2 days). Stage 2 adds one: someone says their age range is not right *(right away, from the My page switch "More facts"; it names nobody and gives no reason, and links to the young people's page)*.
 
 **Coaches** (a summary by default): a leader was given to you; a leader is ready for a practice assessment; a leader sent in a Tribe Card; a leader has stopped moving in the Academy (weekly, after 14 days); a leader has not answered the check of their details *(a week after the church asked)*.
 

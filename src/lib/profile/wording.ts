@@ -1,3 +1,4 @@
+import { STATUS_INFO } from "@/lib/leaders/options";
 import type { FactKey, ItemStatus, LeftOutReason, Outcome } from "./types";
 
 // The words of My page, the private page and the Details Check console. Nothing here decides anything: the database does.
@@ -70,3 +71,63 @@ export function standing(by: string, confirmed: boolean): string {
 }
 
 export const SPECIAL_ROUTE = "A change for someone under 18 goes through the young people’s rules. Ask the church office.";
+
+// ---- My page, stage 2: the details, the story, the panels and the office ----
+
+/** Where an application stands, in the words the applicant already knows from Lead a tribe. */
+export const APPLICANT_WORDS: Record<string, string> = Object.fromEntries(Object.entries(STATUS_INFO).map(([k, v]) => [k, v.label]));
+
+export const DETAILS_HEADING = "About you";
+export const DETAILS_LINE = "Short details you type yourself. Each is saved the moment you press Save. Nobody else sees them yet.";
+export const STORY_HEADING = "My story";
+export const STORY_LINE = "A few lines in your own words. For now they are kept for you and nobody else sees them. Before anything here is ever shown to another person, you will be asked who may see it.";
+export const PANELS_HEADING = "Where you serve and belong";
+
+/** What a class of change means for the person, in one line under the field. */
+export const CLASS_WORDS = {
+  A: "Saved at once. Nothing else changes.",
+  B: "Saved at once. The tribes suggested to you are worked out again from the next time you look. Nobody is moved.",
+} as const;
+
+export const SAVED_WORDS = { saved: "Saved.", cleared: "Cleared." } as const;
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+export const MONTH_NAMES = MONTHS;
+
+/** "03-14" as "14 March". Anything else is shown as it was given. */
+export function monthDay(v: string): string {
+  const m = /^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.exec(v);
+  return m ? `${Number(m[2])} ${MONTHS[Number(m[1]) - 1]}` : v;
+}
+
+/** What to say when a typed fact or a story line could not be taken. The database's own words are used when it gave some. */
+export const SAVE_FAILURES: Record<string, string> = {
+  off: "This is not open yet.",
+  not_applicable: "That does not apply to you.",
+  bad_value: "Please check what you typed and try again.",
+  unknown: "We couldn’t save that. Please try again in a moment.",
+};
+
+// Ask the church office (class D: a change across 17 and 18 is never self-service)
+export const OFFICE = {
+  heading: "Is your age range not right?",
+  body: "The list offers adult ranges only. If you are really under 18, or your range is wrong in a way the list cannot fix, tell the Care Team. We change nothing until someone from the Care Team has spoken to you, and to a parent or guardian where that is needed.",
+  noteLabel: "Anything you want the Care Team to know (optional)",
+  button: "Tell the Care Team",
+  sent: "Thank you. The Care Team has your message. Nothing about your age range has changed, and someone will be in touch.",
+  waiting: "The Care Team has your message and will be in touch.",
+  looked: "The Care Team has looked at your message.",
+  note: (note: string) => `They wrote: “${note}”`,
+  failures: { waiting: "The Care Team already has your message.", off: "This is not open yet.", not_applicable: "That does not apply to you." } as Record<string, string>,
+} as const;
+
+// The Home strip
+export const STILL_RIGHT = {
+  heading: "Still right?",
+  line: (season: string) => `A new season${season ? `, ${season},` : ""} has begun. Please check that this is still true.`,
+  yes: "Yes, still right",
+  change: "It has changed",
+  later: "Not now",
+  thanks: "Thank you. That is noted.",
+  hidden: "Of course. We will not ask again this season.",
+} as const;

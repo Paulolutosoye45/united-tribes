@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseCheckStatus, parseChecks, parseLink, parsePage, parseReviews, parseStageStatus } from "./parse";
-import type { CheckStatus, CheckSummary, LinkState, PageState, StageReviews, StageStatus } from "./types";
+import { parseCheckStatus, parseChecks, parseLink, parseOfficeAsks, parsePage, parseReviews, parseStageStatus, parseStillRight } from "./parse";
+import type { CheckStatus, CheckSummary, LinkState, OfficeAsk, PageState, StageReviews, StageStatus, StillRight } from "./types";
 
 // Each loader returns "nothing" when the database refuses, does not have the function yet, or cannot be reached. A page treats that as
 // "not available": the database has already decided who may see what, and a website deployed before the database file is applied behaves
@@ -18,6 +18,17 @@ async function load(supabase: SupabaseClient, fn: string, args?: Record<string, 
 
 /** My page for the signed-in person. `enabled: false` when the function is Off for them, and for anything unreadable. */
 export const loadMyPage = async (s: SupabaseClient): Promise<PageState> => parsePage(await load(s, "my_page_state"));
+
+/** The once-a-season "Still right?" strip for Home. Not due, for anyone it is Off for and for anything unreadable. */
+export const loadStillRight = async (s: SupabaseClient): Promise<StillRight> => parseStillRight(await load(s, "still_right_state"));
+
+/** Whether My page is open for the signed-in person (the account menu uses only this). False when Off, when under 18, and when the database does not have it yet. */
+export async function loadMyPageOpen(s: SupabaseClient): Promise<boolean> {
+  return (await load(s, "my_page_open")) === true;
+}
+
+/** The Care Team's list of people who said their age range is not right. Null for anyone who is not on the Care Team, and when the database does not have it yet. */
+export const loadOfficeAsks = async (s: SupabaseClient): Promise<OfficeAsk[] | null> => parseOfficeAsks(await load(s, "profile_office_asks_list"));
 
 /** The pastor's list of changes waiting for a decision, and those decided in the last 30 days. */
 export const loadStageReviews = async (s: SupabaseClient): Promise<StageReviews | null> => parseReviews(await load(s, "stage_reviews_list"));

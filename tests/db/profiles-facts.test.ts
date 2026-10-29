@@ -75,11 +75,18 @@ describe("what the platform holds, and who said it", () => {
     expect((await c.one("select public.profile_fact_options('nothing') as r")).r).toEqual([]);
   });
 
-  it("keeps the registry as the blueprint's first two facts, each with a class and who it applies to", async () => {
+  it("keeps the registry as the blueprint's facts, each with a class and who it applies to (stage 1's two, then stage 2's seven)", async () => {
     const rows = await c.sql("select key, layer, change_class, applies_to from public.profile_fact_registry order by sort");
     expect(rows).toEqual([
       { key: "life_stage", layer: "facts", change_class: "C", applies_to: ["leader"] },
       { key: "age_range", layer: "facts", change_class: "C", applies_to: ["member"] },
+      { key: "preferred_name", layer: "facts", change_class: "A", applies_to: ["leader", "member"] },
+      { key: "area", layer: "facts", change_class: "B", applies_to: ["member"] },
+      { key: "birthday", layer: "facts", change_class: "A", applies_to: ["member"] },
+      { key: "about_me", layer: "story", change_class: "A", applies_to: ["leader", "member"] },
+      { key: "gifts", layer: "story", change_class: "A", applies_to: ["leader", "member"] },
+      { key: "ask_me", layer: "story", change_class: "A", applies_to: ["leader", "member"] },
+      { key: "pray_for_me", layer: "story", change_class: "A", applies_to: ["leader", "member"] },
     ]);
   });
 });

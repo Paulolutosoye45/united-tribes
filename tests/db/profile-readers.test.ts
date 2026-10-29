@@ -13,7 +13,8 @@ import { createTestDb, type TestDb } from "./helpers";
 
 const ROOT = path.resolve(__dirname, "../..");
 const SRC = path.join(ROOT, "src");
-const MIGRATION = path.join(ROOT, "supabase/migrations/20270101000100_profiles_stage1.sql");
+// What the facts store added: stage 1 and stage 2. A function created in either is an owner; anything older is a reader.
+const MIGRATIONS = ["20270101000100_profiles_stage1.sql", "20270102000100_profiles_stage2.sql"].map((f) => path.join(ROOT, "supabase/migrations", f));
 
 let db: TestDb;
 beforeAll(async () => {
@@ -66,7 +67,9 @@ describe("the readers of what a person has told us", () => {
 
   it("names as owners only what the facts store added, and as readers only what was there before it", () => {
     const created = new Set<string>();
-    for (const m of fs.readFileSync(MIGRATION, "utf8").matchAll(/create\s+(?:or\s+replace\s+)?function\s+public\.([a-z_0-9]+)\s*\(/gi)) created.add(m[1].toLowerCase());
+    for (const file of MIGRATIONS) {
+      for (const m of fs.readFileSync(file, "utf8").matchAll(/create\s+(?:or\s+replace\s+)?function\s+public\.([a-z_0-9]+)\s*\(/gi)) created.add(m[1].toLowerCase());
+    }
     for (const fact of FACTS) {
       for (const r of fact.db) expect(created.has(r.name), `${r.name} (${fact.key}) is ${r.kind}`).toBe(r.kind === "owner");
       for (const r of fact.app) {

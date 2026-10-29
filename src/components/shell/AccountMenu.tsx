@@ -13,9 +13,11 @@ type Props = {
   roleLabel: string;
   /** Present only when the person can work in more than one centre. */
   centres?: { current: string | null; list: { id: string; name: string }[] } | null;
+  /** My page is open for this person. False (the usual) shows no link, exactly as before My page was built. */
+  myPage?: boolean;
 };
 
-export function AccountMenu({ name, email, roleLabel, centres = null }: Props) {
+export function AccountMenu({ name, email, roleLabel, centres = null, myPage = false }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
@@ -108,6 +110,16 @@ export function AccountMenu({ name, email, roleLabel, centres = null }: Props) {
             </div>
           ) : null}
           <div className="mt-4 border-t border-line pt-2">
+            {myPage ? (
+              <Link
+                href="/my"
+                onClick={() => setOpen(false)}
+                className="press flex h-12 items-center rounded-[var(--radius-control)] px-3 font-medium hover:bg-surface"
+                data-testid="menu-my-page"
+              >
+                My page
+              </Link>
+            ) : null}
             <Link
               href="/guides"
               onClick={() => setOpen(false)}

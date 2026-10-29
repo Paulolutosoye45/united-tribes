@@ -125,7 +125,14 @@ describe("the way back from the team's emails", () => {
       // unlocked), so only the notices' own files are held to "no row is touched"; every file is held to the rest.
       // (A later feature's file may put old function bodies back; what a body does is not what the file does, so bodies are not read here.)
       const lines = text.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-      const code = LATER_DOWN.includes(f) ? lines.replace(/CREATE OR REPLACE FUNCTION[\s\S]*?\$function\$;/g, "") : lines;
+      // (pg_get_functiondef writes CREATE OR REPLACE FUNCTION … $function$; a hand-written file may write create or replace function … $$.)
+      // (A later feature's way back may also take out the switchboard and fact-list rows that same feature added: they are settings, not anyone's
+      // data. Only statements on those three tables are set aside here; a statement on any other table is still held to the rule.)
+      const code = LATER_DOWN.includes(f)
+        ? lines
+            .replace(/create\s+or\s+replace\s+function[\s\S]*?(?:\$function\$|\$\$);/gi, "")
+            .replace(/\b(?:delete\s+from|update)\s+public\.(?:feature_settings|feature_registry|profile_fact_registry)\b[^;]*;/gi, "")
+        : lines;
       expect(code, f).not.toMatch(LATER_DOWN.includes(f) ? /\b(delete|truncate|insert)\b\s/i : /\b(delete|truncate|insert|update)\b\s/i);
       expect(code, f).not.toMatch(/\bdrop\s+(table|column|schema)\b/i);
       expect(code, f).not.toMatch(/\balter\s+table\b/i);

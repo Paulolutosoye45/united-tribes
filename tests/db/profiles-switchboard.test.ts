@@ -26,13 +26,15 @@ afterAll(async () => {
 
 const state = (who: string, key: string) => c.as(who, "feature_state", key, null);
 const all = (who: string) => c.as(who, "my_features");
+/** What every function says on a fresh board: Off, the four of stage 2 included. */
+const OFF = { my_page: "off", details_check: "off", hold_card: "off", my_details: "off", my_story: "off", role_panels: "off", still_right: "off" };
 
 describe("everything ships Off", () => {
-  it("lists seventeen functions, and only the three this release builds can be moved", async () => {
+  it("lists twenty-one functions, and only the seven that stages 1 and 2 build can be moved", async () => {
     const rows = await c.sql("select key, available, stage from public.feature_registry order by sort");
-    expect(rows).toHaveLength(17);
-    expect(rows.filter((r) => r.available).map((r) => r.key)).toEqual(["my_page", "details_check", "hold_card"]);
-    expect(rows.filter((r) => r.available).every((r) => r.stage === 1)).toBe(true);
+    expect(rows).toHaveLength(21);
+    expect(rows.filter((r) => r.available).map((r) => r.key)).toEqual(["my_page", "details_check", "hold_card", "my_details", "my_story", "role_panels", "still_right"]);
+    expect(rows.filter((r) => r.available).map((r) => r.stage)).toEqual([1, 1, 1, 2, 2, 2, 2]);
     expect(rows.filter((r) => !r.available).every((r) => r.stage >= 3)).toBe(true);
   });
 
@@ -41,7 +43,7 @@ describe("everything ships Off", () => {
     expect((await c.one("select paused from public.feature_master")).paused).toBe(false);
     expect((await c.one("select count(*)::int n from public.feature_log")).n).toBe(0);
     for (const who of [leader, c.appointed.id, c.member, c.pastor, c.director, c.admin]) {
-      expect(await all(who)).toEqual({ my_page: "off", details_check: "off", hold_card: "off" });
+      expect(await all(who)).toEqual(OFF);
     }
     expect(await state(leader, "my_page")).toBe("off");
   });
@@ -60,7 +62,7 @@ describe("everything ships Off", () => {
     // The pause row is gone: the platform cannot tell whether it is paused, so it says Off
     await c.db.admin.query("delete from public.feature_master");
     try {
-      expect(await all(leader)).toEqual({ my_page: "off", details_check: "off", hold_card: "off" });
+      expect(await all(leader)).toEqual(OFF);
     } finally {
       await c.db.admin.query("insert into public.feature_master (id) values (true)");
     }
@@ -118,7 +120,7 @@ describe("only the owner moves a switch", () => {
   it("lets the unlocked owner read the whole page", async () => {
     const board = await c.o.call("god_feature_board");
     expect(board.paused).toBe(false);
-    expect(board.features).toHaveLength(17);
+    expect(board.features).toHaveLength(21);
     const mine = board.features.find((f: { key: string }) => f.key === "details_check");
     expect(mine).toMatchObject({ available: true, summary: "off", depends: ["my_page"], rules: [] });
     // Every function reads Off on a fresh board, the hold too (its own default of Optional only means something once the Details check is open)
@@ -260,7 +262,7 @@ describe("who a rule reaches", () => {
     await c.reset();
     await c.set("my_page", "rehearsal");
     await c.set("details_check", "rehearsal");
-    expect(await all(leader)).toEqual({ my_page: "rehearsal", details_check: "rehearsal", hold_card: "off" });
+    expect(await all(leader)).toEqual({ ...OFF, my_page: "rehearsal", details_check: "rehearsal" });
     // a rule that is wider elsewhere cannot make a function more open than the one it needs for this person
     await c.set("my_page", "on", { scope: "tribe", id: c.seasoned.tribe });
     await c.set("details_check", "on", { scope: "tribe", id: c.seasoned.tribe });
@@ -318,14 +320,14 @@ describe("the Master pause", () => {
   it("turns every function Off at once, deletes nothing, and puts everything back with one more press", async () => {
     await c.open("required");
     const before = await c.sql("select feature, scope, position from public.feature_settings order by feature");
-    expect(await all(leader)).toEqual({ my_page: "on", details_check: "on", hold_card: "required" });
+    expect(await all(leader)).toEqual({ ...OFF, my_page: "on", details_check: "on", hold_card: "required" });
     expect(await c.o.call("god_feature_master", true, "Something looks wrong")).toEqual({ ok: true, changed: true });
-    expect(await all(leader)).toEqual({ my_page: "off", details_check: "off", hold_card: "off" });
+    expect(await all(leader)).toEqual(OFF);
     expect(await state(c.appointed.id, "my_page")).toBe("off");
     expect(await c.sql("select feature, scope, position from public.feature_settings order by feature")).toEqual(before);
     expect(await c.o.call("god_feature_master", true, "Pressed twice")).toEqual({ ok: true, changed: false });
     expect(await c.o.call("god_feature_master", false, "All is well")).toEqual({ ok: true, changed: true });
-    expect(await all(leader)).toEqual({ my_page: "on", details_check: "on", hold_card: "required" });
+    expect(await all(leader)).toEqual({ ...OFF, my_page: "on", details_check: "on", hold_card: "required" });
   });
 
   it("stops a function that is being used: a private link says nothing while it is paused", async () => {

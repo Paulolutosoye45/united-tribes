@@ -214,12 +214,12 @@ The **Exports** tab is the only place any switch for exports and reports can be 
 
 ## Features and the Details check (`/god/features`, `/god/details`)
 
-The **Features** tab is the only place any switch of Profiles and the Weekly Rhythm can be moved. An administrator, a director and a pastor cannot, and the database refuses them if they call it directly (pastors, directors and the admin can only *read* what is on, so the Stage changes tab can appear for them). It lists seventeen functions in six stages; the three of stage 1 (My page, the Details Check, and the hold on the Tribe Card) can be moved, the others say when they arrive. Everything starts Off.
+The **Features** tab is the only place any switch of Profiles and the Weekly Rhythm can be moved. An administrator, a director and a pastor cannot, and the database refuses them if they call it directly (pastors, directors and the admin can only *read* what is on, so the Stage changes tab can appear for them). It lists twenty-one functions in six stages; the three of stage 1 (My page, the Details Check, and the hold on the Tribe Card) and the four of stage 2 (More facts on My page, My story, Role panels, Still right?) can be moved, the others say when they arrive. Everything starts Off.
 
 - **Where:** the whole platform, a centre, a community, a tribe, or one person; the narrowest place wins. One rule per function per place.
 - **Who:** a rule can be limited to some roles. Open it **for tribe leaders first.** A rule limited to some roles replaces an unfiltered rule at the same place.
 - **A reason** (at least eight characters) is required to open a function for the whole platform with no role filter. Every change is one line in the log, in words.
-- **Order is enforced:** the Details Check cannot be opened before My page.
+- **Order is enforced:** the Details Check and the four functions of stage 2 cannot be opened before My page, and My page cannot be closed while one of them needs it.
 - **The Master pause** makes every new function act as Off at once; resuming brings back every rule.
 
 The **Details check** tab asks people to confirm a fact. Choose who (appointed leaders, all leaders, one tribe's leader, named people, or everyone still unconfirmed) and what; the page shows how many would be asked and how many are left out and why, never who. A **Rehearsal** writes what would be sent and sends nothing; a **Live** run needs a tick to say you understand, then sends one message to each person with a private link. Each run shows where everyone stands and **never what they answered**. How it works is in `docs/PROFILES.md`.

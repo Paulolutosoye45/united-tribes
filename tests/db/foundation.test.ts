@@ -1018,6 +1018,16 @@ describe("locked-down defaults", () => {
       "god_details_checks",
       "god_details_status",
       "god_details_close",
+      // Profiles and the Weekly Rhythm, stage 2 (My page for everyone). Each answers about the signed-in person only; the Care Team's two begin with guardian_staff().
+      // All four new functions are Off until the owner moves them, and the pending age-range messages are readable by the care team alone.
+      "my_page_save",
+      "my_page_open",
+      "my_office_ask",
+      "profile_office_asks_list",
+      "profile_office_ask_close",
+      "still_right_state",
+      "still_right_later",
+      "my_profile_export",
       // Exports and Reports. The switchboard functions each begin god_only() (the platform owner's alone); the rest check who is asking and
       // whether the pack is on for them. A pack that is Off gives nothing to anyone.
       "export_board",

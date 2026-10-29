@@ -5,20 +5,24 @@ import {
   cleanAudience, isAudienceKind, isFactKey, parseAnswered, parseCheckStatus, parseChecks, parseCodeChecked, parseCodeSent, parseLink, parsePage, parsePlan, parseReviews, parseSent, parseStageStatus,
 } from "@/lib/profile/parse";
 import { FACTS } from "@/lib/profile/registry";
-import { AUDIENCES, FACT_KEYS, ITEM_STATUSES, LEFT_OUT_REASONS } from "@/lib/profile/types";
+import { AUDIENCES, DETAIL_KEYS, FACT_KEYS, ITEM_STATUSES, LEFT_OUT_REASONS, STORY_KEYS } from "@/lib/profile/types";
 import { AUDIENCE_WORDS, CODE_WORDS, FACT_WORDS, LEFT_OUT_WORDS, OUTCOME_WORDS, STATUS_WORDS, standing } from "@/lib/profile/wording";
 
 // What the website makes of the database's answers about My page, the stage reviews, the Details Check console and the private page.
 
 const MIGRATION = fs.readFileSync(path.resolve(__dirname, "../../supabase/migrations/20270101000100_profiles_stage1.sql"), "utf8");
+const MIGRATION_2 = fs.readFileSync(path.resolve(__dirname, "../../supabase/migrations/20270102000100_profiles_stage2.sql"), "utf8");
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const isUuid = (v: unknown) => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v);
 
 describe("the facts and the words for them", () => {
   it("are the same facts the registry and the database name", () => {
-    expect([...FACT_KEYS]).toEqual(FACTS.map((f) => f.key));
+    // the two facts the office asks about (stage 1), then the three a person types and the four lines of their story (stage 2)
+    expect([...FACT_KEYS, ...DETAIL_KEYS, ...STORY_KEYS]).toEqual(FACTS.map((f) => f.key));
     const rows = [...MIGRATION.slice(MIGRATION.indexOf("insert into public.profile_fact_registry")).matchAll(/^\s+\('([a-z_]+)', '/gm)].slice(0, FACT_KEYS.length).map((m) => m[1]);
     expect(rows).toEqual([...FACT_KEYS]);
+    const more = [...MIGRATION_2.slice(MIGRATION_2.indexOf("insert into public.profile_fact_registry")).matchAll(/^\s+\('([a-z_]+)', '/gm)].slice(0, DETAIL_KEYS.length + STORY_KEYS.length).map((m) => m[1]);
+    expect(more).toEqual([...DETAIL_KEYS, ...STORY_KEYS]);
     expect(FACT_KEYS.every(isFactKey)).toBe(true);
     expect(isFactKey("shoe_size")).toBe(false);
     expect(AUDIENCES.every(isAudienceKind)).toBe(true);

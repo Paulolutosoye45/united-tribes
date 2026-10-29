@@ -1,4 +1,4 @@
-# Profiles and the Weekly Rhythm: stage 1, the foundations
+# Profiles and the Weekly Rhythm: stage 1 (the foundations) and stage 2 (My page for everyone)
 
 **Who this is for:** the owner (God Mode), the pastorate, the office, and whoever maintains the platform.
 
@@ -14,7 +14,7 @@ It exists to fix one problem: an appointed leader's stage of life was typed by t
 
 **Everything ships Off, and every switch is in God Mode and nowhere else.** Applying stage 1 changes nothing for anybody until the owner moves a switch. A test proves it (see *Off must mean identical*).
 
-Stages 2 to 6 (My page for everyone, faces and visibility, know your tribe, the weekly rhythm, leaders' week) are listed on the Features page and **cannot be moved** until their stage ships.
+Stage 2 (My page for everyone) is described below. Stages 3 to 6 (faces and visibility, know your tribe, the weekly rhythm, leaders' week) are listed on the Features page and **cannot be moved** until their stage ships.
 
 ## The principles every part follows
 
@@ -28,13 +28,17 @@ Stages 2 to 6 (My page for everyone, faces and visibility, know your tribe, the 
 
 ## The Switchboard (God Mode → Features)
 
-Seventeen functions are listed; three can be moved in stage 1:
+Twenty-one functions are listed; seven can be moved (three from stage 1, four from stage 2):
 
 | Function | What it does | Modes |
 | --- | --- | --- |
 | **My page** | The page where a person sees and confirms what the church holds about them. In stage 1: leaders. | Off, Rehearsal, On |
 | **Details Check from God Mode** | The owner asks people to confirm a fact. Needs My page. | Off, Rehearsal, On |
 | **Hold the Tribe Card until the leader's stage is confirmed** | *Optional*: a pastor sees that the stage is not yet confirmed. *Required*: a pastor cannot approve the card until it is. Needs the Details Check. | Off, Optional, Required |
+| **More facts on My page** (stage 2) | Preferred name, area and birthday, typed by the person and saved at once; and the way to tell the Care Team that an age range is wrong. Needs My page. | Off, On |
+| **My story (private)** (stage 2) | About me, gifts, ask me about, how to pray for me: the person's own words, kept for them. Needs My page. | Off, On |
+| **Role panels** (stage 2) | One short panel on My page for each role a person holds. Needs My page. | Off, On |
+| **Still right? once a season** (stage 2) | A one-line strip on Home, once a season, for a fact that may have moved. Needs My page. | Off, On |
 
 How a switch is read:
 
@@ -125,6 +129,41 @@ A change from a leader whose tribe has members (or whose card is approved) arriv
 - The leader's **welcome email** gains a "Confirm your details" line and button while their stage is unconfirmed. While the Details Check is Off the welcome email is the one the pastor approved, word for word.
 - Two notices are new: `pastor_stage_review` (to the pastors and directors of the leader's centre) and `coach_details_unanswered` (to the coach). There are now **61 notices** (`docs/NOTICES-ADMIN.md`), and the platform can send **139 messages** in all (`docs/MESSAGES-AUDIT.md`).
 
+## Stage 2: My page for everyone
+
+Stage 2 opens My page to every member and adds four functions to the Switchboard. **All four start Off, each can be moved on its own, and none can be opened before My page.** With them Off, My page is exactly what stage 1 made it. A person under 18 is never shown any of it (My page is "We can't find that page", there is no link in the account menu and no strip on Home).
+
+### What a person sees on My page
+
+- **About you** (More facts): *Name we use for you*, *Area* and *Birthday* (day and month only, never the year), each in its own card with a Save button and a line saying what saving does. A name must have a letter; an empty value clears the fact. The age range and stage of life are the questions from stage 1.
+- **My story** (My story): *About me*, *Gifts* (up to three, chosen from the church's list; a fourth cannot be ticked), *Ask me about* and *How to pray for me*. These are the person's own words, kept for them. **Nobody else sees them in this release**: sharing, with levels of visibility, comes with stage 3.
+- **Panels** (Role panels): one short panel for each role the person holds, in this order: office, data, care, coach, community, leader, assistant, applicant, member. Each shows a few lines (where an application stands, the tribe, what waits) and one link to the page that has the whole of it.
+- **Is your age range not right?** (More facts): for someone whose range the list cannot fix (above all someone who is really under 18). It sends a short message to the Care Team and **changes nothing**: crossing 17/18 is never self-service. The Care Team reads it on the young people's page (**Care → Young people**), writes a note and marks it looked at, and the person reads that note on their page. The Care Team's notice (`care_age_ask`) carries no name and no reason.
+
+### Still right? (Home)
+
+Once a season, Home shows one strip: "Still right?" for each fact the person confirms (the age range; a leader's stage of life) that has not been confirmed or typed since the season began. It is not shown while a change to that fact is waiting for a pastor, nor once the person has chosen **Not now** for the season, and a season must be open or running. Three answers: **Yes, still right** (that is the confirmation, stamped today), **It has changed** (goes to My page) and **Not now** (put away for the season). Nothing is sent to anyone, and a person under 18 is never asked.
+
+### The four classes of change, now with examples
+
+| Class | Saved | Examples |
+| --- | --- | --- |
+| A | at once, nothing else moves | preferred name, birthday, the four story fields |
+| B | at once; the next list of suggested tribes is worked out again from the person's next look; nobody is moved | area |
+| C | reviewed by a pastor when the change touches other people (stage 1) | a leader's stage of life, when the tribe has members |
+| D | never self-service; the person writes to the Care Team | crossing 17 and 18 |
+
+### What is stored, and who can read it
+
+- Three new tables, **`profile_story`**, **`profile_office_asks`** and **`profile_prompts`**, each with row-level security and **no grants**: the website reaches them only through functions. Seven new rows in the facts registry (`preferred_name`, `area`, `birthday`, `about_me`, `gifts`, `ask_me`, `pray_for_me`), and each reader of each is written down in `src/lib/profile/registry.ts` and `docs/PROFILE-READERS.md`.
+- The Care Team's list is readable only by an administrator, director, pastor or care lead (`guardian_staff()`), for their own centre.
+- **A person's data file** (`/profile/data`) now holds their story (gifts in words), how each fact changed, what they told the Care Team and the strip they put away. Only their own.
+- **Pausing** (Features → Pause every function) or putting one function back Off removes only that part from view. **Nothing written is lost.**
+
+### Way back
+
+`supabase/rollback/20270102000100_profiles_stage2.down.sql` drops the new functions, puts the eight it replaced back exactly as stage 1 wrote them, removes the four rows from the Switchboard (with their rules; the log is kept) and the seven rows from the facts registry unless a person has used one. **The three tables are kept with every row**; the file says in a comment how to remove them as well. Running it twice changes nothing, and it is safe after stage 1's own way back has run. The rehearsal (`scripts/rehearse-rollback.sh`) runs it.
+
 ## Off must mean identical
 
 Three checks stand behind the promise:
@@ -146,6 +185,8 @@ Three checks stand behind the promise:
 | What | Where |
 | --- | --- |
 | The migration, and its way back | `supabase/migrations/20270101000100_profiles_stage1.sql`, `supabase/rollback/20270101000100_profiles_stage1.down.sql` (12 tables, 52 functions, 2 triggers) |
+| Stage 2: the migration, and its way back | `supabase/migrations/20270102000100_profiles_stage2.sql`, `supabase/rollback/20270102000100_profiles_stage2.down.sql` (3 tables, 14 functions, 8 replaced, 4 switches, 7 facts) |
+| Stage 2: the screens | `/my` (`MyDetails`, `MyPanels`, `OfficeAskCard`), Home (`StillRightStrip`), Care → Young people (`OfficeAskDesk`) |
 | The switchboard and Details check consoles | `/god/features`, `/god/details` (`src/components/god/FeaturesBoard.tsx`, `DetailsConsole.tsx`) |
 | My page, the private page, the strip, the banner | `/my`, `/details/[token]`, `src/components/profile/*` |
 | Stage changes | `/review/stages` |
@@ -154,8 +195,8 @@ Three checks stand behind the promise:
 | Every message the platform can send | `docs/MESSAGES-AUDIT.md` (written by `npm run messages-audit`) |
 | The heartbeat's part | `worker_details_tick`, called from `/api/cron/tick`; a fault in it is listed and never stops anything else |
 
-## What is not in stage 1
+## What is not in stages 1 and 2
 
-- My page for **everyone** (stage 2), photos and visibility levels (3), Our Tribe, Encourage, This week's line and the directory (4), the weekly rhythm, thanks, fruit and the belonging pulse (5), the Shepherd's hour, coach card and rest week (6). Their switches are listed and cannot be moved.
-- **Members are not asked anything by default.** The age-range question exists and is tested; use it only once My page opens to members.
+- Photos and visibility levels (3), Our Tribe, Encourage, This week's line and the directory (4), the weekly rhythm, thanks, fruit and the belonging pulse (5), the Shepherd's hour, coach card and rest week (6). Their switches are listed and cannot be moved.
+- **Members are not asked anything by default.** Open My page to members only when you are ready; the order is in `docs/APPLY-PROFILES-STAGE-2.md`.
 - **The WhatsApp template is not submitted to Meta** (it needs your credentials; see above).

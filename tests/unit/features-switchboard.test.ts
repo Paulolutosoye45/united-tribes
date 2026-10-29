@@ -9,12 +9,17 @@ import { MASTER_LINE, POSITION_WORDS, ROLE_FILTERS, SCOPE_WORDS, STAGE_WORDS, SU
 // The Switchboard as the website reads it: the database's answers are data, read defensively, and the words of the page.
 
 const MIGRATION = fs.readFileSync(path.resolve(__dirname, "../../supabase/migrations/20270101000100_profiles_stage1.sql"), "utf8");
+const MIGRATION_2 = fs.readFileSync(path.resolve(__dirname, "../../supabase/migrations/20270102000100_profiles_stage2.sql"), "utf8");
 
 describe("the list of functions", () => {
   it("is the database's own list, in the same order", () => {
     const block = MIGRATION.slice(MIGRATION.indexOf("insert into public.feature_registry"), MIGRATION.indexOf("-- The rules, the Master pause, the log"));
     const keys = [...block.matchAll(/^\s+\('([a-z_]+)',/gm)].map((m) => m[1]);
-    expect(keys).toEqual([...FEATURE_KEYS]);
+    // stage 2 puts its four after the third row (the migration moves the rest down by four)
+    const block2 = MIGRATION_2.slice(MIGRATION_2.indexOf("insert into public.feature_registry"), MIGRATION_2.indexOf("update public.feature_registry\n   set blurb"));
+    const added = [...block2.matchAll(/^\s+\('([a-z_]+)',.*, (\d+)\)[,;]\s*$/gm)].sort((a, b) => Number(a[2]) - Number(b[2])).map((m) => m[1]);
+    expect(added).toEqual(["my_details", "my_story", "role_panels", "still_right"]);
+    expect([...keys.slice(0, 3), ...added, ...keys.slice(3)]).toEqual([...FEATURE_KEYS]);
   });
 
   it("has words for every position, every summary, every scope and every stage the road has", () => {

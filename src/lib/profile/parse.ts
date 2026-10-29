@@ -1,4 +1,5 @@
-import { AUDIENCES, FACT_KEYS, ITEM_STATUSES, LEFT_OUT_REASONS, type Answered, type Audience, type CheckPerson, type CheckStatus, type CheckSummary, type CodeChecked, type CodeSent, type FactKey, type FactOption, type FactState, type ItemStatus, type LeftOutReason, type LinkState, type Outcome, type PageChange, type PageFact, type PageState, type Plan, type Sent, type StageReview, type StageReviews, type StageStatus } from "./types";
+import { AUDIENCES, DETAIL_KEYS, FACT_KEYS, ITEM_STATUSES, LEFT_OUT_REASONS, STORY_KEYS, type Answered, type Audience, type CheckPerson, type CheckStatus, type CheckSummary, type CodeChecked, type CodeSent, type DetailKey, type FactKey, type FactOption, type FactState, type ItemStatus, type LeftOutReason, type LinkState, type OfficeAsk, type OfficeAsked, type OfficeStatus, type Outcome, type PageChange, type PageDetail, type PageFact, type PagePanel, type PageState, type Plan, type Saved, type Sent, type StageReview, type StageReviews, type StageStatus, type StillRight, type StoryKey } from "./types";
+import { APPLICANT_WORDS } from "./wording";
 
 // What the database answers is data, not a promise. Each answer is read defensively: anything that is not the shape expected becomes
 // "nothing", so a screen says "not available" rather than breaking.
@@ -62,7 +63,101 @@ export function parsePage(v: unknown): PageState {
       last: l && typeof l.event === "string" ? { event: l.event, at: str(l.at) } : null,
     });
   }
-  return { enabled: true, first: str(v.first), facts };
+  return {
+    enabled: true,
+    first: str(v.first),
+    facts,
+    details: details(v.details, DETAIL_KEYS),
+    story: details(v.story, STORY_KEYS),
+    panels: panels(v.panels),
+    canAsk: v.canAsk === true,
+    office: officeStatus(v.office),
+  };
+}
+
+const KINDS = ["text", "choice", "monthday", "gifts"] as const;
+
+/** The typed facts and the story fields. A field the website does not know is left out, so a newer database never breaks an older page. */
+function details<K extends DetailKey | StoryKey>(v: unknown, known: readonly K[]): PageDetail[] {
+  const out: PageDetail[] = [];
+  for (const raw of arr(v)) {
+    if (!isObj(raw) || typeof raw.key !== "string" || !(known as readonly string[]).includes(raw.key)) continue;
+    const kind = KINDS.find((k) => k === raw.kind);
+    if (!kind) continue;
+    out.push({
+      key: raw.key as K,
+      label: str(raw.label, raw.key),
+      question: str(raw.question),
+      kind,
+      changeClass: raw.class === "B" ? "B" : "A",
+      value: str(raw.value),
+      valueLabel: str(raw.valueLabel, str(raw.value)),
+      at: strOrNull(raw.at),
+      options: options(raw.options),
+      max: numOrNull(raw.max),
+      limit: numOrNull(raw.limit),
+    });
+  }
+  return out;
+}
+
+function panels(v: unknown): PagePanel[] {
+  const out: PagePanel[] = [];
+  for (const raw of arr(v)) {
+    if (!isObj(raw) || typeof raw.key !== "string") continue;
+    const lines = arr(raw.lines).flatMap((l) => {
+      if (!isObj(l) || typeof l.label !== "string") return [];
+      // An applicant's line carries a status code; the website puts the words on it
+      const value = typeof l.value === "string" ? l.value : typeof l.code === "string" ? (APPLICANT_WORDS[l.code] ?? "Being looked at") : null;
+      return value === null ? [] : [{ label: l.label, value }];
+    });
+    const link = isObj(raw.link) && typeof raw.link.label === "string" && typeof raw.link.path === "string" && /^\/(?!\/)[a-z0-9/_-]*$/i.test(raw.link.path) ? { label: raw.link.label, path: raw.link.path } : null;
+    if (lines.length > 0) out.push({ key: raw.key, title: str(raw.title, raw.key), lines, link });
+  }
+  return out;
+}
+
+function officeStatus(v: unknown): OfficeStatus | null {
+  if (!isObj(v) || (v.status !== "open" && v.status !== "done")) return null;
+  return { status: v.status, askedAt: str(v.askedAt), closedAt: strOrNull(v.closedAt), note: strOrNull(v.note) };
+}
+
+export function parseSaved(v: unknown): Saved {
+  if (isObj(v) && v.ok === true && (v.outcome === "saved" || v.outcome === "cleared")) return { ok: true, outcome: v.outcome };
+  return { ok: false, reason: isObj(v) ? str(v.reason, "unknown") : "unknown", message: isObj(v) ? strOrNull(v.message) : null };
+}
+
+export function parseOfficeAsked(v: unknown): OfficeAsked {
+  if (isObj(v) && v.ok === true) return { ok: true };
+  return { ok: false, reason: isObj(v) ? str(v.reason, "unknown") : "unknown", message: isObj(v) ? strOrNull(v.message) : null };
+}
+
+/** The Home strip. Anything unreadable is "not due": a person who is not sure is simply not asked. */
+export function parseStillRight(v: unknown): StillRight {
+  if (!isObj(v) || v.due !== true) return { due: false };
+  const items = arr(v.items).flatMap((raw) =>
+    isObj(raw) && isFactKey(raw.key) ? [{ key: raw.key, label: str(raw.label, raw.key), valueLabel: str(raw.valueLabel), options: options(raw.options) }] : [],
+  );
+  return items.length > 0 ? { due: true, season: str(v.season), items } : { due: false };
+}
+
+export function parseOfficeAsks(v: unknown): OfficeAsk[] | null {
+  if (!isObj(v)) return null;
+  return arr(v.asks).flatMap((raw) => {
+    if (!isObj(raw) || typeof raw.id !== "string") return [];
+    return [
+      {
+        id: raw.id,
+        status: raw.status === "done" ? ("done" as const) : ("open" as const),
+        person: str(raw.person, "Someone"),
+        held: str(raw.held),
+        note: strOrNull(raw.note),
+        askedAt: str(raw.askedAt),
+        closedAt: strOrNull(raw.closedAt),
+        closingNote: strOrNull(raw.closingNote),
+      },
+    ];
+  });
 }
 
 export function parseAnswered(v: unknown): Answered {

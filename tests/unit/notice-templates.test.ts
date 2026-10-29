@@ -23,12 +23,12 @@ function message(template: string, params: Params, over: Partial<ClaimedMessage[
 }
 
 const read = (file: string) => readFileSync(join(__dirname, "../../supabase/migrations", file), "utf8");
-const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}`;
+const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}\n${read("20270102000100_profiles_stage2.sql")}`;
 
 describe("the notices, as templates", () => {
-  it("has the 61 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, and the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach), each registered with the sender", () => {
-    expect(keys).toHaveLength(61);
-    expect(new Set(keys).size).toBe(61);
+  it("has the 62 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach, and the one of stage 2: a person tells the Care Team their age range is not right), each registered with the sender", () => {
+    expect(keys).toHaveLength(62);
+    expect(new Set(keys).size).toBe(62);
     for (const key of keys) expect(TEMPLATES[key], key).toBeDefined();
     expect(NOTICE_CATALOGUE.map((n) => n.key).sort()).toEqual([...keys].sort());
     expect(Object.keys(NOTICE_SAMPLES).sort()).toEqual([...keys].sort());
