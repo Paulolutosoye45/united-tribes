@@ -19,7 +19,9 @@ describe("the list of functions", () => {
     const block2 = MIGRATION_2.slice(MIGRATION_2.indexOf("insert into public.feature_registry"), MIGRATION_2.indexOf("update public.feature_registry\n   set blurb"));
     const added = [...block2.matchAll(/^\s+\('([a-z_]+)',.*, (\d+)\)[,;]\s*$/gm)].sort((a, b) => Number(a[2]) - Number(b[2])).map((m) => m[1]);
     expect(added).toEqual(["my_details", "my_story", "role_panels", "still_right"]);
-    expect([...keys.slice(0, 3), ...added, ...keys.slice(3)]).toEqual([...FEATURE_KEYS]);
+    // the WhatsApp and number/removal functions come after them, in the order their migrations add them (sort 22 to 25)
+    const later = ["whatsapp_guard", "whatsapp_health", "number_required", "removal_requests"];
+    expect([...keys.slice(0, 3), ...added, ...keys.slice(3), ...later]).toEqual([...FEATURE_KEYS]);
   });
 
   it("has words for every position, every summary, every scope and every stage the road has", () => {
@@ -27,6 +29,8 @@ describe("the list of functions", () => {
     for (const s of ["off", "rehearsal", "limited", "on", "optional", "required"] as const) expect(SUMMARY_WORDS[s]).toBeTruthy();
     for (const s of SCOPES) expect(SCOPE_WORDS[s]).toBeTruthy();
     for (const n of [1, 2, 3, 4, 5, 6]) expect(STAGE_WORDS[n]).toMatch(/^Stage \d/);
+    // the two groups after the profile stages are named for what they do, not numbered
+    for (const n of [7, 8]) expect(STAGE_WORDS[n].length).toBeGreaterThan(10);
     expect(MASTER_LINE).toMatch(/Nothing is deleted/);
   });
 
@@ -129,7 +133,7 @@ describe("the words of the page", () => {
   });
 
   it("says what a function needs first, or nothing", () => {
-    const row = (depends: FeatureRow["depends"]): FeatureRow => ({ key: "details_check", name: "", blurb: "", stage: 1, depends, modes: [], default: "off", available: true, summary: "off", rules: [] });
+    const row = (depends: FeatureRow["depends"]): FeatureRow => ({ key: "details_check", name: "", blurb: "", stage: 1, depends, modes: [], default: "off", available: true, platformOnly: false, summary: "off", rules: [] });
     expect(needs(row([]), {})).toBeNull();
     expect(needs(row(["my_page"]), { my_page: "My page" })).toBe("Needs My page to be at least as open.");
     expect(needs(row(["my_page", "photos"]), {})).toBe("Needs my_page and photos to be at least as open.");

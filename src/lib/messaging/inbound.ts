@@ -4,7 +4,9 @@ export type DeliveryStatus = "delivered" | "read" | "failed";
 export type StatusEvent = { providerId: string; status: DeliveryStatus; error?: string };
 export type ReplyEvent = { replyToken: string; outcome: "done" | "partly" | "not_yet" };
 export type StopEvent = { phone: string };
-export type WhatsAppEvents = { statuses: StatusEvent[]; replies: ReplyEvent[]; stops: StopEvent[] };
+/** News from Meta about the account rather than a message: a template approved or rejected, the number's quality, a restriction (WhatsApp health). */
+export type SignalEvent = { kind: "template" | "quality" | "account"; subject: string; status: string; detail?: string };
+export type WhatsAppEvents = { statuses: StatusEvent[]; replies: ReplyEvent[]; stops: StopEvent[]; signals: SignalEvent[] };
 
 const PAYLOAD = /^ck:([a-f0-9]{32,128}):(done|partly|not_yet)$/;
 const STOP_WORDS = new Set(["stop", "stop all", "unsubscribe", "cancel", "opt out", "optout", "end"]);
@@ -33,7 +35,7 @@ export function signMeta(secret: string, rawBody: string): string {
  * many kinds of events and expects a quick "ok" to every one.
  */
 export function parseWhatsAppEvents(payload: unknown): WhatsAppEvents {
-  const out: WhatsAppEvents = { statuses: [], replies: [], stops: [] };
+  const out: WhatsAppEvents = { statuses: [], replies: [], stops: [], signals: [] };
   const root = asObject(payload);
   if (!root) return out;
 
@@ -41,6 +43,8 @@ export function parseWhatsAppEvents(payload: unknown): WhatsAppEvents {
     for (const change of asArray(asObject(entry)?.changes)) {
       const value = asObject(asObject(change)?.value);
       if (!value) continue;
+      const signal = readSignal(asString(asObject(change)?.field), value);
+      if (signal) out.signals.push(signal);
 
       for (const raw of asArray(value.statuses)) {
         const s = asObject(raw);
@@ -74,6 +78,48 @@ export function parseWhatsAppEvents(payload: unknown): WhatsAppEvents {
     }
   }
   return out;
+}
+
+const clip = (v: string | null, n: number) => (v ? v.replace(/\s+/g, " ").trim().slice(0, n) : "");
+const code = (v: unknown) => clip(asString(v), 80).replace(/[^A-Za-z0-9_ .:+-]/g, "");
+
+/**
+ * What Meta says about the account itself, from the five kinds of change that matter: a template's approval, its category, the number's quality,
+ * the display name and a restriction on the account. A change of any other kind is ignored. Only short, plain fields are kept (never a message).
+ */
+function readSignal(field: string | null, v: Record<string, unknown>): SignalEvent | null {
+  if (field === "message_template_status_update") {
+    const name = clip(asString(v.message_template_name), 200);
+    const event = code(v.event);
+    const reason = code(v.reason);
+    return name && event ? { kind: "template", subject: name, status: event, ...(reason && reason !== "NONE" ? { detail: reason } : {}) } : null;
+  }
+  if (field === "message_template_category_update") {
+    const name = clip(asString(v.message_template_name), 200);
+    const next = code(v.new_category);
+    const was = code(v.previous_category);
+    return name && next ? { kind: "template", subject: name, status: `CATEGORY_${next}`, ...(was ? { detail: `was ${was}` } : {}) } : null;
+  }
+  if (field === "phone_number_quality_update") {
+    const number = clip(asString(v.display_phone_number), 200);
+    const event = code(v.event);
+    const limit = code(v.current_limit);
+    return number && event ? { kind: "quality", subject: number, status: event, ...(limit ? { detail: limit } : {}) } : null;
+  }
+  if (field === "phone_number_name_update") {
+    const number = clip(asString(v.display_phone_number), 200);
+    const decision = code(v.decision);
+    const why = code(v.rejection_reason);
+    return number && decision ? { kind: "account", subject: number, status: `NAME_${decision}`, ...(why ? { detail: why } : {}) } : null;
+  }
+  if (field === "account_update" || field === "account_review_update") {
+    const number = clip(asString(v.phone_number), 200) || "account";
+    const event = field === "account_review_update" ? (code(v.decision) ? `REVIEW_${code(v.decision)}` : "") : code(v.event);
+    const first = asObject(asArray(v.restriction_info)[0]);
+    const detail = code(first?.restriction_type) || code(asObject(v.violation_info)?.violation_type) || code(asObject(v.ban_info)?.waba_ban_state);
+    return event ? { kind: "account", subject: number, status: event, ...(detail ? { detail } : {}) } : null;
+  }
+  return null;
 }
 
 export type EmailEvent = { providerId: string; status: "delivered" | "failed"; error?: string; optOutEmail?: string; signal?: "hard_bounce" | "complaint" };

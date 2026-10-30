@@ -214,7 +214,7 @@ The **Exports** tab is the only place any switch for exports and reports can be 
 
 ## Features and the Details check (`/god/features`, `/god/details`)
 
-The **Features** tab is the only place any switch of Profiles and the Weekly Rhythm can be moved. An administrator, a director and a pastor cannot, and the database refuses them if they call it directly (pastors, directors and the admin can only *read* what is on, so the Stage changes tab can appear for them). It lists twenty-one functions in six stages; the three of stage 1 (My page, the Details Check, and the hold on the Tribe Card) and the four of stage 2 (More facts on My page, My story, Role panels, Still right?) can be moved, the others say when they arrive. Everything starts Off.
+The **Features** tab is the only place any switch of Profiles and the Weekly Rhythm can be moved. An administrator, a director and a pastor cannot, and the database refuses them if they call it directly (pastors, directors and the admin can only *read* what is on, so the Stage changes tab can appear for them). It lists twenty-five functions in eight groups (the six stages of Profiles and the Weekly Rhythm, then "WhatsApp that cannot fail quietly" and "Joining a tribe, and leaving one"); the three of stage 1 (My page, the Details Check, and the hold on the Tribe Card) and the four of stage 2 (More facts on My page, My story, Role panels, Still right?) can be moved, the others say when they arrive. Everything starts Off.
 
 - **Where:** the whole platform, a centre, a community, a tribe, or one person; the narrowest place wins. One rule per function per place.
 - **Who:** a rule can be limited to some roles. Open it **for tribe leaders first.** A rule limited to some roles replaces an unfiltered rule at the same place.
@@ -223,6 +223,19 @@ The **Features** tab is the only place any switch of Profiles and the Weekly Rhy
 - **The Master pause** makes every new function act as Off at once; resuming brings back every rule.
 
 The **Details check** tab asks people to confirm a fact. Choose who (appointed leaders, all leaders, one tribe's leader, named people, or everyone still unconfirmed) and what; the page shows how many would be asked and how many are left out and why, never who. A **Rehearsal** writes what would be sent and sends nothing; a **Live** run needs a tick to say you understand, then sends one message to each person with a private link. Each run shows where everyone stands and **never what they answered**. How it works is in `docs/PROFILES.md`.
+
+### The four whole-church functions (WhatsApp and removal requests)
+
+Four functions on the Features tab are **for the whole church only**: the editor shows no place, role or tribe to choose, and the database refuses a rule that names one. Each starts Off, needs a reason of at least eight characters to open, and is covered by the Master pause.
+
+| Function | Positions | What it does | Guide |
+| --- | --- | --- | --- |
+| **WhatsApp safety net** (`whatsapp_guard`) | Off, Rehearsal, On | A pause for every WhatsApp message, an automatic pause when Meta refuses the account, a count of messages Meta never confirmed. Rehearsal says when it would have paused and holds nothing back. | `docs/WHATSAPP.md` |
+| **WhatsApp health** (`whatsapp_health`) | Off, On | The page under Messages that asks Meta what is wrong, with a test message. | `docs/WHATSAPP.md` |
+| **WhatsApp number required** (`number_required`) | Off, On | A phone number is compulsory on the join form and in an adult member's contact details; members without one are asked gently. | `docs/WHATSAPP.md` |
+| **Leader removal requests** (`removal_requests`) | Off, Rehearsal, On | A leader asks the church to change a member's place; a person with the right to decides, with a note. Rehearsal walks the road as practice. | `docs/REMOVAL-REQUESTS.md` |
+
+Open them in this order, a few days apart: the safety net (Rehearsal, then On), the health page, the required number, removal requests (Rehearsal, then On). Moving one back to Off puts the platform back exactly as it was and keeps what was written; the way-back files in `supabase/rollback/` remove the tables.
 
 ## Guarding it
 

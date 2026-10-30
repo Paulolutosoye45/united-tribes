@@ -59,6 +59,11 @@ export async function POST(request: Request) {
     const r = await rpc("worker_opt_out", { p_phone: stop.phone, p_email: null, p_channel: "whatsapp" });
     if (r.error) failures++;
   }
+  // News about the account (WhatsApp health). Optional: the database keeps it only while the health page is switched On, and a failure here, even a
+  // database that does not have the function yet, never makes Meta think the receipts failed.
+  for (const sig of events.signals) {
+    await rpc("worker_whatsapp_signal", { p_kind: sig.kind, p_subject: sig.subject, p_status: sig.status, p_detail: sig.detail ?? null });
+  }
   // A 5xx makes Meta try again later; every handler above is safe to repeat.
   if (failures > 0) return Response.json({ ok: false }, { status: 500, headers: NO_STORE });
   return Response.json({ ok: true }, { headers: NO_STORE });

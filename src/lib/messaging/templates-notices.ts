@@ -320,6 +320,18 @@ add({
   sample: { season: "Season 1, 2027", days: 7, left: 3, path: "/admin/seasons" },
 });
 
+add({
+  key: "director_removal_escalated", audience: "office", group: "directors", title: "A request about a member's place has waited a week", urgent: true,
+  who: "Directors", when: "At once, once a leader's request about a member's place has waited 7 days without an answer",
+  subject: () => "A request about a member’s place has waited a week",
+  body: () => [
+    "A leader’s request about a member’s place in their tribe has waited a week without an answer. The Care Team has been told as well.",
+    "Nothing has happened to the member: silence never removes anyone. The leader is waiting to hear, so please make sure someone decides.",
+  ],
+  button: { label: "Open the request", path: "/growth/removals" },
+  sample: { path: "/growth/removals" },
+});
+
 // ---------------------------------------------------------------------------
 // Admins and the data lead
 // ---------------------------------------------------------------------------
@@ -522,6 +534,33 @@ add({
   sample: { leader_first: "Ngozi", days: 14, path: "/review/academy" },
 });
 
+add({
+  key: "coach_removal_ask", audience: "coach", group: "coaches", title: "A leader has asked about a member's place",
+  who: "The coach of the tribe (not for the requests only the Care Team decides)", when: "When a leader asks the church to change a member's place in their tribe, and when they answer a question put to them",
+  subject: (p) => (p.again === true ? "A leader answered your question" : "A leader has asked about a member’s place"),
+  body: (p) =>
+    p.again === true
+      ? ["A leader has answered the question you put to them about a member’s place in their tribe.", "Their answer is on the page, not in this email. When you have read it, you can approve or decline the request."]
+      : [
+          "One of your leaders has asked the church to change a member’s place in their tribe. As their coach, you are the first to look at it.",
+          "What the leader wrote is on the page, not in this email. You can approve it, decline it, or ask the leader a question. Nothing happens to the member until someone decides.",
+        ],
+  button: { label: "Open the request", path: "/growth/removals" },
+  sample: { path: "/growth/removals" },
+});
+
+add({
+  key: "coach_removal_waiting", audience: "coach", group: "coaches", title: "A request about a member's place is waiting for you",
+  who: "The coach of the tribe", when: "Once, when a request has waited 3 days without an answer",
+  subject: () => "A request about a member’s place has waited three days",
+  body: () => [
+    "A request from one of your leaders about a member’s place in their tribe has waited three days for an answer.",
+    "Nothing has happened to the member while it waits, and the leader is waiting to hear. If you cannot decide, ask the leader a question or tell the Care Team.",
+  ],
+  button: { label: "Open the request", path: "/growth/removals" },
+  sample: { level: "reminder", path: "/growth/removals" },
+});
+
 // ---------------------------------------------------------------------------
 // The care team (never a name, an age or a reason)
 // ---------------------------------------------------------------------------
@@ -572,6 +611,51 @@ add({
   ],
   button: { label: "Open the requests", path: "/care/asks" },
   sample: { count: 3, path: "/care/asks" },
+});
+
+add({
+  key: "care_removal_ask", audience: "care", group: "care", title: "A leader has asked about a member's place",
+  who: "The care team", when: "When a leader asks the church to change a member's place in their tribe, and when they answer a question put to them",
+  subject: (p) => (p.again === true ? "A leader answered a question about a member’s place" : "A leader has asked about a member’s place"),
+  body: (p) =>
+    p.again === true
+      ? ["A leader has answered the question put to them about a member’s place in their tribe.", "The answer is on the page, not in this email."]
+      : [
+          "A leader has asked the church to change a member’s place in their tribe. The Care Team always sees these.",
+          "The request is on the page, not in this email. Some of them only the Care Team, a director or an admin may decide, and the page says which. Nothing happens to the member until someone decides.",
+        ],
+  button: { label: "Open the request", path: "/growth/removals" },
+  sample: { path: "/growth/removals" },
+});
+
+add({
+  key: "care_removal_waiting", audience: "care", group: "care", title: "A request about a member's place is still waiting",
+  who: "The care team", when: "When a request has waited 3 days, and again at 7 days (when the director is told as well)",
+  subject: (p) => (p.level === "escalated" ? "A request about a member’s place has waited a week" : "A request about a member’s place has waited three days"),
+  body: (p) =>
+    p.level === "escalated"
+      ? [
+          "A leader’s request about a member’s place in their tribe has now waited a week. The director has been told as well.",
+          "Nothing has happened to the member: silence never removes anyone. The leader is waiting to hear.",
+        ]
+      : [
+          "A leader’s request about a member’s place in their tribe has waited three days for an answer.",
+          "Nothing has happened to the member while it waits. If the coach cannot decide, the Care Team can.",
+        ],
+  button: { label: "Open the request", path: "/growth/removals" },
+  sample: { level: "reminder", path: "/growth/removals" },
+});
+
+add({
+  key: "care_removal_appeal", audience: "care", group: "care", title: "A member has asked for a decision to be looked at again",
+  who: "The care team", when: "When a member whose place in a tribe was changed asks the Care Lead to look again (they have 14 days)",
+  subject: () => "A member has asked for a decision to be looked at again",
+  body: () => [
+    "A member whose place in a tribe was changed has asked the Care Team to look at the decision again.",
+    "What they wrote is on the page, not in this email. You can keep the decision, or put their place back, and either way they and the leader are told.",
+  ],
+  button: { label: "Open the request", path: "/growth/removals" },
+  sample: { path: "/growth/removals" },
 });
 
 // ---------------------------------------------------------------------------

@@ -94,7 +94,7 @@ export function SignInControls({ overview, setup }: { overview: SigninOverview; 
           <p className="font-semibold">WhatsApp codes</p>
           <p className="t-small text-soft">
             {s.whatsapp_on
-              ? "The kill switch. Turning it off stops every WhatsApp code at once. Email codes carry on."
+              ? "The kill switch for sign-in codes. Turning it off stops every WhatsApp sign-in code at once. Email codes carry on. Other WhatsApp messages are not affected: pause those on the Messages page."
               : "Switched off. Turn it on when you are ready; if it paused itself, restart it above as well."}
           </p>
         </div>
@@ -104,7 +104,7 @@ export function SignInControls({ overview, setup }: { overview: SigninOverview; 
           loading={d.busy === "switch"}
           onClick={() => void d.go("switch", () => setSigninSwitchAction(!s.whatsapp_on), { saved: s.whatsapp_on ? "Switched off. No more WhatsApp codes will be sent." : "Switched on." })}
         >
-          {s.whatsapp_on ? "Turn WhatsApp codes off" : "Turn WhatsApp codes on"}
+          {s.whatsapp_on ? "Turn WhatsApp sign-in codes off" : "Turn WhatsApp sign-in codes on"}
         </Button>
       </div>
 

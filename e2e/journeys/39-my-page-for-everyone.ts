@@ -152,7 +152,7 @@ async function main() {
   for (const key of ["my_details", "my_story", "role_panels", "still_right"]) {
     check(/Off/.test(await page.getByTestId(`feature-${key}`).innerText()), `${key} starts Off`);
   }
-  check((await page.locator('[data-testid^="feature-"][data-testid$="-open"]').count()) === 7, "seven functions can be moved: the three of stage 1 and the four of stage 2");
+  check((await page.locator('[data-testid^="feature-"][data-testid$="-open"]').count()) === 11, "eleven functions can be moved: the three of stage 1 and the four of stage 2 of Profiles, and the four whole-church functions of WhatsApp reliability");
   has("the board says what each does and who sees it", /Nobody else sees them in this release/, board);
 
   // A new function cannot be opened before My page

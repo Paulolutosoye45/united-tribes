@@ -90,7 +90,7 @@ describe("reading what WhatsApp sends", () => {
 
   it("ignores anything it does not understand", () => {
     for (const junk of [null, 3, "x", [], {}, { entry: "no" }, { entry: [null, { changes: [3] }] }, wrap({ statuses: [null, { id: 1 }] }), wrap({ messages: [null] })]) {
-      expect(parseWhatsAppEvents(junk)).toEqual({ statuses: [], replies: [], stops: [] });
+      expect(parseWhatsAppEvents(junk)).toEqual({ statuses: [], replies: [], stops: [], signals: [] });
     }
   });
 

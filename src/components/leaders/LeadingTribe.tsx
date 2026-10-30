@@ -4,6 +4,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { formatDate } from "@/lib/dates";
 import { LEADER_EMPTY } from "@/lib/placement/wording";
 import { leadingLine, leadingTitle, peopleLine, type LeadingPerson, type MyLeading } from "@/lib/leaders/leading";
+import { NUMBER_WORDS, type NumberGaps } from "@/lib/messaging/number-rule";
 
 /**
  * The tribe a leader leads, in a few words and two buttons. For a leader on a page that is about something else (My tribe, or an application
@@ -34,8 +35,10 @@ export function LeadingStrip({ leading }: { leading: MyLeading }) {
 }
 
 /** The people who have joined, on the Lead page. The list is the leader's own (the database applies its rules); the welcome work stays on the Tribe Card. */
-export function LeadingPeople({ leading, people }: { leading: MyLeading; people: LeadingPerson[] }) {
+export function LeadingPeople({ leading, people, gaps = null }: { leading: MyLeading; people: LeadingPerson[]; gaps?: NumberGaps | null }) {
   if (leading.tribeStatus !== "approved") return null;
+  // Only while the church has made the phone number compulsory: how many have none yet, by first name, so the leader can ask in person
+  const gapLine = gaps?.on ? NUMBER_WORDS.leaderNote(gaps.count, gaps.names) : null;
   return (
     <section aria-labelledby="leading-people-h" className="card flex flex-col gap-4 p-6" data-testid="leading-people">
       <div className="flex flex-col gap-1">
@@ -46,6 +49,11 @@ export function LeadingPeople({ leading, people }: { leading: MyLeading; people:
           {people.length === 0 ? LEADER_EMPTY : peopleLine(people.length)}
         </p>
       </div>
+      {gapLine ? (
+        <p className="t-small rounded-[var(--radius-control)] bg-gold/20 px-4 py-3" data-testid="number-gaps">
+          {gapLine}
+        </p>
+      ) : null}
       {people.length > 0 ? (
         <ul className="flex flex-col divide-y divide-line">
           {people.map((p, i) => (

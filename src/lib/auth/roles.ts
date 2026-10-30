@@ -106,8 +106,11 @@ export const MULTIPLY_ROLES: readonly Role[] = ["admin", "director", "pastor", "
 /** The Care Team's view of young people and their parents or guardians. */
 export const TEEN_ROLES: readonly Role[] = ["admin", "director", "pastor", "care_lead"];
 
-/** Everyone who has at least one of the growth tools: tribe changes, planning, the matching model, teens. */
-export const GROWTH_ROLES: readonly Role[] = [...new Set<Role>([...SWAP_ROLES, ...MODEL_ROLES, ...MULTIPLY_ROLES, ...TEEN_ROLES])];
+/** Who reads leader removal requests. The database decides which and what each may do: a coach sees and decides only the ordinary requests of their own tribes. */
+export const REMOVAL_ROLES: readonly Role[] = ["admin", "director", "pastor", "care_lead", "coach"];
+
+/** Everyone who has at least one of the growth tools: tribe changes, planning, the matching model, teens, removal requests. */
+export const GROWTH_ROLES: readonly Role[] = [...new Set<Role>([...SWAP_ROLES, ...MODEL_ROLES, ...MULTIPLY_ROLES, ...TEEN_ROLES, ...REMOVAL_ROLES])];
 
 /** The office: opens the Admin hub. What each of them may change is decided screen by screen, and again by the database. */
 export const OFFICE_ROLES: readonly Role[] = ["admin", "director", "pastor", "data_lead"];

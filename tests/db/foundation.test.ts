@@ -798,6 +798,8 @@ describe("locked-down defaults", () => {
       "worker_signin_sender_signal",
       "worker_signin_status",
       "worker_signin_tick",
+      "worker_whatsapp_signal",
+      "worker_removal_tick",
       "signin_channel_status",
       "signin_admin_overview",
       "signin_admin_update",
@@ -1028,6 +1030,34 @@ describe("locked-down defaults", () => {
       "still_right_state",
       "still_right_later",
       "my_profile_export",
+      // WhatsApp that cannot fail quietly, stage 1 (the safety net). The overview is read by the office (admin, director, data lead, pastor);
+      // the pause and restart by the people who run messages; the settings by an admin or a director. Each checks, and the net itself is Off until the owner moves it.
+      "whatsapp_guard_overview",
+      "whatsapp_pause",
+      "whatsapp_resume",
+      "whatsapp_guard_settings_save",
+      // WhatsApp that cannot fail quietly, stage 2 (the health page). The overview is read by the office and the pastor; saving a check and sending
+      // the test belong to the admin, a director and the data lead; every one answers 'off' or refuses until the owner switches the page On.
+      "whatsapp_health_overview",
+      "whatsapp_check_save",
+      "whatsapp_test_send",
+      // WhatsApp that cannot fail quietly, stage 3 (the number is compulsory). Each answers about the signed-in person only, or a tribe the asker runs;
+      // all three answer "off" until the owner moves the switch.
+      "my_number_rule",
+      "number_prompt_dismiss",
+      "tribe_number_gaps",
+      // WhatsApp that cannot fail quietly, stage 4 (leader removal requests). Each answers "off" or refuses until the owner moves the switch; who may ask,
+      // read and decide is checked inside each one, and the heartbeat (worker_removal_tick, below) needs the sending service's token.
+      "removal_ask",
+      "removal_answer",
+      "removal_withdraw",
+      "removal_mine",
+      "removal_board",
+      "removal_decide",
+      "my_removal",
+      "removal_appeal",
+      "removal_reinstate",
+      "removal_appeal_uphold",
       // Exports and Reports. The switchboard functions each begin god_only() (the platform owner's alone); the rest check who is asking and
       // whether the pack is on for them. A pack that is Off gives nothing to anyone.
       "export_board",
@@ -1093,6 +1123,8 @@ describe("locked-down defaults", () => {
       "worker_signin_sender_signal",
       "worker_signin_status",
       "worker_signin_tick",
+      "worker_whatsapp_signal",
+      "worker_removal_tick",
       "signin_channel_status",
       // Messages & reminders: the email pages and the sending service, each behind a secret
       "worker_reminders_tick",

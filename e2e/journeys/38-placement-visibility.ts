@@ -174,7 +174,13 @@ async function main() {
   check((await one("select count(*)::int n from public.messages where template = 'placement_your_team' and tribe_id = $1", [A.tribe]))?.n === before?.n, "…and nothing has changed until it is confirmed");
   await shot(page, "38-open-now-confirm");
   await confirm.getByRole("button", { name: "Yes, open it" }).click();
-  await page.getByText(/Journey Visibility Tribe is open\./).waitFor({ timeout: 20000 });
+  try {
+    await page.getByText(/Journey Visibility Tribe is open\./).waitFor({ timeout: 20000 });
+  } catch (e) {
+    // If it does not come, say what the page said instead, so the reason is in the log
+    console.log("page said:", (await text(page)).replace(/\s+/g, " ").slice(0, 1500));
+    throw e;
+  }
   check((await one("select count(*)::int n from public.messages where template = 'placement_your_team' and status <> 'skipped' and tribe_id = $1", [A.tribe]))?.n === 2, "the leader and the assistant are emailed their team");
   await page.reload();
   await page.getByTestId("run-results").waitFor({ timeout: 20000 });

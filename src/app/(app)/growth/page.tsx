@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GROWTH_ROLES, MODEL_ROLES, MULTIPLY_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole } from "@/lib/auth/roles";
+import { GROWTH_ROLES, MODEL_ROLES, MULTIPLY_ROLES, REMOVAL_ROLES, SWAP_ROLES, TEEN_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
+import { loadRemovalBoard } from "@/lib/removal/server";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Growth" };
 
@@ -25,6 +27,12 @@ const TOOLS = [
     roles: MODEL_ROLES,
   },
   {
+    href: "/growth/removals",
+    title: "Removal requests",
+    body: "A leader asking the church about a member's place in their tribe. A person with the right to decide does; silence never removes anyone.",
+    roles: REMOVAL_ROLES,
+  },
+  {
     href: "/care/teens",
     title: "Young people",
     body: "Parent and guardian permission for members aged 13 to 17, and the call that confirms it.",
@@ -34,7 +42,9 @@ const TOOLS = [
 
 export default async function GrowthPage() {
   const session = await requireRole(GROWTH_ROLES, "/growth");
-  const tools = TOOLS.filter((t) => hasAnyRole(session.roles, t.roles));
+  // The removal tile appears only once the church has opened leader removal requests (Rehearsal or On); until then the page is as it was
+  const removalOpen = hasAnyRole(session.roles, REMOVAL_ROLES) ? (await loadRemovalBoard(await createClient())).state !== "off" : false;
+  const tools = TOOLS.filter((t) => hasAnyRole(session.roles, t.roles) && (t.href !== "/growth/removals" || removalOpen));
 
   return (
     <div className="flex flex-col gap-8">

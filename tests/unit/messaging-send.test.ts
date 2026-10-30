@@ -283,6 +283,25 @@ describe("the dispatcher", () => {
     expect(summary.sent).toBe(1);
   });
 
+  it("runs the removal-request heartbeat each time, and reports a fault without stopping the messages", async () => {
+    const calls: string[] = [];
+    const rpc: WorkerRpc = async (fn) => {
+      calls.push(fn);
+      if (fn === "worker_removal_tick") return { data: null, error: { message: "locked" } };
+      if (fn === "worker_claim") return { data: calls.filter((c) => c === "worker_claim").length === 1 ? [row("a")] : [], error: null };
+      return { data: null, error: null };
+    };
+    const wa = provider("whatsapp", [ok("wamid.9")]);
+    const summary = await runDispatch({ rpc, providers: { whatsapp: wa, email: null, sms: null }, site: SITE });
+    expect(calls).toContain("worker_removal_tick");
+    expect(summary.problems).toEqual(["removals: locked"]);
+    expect(summary.sent).toBe(1);
+    // and it is left alone when the caller asks for messages only
+    const quiet: string[] = [];
+    await runDispatch({ rpc: async (fn) => (quiet.push(fn), { data: fn === "worker_claim" ? [] : null, error: null }), providers: { whatsapp: wa, email: null, sms: null }, site: SITE, tick: false });
+    expect(quiet).not.toContain("worker_removal_tick");
+  });
+
   it("turns a message back when its channel is not set up, so the database tries the next", async () => {
     const r = rig([[row("a", "sms")]]);
     const summary = await runDispatch({ rpc: r.rpc, providers: { whatsapp: null, email: null, sms: null }, site: SITE });

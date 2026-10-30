@@ -45,6 +45,8 @@ export type IntakeProps = {
   voiceAvailable: boolean;
   /** The address they signed in with, shown beside the Email choice. */
   email: string | null;
+  /** The church has made the phone number compulsory (the Switchboard's "WhatsApp number required" is On). Never asked of a teenager. */
+  numberRequired?: boolean;
   seasonName: string | null;
   seasonStarts: string | null;
   initial: { view: View; answers: Answers; activeSeconds: number; ai: boolean; isEdit: boolean };
@@ -63,7 +65,7 @@ function draftOf(answers: Answers, teensOpen: boolean): Answers {
 }
 
 
-export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, email, seasonName, seasonStarts, initial }: IntakeProps) {
+export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, email, numberRequired = false, seasonName, seasonStarts, initial }: IntakeProps) {
   const router = useRouter();
   const [view, setView] = useState<View>(initial.view);
   const [dir, setDir] = useState<"forward" | "back">("forward");
@@ -272,7 +274,7 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
     if (view === "heard") sugg.request("community", answers.story ?? "", undefined, confirmed);
     if (view === "community" && answers.community) sugg.request("season_goal", answers.story ?? "", answers.community, confirmed);
     // Changing the community from the review means the goal must be chosen again.
-    if (reviewMode && view === "community" && !canContinue("goal", answers, { teensOpen })) return go("goal", "forward");
+    if (reviewMode && view === "community" && !canContinue("goal", answers, { teensOpen, numberRequired })) return go("goal", "forward");
     if (reviewMode) return go("review", "forward");
     go(nextStep(view), "forward");
   }
@@ -316,8 +318,10 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
   const goalTitle = catalogue.communities.find((t) => t.slug === answers.community)?.goals.find((g) => g.slug === answers.goal)?.title ?? null;
   const asking = assistantOn && sugg.waiting;
 
-  const canGo = onWelcome ? agreed || false : canContinue(view as StepId, answers, { teensOpen });
-  const skipping = SKIPPABLE.includes(view as StepId) && isEmptyStep(view as StepId, answers);
+  const canGo = onWelcome ? agreed || false : canContinue(view as StepId, answers, { teensOpen, numberRequired });
+  // While the number is compulsory the contact screen cannot be skipped (a teenager is never asked)
+  const numberNeeded = numberRequired && !isTeen;
+  const skipping = SKIPPABLE.includes(view as StepId) && !(view === "contact" && numberNeeded) && isEmptyStep(view as StepId, answers);
   const label =
     view === "welcome" ? "I agree, let’s begin" : view === "review" ? (initial.isEdit ? "Save changes" : "Save my answers") : skipping ? "Skip for now" : "Continue";
 
@@ -368,7 +372,7 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
       {view === "rhythm" ? <RhythmStep answers={answers} set={set} cmp={cmp} /> : null}
       {view === "style" ? <StyleStep answers={answers} set={set} cmp={cmp} /> : null}
       {view === "care" ? <CareStep answers={answers} set={set} assistantOn={assistantOn} cmp={cmp} /> : null}
-      {view === "contact" ? <ContactStep answers={answers} set={set} email={email} /> : null}
+      {view === "contact" ? <ContactStep answers={answers} set={set} email={email} numberRequired={numberNeeded} /> : null}
       {view === "review" ? <ReviewStep answers={answers} set={set} catalogue={catalogue} onEdit={onEdit} error={problem} kept={cmp.kept} /> : null}
     </FlowFrame>
   );

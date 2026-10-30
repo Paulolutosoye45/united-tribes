@@ -1,4 +1,5 @@
 import { normalisePhone } from "@/lib/auth/phone";
+import { looksMadeUp, NUMBER_WORDS } from "./number-rule";
 
 export type Preferred = "whatsapp" | "email" | "sms";
 
@@ -31,10 +32,13 @@ export function readContact(data: unknown): Contact {
  * Checks the contact form before it goes to the database. The database checks again:
  * this is only to give a clear sentence quickly.
  */
-export function parseContactForm(form: FormData): { ok: true; value: ContactInput } | { ok: false; message: string } {
+export function parseContactForm(form: FormData, opts: { required?: boolean } = {}): { ok: true; value: ContactInput } | { ok: false; message: string } {
   const rawPhone = String(form.get("phone") ?? "").trim();
   const phone = rawPhone ? normalisePhone(rawPhone) : null;
+  // While the number is compulsory for this person (an adult member, with the switch On) it must be there and must not be made up
+  if (opts.required && !rawPhone) return { ok: false, message: NUMBER_WORDS.missing };
   if (rawPhone && !phone) return { ok: false, message: "That number doesn’t look right. Include your network code, like 0803 123 4567." };
+  if (opts.required && looksMadeUp(phone)) return { ok: false, message: NUMBER_WORDS.madeUp };
 
   const whatsapp = form.get("whatsapp") === "on";
   const sms = form.get("sms") === "on";

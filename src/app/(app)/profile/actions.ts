@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { plain, run, text, type Result } from "@/lib/admin/rpc";
 import { friendly } from "@/lib/leaders/errors";
 import { parseContactForm } from "@/lib/messaging/contact";
+import { loadNumberRule } from "@/lib/messaging/number-rule-server";
 import { CONSENT_VERSION } from "@/lib/intake/consent";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,10 +31,12 @@ export type ContactState = { status: "idle" | "ok" | "error"; message: string };
 export async function saveContactAction(_prev: ContactState, formData: FormData): Promise<ContactState> {
   const session = await getSession();
   if (!session) redirect("/sign-in?next=/profile");
-  const parsed = parseContactForm(formData);
+  const supabase = await createClient();
+  // Compulsory for an adult member while the church has switched the rule On; Off, this is exactly what it was
+  const rule = await loadNumberRule(supabase);
+  const parsed = parseContactForm(formData, { required: rule.required });
   if (!parsed.ok) return { status: "error", message: parsed.message };
 
-  const supabase = await createClient();
   const { error } = await supabase.rpc("save_contact", {
     p_phone: parsed.value.phone,
     p_preferred: parsed.value.preferred,
@@ -45,6 +48,17 @@ export async function saveContactAction(_prev: ContactState, formData: FormData)
   if (error) return { status: "error", message: friendly(error) };
   revalidatePath("/profile");
   return { status: "ok", message: "Saved. We’ll use these from now on." };
+}
+
+/** "Not now" on the prompt to add a phone number: it stays away for a week. Nothing is asked of the person, and nothing is sent to anyone. */
+export async function dismissNumberPromptAction(): Promise<{ ok: boolean }> {
+  const session = await getSession();
+  if (!session) return { ok: false };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("number_prompt_dismiss");
+  if (error) return { ok: false };
+  revalidatePath("/", "layout");
+  return { ok: true };
 }
 
 /** Withdrawing agreement erases the saved answers and any draft (the database does this). */

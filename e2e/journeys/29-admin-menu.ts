@@ -190,6 +190,8 @@ async function main() {
     await f.locator("body").click({ position: { x: 5, y: 5 } });
     await f.keyboard.press("/");
     await sheet.waitFor({ state: "visible", timeout: 5000 });
+    // (The page puts the cursor in the box a moment after the sheet opens, so wait for it rather than look at the instant it is drawn.)
+    await f.waitForFunction(() => document.activeElement?.id === "sheet-search", null, { timeout: 3000 }).catch(() => undefined);
     check((await f.evaluate(() => document.activeElement?.id)) === "sheet-search", "the / key opens the sheet with the search ready");
     await f.keyboard.type("figures");
     await f.keyboard.press("Enter");

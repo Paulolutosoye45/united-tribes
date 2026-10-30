@@ -9,6 +9,7 @@ let communityId: string;
 let goalId: string;
 let token: string;
 let n = 0;
+const NOON = "create or replace function public.lagos_hour() returns integer language sql stable set search_path = '' as $$ select 12 $$";
 
 // A Sunday, so "Monday" is day 1 of the week, "Friday" day 5, and so on.
 const START = "2027-02-14";
@@ -28,6 +29,9 @@ beforeAll(async () => {
   communityId = (await db.admin.query("select id from public.communities where slug = 'professionals'")).rows[0].id;
   goalId = (await db.admin.query("select id from public.season_goals where slug = 'step-into-a-leadership-role'")).rows[0].id;
   token = (await db.admin.query("select public.bootstrap_worker_token('test') as t")).rows[0].t;
+  // Midday in Lagos for every test, so none depends on the hour it is run (between 22:00 and 06:00 only urgent messages go out). The one test of the
+  // quiet hours sets its own hour and puts this one back.
+  await db.admin.query(NOON);
 });
 
 afterAll(async () => {
@@ -300,7 +304,7 @@ describe("queue behaviour", () => {
     expect(night.some((x) => x.id === urgent)).toBe(true);
     await db.admin.query("create or replace function public.lagos_hour() returns integer language sql as $$ select 6 $$");
     expect((await claim()).some((x) => x.id === calm)).toBe(true);
-    await db.admin.query("create or replace function public.lagos_hour() returns integer language sql stable set search_path = '' as $$ select extract(hour from (now() at time zone 'Africa/Lagos'))::integer $$");
+    await db.admin.query(NOON);
   });
 
   it("retries a hiccup a little later, three times, then moves on", async () => {

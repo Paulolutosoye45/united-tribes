@@ -6,8 +6,13 @@ import { answerAs, issueCode, issueLink, listInDirectory, secret, uniqueEmail, u
 let db: TestDb;
 let token: string;
 
+// The messages these tests look for are held until morning if they are sent between 22:00 and 06:00 in Lagos, so the clock is set to noon here: the
+// tests mean the same thing at any hour. (The hold itself is tested in messaging.test.ts.)
+const NOON = "create or replace function public.lagos_hour() returns integer language sql stable set search_path = '' as $$ select 12 $$";
+
 beforeAll(async () => {
   db = await createTestDb();
+  await db.admin.query(NOON);
   token = (await db.admin.query("select public.bootstrap_worker_token('test') as t")).rows[0].t;
 });
 

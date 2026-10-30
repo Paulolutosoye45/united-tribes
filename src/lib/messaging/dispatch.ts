@@ -25,6 +25,7 @@ export type DispatchSummary = {
   reminders?: unknown;
   /** What the referee check's housekeeping did this time (old hashes and codes forgotten). */
   referees?: unknown;
+  removals?: unknown;
   claimed: number;
   sent: number;
   retried: number;
@@ -114,6 +115,14 @@ export async function runDispatch(o: Options): Promise<DispatchSummary> {
     const referees = await o.rpc("worker_referee_tick");
     if (referees.error) summary.problems.push(`referees: ${referees.error.message}`);
     else summary.referees = referees.data;
+  }
+
+  // Leader removal requests: the reminder at three days, the word to the director at seven, and the leader's words cleared after twelve months.
+  // It never decides anything, and it answers "off" at once while the switch is Off. A fault is reported and never stops a message.
+  if (o.tick !== false) {
+    const removals = await o.rpc("worker_removal_tick");
+    if (removals.error) summary.problems.push(`removals: ${removals.error.message}`);
+    else summary.removals = removals.data;
   }
 
   for (let batch = 0; batch < (o.maxBatches ?? 8); batch++) {

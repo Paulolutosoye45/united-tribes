@@ -7,6 +7,13 @@
  *   GET  /__sent[?channel=whatsapp|email|sms]   what has been received, oldest first
  *   POST /__reset                               forget everything
  *
+ * Meta's account questions, which the WhatsApp health page asks (GET /v23.0/<phone number id>?fields=..., /<account id>/subscribed_apps and
+ * /<account id>/message_templates), are answered from a state a journey sets:
+ *
+ *   POST /__meta/mode {"token": "ok"|"expired", "sender": "own"|"test", "subscribed": true|false, "templates": ["ut_welcome", ...]}
+ *                                               "expired" also makes every send fail with code 190, as an expired token does; "test" is
+ *                                               Meta's free test number; the templates listed are reported APPROVED and Utility
+ *
  * It stands in for the ordinary-number WhatsApp sender (/sender) too, with the same checks the real one makes:
  *
  *   POST /linked/send                           one short message, signed; recorded as channel "linked"
@@ -26,7 +33,7 @@ import { verify } from "../sender/src/auth";
 
 export type Received = { channel: "whatsapp" | "email" | "sms" | "linked"; at: number; id: string; body: Record<string, unknown> };
 
-export const KEYS = { whatsappToken: "wa_e2e_token", phoneNumberId: "100200300", resend: "re_e2e", termii: "tm_e2e" } as const;
+export const KEYS = { whatsappToken: "wa_e2e_token", phoneNumberId: "100200300", businessAccountId: "900800700", resend: "re_e2e", termii: "tm_e2e" } as const;
 
 /** WhatsApp sign-in through the ordinary-number sender (the stand-in for it is in stubs.ts). Not real: for the throwaway stack only. */
 export const SIGNIN = {
@@ -70,6 +77,8 @@ export function startStubs(port: number): Promise<{ url: string; received: Recei
   let counter = 0;
   let linkedState = "open";
   let linkedFails = false;
+  const metaDefault = () => ({ token: "ok" as "ok" | "expired", sender: "own" as "own" | "test", subscribed: true, templates: [] as string[] });
+  let meta = metaDefault();
 
   const server = http.createServer((req, res) => {
     const chunks: Buffer[] = [];
@@ -96,7 +105,15 @@ export function startStubs(port: number): Promise<{ url: string; received: Recei
         received.length = 0;
         linkedState = "open";
         linkedFails = false;
+        meta = metaDefault();
         return send(200, { ok: true });
+      }
+      if (req.method === "POST" && url.pathname === "/__meta/mode") {
+        if (body.token === "ok" || body.token === "expired") meta.token = body.token;
+        if (body.sender === "own" || body.sender === "test") meta.sender = body.sender;
+        if (typeof body.subscribed === "boolean") meta.subscribed = body.subscribed;
+        if (Array.isArray(body.templates)) meta.templates = body.templates.map(String);
+        return send(200, { ...meta, templates: meta.templates.length });
       }
 
       // The ordinary-number sender
@@ -148,10 +165,31 @@ export function startStubs(port: number): Promise<{ url: string; received: Recei
         return record(true);
       }
 
+      // Meta Graph reads made by the WhatsApp health page
+      const graph = /^\/v[\d.]+\/(\d+)(?:\/(subscribed_apps|message_templates))?$/.exec(url.pathname);
+      if (req.method === "GET" && graph) {
+        if (meta.token === "expired" || req.headers.authorization !== `Bearer ${KEYS.whatsappToken}`) {
+          return send(401, { error: { code: 190, message: "Error validating access token: Session has expired" } });
+        }
+        const [, id, part] = graph;
+        if (!part) {
+          if (id !== KEYS.phoneNumberId) return send(400, { error: { code: 100, error_subcode: 33, message: "Unsupported get request" } });
+          return send(
+            200,
+            meta.sender === "test"
+              ? { id, display_phone_number: "+1 555-025-3483", verified_name: "Test Number", quality_rating: "GREEN", name_status: "APPROVED", status: "CONNECTED", messaging_limit_tier: "TIER_250", account_mode: "SANDBOX" }
+              : { id, display_phone_number: "+234 800 000 0002", verified_name: "The Covenant Nation", quality_rating: "GREEN", name_status: "APPROVED", status: "CONNECTED", messaging_limit_tier: "TIER_250", account_mode: "LIVE" },
+          );
+        }
+        if (id !== KEYS.businessAccountId) return send(400, { error: { code: 100, error_subcode: 33, message: "Unsupported get request" } });
+        if (part === "subscribed_apps") return send(200, { data: meta.subscribed ? [{ whatsapp_business_api_data: { id: "1", name: "United Tribes" } }] : [] });
+        return send(200, { data: meta.templates.map((name) => ({ name, status: "APPROVED", category: "UTILITY", language: "en" })) });
+      }
+
       // Meta Cloud API: POST /v23.0/<phone number id>/messages
       const wa = /^\/v[\d.]+\/(\d+)\/messages$/.exec(url.pathname);
       if (req.method === "POST" && wa) {
-        if (req.headers.authorization !== `Bearer ${KEYS.whatsappToken}` || wa[1] !== KEYS.phoneNumberId) {
+        if (meta.token === "expired" || req.headers.authorization !== `Bearer ${KEYS.whatsappToken}` || wa[1] !== KEYS.phoneNumberId) {
           return send(401, { error: { code: 190, message: "Invalid OAuth access token" } });
         }
         const to = String(body.to ?? "");

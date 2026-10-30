@@ -2,7 +2,7 @@
 
 *Written by `npm run messages-audit` from the templates in `src/lib/messaging`. Do not edit it here; change the template and run the command again. A test fails when a check below fails or when this file is out of date.*
 
-**140 messages**, 16 for applicant, 8 for care, 12 for coach, 1 for guardian, 1 for invitee, 38 for leader, 20 for member, 39 for office, 5 for referee.
+**152 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 39 for leader, 22 for member, 43 for office, 5 for referee.
 
 Each message is written out from believable details and checked for what the office would check by eye:
 
@@ -42,6 +42,9 @@ Each message is written out from believable details and checked for what the off
 | `care_age_ask` | Someone says their age range is not right | Someone says their age range is not right | 66 | 81 | email only | 2 / 0 | — |
 | `care_asks_waiting` | People have asked for someone to reach out | 0 people asked for someone to reach out | 46 | 78 | email only | 2 / 0 | — |
 | `care_callbacks_due` | Referee call-backs are due | 0 referee call-backs due this week | 42 | 77 | email only | 2 / 0 | — |
+| `care_removal_appeal` | A member has asked for a decision to be looked at again | A member has asked for a decision to be looked at again | 75 | 100 | email only | 2 / 0 | — |
+| `care_removal_ask` | A leader has asked about a member's place | A leader has asked about a member’s place | 82 | 86 | email only | 2 / 0 | — |
+| `care_removal_waiting` | A request about a member's place is still waiting | A request about a member’s place has waited three days | 60 | 99 | email only | 2 / 0 | — |
 | `care_task_overdue` | A care task is late | Late: pastoral care for Ada Okafor | 68 | 78 | `ut_care_task_overdue` | 2 / 0 | database |
 | `care_teen_confirm` | A parent's permission is waiting for its call | A permission is waiting for its confirmation call | 51 | 89 | email only | 2 / 0 | — |
 | `care_urgent` | Urgent care: same-day response | URGENT care: Ada Okafor (Builders Tribe) | 63 | 114 | `ut_care_urgent` | 2 / 0 | database |
@@ -62,6 +65,8 @@ Each message is written out from believable details and checked for what the off
 | `coach_missed_three` | A member has missed three meetings | Ada Okafor has missed 3 meetings | 64 | 121 | `ut_coach_missed_three` | 2 / 0 | database |
 | `coach_new_leader` | A leader was given to you | Ngozi Okafor is now one of your leaders | 45 | 81 | email only | 2 / 0 | — |
 | `coach_practice_ready` | A leader is ready for a practice assessment | Ngozi Okafor is ready for a practice assessment | 42 | 91 | email only | 2 / 0 | — |
+| `coach_removal_ask` | A leader has asked about a member's place | A leader has asked about a member’s place | 84 | 86 | email only | 2 / 0 | — |
+| `coach_removal_waiting` | A request about a member's place is waiting for you | A request about a member’s place has waited three days | 76 | 99 | email only | 2 / 0 | — |
 | `coach_welcome_overdue` | A new member still has not been called (7 days) | Ada still hasn’t been called | 48 | 140 | `ut_coach_welcome_overdue` | 2 / 0 | database |
 | `swap_requested` | A member has asked to change tribe | Ada would like to change tribe | 83 | 121 | `ut_swap_requested` | 2 / 0 | database |
 
@@ -115,6 +120,7 @@ Each message is written out from believable details and checked for what the off
 | `new_member` | Someone joined your tribe: call within 72 hours | Ada joined Builders Tribe | 66 | 98 | `ut_new_member` | 2 / 0 | database |
 | `placement_leader_appointed` | You have been appointed to lead a tribe | You have been appointed to lead a tribe | 113 | 123 | email only | 2 / 0 | database |
 | `placement_your_team` | Who is on your team | Your team: Builders Tribe | 127 | 118 | email only | 2 / 0 | database |
+| `removal_leader_decided` | A leader is told what was decided about their request | Your request about Bola was approved | 120 | 92 | email only | 2 / 0 | database |
 | `swap_moved` | A member has moved tribe | Ada is joining your tribe | 60 | 115 | `ut_swap_moved` | 2 / 0 | database |
 | `testimony_waiting` | A testimony is waiting for you | A testimony is waiting for your approval | 40 | 107 | `ut_testimony_waiting` | 2 / 0 | database |
 | `weekly_report` | Saturday: the weekly tribe report | Week 3 report: Builders Tribe | 55 | 111 | `ut_weekly_report` | 2 / 0 | database |
@@ -137,6 +143,8 @@ Each message is written out from believable details and checked for what the off
 | `placement_withheld` | Your details are kept private; here is how to reach your tribe | Your details are private. Here is how to join | 110 | 113 | email only | 2 / 1 | database |
 | `placement_your_tribe` | The church has placed you in a tribe | A place for you in Builders Tribe | 188 | 131 | email only | 4 / 1 | database |
 | `reminder_email` | A reminder from one of the four journeys | You’re part-way to your tribe, Ada | 91 | 88 | email only | 3 / 0 | app, database |
+| `removal_member_reinstated` | A member is told their place in a tribe has been put back | Your place in Builders Tribe is back | 66 | 97 | email only | 2 / 0 | database |
+| `removal_member_told` | A member is told their place in a tribe has changed | Your place in Builders Tribe has changed | 144 | 125 | email only | 2 / 0 | database |
 | `season_complete` | The season is complete | Season 1 is complete | 63 | 108 | `ut_season_complete` | 2 / 0 | database |
 | `season_starts_soon` | The season starts in two days | Your season starts on Sun 14 Feb | 68 | 108 | `ut_season_starts_soon` | 2 / 1 | database |
 | `swap_declined` | About your request to change tribe | About your request to change tribe | 69 | 120 | `ut_swap_declined` | 2 / 0 | database |
@@ -167,6 +175,7 @@ Each message is written out from believable details and checked for what the off
 | `director_interviews_tomorrow` | Interviews tomorrow | Tomorrow: 1 interview | 45 | 68 | email only | 2 / 0 | — |
 | `director_offer_answered` | A leader offer was answered | Someone declined a leader offer | 43 | 80 | email only | 2 / 0 | — |
 | `director_offer_unanswered` | An offer has had no answer | An offer to Ngozi has had no answer | 46 | 84 | email only | 2 / 0 | — |
+| `director_removal_escalated` | A request about a member's place has waited a week | A request about a member’s place has waited a week | 72 | 95 | email only | 2 / 0 | — |
 | `director_season_countdown` | A season is about to open | Season 1 opens in 0 days | 39 | 59 | email only | 2 / 0 | — |
 | `director_slots_low` | Interview times are running out | Only 0 interview times left | 46 | 74 | email only | 2 / 0 | — |
 | `director_unplaced` | Members finished the form and have no tribe | 0 members still have no tribe | 59 | 68 | email only | 2 / 0 | — |
@@ -188,6 +197,9 @@ Each message is written out from believable details and checked for what the off
 | `staff_digest` | Your daily or weekly summary of what is waiting | 0 things waiting for you | 48 | 60 | email only | 2 / 0 | app, database |
 | `staff_escalation` | Something has waited too long | 1 approved | 47 | 45 | email only | 2 / 0 | — |
 | `staff_role_welcome` | You now hold a new role | You now hold the tribe leader role | 67 | 69 | email only | 2 / 0 | — |
+| `whatsapp_paused` | WhatsApp messages have paused themselves | WhatsApp messages are paused | 100 | 151 | email only | 2 / 0 | — |
+| `whatsapp_signal` | Meta has sent news about the church's WhatsApp | Meta has sent news about WhatsApp | 71 | 124 | email only | 2 / 0 | — |
+| `whatsapp_test` | A test message, sent by a person in the office to themselves | A test message from United Tribes | 48 | 101 | `ut_whatsapp_test` | 1 / 0 | database |
 
 ## For referee
 
@@ -201,4 +213,4 @@ Each message is written out from believable details and checked for what the off
 
 ## Messages nothing queues by name
 
-73 of the messages are not named in any database function or application file as a quoted name. Most are queued from a generic function that builds the name (the notices, the reminders), and a person can confirm each by looking where the message log shows it: `admin_application_sent`, `admin_checklist_overdue`, `admin_data_request`, `admin_data_request_due`, `admin_email_health`, `admin_messages_failing`, `admin_queue_stuck`, `admin_reporting_failed`, `admin_role_changed`, `applicant_referee_slow`, `applicant_reference_in`, `applicant_still_with_us`, `application_approved`, `application_approved_declaration`, `application_approved_open`, `application_approved_optional`, `application_interview_booked`, `application_interview_invited`, `application_not_approved`, `application_received`, `care_age_ask`, `care_asks_waiting`, `care_callbacks_due`, `care_teen_confirm`, `champion_month`, `champion_waiting`, `coach_card_submitted`, `coach_details_unanswered`, `coach_leader_stalled`, `coach_new_leader`, `coach_practice_ready`, `data_integrity_week`, `data_unusual_export`, `director_demand_gap`, `director_interview_booked`, `director_interview_no_outcome`, `director_interviews_tomorrow`, `director_offer_answered`, `director_offer_unanswered`, `director_season_countdown`, `director_slots_low`, `director_unplaced`, `leader_academy_next`, `leader_assistant_added`, `leader_card_approved`, `leader_card_changes`, `leader_check_clear_open`, `leader_check_clear_optional`, `leader_next_season`, `leader_seats`, `leader_tribe_open`, `leader_workshop_tomorrow`, `member_deletion_done`, `member_deletion_received`, `member_meeting_changed`, `member_testimony_shared`, `office_assistant_recommended`, `pastor_card_overdue`, `pastor_card_review`, `pastor_decision_overdue`, `pastor_decision_ready`, `pastor_fit_model_waiting`, `pastor_referee_concern`, `pastor_reference_held`, `pastor_season_review`, `pastor_stage_review`, `pastor_templates_waiting`, `referee_reminder`, `referee_thanks`, `signin_paused`, `signin_stop_alert`, `staff_escalation`, `staff_role_welcome`.
+81 of the messages are not named in any database function or application file as a quoted name. Most are queued from a generic function that builds the name (the notices, the reminders), and a person can confirm each by looking where the message log shows it: `admin_application_sent`, `admin_checklist_overdue`, `admin_data_request`, `admin_data_request_due`, `admin_email_health`, `admin_messages_failing`, `admin_queue_stuck`, `admin_reporting_failed`, `admin_role_changed`, `applicant_referee_slow`, `applicant_reference_in`, `applicant_still_with_us`, `application_approved`, `application_approved_declaration`, `application_approved_open`, `application_approved_optional`, `application_interview_booked`, `application_interview_invited`, `application_not_approved`, `application_received`, `care_age_ask`, `care_asks_waiting`, `care_callbacks_due`, `care_removal_appeal`, `care_removal_ask`, `care_removal_waiting`, `care_teen_confirm`, `champion_month`, `champion_waiting`, `coach_card_submitted`, `coach_details_unanswered`, `coach_leader_stalled`, `coach_new_leader`, `coach_practice_ready`, `coach_removal_ask`, `coach_removal_waiting`, `data_integrity_week`, `data_unusual_export`, `director_demand_gap`, `director_interview_booked`, `director_interview_no_outcome`, `director_interviews_tomorrow`, `director_offer_answered`, `director_offer_unanswered`, `director_removal_escalated`, `director_season_countdown`, `director_slots_low`, `director_unplaced`, `leader_academy_next`, `leader_assistant_added`, `leader_card_approved`, `leader_card_changes`, `leader_check_clear_open`, `leader_check_clear_optional`, `leader_next_season`, `leader_seats`, `leader_tribe_open`, `leader_workshop_tomorrow`, `member_deletion_done`, `member_deletion_received`, `member_meeting_changed`, `member_testimony_shared`, `office_assistant_recommended`, `pastor_card_overdue`, `pastor_card_review`, `pastor_decision_overdue`, `pastor_decision_ready`, `pastor_fit_model_waiting`, `pastor_referee_concern`, `pastor_reference_held`, `pastor_season_review`, `pastor_stage_review`, `pastor_templates_waiting`, `referee_reminder`, `referee_thanks`, `signin_paused`, `signin_stop_alert`, `staff_escalation`, `staff_role_welcome`, `whatsapp_paused`, `whatsapp_signal`.

@@ -292,7 +292,7 @@ async function main() {
     const a = await newPage(browser, "phone");
     await signIn(a.page, "admin.mary@example.org", "/admin/signin");
     await heading(a.page, "WhatsApp sign-in").waitFor({ timeout: 15000 });
-    await a.page.getByRole("button", { name: "Turn WhatsApp codes off" }).click();
+    await a.page.getByRole("button", { name: "Turn WhatsApp sign-in codes off" }).click();
     await a.page.getByText("Switched off. No more WhatsApp codes will be sent.").waitFor({ timeout: 15000 });
     check(await statusIs(a.page, "Switched off"), "the kill switch switches WhatsApp off");
     check((await settings()).whatsapp_on === false, "…and the database says so");
@@ -327,7 +327,7 @@ async function main() {
     check((await text(e.page)).includes("WhatsApp codes are paused today. Use email."), "…and says why");
     await e.ctx.close();
 
-    await a.page.getByRole("button", { name: "Turn WhatsApp codes on" }).click();
+    await a.page.getByRole("button", { name: "Turn WhatsApp sign-in codes on" }).click();
     await a.page.getByText("Switched on.").waitFor({ timeout: 15000 });
     check((await settings()).whatsapp_on === true, "turning it back on works");
     await a.ctx.close();
@@ -417,7 +417,7 @@ async function main() {
     const p = await newPage(browser, "phone");
     await signIn(p.page, "pastor.ife@example.org", "/admin/signin");
     await p.page.waitForLoadState("networkidle").catch(() => {});
-    check(!(await text(p.page)).includes("Turn WhatsApp codes off"), "a pastor cannot open it");
+    check(!(await text(p.page)).includes("Turn WhatsApp sign-in codes off"), "a pastor cannot open it");
     await p.ctx.close();
   }
 

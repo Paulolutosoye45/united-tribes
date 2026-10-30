@@ -10,6 +10,7 @@ import { parseDraftAnswers, type Answers } from "@/lib/intake/answers";
 import { loadCatalogue, openSealedDraft, profileToAnswers } from "@/lib/intake/server";
 import { resumeStep } from "@/lib/intake/steps";
 import { readContact } from "@/lib/messaging/contact";
+import { parseNumberRule } from "@/lib/messaging/number-rule";
 import { loadMyGuardian } from "@/lib/growth/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,7 +25,7 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
 
   // Their own answers first: a community or goal they chose that has since been retired is still shown to them.
   const profile = await supabase.from("member_profiles").select("*").eq("person_id", session.person.id).maybeSingle();
-  const [{ catalogue, ids }, draft, matching, aiConsent, season, contactRaw] = await Promise.all([
+  const [{ catalogue, ids }, draft, matching, aiConsent, season, contactRaw, numberRaw] = await Promise.all([
     loadCatalogue(supabase, { keep: [profile.data?.community_id, profile.data?.second_community_id, profile.data?.season_goal_id] }),
     supabase.from("intake_drafts").select("step, answers, active_seconds, sealed").eq("person_id", session.person.id).maybeSingle(),
     supabase.rpc("has_consent", { p_purpose: "matching" }),
@@ -37,9 +38,12 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
       .limit(1)
       .maybeSingle(),
     supabase.rpc("my_contact"),
+    // Whether the church has made the phone number compulsory. Off (or the database not having it yet), nothing changes.
+    supabase.rpc("my_number_rule"),
   ]);
 
   const contact = readContact(contactRaw.data);
+  const numberRequired = parseNumberRule(numberRaw.data).on;
   const aiAvailable = providerFromEnv() !== null;
   const voiceAvailable = speechFromEnv() !== null;
   const hasMatchingConsent = matching.data === true;
@@ -103,6 +107,7 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
       aiAvailable={aiAvailable}
       voiceAvailable={voiceAvailable}
       email={session.person.email ?? null}
+      numberRequired={numberRequired}
       seasonName={seasonName}
       seasonStarts={seasonStarts}
       initial={{ view, answers, activeSeconds, ai: aiConsent.data === true, isEdit: editing }}

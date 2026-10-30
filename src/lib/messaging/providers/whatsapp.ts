@@ -15,10 +15,18 @@ type Options = {
 
 /**
  * Meta error codes that mean this message cannot reach this person on WhatsApp, or
- * that the template is not usable. Trying again would give the same answer, so the
- * message moves on to the next channel instead.
+ * that the template is not usable, or that the church's own account is refused (an
+ * expired token, a locked or blocked account). Trying again would give the same answer,
+ * so the message moves on to the next channel instead; the database counts the
+ * account-level ones and pauses WhatsApp when there are too many (WhatsApp safety net).
  */
 const GIVE_UP_CODES = new Set([
+  10, // the access token is missing a permission
+  190, // the access token has expired or is wrong
+  200, // the access token is missing a permission
+  368, // the account is temporarily blocked for a policy reason
+  131031, // the account is locked
+  131037, // the display name needs approval
   131026, // the number is not on WhatsApp, or has not accepted the terms
   131030, // not in the allowed list (a test number)
   131021, // sent to itself

@@ -87,7 +87,7 @@ export function timeLeftLabel(step: StepId): string {
 }
 
 /** Whether Continue is allowed on this step. Optional steps are always allowed. */
-export function canContinue(step: StepId, a: Answers, opts: { teensOpen?: boolean } = {}): boolean {
+export function canContinue(step: StepId, a: Answers, opts: { teensOpen?: boolean; numberRequired?: boolean } = {}): boolean {
   switch (step) {
     case "age":
       if (!a.ageRange || (a.ageRange === TEENS && opts.teensOpen !== true)) return false;
@@ -116,7 +116,7 @@ export function canContinue(step: StepId, a: Answers, opts: { teensOpen?: boolea
     case "rhythm":
       return Boolean(a.meetingMode && a.times && a.times.length > 0);
     case "contact":
-      return contactProblem(a) === null;
+      return contactProblem(a, { required: opts.numberRequired === true && a.ageRange !== TEENS }) === null;
   }
 }
 

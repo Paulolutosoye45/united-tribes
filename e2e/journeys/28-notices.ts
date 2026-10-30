@@ -62,6 +62,9 @@ async function main() {
   const modeOf = async (group: string) => (await one("select mode from public.notice_settings where group_key = $1", [group]))!.mode as string;
   const hour = Number((await one("select public.lagos_hour() as h"))!.h);
   const daytime = hour >= 6 && hour <= 21;
+  // Journeys run before this one leave reminders waiting in the queue. Against this journey's own nine o'clock they look stuck whenever it is run before
+  // nine in Lagos, and the "Messages are not going out" email would be counted with the ones checked below. They are not this journey's business: put them away.
+  await q.query("update public.messages set status = 'skipped' where status = 'queued'");
 
   const tobiEmail = "tobi.both@example.org";
   const tobi = await person(tobiEmail, "Tobi Both", ["admin", "pastor"]);

@@ -64,6 +64,7 @@ export function messagingEnv(workerToken: string, stubUrl: string): Record<strin
     CRON_SECRET: MESSAGING.cronSecret,
     WHATSAPP_PROVIDER: "meta",
     WHATSAPP_PHONE_NUMBER_ID: "100200300",
+    WHATSAPP_BUSINESS_ACCOUNT_ID: "900800700",
     WHATSAPP_ACCESS_TOKEN: "wa_e2e_token",
     WHATSAPP_API_BASE: stubUrl,
     WHATSAPP_APP_SECRET: MESSAGING.appSecret,

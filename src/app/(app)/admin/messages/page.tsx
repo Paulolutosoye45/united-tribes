@@ -4,6 +4,7 @@ import { PageHead } from "@/components/admin/PageHead";
 import { RetryMessage } from "@/components/admin/RetryMessage";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { WhatsAppGuardCard } from "@/components/admin/WhatsAppGuardCard";
 import { DATA_ROLES, PROGRAMME_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { loadMessageLog, loadMessageStats } from "@/lib/admin/server";
@@ -11,6 +12,8 @@ import { MESSAGE_STATUSES } from "@/lib/admin/types";
 import { MESSAGE_STATUS_TONE, templateName } from "@/lib/admin/wording";
 import { formatLagosDay } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { loadWhatsappGuard } from "@/lib/whatsapp/guard-server";
+import { loadWhatsappHealth } from "@/lib/whatsapp/health-server";
 
 export const metadata: Metadata = { title: "Message log" };
 
@@ -25,7 +28,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Sea
   const template = q.template && /^[a-z_]{2,60}$/.test(q.template) ? q.template : null;
   const days = q.days === "1" || q.days === "30" ? Number(q.days) : 7;
   const supabase = await createClient();
-  const [stats, log] = await Promise.all([loadMessageStats(supabase, days), loadMessageLog(supabase, status, template, 100)]);
+  const [stats, log, guard, health] = await Promise.all([loadMessageStats(supabase, days), loadMessageLog(supabase, status, template, 100), loadWhatsappGuard(supabase), loadWhatsappHealth(supabase)]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -33,6 +36,17 @@ export default async function MessagesPage({ searchParams }: { searchParams: Sea
         Every WhatsApp, email and text the platform has queued, and what became of it. Names are shown here for the office only.
         {canRetry ? " A message that failed can be tried again; it goes out on the next heartbeat." : ""}
       </PageHead>
+
+      {guard && guard.state !== "off" ? <WhatsAppGuardCard guard={guard} /> : null}
+
+      {health ? (
+        <p className="t-small" data-testid="wa-health-link">
+          <Link href="/admin/messages/whatsapp" className="font-medium underline">
+            WhatsApp health
+          </Link>{" "}
+          · is WhatsApp working, and if not, why?
+        </p>
+      ) : null}
 
       {stats ? (
         <section aria-label="Totals" className="flex flex-col gap-3">

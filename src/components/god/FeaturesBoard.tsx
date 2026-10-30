@@ -201,6 +201,11 @@ function Editor({ row, d }: { row: FeatureRow; d: Doing }) {
 
   return (
     <div className="flex flex-col gap-4 rounded-[var(--radius-control)] border border-line p-4" data-testid={`feature-${row.key}-editor`}>
+      {row.platformOnly ? (
+        <p className="t-small text-soft" data-testid={`feature-${row.key}-whole-church`}>
+          This one is for the whole church only: it has no place or role to choose.
+        </p>
+      ) : (
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-[0.95rem] font-medium">Where</legend>
         <div className="flex flex-wrap gap-2">
@@ -232,6 +237,7 @@ function Editor({ row, d }: { row: FeatureRow; d: Doing }) {
           </div>
         ) : null}
       </fieldset>
+      )}
 
       <div role="group" aria-label={`${row.name} position`} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {row.modes.map((p) => (
@@ -249,7 +255,7 @@ function Editor({ row, d }: { row: FeatureRow; d: Doing }) {
       </div>
       <p className="t-small text-soft">{POSITION_WORDS[position].line}</p>
 
-      {position !== "off" ? (
+      {position !== "off" && !row.platformOnly ? (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-[0.95rem] font-medium">Only for these roles (leave empty for everyone it reaches)</legend>
           <div className="flex flex-wrap gap-2">

@@ -25,13 +25,18 @@ afterAll(async () => {
 });
 
 const state = (who: string, key: string) => c.as(who, "feature_state", key, null);
-const all = (who: string) => c.as(who, "my_features");
-/** What every function says on a fresh board: Off, the four of stage 2 included. */
+const PROFILE_KEYS = ["my_page", "details_check", "hold_card", "my_details", "my_story", "role_panels", "still_right"];
+/** What the person is told for the functions of the profile stages (the ones added after them are checked on their own, below). */
+const all = async (who: string) => {
+  const everything = (await c.as(who, "my_features")) as Record<string, string>;
+  return Object.fromEntries(PROFILE_KEYS.map((k) => [k, everything[k]]));
+};
+/** What every function of the profile stages says on a fresh board: Off, the four of stage 2 included. */
 const OFF = { my_page: "off", details_check: "off", hold_card: "off", my_details: "off", my_story: "off", role_panels: "off", still_right: "off" };
 
 describe("everything ships Off", () => {
   it("lists twenty-one functions, and only the seven that stages 1 and 2 build can be moved", async () => {
-    const rows = await c.sql("select key, available, stage from public.feature_registry order by sort");
+    const rows = await c.sql("select key, available, stage from public.feature_registry where stage <= 6 order by sort");
     expect(rows).toHaveLength(21);
     expect(rows.filter((r) => r.available).map((r) => r.key)).toEqual(["my_page", "details_check", "hold_card", "my_details", "my_story", "role_panels", "still_right"]);
     expect(rows.filter((r) => r.available).map((r) => r.stage)).toEqual([1, 1, 1, 2, 2, 2, 2]);
@@ -46,6 +51,13 @@ describe("everything ships Off", () => {
       expect(await all(who)).toEqual(OFF);
     }
     expect(await state(leader, "my_page")).toBe("off");
+  });
+
+  it("tells everyone Off for every function added after the profile stages too", async () => {
+    for (const who of [leader, c.member, c.director, c.admin]) {
+      const everything = (await c.as(who, "my_features")) as Record<string, string>;
+      for (const [key, position] of Object.entries(everything)) expect(position, key).toBe("off");
+    }
   });
 
   it("tells a visitor Off and a person only about themselves", async () => {
@@ -120,7 +132,7 @@ describe("only the owner moves a switch", () => {
   it("lets the unlocked owner read the whole page", async () => {
     const board = await c.o.call("god_feature_board");
     expect(board.paused).toBe(false);
-    expect(board.features).toHaveLength(21);
+    expect(board.features.filter((f: { stage: number }) => f.stage <= 6)).toHaveLength(21);
     const mine = board.features.find((f: { key: string }) => f.key === "details_check");
     expect(mine).toMatchObject({ available: true, summary: "off", depends: ["my_page"], rules: [] });
     // Every function reads Off on a fresh board, the hold too (its own default of Optional only means something once the Details check is open)

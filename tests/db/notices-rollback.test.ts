@@ -36,6 +36,17 @@ const RESTORED_BY_LATER = new Set(
   ),
 );
 
+/**
+ * Tables a feature built after the notices created. Its own way back may drop them (it says in its first lines what that takes with it and how
+ * to copy it first); a table the notices made, or one that was there before, is still held to "never dropped".
+ */
+const LATER_TABLES = new Set(
+  fs
+    .readdirSync(MIGRATIONS)
+    .filter((f) => f.endsWith(".sql") && f.slice(0, 14) > "20261225000200")
+    .flatMap((f) => [...fs.readFileSync(path.join(MIGRATIONS, f), "utf8").matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?public\.([a-z_0-9]+)/gi)].map((m) => m[1].toLowerCase())),
+);
+
 let db: TestDb;
 let baseline: Client;
 let baselineName: string;
@@ -132,6 +143,9 @@ describe("the way back from the team's emails", () => {
         ? lines
             .replace(/create\s+or\s+replace\s+function[\s\S]*?(?:\$function\$|\$\$);/gi, "")
             .replace(/\b(?:delete\s+from|update)\s+public\.(?:feature_settings|feature_registry|profile_fact_registry)\b[^;]*;/gi, "")
+            // …nor the tables that same feature made, nor the Switchboard's own column and range check it added or widened (a way back puts them as they were)
+            .replace(/\bdrop\s+table\s+if\s+exists\s+public\.([a-z_0-9]+)\s*;/gi, (all, t: string) => (LATER_TABLES.has(t.toLowerCase()) ? "" : all))
+            .replace(/\balter\s+table\s+public\.feature_registry\b[^;]*;/gi, "")
         : lines;
       expect(code, f).not.toMatch(LATER_DOWN.includes(f) ? /\b(delete|truncate|insert)\b\s/i : /\b(delete|truncate|insert|update)\b\s/i);
       expect(code, f).not.toMatch(/\bdrop\s+(table|column|schema)\b/i);

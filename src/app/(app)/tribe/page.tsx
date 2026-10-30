@@ -15,6 +15,8 @@ import { loadMyLeading } from "@/lib/leaders/server";
 import { loadMatches } from "@/lib/matching/server";
 import { loadMyPlacement } from "@/lib/placement/server";
 import { loadMyProgress, loadWordDays } from "@/lib/dashboard/server";
+import { RemovedNotice } from "@/components/removal/RemovedNotice";
+import { loadMyRemoval } from "@/lib/removal/server";
 import { loadMyWeek, loadWeekLayer } from "@/lib/rhythm/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -60,6 +62,9 @@ export default async function TribePage({ searchParams }: { searchParams: Search
   const strip = leading ? <LeadingStrip leading={leading} /> : null;
 
   const match = await loadMatches(supabase);
+  // A member whose place the church has changed reads it kindly above the tribes that are open to them. Nothing while the switch is Off.
+  const removedNow = match?.placement ? null : await loadMyRemoval(supabase);
+  const removed = removedNow && !removedNow.reinstated ? <RemovedNotice removal={removedNow} /> : null;
 
   if (match?.placement) {
     // A member the church placed is asked, above their tribe, to say yes or to keep their details private
@@ -90,9 +95,10 @@ export default async function TribePage({ searchParams }: { searchParams: Search
     );
   }
 
-  return strip ? (
+  return strip || removed ? (
     <div className="flex flex-col gap-8">
       {strip}
+      {removed}
       <MatchList match={match} />
     </div>
   ) : (

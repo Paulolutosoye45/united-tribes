@@ -23,12 +23,12 @@ function message(template: string, params: Params, over: Partial<ClaimedMessage[
 }
 
 const read = (file: string) => readFileSync(join(__dirname, "../../supabase/migrations", file), "utf8");
-const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}\n${read("20270102000100_profiles_stage2.sql")}`;
+const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}\n${read("20270102000100_profiles_stage2.sql")}\n${read("20270103000400_removal_requests.sql")}`;
 
 describe("the notices, as templates", () => {
-  it("has the 62 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach, and the one of stage 2: a person tells the Care Team their age range is not right), each registered with the sender", () => {
-    expect(keys).toHaveLength(62);
-    expect(new Set(keys).size).toBe(62);
+  it("has the 68 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach, the one of stage 2: a person tells the Care Team their age range is not right, and the six of leader removal requests: a request for the coach and for the Care Team, the waiting reminder for each, the week-old one for a director, and a member's appeal), each registered with the sender", () => {
+    expect(keys).toHaveLength(68);
+    expect(new Set(keys).size).toBe(68);
     for (const key of keys) expect(TEMPLATES[key], key).toBeDefined();
     expect(NOTICE_CATALOGUE.map((n) => n.key).sort()).toEqual([...keys].sort());
     expect(Object.keys(NOTICE_SAMPLES).sort()).toEqual([...keys].sort());
@@ -41,6 +41,8 @@ describe("the notices, as templates", () => {
       "referee_concern", "referee_concerns", "referee_days", "referee_first",
       // Profiles stage 1: a function key on the Features switchboard, and a message template (email only, not a notice)
       "coach_card", "leader_welcome",
+      // Leader removal requests: fields of the params and rows (the member's first name and id), not kinds
+      "member_first", "member_id",
     ]);
     const queued = new Set([...SQL.matchAll(/'((?:pastor|director|admin|coach|care|leader|member|applicant|referee|champion|data|staff)_[a-z_]+)'/g)].map((m) => m[1]).filter((k) => !notKinds.has(k)));
     expect([...queued].filter((k) => !keys.includes(k))).toEqual([]);
@@ -354,7 +356,7 @@ describe("the catalogue the Notifications page shows", () => {
 
   it("marks as 'at once' only what the database sends at once", () => {
     const urgent = NOTICE_CATALOGUE.filter((n) => n.urgent).map((n) => n.key).sort();
-    expect(urgent).toEqual(["admin_application_sent", "admin_data_request_due", "admin_queue_stuck", "admin_role_changed", "pastor_referee_concern", "staff_role_welcome"]);
+    expect(urgent).toEqual(["admin_application_sent", "admin_data_request_due", "admin_queue_stuck", "admin_role_changed", "director_removal_escalated", "pastor_referee_concern", "staff_role_welcome"]);
   });
 
   it("never lists the same group twice, and only groups that have a digest say so", () => {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { looksMadeUp, NUMBER_WORDS } from "@/lib/messaging/number-rule";
 import {
   BASELINES,
   CHANNELS,
@@ -145,7 +146,7 @@ export type Problem = { step: string; message: string };
  * Checks a finished form. Returns the first problem, naming the step to send
  * the person back to, or null when everything needed is present.
  */
-export function firstProblem(a: Answers, opts: { teensOpen?: boolean } = {}): Problem | null {
+export function firstProblem(a: Answers, opts: { teensOpen?: boolean; numberRequired?: boolean } = {}): Problem | null {
   if (!a.ageRange) return { step: "age", message: "Choose your age range." };
   if (a.ageRange === TEENS && opts.teensOpen !== true) return { step: "age", message: "Tribes for teens are not open yet." };
   if (a.birthdayDay !== undefined || a.birthdayMonth !== undefined) {
@@ -165,7 +166,7 @@ export function firstProblem(a: Answers, opts: { teensOpen?: boolean } = {}): Pr
   if (!a.times || a.times.length === 0) return { step: "rhythm", message: "Choose at least one time that could work." };
   if (a.secondCommunity && a.secondCommunity === a.community) return { step: "community", message: "Your second choice has to be a different community from your first." };
   if (a.groupRoles && a.groupRoles.length > MAX_GROUP_ROLES) return { step: "style", message: `Choose up to ${MAX_GROUP_ROLES} roles.` };
-  const contact = contactProblem(a);
+  const contact = contactProblem(a, { required: opts.numberRequired === true && a.ageRange !== TEENS });
   if (contact) return { step: "contact", message: contact };
   return null;
 }
@@ -175,10 +176,16 @@ export function hasWords(value: string | undefined, min = 3): boolean {
   return (value?.trim().length ?? 0) >= min;
 }
 
-/** What is wrong with how the person asked to be reached, in words they can act on, or null. */
-export function contactProblem(a: Pick<Answers, "phone" | "whatsappOk" | "smsOk" | "channel" | "emailOk">): string | null {
+/**
+ * What is wrong with how the person asked to be reached, in words they can act on, or null. `required` is true while the
+ * WhatsApp number is compulsory (the Switchboard's "WhatsApp number required" is On and the person is an adult): then the
+ * number must be there, and must not be made up. Off, nothing about the number is checked beyond its shape.
+ */
+export function contactProblem(a: Pick<Answers, "phone" | "whatsappOk" | "smsOk" | "channel" | "emailOk">, opts: { required?: boolean } = {}): string | null {
   const phone = a.phone?.trim();
+  if (opts.required && !phone) return NUMBER_WORDS.missing;
   if (phone && !normaliseWhatsapp(phone)) return "That phone number doesn't look right. Include your network code, like 0803 123 4567.";
+  if (opts.required && phone && looksMadeUp(normaliseWhatsapp(phone))) return NUMBER_WORDS.madeUp;
   if ((a.whatsappOk || a.smsOk) && !phone) return "Add your phone number to be reached on WhatsApp or by text message, or untick them.";
   if (a.emailOk === false && !a.whatsappOk && !a.smsOk) return "Choose at least one way for us to reach you, or we won't be able to send your meeting reminders.";
   return null;

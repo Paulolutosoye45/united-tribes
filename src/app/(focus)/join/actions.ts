@@ -6,6 +6,7 @@ import { SealUnavailable, draftContext, leaderNoteContext, seal, sealingAvailabl
 import { enabledChannels, firstProblem, hasWords, normaliseWhatsapp, parseDraftAnswers, supportLoad, TEENS } from "@/lib/intake/answers";
 import { areaBySlug } from "@/lib/intake/areas";
 import { CONSENT_VERSION } from "@/lib/intake/consent";
+import { parseNumberRule } from "@/lib/messaging/number-rule";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; message: string; step?: string };
@@ -47,7 +48,10 @@ export async function submitIntakeAction(raw: unknown, activeSeconds: number, is
   const personId = session.person.id;
 
   const { data: teensOpen } = await supabase.rpc("teen_track_open");
-  const problem = firstProblem(answers, { teensOpen: teensOpen === true });
+  // While the church has made the phone number compulsory, it is checked here, before anything is saved (the database checks again in save_contact)
+  const { data: numberRaw } = await supabase.rpc("my_number_rule");
+  const numberRequired = parseNumberRule(numberRaw).on;
+  const problem = firstProblem(answers, { teensOpen: teensOpen === true, numberRequired });
   if (problem) return { ok: false, ...problem };
 
   const { data: consented } = await supabase.rpc("has_consent", { p_purpose: "matching" });
@@ -166,7 +170,8 @@ export async function submitIntakeAction(raw: unknown, activeSeconds: number, is
     p_email: answers.emailOk !== false,
     p_version: CONSENT_VERSION,
   });
-  if (contactError) return { ok: false, step: "contact", message: TRY_AGAIN };
+  // The database words its own refusals for people (a number missing or made up); anything else is a fault to try again
+  if (contactError) return { ok: false, step: "contact", message: contactError.code === "22023" && contactError.message ? contactError.message : TRY_AGAIN };
 
   // How they asked to be called lives on their person record.
   await supabase
