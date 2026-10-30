@@ -4,8 +4,8 @@ import { Crest } from "@/components/brand/Crest";
 import { canSwitchCentre, getMyCentres } from "@/lib/auth/centres";
 import { ROLE_LABELS, navFor, primaryRole } from "@/lib/auth/roles";
 import type { Session } from "@/lib/auth/session";
-import { HelpLink } from "@/components/guides/HelpLink";
-import { helpEntriesFor } from "@/lib/guides/context";
+import { HowToPilot } from "@/components/guides/HowToPilot";
+import { pilotFor } from "@/lib/guides/pilot";
 import { loadMyPageOpen } from "@/lib/profile/server";
 import { createClient } from "@/lib/supabase/server";
 import { AccountMenu } from "./AccountMenu";
@@ -22,7 +22,7 @@ export async function AppShell({ session, children }: { session: Session; childr
   const mine = session.roles.some((r) => r !== "member") ? await getMyCentres() : null;
   const centres = canSwitchCentre(mine) ? { current: mine.current?.id ?? null, list: mine.centres.filter((c) => c.active) } : null;
   const name = session.person.fullName ?? displayName(session.person);
-  const help = helpEntriesFor(session.roles);
+  const pilot = pilotFor(session.roles, items);
   // The link to My page appears only while My page is open for this person (the owner has no member page)
   const myPage = owner ? false : await loadMyPageOpen(await createClient());
 
@@ -45,7 +45,6 @@ export async function AppShell({ session, children }: { session: Session; childr
           </Link>
           <TopNav items={items} />
           <div className="col-start-3 flex items-center justify-end gap-2">
-            <HelpLink entries={help} />
             <AccountMenu
               name={name}
               email={session.person.email}
@@ -62,6 +61,8 @@ export async function AppShell({ session, children }: { session: Session; childr
       </main>
 
       <BottomTabs items={items} />
+      {/* The button that shows anyone how to use the app: on every screen, for every role */}
+      <HowToPilot data={pilot} tabs={items.length > 1} />
     </div>
   );
 }

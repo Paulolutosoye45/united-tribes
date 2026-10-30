@@ -92,6 +92,7 @@ export const runYourWeek: Guide = {
           id: "calls",
           title: "See who needs a call",
           do: ["**People to call first** lists anyone the app has noticed, with the reason and a line of advice.", "Press [[Message on WhatsApp]] for a short, warm message, or [[Call]]."],
+          tip: "When your church has made the phone number compulsory, a gold note on your tribe’s page says who has not added one yet. You can ask them in person.",
           shot: week({ path: "/lead/week", ring: [{ role: "heading", name: "People to call first" }], tag: "Call first", alt: "The list of people to call first, with a reason for each and buttons to message or call.", minHeight: 560, lead: 40 }),
         },
         {

@@ -26,7 +26,7 @@ import { labelsIn } from "../../src/lib/guides/markup";
 import type { Action, Cast, Finder, Guide, GuideManifest, PictureInfo, Shot, Step } from "../../src/lib/guides/types";
 import { MESSAGING } from "../env";
 import { BASE, launch, open, settle, state } from "../lib";
-import { ARRANGE, CAST, arrange, makeStage, pathFor } from "./guide-cast";
+import { ARRANGE, CAST, arrange, makeStage, pathFor, setSituation } from "./guide-cast";
 
 const ROOT = path.resolve(__dirname, "../..");
 const OUT = path.join(ROOT, "content/guides/pictures");
@@ -73,6 +73,15 @@ async function emailedCode(page: Page, to: string): Promise<string> {
 }
 
 async function run(page: Page, a: Action) {
+  try {
+    await doAction(page, a);
+  } catch (e) {
+    // Say which step of getting to the screen failed, not only that something timed out
+    throw new Error(`could not ${a.do} ${"on" in a ? describe(a.on) : "path" in a ? a.path : ""}: ${(e instanceof Error ? e.message : String(e)).split("\n")[0]}`);
+  }
+}
+
+async function doAction(page: Page, a: Action) {
   switch (a.do) {
     case "click":
       await locate(page, a.on).first().click({ timeout: 15000 });
@@ -82,6 +91,9 @@ async function run(page: Page, a: Action) {
       break;
     case "check":
       await locate(page, a.on).first().check({ timeout: 15000 });
+      break;
+    case "select":
+      await locate(page, a.on).first().selectOption({ label: a.value }, { timeout: 15000 });
       break;
     case "fill-code":
       await locate(page, a.on).first().fill(await emailedCode(page, a.to), { timeout: 15000 });
@@ -354,6 +366,13 @@ async function main() {
       contexts.delete(key);
     } else if (have) return have.page;
     const made = await CAST[cast]!.open(stage, browser, device, firstPath);
+    // The "How to use this app" button is not part of any screen a guide pictures, and it must never be in the way of what a step presses
+    await made.ctx.addInitScript(() => {
+      // (A constructed style sheet: the site's content policy turns away a style element a script adds)
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync("[data-howto-ui]{display:none !important}");
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+    });
     contexts.set(key, made);
     return made.page;
   }
@@ -376,11 +395,14 @@ async function main() {
           const shot = step.shot;
           const device = shot.device ?? "phone";
           const where = `${guide.code} "${guide.title}", step "${step.id}"`;
+          let current: Page | undefined;
           try {
+            await setSituation(stage, shot);
             if (shot.arrange) await arrange(stage, shot.arrange);
             await CAST[shot.cast]?.fresh?.(stage);
             const where_ = await pathFor(stage, shot.path);
             const page = await pageFor(shot.cast, device, where_);
+            current = page;
             await open(page, where_);
             for (const a of shot.before ?? []) await run(page, a);
             await settle(page);
@@ -391,6 +413,9 @@ async function main() {
           } catch (e) {
             const why = (e instanceof Error ? e.message : String(e)).split("\n")[0];
             console.log(`  ${step.id.padEnd(26)} FAILED: ${why}`);
+            // GUIDE_DEBUG=1 shows what the screen said when a picture could not be made
+            if (process.env.GUIDE_DEBUG && current) console.log(`    the screen said: ${(await current.locator("body").innerText().catch(() => "")).replace(/\n+/g, " | ").slice(0, 700)}`);
+            if (process.env.GUIDE_DEBUG && current) console.log(`    buttons: ${(await current.evaluate(() => [...document.querySelectorAll("button, input")].map((b) => ((b as HTMLElement).innerText || (b as HTMLInputElement).name) + ((b as HTMLButtonElement).disabled ? " (disabled)" : "") + ((b as HTMLInputElement).checked ? " (checked)" : "")).join(" | ")).catch(() => "")).slice(0, 500)}`);
             failures.push(why.startsWith(where) ? why : `${where}: ${why}`);
           }
         }

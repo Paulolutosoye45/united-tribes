@@ -1,12 +1,15 @@
 import type { Role } from "@/lib/auth/roles";
 import { canOpen } from "./access";
 import { GUIDES } from "./catalogue";
+import { helpFor, helpForAll, type HelpEntry } from "./match";
 
 /**
- * Which guide answers "how do I use this page?". The little help button in the app's header takes a person to it.
+ * Which guide answers "how do I use this page?". The "How to use this app" button takes a person to it.
  *
- * The first line that matches the page, and that this person is allowed to read, wins. So a leader and an assistant leader, on the very
- * same page, are each taken to their own guide, and a person is never sent to a guide that would say "not for you".
+ * The first line that matches the page, and that this person is allowed to read, is the main one. So a leader and an assistant leader, on the
+ * very same page, are each taken to their own guide, and a person is never sent to a guide that would say "not for you". A page may have
+ * more than one guide (the leader's tribe page has the one for starting out and the one for asking about a member's place); the others
+ * follow the main one.
  */
 type Line = { prefix: string; exact?: boolean; slug: string; when?: (roles: readonly Role[]) => boolean };
 
@@ -19,6 +22,7 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/lead/academy", slug: "leader-academy" },
   { prefix: "/lead/apply", slug: "apply-to-lead" },
   { prefix: "/lead/tribe", slug: "appointed-to-lead" },
+  { prefix: "/lead/tribe", slug: "ask-about-a-place", when: holds("leader") },
   { prefix: "/lead", exact: true, slug: "appointed-to-lead", when: holds("leader") },
   { prefix: "/lead", exact: true, slug: "apply-to-lead" },
   { prefix: "/care", slug: "assistant-leader", when: holds("assistant_leader") },
@@ -27,15 +31,24 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/tribe", slug: "join-your-tribe" },
   { prefix: "/profile", slug: "your-information" },
   { prefix: "/privacy", slug: "your-information" },
+  // The church's own people
+  { prefix: "/admin/messages/whatsapp", slug: "whatsapp-health" },
+  { prefix: "/admin/messages", slug: "whatsapp-health" },
+  { prefix: "/growth/removals", slug: "decide-a-place-change" },
+  // Pages people reach from an email or before they have an account: open to anyone with the link
+  { prefix: "/sign-in", slug: "sign-in" },
+  { prefix: "/reference", slug: "give-a-reference" },
+  { prefix: "/guardian", slug: "parent-permission" },
+  { prefix: "/placed", slug: "you-have-been-placed" },
 ];
 
-/** What the browser needs to choose a guide for the page it is on: small, and only guides this person may open. */
-export type HelpEntry = { prefix: string; exact: boolean; slug: string; title: string };
+export type { HelpEntry };
 
-export function helpEntriesFor(roles: readonly Role[]): HelpEntry[] {
+/** `roles` is null for someone who is not signed in: they are offered only the guides that open for anyone with the link. */
+export function helpEntriesFor(roles: readonly Role[] | null): HelpEntry[] {
   const out: HelpEntry[] = [];
   for (const line of HELP_LINES) {
-    if (line.when && !line.when(roles)) continue;
+    if (line.when && !line.when(roles ?? [])) continue;
     const guide = GUIDES.find((g) => g.slug === line.slug);
     if (!guide || !canOpen(guide, roles)) continue;
     out.push({ prefix: line.prefix, exact: line.exact === true, slug: guide.slug, title: guide.title });
@@ -43,8 +56,4 @@ export function helpEntriesFor(roles: readonly Role[]): HelpEntry[] {
   return out;
 }
 
-/** The guide for this address, if there is one. Runs in the browser, so it knows nothing but the entries it was given. */
-export function helpFor(entries: readonly HelpEntry[], pathname: string): HelpEntry | null {
-  const here = pathname.replace(/\/+$/, "") || "/";
-  return entries.find((e) => (e.exact ? here === e.prefix : here === e.prefix || here.startsWith(`${e.prefix}/`))) ?? null;
-}
+export { helpFor, helpForAll };

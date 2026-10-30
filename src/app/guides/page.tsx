@@ -6,23 +6,10 @@ import { PublicFrame } from "@/components/guides/PublicFrame";
 import { getSession } from "@/lib/auth/session";
 import { shelvesFor } from "@/lib/guides/access";
 import { GUIDES } from "@/lib/guides/catalogue";
-import { cardOf, type CardView } from "@/lib/guides/view";
+import { TRIBE_CARD_GUIDE } from "@/lib/guides/tribe-card";
+import { cardOf } from "@/lib/guides/view";
 
 export const metadata: Metadata = { title: "How-to guides", description: "Short guides with a picture for every step." };
-
-/** The Tribe Card guide was made first and lives at its own address, which has already been shared. It is listed here, and opens there. */
-const TRIBE_CARD_GUIDE: CardView = {
-  slug: "tribe-card",
-  code: "L0",
-  title: "Fill in your Tribe Card, and your first 21 days",
-  lede: "Ten steps to fill in your Tribe Card, then what to do in your first 21 days as a leader.",
-  forWho: "For tribe leaders",
-  minutes: 12,
-  steps: 10,
-  cover: null,
-  href: "/tutorial",
-  search: "l0 tribe card first 21 days leader fill in card",
-};
 
 export default async function GuidesPage() {
   const session = await getSession();

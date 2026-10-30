@@ -1,0 +1,309 @@
+/*
+ * "How to use this app" button
+ *
+ * Everything here is named hp-*, so it cannot touch the rest of the app, and it uses only the app's own colour and shape tokens (globals.css),
+ * so light and dark come for free. The button pulses with a ripple of light that is drawn outside it (a shadow that grows and fades), so the
+ * button itself never moves or changes size and nothing under it shifts. With "reduce motion" on, nothing moves: a still gold ring says the
+ * same thing.
+ */
+
+.hp-btn {
+  position: fixed;
+  z-index: 35;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 3.25rem;
+  padding: 0 1.15rem 0 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--crest-ink);
+  font: inherit;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  background: linear-gradient(160deg, var(--crest-gold), var(--crest-flame));
+  box-shadow: 0 10px 26px -10px rgb(232 104 56 / 0.85), inset 0 1px 0 rgb(255 255 255 / 0.45);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Above the phone's tab bar, when there is one */
+.hp-btn[data-tabs="true"] { bottom: calc(env(safe-area-inset-bottom, 0px) + 5.9rem); }
+@media (min-width: 1024px) {
+  .hp-btn, .hp-btn[data-tabs="true"] { right: 1.5rem; bottom: 1.5rem; }
+}
+.hp-btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.hp-btn:hover { filter: brightness(1.04); }
+
+/* The ripple is a thin gold ring that grows and fades. It uses only transform and opacity, which the browser animates on its own, without repainting the page on every frame */
+.hp-btn {
+  --hp-x: 1.1;
+  --hp-y: 1.55;
+}
+.hp-btn[data-pulse="soft"] { --hp-x: 1.06; --hp-y: 1.32; }
+.hp-btn::before,
+.hp-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 3px solid rgb(244 196 67 / 0.9);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.hp-icon {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.55);
+}
+.hp-icon svg { width: 1.3rem; height: 1.3rem; }
+.hp-label { font-size: 0.97rem; white-space: nowrap; }
+
+/* On a phone the words are shown until the person has opened the button once; after that it is a round button, and the words stay for a screen reader */
+@media (max-width: 1023.98px) {
+  .hp-btn[data-new="false"] { padding: 0; width: 3.5rem; height: 3.5rem; justify-content: center; }
+  .hp-btn[data-new="false"] .hp-label { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .hp-btn[data-new="false"] .hp-icon { background: transparent; width: 2.4rem; height: 2.4rem; }
+  .hp-btn[data-new="false"] .hp-icon svg { width: 1.7rem; height: 1.7rem; }
+  .hp-btn[data-new="false"] { --hp-x: 1.5; --hp-y: 1.5; }
+  .hp-btn[data-new="false"][data-pulse="soft"] { --hp-x: 1.3; --hp-y: 1.3; }
+}
+
+/*
+ * In a form's own header (Find your tribe, the leader application): a small round button that is part of the page, not floating over it, so it can never
+ * cover a question or the Continue bar. It is placed after the rules above on purpose: it is as specific as they are, and the last one wins.
+ */
+.hp-btn[data-inline="true"] {
+  position: relative;
+  z-index: auto;
+  right: auto;
+  bottom: auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-height: 0;
+  padding: 0;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hp-btn[data-inline="true"] .hp-icon { background: transparent; width: 2.4rem; height: 2.4rem; }
+.hp-btn[data-inline="true"] .hp-icon svg { width: 1.7rem; height: 1.7rem; }
+.hp-btn[data-inline="true"] { --hp-x: 1.45; --hp-y: 1.45; }
+.hp-btn[data-inline="true"][data-pulse="soft"] { --hp-x: 1.28; --hp-y: 1.28; }
+
+/*
+ * The pulse. "strong" is for someone new to the button, "soft" for a page whose guide has not been looked at. It ripples a few times and then rests, so a page
+ * left open is not repainting for ever (that would flatten a phone's battery); the next page ripples again.
+ */
+@keyframes hp-ripple {
+  0% { transform: scale(1); opacity: 0.85; }
+  45%, 100% { transform: scale(var(--hp-x), var(--hp-y)); opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hp-btn[data-pulse="strong"]::before { animation: hp-ripple 3.4s ease-out 0s 6; }
+  .hp-btn[data-pulse="strong"]::after { animation: hp-ripple 3.4s ease-out 0.6s 6; }
+  .hp-btn[data-pulse="soft"]::before { animation: hp-ripple 5s ease-out 0s 3; }
+  .hp-bubble { animation: hp-bubble-in 520ms var(--ease-spring, ease-out) both; }
+  .hp-point { animation: hp-point-in 260ms ease-out both; }
+  .hp-point::before { animation: hp-point-pulse 1.5s ease-out 4; }
+  .hp-sheet[open] .hp-panel { animation: hp-sheet-in 320ms var(--ease-out, ease-out) both; }
+  .hp-tour { animation: hp-bubble-in 360ms var(--ease-spring, ease-out) both; }
+}
+@keyframes hp-bubble-in { from { opacity: 0; transform: translateY(10px) scale(0.96); } }
+@keyframes hp-point-in { from { opacity: 0; transform: scale(1.12); } }
+@keyframes hp-point-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(244 196 67 / 0.75); }
+  100% { box-shadow: 0 0 0 16px rgb(244 196 67 / 0); }
+}
+@keyframes hp-sheet-in { from { opacity: 0; transform: translateY(24px); } }
+@media (prefers-reduced-motion: reduce) {
+  /* Nothing moves, but the button still says "look at me" */
+  .hp-btn[data-pulse="strong"] { box-shadow: 0 0 0 4px rgb(244 196 67 / 0.65), 0 10px 26px -10px rgb(232 104 56 / 0.85); }
+  .hp-btn[data-pulse="soft"]::before { opacity: 1; border: 0; box-shadow: 0 0 0 3px rgb(244 196 67 / 0.7); }
+}
+
+/* The welcome bubble, over the button */
+.hp-bubble {
+  position: fixed;
+  z-index: 36;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem + 4.1rem);
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 1rem 1rem 0.9rem;
+  border-radius: 1.4rem 1.4rem 0.4rem 1.4rem;
+  color: var(--ink);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-pop);
+}
+.hp-bubble[data-tabs="true"] { bottom: calc(env(safe-area-inset-bottom, 0px) + 5.9rem + 4.1rem); }
+@media (min-width: 1024px) {
+  .hp-bubble, .hp-bubble[data-tabs="true"] { right: 1.5rem; bottom: calc(1.5rem + 4.1rem); }
+}
+.hp-bubble[data-live="false"] { pointer-events: none; }
+.hp-bubble p { margin: 0; }
+.hp-bubble-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+
+/* Small buttons used inside the sheet, the bubble and the tour */
+.hp-go,
+.hp-quiet,
+.hp-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 650;
+  cursor: pointer;
+  text-decoration: none;
+}
+.hp-go { border: 0; color: var(--crest-ink); background: linear-gradient(160deg, var(--crest-gold), var(--crest-flame)); }
+.hp-quiet { color: var(--ink); background: transparent; border: 1px solid var(--line); }
+.hp-quiet:hover, .hp-chip:hover { background: var(--surface); }
+.hp-go:disabled, .hp-quiet:disabled { opacity: 0.5; cursor: not-allowed; }
+.hp-chip {
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--crest-gold) 65%, var(--line));
+  background: color-mix(in srgb, var(--crest-gold) 22%, var(--raised));
+}
+.hp-go:focus-visible, .hp-quiet:focus-visible, .hp-chip:focus-visible, .hp-close:focus-visible, .hp-row:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+/* The sheet */
+.hp-sheet {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+.hp-sheet::backdrop { background: rgb(10 9 8 / 0.55); backdrop-filter: blur(2px); }
+.hp-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  max-height: min(90dvh, 46rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem 1.25rem calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
+  border-radius: 1.75rem 1.75rem 0 0;
+  background: var(--raised);
+  box-shadow: var(--shadow-pop);
+}
+@media (min-width: 640px) {
+  .hp-panel { left: auto; right: 1.5rem; bottom: 1.5rem; width: 27rem; border-radius: 1.75rem; padding-bottom: 1.5rem; }
+}
+.hp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.hp-head h2 { margin: 0; font-size: 1.45rem; line-height: 1.15; letter-spacing: -0.02em; font-weight: 700; }
+.hp-where { margin: 0.3rem 0 0; font-size: 0.92rem; color: var(--soft); }
+.hp-close {
+  display: grid; place-items: center; flex: none;
+  width: 2.75rem; height: 2.75rem; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--raised); color: var(--ink); cursor: pointer;
+}
+.hp-close:hover { background: var(--surface); }
+.hp-panel h3 { margin: 0 0 0.6rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); }
+.hp-panel section { display: block; }
+
+.hp-card {
+  display: flex; flex-direction: column; gap: 0.75rem;
+  padding: 1rem; border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--crest-gold) 14%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--crest-gold) 40%, var(--line));
+}
+.hp-card strong { font-size: 1.08rem; line-height: 1.25; }
+.hp-meta { font-size: 0.9rem; color: var(--soft); }
+.hp-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.hp-chips-title { margin: 0 0 0.4rem; font-size: 0.92rem; color: var(--soft); }
+
+.hp-search {
+  width: 100%; height: 3.25rem; padding: 0 1rem;
+  border-radius: var(--radius-control); border: 1px solid var(--line);
+  background: var(--page); color: var(--ink); font: inherit; font-size: 1rem;
+}
+.hp-search:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.hp-list { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
+.hp-row {
+  display: grid; gap: 0.15rem; padding: 0.75rem 0.9rem; border-radius: 1rem;
+  border: 1px solid var(--line); background: var(--page); color: var(--ink); text-decoration: none;
+}
+.hp-row:hover { background: var(--surface); }
+.hp-row b { font-weight: 650; line-height: 1.3; }
+.hp-row span { font-size: 0.88rem; color: var(--soft); }
+.hp-row[aria-current="page"] { border-color: color-mix(in srgb, var(--crest-gold) 70%, var(--line)); }
+.hp-note { margin: 0.6rem 0 0; font-size: 0.95rem; color: var(--soft); }
+.hp-details > summary { cursor: pointer; font-weight: 650; min-height: 2.75rem; display: flex; align-items: center; }
+.hp-foot { display: flex; flex-wrap: wrap; gap: 0.5rem; padding-top: 0.25rem; border-top: 1px solid var(--line); }
+.hp-foot { padding-top: 1rem; }
+
+/* The ring over a real control on the page */
+.hp-point {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  border-radius: 0.9rem;
+  border: 3px solid var(--crest-gold);
+  box-shadow: 0 0 0 3px rgb(26 25 23 / 0.55);
+}
+.hp-point::before { content: ""; position: absolute; inset: -3px; border-radius: inherit; }
+.hp-point-tag {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.55rem);
+  transform: translateX(-50%);
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--crest-ink);
+  background: var(--crest-gold);
+  box-shadow: 0 6px 16px -8px rgb(0 0 0 / 0.6);
+}
+.hp-point[data-below="true"] .hp-point-tag { bottom: auto; top: calc(100% + 0.55rem); }
+
+/* The tour card */
+.hp-tour {
+  position: fixed;
+  z-index: 70;
+  left: 1rem;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 6.4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.1rem;
+  border-radius: 1.5rem;
+  background: var(--raised);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-pop);
+}
+@media (min-width: 1024px) {
+  .hp-tour { left: 50%; right: auto; bottom: auto; top: 5rem; width: 26rem; transform: translateX(-50%); }
+}
+.hp-tour h3 { margin: 0; font-size: 1.2rem; letter-spacing: -0.01em; }
+.hp-tour p { margin: 0; }
+.hp-tour-step { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); }
+.hp-tour-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.35rem; }
+
+@media print { .hp-btn, .hp-bubble, .hp-sheet, .hp-point, .hp-tour { display: none !important; } }

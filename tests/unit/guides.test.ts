@@ -7,7 +7,7 @@ import { canOpen, doorFor, guidesFor, shelvesFor } from "@/lib/guides/access";
 import { GUIDES, guideBySlug } from "@/lib/guides/catalogue";
 import { labelsIn, pieces, plain } from "@/lib/guides/markup";
 import { PICTURES, pictureUrl } from "@/lib/guides/pictures";
-import { HELP_LINES, helpEntriesFor, helpFor } from "@/lib/guides/context";
+import { HELP_LINES, helpEntriesFor, helpFor, helpForAll } from "@/lib/guides/context";
 import { viewOf } from "@/lib/guides/view";
 import type { Guide } from "@/lib/guides/types";
 
@@ -276,7 +276,7 @@ describe("what the pictures must never show", () => {
   });
 });
 
-describe("the help button in the header", () => {
+describe("which guide belongs to which page", () => {
   const slugOf = (roles: Role[], path: string) => helpFor(helpEntriesFor(roles), path)?.slug ?? null;
   it("only ever points at guides that exist", () => {
     for (const line of HELP_LINES) expect(guideBySlug(line.slug), `${line.prefix} -> ${line.slug}`).toBeTruthy();
@@ -298,6 +298,18 @@ describe("the help button in the header", () => {
       const held: Role[] = role === "member" ? ["member"] : ["member", role];
       for (const e of helpEntriesFor(held)) expect(canOpen(guideBySlug(e.slug)!, held), `${role} ${e.prefix}`).toBe(true);
     }
+  });
+  it("takes the people who look after WhatsApp, leaders who ask about a place, and coaches who decide, to their own guides", () => {
+    expect(slugOf(["member", "admin"], "/admin/messages")).toBe("whatsapp-health");
+    expect(slugOf(["member", "admin"], "/admin/messages/whatsapp")).toBe("whatsapp-health");
+    expect(slugOf(["member", "data_lead"], "/admin/messages")).toBe("whatsapp-health");
+    expect(slugOf(["member", "coach"], "/growth/removals")).toBe("decide-a-place-change");
+    expect(slugOf(["member", "care_lead"], "/growth/removals")).toBe("decide-a-place-change");
+    expect(slugOf(["member"], "/growth/removals")).toBeNull();
+    expect(slugOf(["member"], "/admin/messages")).toBeNull();
+    // On the leader's Tribe Card both the appointed leader's guide and the one about asking apply; a member sees neither
+    expect(helpForAll(helpEntriesFor(["member", "leader"]), "/lead/tribe").map((e) => e.slug)).toEqual(["appointed-to-lead", "ask-about-a-place"]);
+    expect(helpForAll(helpEntriesFor(["member"]), "/lead/tribe").map((e) => e.slug)).not.toContain("ask-about-a-place");
   });
   it("matches a page and the pages under it, but not a page that only starts with the same letters", () => {
     expect(slugOf(["member", "leader"], "/lead")).toBe("appointed-to-lead");

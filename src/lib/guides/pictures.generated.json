@@ -152,7 +152,7 @@
     }
   },
   "find-your-tribe": {
-    "madeOn": "2026-10-26",
+    "madeOn": "2026-10-30",
     "pictures": {
       "start": {
         "id": "start",
@@ -179,7 +179,7 @@
         "id": "agree",
         "width": 780,
         "height": 1688,
-        "hash": "113ff527",
+        "hash": "6ae76723",
         "device": "phone",
         "rings": [
           {
@@ -425,6 +425,27 @@
           "text": "Your tribes",
           "x": 96.41,
           "y": 8.34
+        }
+      },
+      "reach": {
+        "id": "reach",
+        "width": 780,
+        "height": 1688,
+        "hash": "e923c833",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 31.25,
+            "w": 92.82,
+            "h": 8.06,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your number",
+          "x": 96.41,
+          "y": 35.28
         }
       }
     }
@@ -914,7 +935,7 @@
     }
   },
   "your-information": {
-    "madeOn": "2026-10-26",
+    "madeOn": "2026-10-30",
     "pictures": {
       "open-privacy": {
         "id": "open-privacy",
@@ -941,21 +962,21 @@
         "id": "how-we-reach-you",
         "width": 780,
         "height": 1040,
-        "hash": "31c3a5af",
+        "hash": "7dd755d4",
         "device": "phone",
         "rings": [
           {
-            "x": 3.59,
-            "y": 6.72,
-            "w": 92.82,
-            "h": 7.12,
+            "x": 8.97,
+            "y": 25.84,
+            "w": 82.05,
+            "h": 13.08,
             "tone": "main"
           }
         ],
         "tag": {
-          "text": "Your choice",
-          "x": 96.41,
-          "y": 10.28
+          "text": "Your number",
+          "x": 91.02,
+          "y": 32.38
         }
       },
       "emails": {
@@ -1096,6 +1117,27 @@
           "text": "Until they answer",
           "x": 62.88,
           "y": 86.97
+        }
+      },
+      "add-number": {
+        "id": "add-number",
+        "width": 780,
+        "height": 600,
+        "hash": "f66d8c6b",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 10.98,
+            "w": 92.82,
+            "h": 67.96,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "If you see this",
+          "x": 96.41,
+          "y": 44.96
         }
       }
     }
@@ -3421,6 +3463,434 @@
           "text": "Signed in",
           "x": 88.56,
           "y": 76.33
+        }
+      }
+    }
+  },
+  "ask-about-a-place": {
+    "madeOn": "2026-10-30",
+    "pictures": {
+      "open-form": {
+        "id": "open-form",
+        "width": 780,
+        "height": 840,
+        "hash": "78a92a49",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 3.59,
+            "y": 27.68,
+            "w": 86.67,
+            "h": 14.29,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 90.26,
+          "y": 34.83
+        }
+      },
+      "send": {
+        "id": "send",
+        "width": 780,
+        "height": 840,
+        "hash": "b6f0069b",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 60.67,
+            "w": 48.9,
+            "h": 14.29,
+            "tone": "main"
+          },
+          {
+            "x": 8.97,
+            "y": 21.54,
+            "w": 6.41,
+            "h": 7.62,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 57.87,
+          "y": 67.81
+        }
+      },
+      "who-and-why": {
+        "id": "who-and-why",
+        "width": 780,
+        "height": 1520,
+        "hash": "25c987e1",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 17.49,
+            "w": 82.05,
+            "h": 75.67,
+            "tone": "main"
+          },
+          {
+            "x": 8.97,
+            "y": 8.54,
+            "w": 82.05,
+            "h": 7.89,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Your choice",
+          "x": 91.02,
+          "y": 55.33
+        }
+      },
+      "say-what": {
+        "id": "say-what",
+        "width": 780,
+        "height": 720,
+        "hash": "f4ce64e4",
+        "device": "phone",
+        "rings": [
+          {
+            "x": 8.97,
+            "y": 23.5,
+            "w": 82.05,
+            "h": 38.89,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "In your own words",
+          "x": 91.02,
+          "y": 42.95
+        }
+      }
+    }
+  },
+  "whatsapp-health": {
+    "madeOn": "2026-10-30",
+    "pictures": {
+      "open-log": {
+        "id": "open-log",
+        "width": 1920,
+        "height": 573,
+        "hash": "ce760bd9",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 59.44,
+            "y": 37.23,
+            "w": 13.07,
+            "h": 8.12,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 72.51,
+          "y": 41.29
+        }
+      },
+      "read-card": {
+        "id": "read-card",
+        "width": 1920,
+        "height": 773,
+        "hash": "d765ecb3",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 35.23,
+            "y": 6.49,
+            "w": 43.66,
+            "h": 7.18,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "How WhatsApp is",
+          "x": 78.89,
+          "y": 10.08
+        }
+      },
+      "pause-start": {
+        "id": "pause-start",
+        "width": 1920,
+        "height": 773,
+        "hash": "d765ecb3",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 35.23,
+            "y": 65.25,
+            "w": 21.39,
+            "h": 11.65,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 56.62,
+          "y": 71.08
+        }
+      },
+      "pause-why": {
+        "id": "pause-why",
+        "width": 1920,
+        "height": 801,
+        "hash": "0d79364b",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 35.23,
+            "y": 66.37,
+            "w": 19.86,
+            "h": 11.24,
+            "tone": "main"
+          },
+          {
+            "x": 35.23,
+            "y": 55.32,
+            "w": 50.78,
+            "h": 11.24,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Then press",
+          "x": 55.09,
+          "y": 71.99
+        }
+      },
+      "restart": {
+        "id": "restart",
+        "width": 1920,
+        "height": 851,
+        "hash": "9b70c15b",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 35.23,
+            "y": 68.52,
+            "w": 19.64,
+            "h": 10.58,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Only when it is fixed",
+          "x": 54.87,
+          "y": 73.81
+        }
+      },
+      "restart-note": {
+        "id": "restart-note",
+        "width": 1920,
+        "height": 960,
+        "hash": "e501375e",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 35.23,
+            "y": 75.13,
+            "w": 20.63,
+            "h": 9.38,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 55.86,
+          "y": 79.82
+        }
+      },
+      "open-health": {
+        "id": "open-health",
+        "width": 1920,
+        "height": 450,
+        "hash": "cdfcb50f",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 33.28,
+            "y": 10.67,
+            "w": 9.9,
+            "h": 9.67,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 43.18,
+          "y": 15.5
+        }
+      },
+      "ask-meta": {
+        "id": "ask-meta",
+        "width": 1920,
+        "height": 450,
+        "hash": "a10543ff",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 35.23,
+            "y": 46.51,
+            "w": 10.36,
+            "h": 20,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 45.59,
+          "y": 56.51
+        }
+      },
+      "read-answers": {
+        "id": "read-answers",
+        "width": 1920,
+        "height": 450,
+        "hash": "a9a5b9d8",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 35.23,
+            "y": 53.31,
+            "w": 50.78,
+            "h": 12.27,
+            "tone": "main"
+          },
+          {
+            "x": 74.99,
+            "y": 30.21,
+            "w": 11.03,
+            "h": 20,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "The answer",
+          "x": 86.01,
+          "y": 59.45
+        }
+      },
+      "test-message": {
+        "id": "test-message",
+        "width": 1920,
+        "height": 450,
+        "hash": "c1982d9e",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 35.23,
+            "y": 55.16,
+            "w": 17.99,
+            "h": 20,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 53.22,
+          "y": 65.16
+        }
+      }
+    }
+  },
+  "decide-a-place-change": {
+    "madeOn": "2026-10-30",
+    "pictures": {
+      "open-board": {
+        "id": "open-board",
+        "width": 1920,
+        "height": 674,
+        "hash": "3b7bd87a",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 12.03,
+            "y": 57.27,
+            "w": 37.81,
+            "h": 35.5,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 49.84,
+          "y": 75.02
+        }
+      },
+      "read-request": {
+        "id": "read-request",
+        "width": 1920,
+        "height": 630,
+        "hash": "fc8b1420",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 12.03,
+            "y": 21.65,
+            "w": 75.94,
+            "h": 37.69,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Read it all",
+          "x": 87.97,
+          "y": 40.49
+        }
+      },
+      "choose": {
+        "id": "choose",
+        "width": 1920,
+        "height": 818,
+        "hash": "e82a70a8",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 13.67,
+            "y": 5.89,
+            "w": 72.66,
+            "h": 49.99,
+            "tone": "main"
+          }
+        ],
+        "tag": {
+          "text": "Your choice",
+          "x": 86.33,
+          "y": 30.89
+        }
+      },
+      "note": {
+        "id": "note",
+        "width": 1920,
+        "height": 843,
+        "hash": "68a2c1ec",
+        "device": "desktop",
+        "rings": [
+          {
+            "x": 13.67,
+            "y": 83.53,
+            "w": 14.18,
+            "h": 10.68,
+            "tone": "main"
+          },
+          {
+            "x": 13.67,
+            "y": 58.92,
+            "w": 72.66,
+            "h": 19.22,
+            "tone": "second"
+          }
+        ],
+        "tag": {
+          "text": "Press",
+          "x": 27.85,
+          "y": 88.87
         }
       }
     }

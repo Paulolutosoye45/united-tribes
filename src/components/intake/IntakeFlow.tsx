@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { FlowFrame, type SaveState } from "@/components/flow/FlowFrame";
 import { PRIVATE_ANSWER_KEYS, TEENS, type Answers } from "@/lib/intake/answers";
 import { HEARD_FIELDS } from "@/lib/intake/heard";
@@ -47,6 +47,8 @@ export type IntakeProps = {
   email: string | null;
   /** The church has made the phone number compulsory (the Switchboard's "WhatsApp number required" is On). Never asked of a teenager. */
   numberRequired?: boolean;
+  /** The "How to use this app" button, shown in the form's header. */
+  help?: ReactNode;
   seasonName: string | null;
   seasonStarts: string | null;
   initial: { view: View; answers: Answers; activeSeconds: number; ai: boolean; isEdit: boolean };
@@ -65,7 +67,7 @@ function draftOf(answers: Answers, teensOpen: boolean): Answers {
 }
 
 
-export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, email, numberRequired = false, seasonName, seasonStarts, initial }: IntakeProps) {
+export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, email, numberRequired = false, help, seasonName, seasonStarts, initial }: IntakeProps) {
   const router = useRouter();
   const [view, setView] = useState<View>(initial.view);
   const [dir, setDir] = useState<"forward" | "back">("forward");
@@ -333,6 +335,7 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
 
   return (
     <FlowFrame
+      help={help}
       fills={fills}
       section={section}
       sections={SECTIONS}

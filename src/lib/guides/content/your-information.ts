@@ -32,11 +32,19 @@ export const yourInformation: Guide = {
           },
         },
         {
+          id: "add-number",
+          title: "Add your WhatsApp number, if we ask",
+          do: ["If the top of your profile says **Add your WhatsApp number**, press [[Add my number]]. It takes you to the box below.", "Not ready? Press [[Not now]]. The reminder stays away for a week."],
+          why: "We need a number to reach you about your tribe. It takes a moment, and you choose how we use it.",
+          shot: { cast: "member", path: "/profile", features: ["number_required"], ring: [{ testid: "number-prompt" }], tag: "If you see this", alt: "A card at the top of the profile: Add your WhatsApp number, with Add my number and Not now.", minHeight: 300 },
+        },
+        {
           id: "how-we-reach-you",
           title: "Choose how we reach you",
-          do: ["Under **How we reach you**, tick [[WhatsApp]], [[Email]] or [[Text message]]. Add your phone number if you tick WhatsApp or text.", "Press [[Save]]."],
+          do: ["Under **How we reach you**, type your [[WhatsApp number]], then tick [[WhatsApp]], [[Email]] or [[Text message]].", "Press [[Save]]."],
           why: "We send nothing between 10 pm and 6 am, except an urgent care alert.",
-          shot: { cast: "member", path: "/profile", ring: [{ role: "heading", name: "How we reach you" }], tag: "Your choice", alt: "The choices for how we reach you: WhatsApp, email and text message.", lead: 40, minHeight: 520 },
+          tip: "If the page says **You have two numbers**, you sign in with one number and we message you on another. That is fine if you meant it. If not, change the one that is wrong.",
+          shot: { cast: "member", path: "/profile", features: ["number_required"], ring: [{ role: "textbox", name: "WhatsApp number" }], tag: "Your number", alt: "The choices for how we reach you: your WhatsApp number, then WhatsApp, email and text message.", lead: 140, minHeight: 520 },
         },
         {
           id: "emails",

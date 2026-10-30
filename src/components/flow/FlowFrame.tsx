@@ -43,6 +43,8 @@ type Props = {
 
   /** An inline message under the screen, for problems that do not belong to one field. */
   problem?: string | null;
+  /** The "How to use this app" button, which lives in the header here so it never covers a question or the Continue bar. */
+  help?: ReactNode;
   children: ReactNode;
 };
 
@@ -73,6 +75,7 @@ export function FlowFrame({
   busy,
   skipping = false,
   problem,
+  help,
   children,
 }: Props) {
   return (
@@ -123,12 +126,13 @@ export function FlowFrame({
                   </span>
                 ))}
               </div>
-              <p className="t-small mt-1.5 truncate text-soft">{caption}</p>
+              <p className="t-small mt-1.5 line-clamp-2 text-soft">{caption}</p>
             </div>
             <div className="hidden flex-1 lg:block" />
             <div className="shrink-0 lg:hidden">
               <ShieldProgress fills={fills} active={section} size={28} label="" />
             </div>
+            {help ? <div className="shrink-0">{help}</div> : null}
           </div>
         </header>
 

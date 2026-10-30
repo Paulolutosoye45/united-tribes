@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HowToPilot } from "@/components/guides/HowToPilot";
 import { IntakeFlow, type View } from "@/components/intake/IntakeFlow";
 import { JoinedView } from "@/components/intake/JoinedView";
 import { AppShell } from "@/components/shell/AppShell";
@@ -9,6 +10,7 @@ import { formatDate } from "@/lib/dates";
 import { parseDraftAnswers, type Answers } from "@/lib/intake/answers";
 import { loadCatalogue, openSealedDraft, profileToAnswers } from "@/lib/intake/server";
 import { resumeStep } from "@/lib/intake/steps";
+import { pilotFor } from "@/lib/guides/pilot";
 import { readContact } from "@/lib/messaging/contact";
 import { parseNumberRule } from "@/lib/messaging/number-rule";
 import { loadMyGuardian } from "@/lib/growth/server";
@@ -108,6 +110,7 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
       voiceAvailable={voiceAvailable}
       email={session.person.email ?? null}
       numberRequired={numberRequired}
+      help={<HowToPilot data={pilotFor(session.roles, [])} variant="inline" />}
       seasonName={seasonName}
       seasonStarts={seasonStarts}
       initial={{ view, answers, activeSeconds, ai: aiConsent.data === true, isEdit: editing }}

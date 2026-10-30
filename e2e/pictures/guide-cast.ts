@@ -13,9 +13,10 @@ import type { Browser, BrowserContext, Page } from "playwright-core";
 import type { Client } from "pg";
 import type { Kit } from "../../tests/db/builders";
 import type { TestDb } from "../../tests/db/helpers";
-import type { Cast } from "../../src/lib/guides/types";
+import type { Cast, Shot } from "../../src/lib/guides/types";
 import { PHONE_UA, DESKTOP_UA } from "./agents";
-import { db, signIn } from "../lib";
+import { db, signIn, state } from "../lib";
+import { expectedTemplates } from "../../src/lib/whatsapp/health";
 import { ownerDoor } from "../owner-door";
 import { kit as makeKit } from "../../tests/db/builders";
 import { testDbFor } from "../dbkit";
@@ -97,6 +98,8 @@ export async function arrange(s: Stage, name: string) {
   if (name.startsWith("application-is:")) return applicationIs(s, name.slice("application-is:".length));
   // "academy-is:<where>" does the same for her training, once she is approved
   if (name.startsWith("academy-is:")) return academyIs(s, name.slice("academy-is:".length));
+  // "removal-is:<asked|none>" puts the leader's request about a member's place back to how a picture needs it, as often as asked
+  if (name.startsWith("removal-is:")) return removalIs(s, name.slice("removal-is:".length));
   if (s.flags.has(name)) return;
   const fn = ARRANGE[name];
   if (!fn) throw new Error(`there is no arrangement called "${name}"`);
@@ -120,7 +123,11 @@ export const CAST: Partial<Record<Cast, CastDef>> = {
     );
   }),
   // Has finished the form and is looking at the tribes that fit
-  member: after("member-has-matches", "member", "Bisola"),
+  // (Her phone number is taken off before each picture, so the page that asks for it looks the way it does for a member who has none)
+  member: after("member-has-matches", "member", "Bisola", [], async (s, id) => {
+    await s.q.query("delete from public.contact_preferences where person_id = $1", [id]);
+    await s.q.query("delete from public.number_prompts where person_id = $1", [id]);
+  }),
   // Is in a tribe, and the season has begun
   "tribe-member": after("member-has-tribe", "tribe-member", "Kemi"),
   // Has asked the church office to delete their account, and is waiting
@@ -135,6 +142,10 @@ export const CAST: Partial<Record<Cast, CastDef>> = {
   leader: after("leader-has-tribe", "leader", "Segun", ["leader"], async (s) => leaderWeekFresh(s)),
   // Is the assistant leader of that tribe, with two care tasks waiting for her
   assistant: after("assistant-has-tribe", "assistant", "Dara", ["assistant_leader"], async (s) => assistantFresh(s)),
+  // Runs the church's messages. Has a phone number saved, so the health page can send her a test message.
+  admin: after("admin-has-number", "admin", "Adaora", ["admin"]),
+  // Coaches the tribe Segun leads
+  coach: after("coach-of-tribe", "coach", "Ngozi", ["coach"]),
   // People who open a private link from an email are not signed in. Each picture starts in a browser of its own (see pageFor).
   referee: { open: async (_s, browser, device) => windowFor(browser, device) },
   parent: { open: async (_s, browser, device) => windowFor(browser, device) },
@@ -272,6 +283,22 @@ export const ARRANGE: Record<string, ArrangeFn> & { __site: ArrangeFn; __realNam
     const t = await s.k.tribe(S2, { name: "Funmi’s Growers tribe", community: "professionals", slot: "saturday-morning", mode: "online" });
     await s.q.query("update public.people set full_name = 'Funmi Example', preferred_name = 'Funmi' where id = $1", [t.leader.id]);
     await s.q.query("update public.tribes set place_note = null where id = $1", [t.tribe]);
+  },
+
+  /** Adaora, who runs the church's messages. Her own phone number is saved on her profile. */
+  async "admin-has-number"(s) {
+    const p = await person(s, "admin", "Adaora", ["admin"]);
+    await s.q.query(
+      "insert into public.contact_preferences (person_id, phone, preferred) values ($1, '+2348031230099', 'email') on conflict (person_id) do update set phone = excluded.phone",
+      [p.id],
+    );
+  },
+
+  /** Ngozi, named as the coach of Segun's tribe. */
+  async "coach-of-tribe"(s) {
+    await arrange(s, "leader-week");
+    const p = await person(s, "coach", "Ngozi", ["coach"]);
+    await s.q.query("update public.tribes set coach_id = $1 where name = 'Segun’s Builders tribe'", [p.id]);
   },
 
   /** Dara, certified as an assistant leader and named as the assistant of Segun's tribe. Two care tasks are waiting for her. */
@@ -530,6 +557,56 @@ async function offerFor(s: Stage, personId: string) {
     "insert into public.leader_offers (goal_id, person_id, season_id, waiting_at_offer) values ($1, $2, $3, 3)",
     [goal!.id, personId, season!.id],
   );
+}
+
+/**
+ * Segun's request about Emeka's place, as a picture needs it: "asked" is one waiting for the coach, "none" is no request at all. Asking is done the
+ * way Segun does it, as Segun, so every rule the database keeps is kept here too.
+ */
+async function removalIs(s: Stage, where: string) {
+  if (where !== "none" && where !== "asked") throw new Error(`there is no removal situation called "${where}"`);
+  // The tribe the leader asks about: six members, the first meeting logged
+  await arrange(s, "coach-of-tribe");
+  await s.q.query("delete from public.removal_requests");
+  if (where === "none") return;
+  const leader = made.get("leader")!;
+  const tribe = (await s.one("select id from public.tribes where name = 'Segun’s Builders tribe'"))!.id as string;
+  // Bukola, because nothing is open for her with the Care Team: a request about someone they are already caring for would go to the Care Team alone
+  const bukola = (await s.one("select p.id from public.people p join public.tribe_members m on m.person_id = p.id where p.full_name = 'Bukola Example' and m.tribe_id = $1", [tribe]))!.id as string;
+  const out = await s.adapter.asUser(leader.id, (run) =>
+    run("select public.removal_ask($1, $2, 'not_a_fit', $3, true, false) as r", [tribe, bukola, "Bukola works on Thursday evenings and has told me twice that our meeting time cannot work for her. We have looked for another way and could not find one."]),
+  );
+  const row = out.rows[0] as { r?: { restricted?: boolean } } | undefined;
+  if (row?.r?.restricted) throw new Error("the request about Bukola went to the Care Team alone, so a coach cannot decide it in the picture");
+}
+
+/**
+ * The church's switches and WhatsApp's safety net as one picture needs them. Every switch is Off unless the picture names it, which is how the app
+ * is until the owner opens something; the safety net is running and the health page has not yet asked Meta. Meta is the made-up one the throwaway
+ * site talks to, and it answers that everything is well.
+ */
+export async function setSituation(s: Stage, shot: Pick<Shot, "features" | "whatsapp">) {
+  await s.q.query("delete from public.feature_settings");
+  await s.q.query("update public.feature_master set paused = false, reason = null, changed_by = null, changed_at = null");
+  for (const key of shot.features ?? []) {
+    await s.q.query("insert into public.feature_settings (feature, scope, position, reason) values ($1, 'platform', 'on', 'Open for the whole church, for the guides’ pictures.')", [key]);
+  }
+  await s.q.query("update public.whatsapp_guard set paused = false, auto = false, reason = null, paused_at = null, paused_by = null, cleared_at = null, would_pause_at = null");
+  for (const t of ["whatsapp_faults", "whatsapp_guard_log", "whatsapp_signals", "whatsapp_outcomes"]) await s.q.query(`delete from public.${t}`);
+  await s.q.query("insert into public.whatsapp_checks (id) values (true) on conflict do nothing");
+  await s.q.query("update public.whatsapp_checks set checked_at = null, checked_by = null, result = '{}'::jsonb");
+  if (shot.whatsapp === "paused") {
+    const admin = made.get("admin") ?? (await person(s, "admin", "Adaora", ["admin"]));
+    await s.q.query(
+      "update public.whatsapp_guard set paused = true, auto = false, reason = 'Meta says our access token has expired. Checking with the owner.', paused_at = now() - interval '20 minutes', paused_by = $1",
+      [admin.id],
+    );
+  }
+  if ((shot.features ?? []).some((f) => f.startsWith("whatsapp"))) {
+    const stub = state().stubUrl;
+    await fetch(`${stub}/__reset`, { method: "POST" });
+    await fetch(`${stub}/__meta/mode`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ templates: expectedTemplates() }) });
+  }
 }
 
 /** The throwaway site's database, the made-up people and the owner's door, ready for arranging situations. */

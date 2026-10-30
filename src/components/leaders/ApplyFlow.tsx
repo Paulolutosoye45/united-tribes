@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { FlowFrame, type SaveState } from "@/components/flow/FlowFrame";
 import { createClient } from "@/lib/supabase/browser";
 import {
@@ -87,6 +87,8 @@ export type ApplyProps = {
   training?: AcademyModes;
   /** Find your tribe is switched on: a screen after "how you lead best" where the leader chooses a tribe. Off changes nothing. */
   fit?: boolean;
+  /** The "How to use this app" button, shown in the form's header. */
+  help?: ReactNode;
   initial: { view: View; answers: LeaderAnswers; referees: Referees; failed: string[] };
 };
 
@@ -101,7 +103,7 @@ const CHECKED: Partial<Record<StepId, string>> = {
 
 const trimmed = (r: RefereeInput) => JSON.stringify({ n: r.name.trim(), r: r.relationship.trim(), c: r.contact.trim(), h: r.head });
 
-export function ApplyFlow({ personId, applicationId, catalogue, applicantName, ai, modes, training = REQUIRED_MODES, fit = false, initial }: ApplyProps) {
+export function ApplyFlow({ personId, applicationId, catalogue, applicantName, ai, modes, training = REQUIRED_MODES, fit = false, help, initial }: ApplyProps) {
   const router = useRouter();
   const [appId, setAppId] = useState(applicationId);
   const [view, setView] = useState<View>(initial.view);
@@ -440,6 +442,7 @@ export function ApplyFlow({ personId, applicationId, catalogue, applicantName, a
 
   return (
     <FlowFrame
+      help={help}
       fills={fills}
       section={section}
       sections={SECTIONS}

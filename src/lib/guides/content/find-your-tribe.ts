@@ -115,6 +115,27 @@ export const findYourTribe: Guide = {
           shot: { cast: "new-member", path: "/join", before: formTo("care"), frame: "screen", ring: [{ role: "heading", name: "Anything you would like us to know?" }], tag: "Private", alt: "The screen where you can tell us what you need, privately." },
         },
         {
+          id: "reach",
+          title: "Give us your WhatsApp number",
+          do: [
+            "Type your [[WhatsApp number]] with your network code, like 0803 123 4567. Under the box we show it back as we will use it.",
+            "Under **You can message me by**, tick how we may reach you, then press [[Continue]].",
+          ],
+          why: "Your tribe’s messages come on WhatsApp, so we need a number to reach you. We write to you only in the ways you choose, and your leader sees your number only if you choose WhatsApp.",
+          tip: "Until your church makes the number compulsory, this box says **Phone number** and you may leave it empty.",
+          careful: "A number that is plainly made up, like 0803 000 0000, is turned away. Write the number you can be reached on.",
+          shot: {
+            cast: "new-member",
+            path: "/join",
+            features: ["number_required"],
+            before: [...formTo("reach"), { do: "fill", on: { label: "WhatsApp number" }, value: "0803 123 4567" }, { do: "pause", ms: 300 }],
+            frame: "screen",
+            ring: [{ label: "WhatsApp number" }],
+            tag: "Your number",
+            alt: "The How should we reach you? screen, with a WhatsApp number typed and shown back as it will be used.",
+          },
+        },
+        {
           id: "save",
           title: "Check, then save",
           do: ["Look through your answers.", "Press [[Save my answers]]."],

@@ -8,7 +8,8 @@
  *  - A tribe leader sees the member's guides and their own, and what their assistant and the people they speak to are shown. An
  *    assistant leader sees their own shelf, and the leader's week as what the leader reads. A pastor sees the member's guides and the
  *    pages people reach from an email.
- *  - The small "?" in the header takes each person, on the same page, to the guide that is theirs, and shows nothing on a page with no guide.
+ *  - The "How to use this app" button takes each person, on the same page, to the guide that is theirs, and offers none on a page with no guide
+ *    (journey 43 tries the button itself, for every kind of person).
  *  - A guide opens as a reader: one step at a time, a picture that loads, a way to see every step at once, and nothing that scrolls
  *    sideways on a phone.
  *
@@ -131,21 +132,23 @@ async function main() {
       await ctx.close();
     }
 
-    // --- 6. the "?" in the header ----------------------------------------------------------------------------------------------------
+    // --- 6. the "How to use this app" button -----------------------------------------------------------------------------------------
     {
       const help = async (email: string, path: string) => {
         const { ctx, page } = await newPage(browser, "phone");
         await signIn(page, email, path);
         await open(page, path);
-        const link = page.getByRole("link", { name: "Help for this page" });
-        const href = (await link.count()) ? await link.first().getAttribute("href") : null;
+        await page.getByTestId("howto-button").click();
+        await page.getByTestId("howto-sheet").waitFor({ state: "visible", timeout: 10000 });
+        const main = page.getByTestId("howto-main");
+        const href = (await main.count()) ? await main.first().getAttribute("href") : null;
         await ctx.close();
-        return href;
+        return href?.split("#")[0] ?? null;
       };
       check((await help("ngozi@example.org", "/lead/week")) === "/guides/run-your-week", "a leader on This week is offered the guide to running the week");
       check((await help("kemi@example.org", "/lead/week")) === "/guides/assistant-leader", "…an assistant leader, on the same page, is offered their own guide");
       check((await help("member@example.org", "/profile")) === "/guides/your-information", "a member on their own information page is offered the guide to it");
-      check((await help("member@example.org", "/home")) === null, "…and nothing is shown on a page that has no guide");
+      check((await help("member@example.org", "/home")) === null, "…and no guide is named on a page that has none (the button still opens, with the tour and the search)");
       check((await help("member@example.org", "/lead/week")) === null, "…and a member is never pointed at a leader’s guide");
     }
 

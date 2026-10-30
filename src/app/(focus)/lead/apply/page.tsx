@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { HowToPilot } from "@/components/guides/HowToPilot";
 import { ApplyFlow, type ApplyAi, type View } from "@/components/leaders/ApplyFlow";
 import { loadAcademyModes } from "@/lib/academy/server";
 import { requireSession } from "@/lib/auth/session";
@@ -9,6 +10,7 @@ import { LEADER_CONSENT_AI, leaderConsentFor } from "@/lib/leaders/consent";
 import { WIRED } from "@/lib/leaders/pipeline";
 import { loadApplyModes, loadLeaderCatalogue, loadMyApplication, loadPipeline } from "@/lib/leaders/server";
 import { isStepId, resolveStep } from "@/lib/leaders/steps";
+import { pilotFor } from "@/lib/guides/pilot";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Lead a tribe" };
@@ -71,6 +73,7 @@ export default async function ApplyPage() {
       modes={modes}
       training={training}
       fit={fit}
+      help={<HowToPilot data={pilotFor(session.roles, [])} variant="inline" />}
       initial={{
         view,
         answers: application?.answers ?? EMPTY_ANSWERS,

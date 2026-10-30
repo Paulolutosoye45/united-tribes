@@ -320,7 +320,9 @@ async function main() {
     await a.page.getByTestId("still-right").waitFor({ timeout: 20000 });
     has("Ada's Home asks her about her stage of life", /Stage of life[\s\S]*26 to 40, the Builders stage/, await a.page.getByTestId("still-right").innerText());
     await a.page.getByTestId("still-life_stage-yes").click();
-    await a.page.getByTestId("still-life_stage-done").waitFor({ timeout: 15000 });
+    // Saving the answer also refreshes Home, which has no strip once nothing is due, so the "Thanks" line can be replaced within a tenth of a second.
+    // The answer is done when either the line or the gap where the strip was is on the screen; the database check below is what proves it was kept.
+    await a.page.waitForFunction(() => Boolean(document.querySelector("[data-testid='still-life_stage-done']")) || !document.querySelector("[data-testid='still-life_stage-yes']"), undefined, { timeout: 15000 });
     check((await one("select confirmed_at > now() - interval '1 hour' as fresh from public.profile_facts where person_id = $1 and key = 'life_stage'", [ada.id]))?.fresh === true, "\"Yes, still right\" is her confirmation, stamped today");
     await open(a.page, "/my");
     await a.page.getByTestId("my-preferred_name").waitFor({ timeout: 20000 });

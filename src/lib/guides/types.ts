@@ -30,6 +30,8 @@ export type Action =
   /** Types the six-digit code the church just emailed to this made-up address (the picture maker reads it from the test mailbox). */
   | { do: "fill-code"; on: Finder; to: string }
   | { do: "check"; on: Finder }
+  /** Chooses an entry, by what it says, from a list that drops down. */
+  | { do: "select"; on: Finder; value: string }
   | { do: "wait"; on: Finder }
   | { do: "open"; path: string }
   | { do: "pause"; ms: number };
@@ -63,6 +65,13 @@ export type Shot = {
   path: string;
   /** Names a ready-made situation the picture maker sets up before the page opens (for example "member-has-tribe"). */
   arrange?: string;
+  /**
+   * The church's switches that are On (for the whole church) while this picture is made, by key, for example "removal_requests". Every other switch is Off,
+   * which is how the app is until the owner opens something. Say it outright when the screen only exists once a rule is On.
+   */
+  features?: readonly string[];
+  /** WhatsApp's safety net as it stands for this picture: "paused" (a person has paused it) or, left out, running. */
+  whatsapp?: "paused";
   /** How to bring the page to the state shown, after it opens. */
   before?: Action[];
   /** What to ring. One finder rings one thing; several ring the box that holds them all. */
