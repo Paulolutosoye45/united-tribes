@@ -536,17 +536,62 @@ add({
 
 add({
   key: "coach_removal_ask", audience: "coach", group: "coaches", title: "A leader has asked about a member's place",
-  who: "The coach of the tribe (not for the requests only the Care Team decides)", when: "When a leader asks the church to change a member's place in their tribe, and when they answer a question put to them",
+  who: "The coach of the tribe (not for the requests only the Care Team handles)", when: "When a leader asks the church to change a member's place in their tribe, and when they answer a question put to them",
   subject: (p) => (p.again === true ? "A leader answered your question" : "A leader has asked about a member’s place"),
   body: (p) =>
     p.again === true
-      ? ["A leader has answered the question you put to them about a member’s place in their tribe.", "Their answer is on the page, not in this email. When you have read it, you can approve or decline the request."]
+      ? ["A leader has answered the question put to them about a member’s place in their tribe.", "Their answer is on the page, not in this email. When you have read it, you can change what you would do."]
       : [
-          "One of your leaders has asked the church to change a member’s place in their tribe. As their coach, you are the first to look at it.",
-          "What the leader wrote is on the page, not in this email. You can approve it, decline it, or ask the leader a question. Nothing happens to the member until someone decides.",
+          "One of your leaders has asked the church to change a member’s place in their tribe. As their coach, you know them best, so the church would like to hear what you would do.",
+          "What the leader wrote is on the page, not in this email. You can say whether you would approve it, decline it or ask the leader a question first. An admin, a director or the Care Lead then decides, and reads what you wrote first. Nothing happens to the member until they do.",
         ],
   button: { label: "Open the request", path: "/growth/removals" },
   sample: { path: "/growth/removals" },
+});
+
+add({
+  key: "admin_removal_ask", audience: "office", group: "admin", title: "A leader has asked about a member's place",
+  who: "Admins and directors (not the leader who asked)", when: "When a leader asks the church to change a member's place in their tribe, and when they answer a question put to them",
+  subject: (p) => (p.again === true ? "A leader answered a question about a member’s place" : "A leader has asked about a member’s place"),
+  body: (p) =>
+    p.again === true
+      ? ["A leader has answered the question put to them about a member’s place in their tribe.", "The answer is on the page, not in this email."]
+      : [
+          "A leader has asked the church to change a member’s place in their tribe. An admin, a director or the Care Lead decides.",
+          "What the leader wrote is on the page, not in this email, and so is what the coach would do. Nothing happens to the member until someone decides.",
+        ],
+  button: { label: "Open the request", path: "/growth/removals" },
+  sample: { path: "/growth/removals" },
+});
+
+add({
+  key: "admin_removal_waiting", audience: "office", group: "admin", title: "A request about a member's place is waiting for a decision",
+  who: "Admins and directors", when: "Once, when a request has waited 3 days without an answer",
+  subject: () => "A request about a member’s place has waited three days",
+  body: () => [
+    "A leader’s request about a member’s place in their tribe has waited three days for a decision.",
+    "Nothing has happened to the member while it waits, and the leader is waiting to hear. If you cannot decide, you can ask the leader a question.",
+  ],
+  button: { label: "Open the request", path: "/growth/removals" },
+  sample: { level: "reminder", path: "/growth/removals" },
+});
+
+add({
+  key: "admin_placement_answer", audience: "office", group: "admin", title: "The owner answered your request to place a member",
+  who: "The admin or director who asked the owner", when: "When the owner approves or declines a request to place or move a member",
+  subject: (p) => (p.approved === true ? "The owner approved your request to place a member" : "The owner has answered your request to place a member"),
+  body: (p) =>
+    p.approved === true
+      ? [
+          "The owner approved your request, and the member has been placed. They have been emailed like anyone the church places, and the leader of the tribe is told in the usual way.",
+          "You can undo it from the member’s page until the leader has been told.",
+        ]
+      : [
+          "The owner has not approved your request, so nothing has changed for the member.",
+          "The owner’s words, if there are any, are on the member’s page. You can ask again if something changes.",
+        ],
+  button: { label: "Open the member", path: "/admin/people" },
+  sample: { approved: true, path: "/admin/people" },
 });
 
 add({
@@ -555,7 +600,7 @@ add({
   subject: () => "A request about a member’s place has waited three days",
   body: () => [
     "A request from one of your leaders about a member’s place in their tribe has waited three days for an answer.",
-    "Nothing has happened to the member while it waits, and the leader is waiting to hear. If you cannot decide, ask the leader a question or tell the Care Team.",
+    "Nothing has happened to the member while it waits, and the leader is waiting to hear. If you have not yet said what you would do, the person deciding will read it first.",
   ],
   button: { label: "Open the request", path: "/growth/removals" },
   sample: { level: "reminder", path: "/growth/removals" },
@@ -622,7 +667,7 @@ add({
       ? ["A leader has answered the question put to them about a member’s place in their tribe.", "The answer is on the page, not in this email."]
       : [
           "A leader has asked the church to change a member’s place in their tribe. The Care Team always sees these.",
-          "The request is on the page, not in this email. Some of them only the Care Team, a director or an admin may decide, and the page says which. Nothing happens to the member until someone decides.",
+          "The request is on the page, not in this email. The Care Lead, a director or an admin may decide it, and the page shows what the coach would do. Nothing happens to the member until someone decides.",
         ],
   button: { label: "Open the request", path: "/growth/removals" },
   sample: { path: "/growth/removals" },

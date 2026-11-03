@@ -44,7 +44,7 @@ export const youHaveBeenPlaced: Guide = {
         {
           id: "details",
           title: "See who is given your details",
-          do: ["**Your details** says that a day after you were told, your leader is given your name and email, so they can say hello.", "You can stop that. The last button on the page does it."],
+          do: ["**Your details** says that your leader can see your name now, and is given your email and number only after you press **Yes, I’m in**.", "You can keep them private. The last button on the page does it."],
           shot: placed({ ring: [{ role: "heading", name: "Your details" }], tag: "Your details", alt: "Your details: when your leader is given your name and email.", minHeight: 420, lead: 40 }),
         },
       ],

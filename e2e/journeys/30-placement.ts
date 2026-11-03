@@ -294,11 +294,14 @@ async function main() {
     await open(l.page, "/lead/tribe");
     await l.page.getByText("Dami Test").first().waitFor({ timeout: 20000 });
     const all = await text(l.page);
-    check(/Placed by the church · said yes/.test(all) && /Placed by the church · details open/.test(all), "once the day has passed, the page lists who said yes and whose details are now open");
+    check(/Placed by the church · said yes/.test(all) && /Placed by the church · waiting for a reply/.test(all), "once the day has passed, the page lists who said yes, and Efe, who has not answered, as waiting for a reply");
     check(!all.includes("Chidi Test") && !all.includes("Folu Test"), "…and not the one who gave the place up, nor the one taken out");
-    for (const who of ["Adaeze Test", "Dami Test", "Efe Test"]) {
-      check((await memberRow(l.page, who).getByRole("link", { name: "Message on WhatsApp" }).count()) === 1, `…${who.split(" ")[0]} can be messaged on WhatsApp, as the "Your team" email said`);
+    for (const who of ["Adaeze Test", "Dami Test"]) {
+      check((await memberRow(l.page, who).getByRole("link", { name: "Message on WhatsApp" }).count()) === 1, `…${who.split(" ")[0]} said yes, so can be messaged on WhatsApp`);
     }
+    // A day passing opens nothing: a number opens on a yes and on nothing else
+    check((await memberRow(l.page, "Efe Test").getByRole("link", { name: "Message on WhatsApp" }).count()) === 0, "…Efe has not said yes, so a day passing does not open their number");
+    check(/has not said yes yet/.test(await memberRow(l.page, "Efe Test").innerText()) && !(await l.page.content()).includes("8031230005"), "…and the page says why, with no number in it");
     check((await memberRow(l.page, "Bolu Test").getByRole("link", { name: "Message on WhatsApp" }).count()) === 0, "…but the member who held back cannot");
     check(/asked that their number is not shared/.test(await memberRow(l.page, "Bolu Test").innerText()) && !all.includes("8031230002"), "…and the page says she asked, with no number");
     await shot(l.page, "30-leader-after");

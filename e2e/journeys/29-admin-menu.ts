@@ -50,7 +50,7 @@ async function main() {
     check(await p.locator("aside[aria-label='Admin']").isVisible(), "the menu is down the side");
     check(await tid(p, "admin-bar").isHidden(), "…and the phone bar is not shown");
     const adminIds = await menuIds(p);
-    check(adminIds.length === 26, `the admin’s menu has 26 pages (${adminIds.length})`);
+    check(adminIds.length === 29, `the admin’s menu has 29 pages (${adminIds.length})`);
     check(new Set(adminIds).size === adminIds.length, "…each once");
     check((await side(p).getByRole("link", { name: /^Answer checks/ }).count()) === 0, "a page only pastors and directors may open is not in the admin’s menu");
     for (const section of ["Season", "People", "Leaders", "Messages", "Programme", "System"]) {
@@ -98,7 +98,7 @@ async function main() {
     await p.locator("#side-search").fill("zzzzqq");
     check(/No page matches/.test(await side(p).innerText()), "a word that matches nothing says so");
     await p.keyboard.press("Escape");
-    check((await p.locator("#side-search").inputValue()) === "" && (await menuIds(p)).length === 26, "Escape clears the search and the whole menu is back");
+    check((await p.locator("#side-search").inputValue()) === "" && (await menuIds(p)).length === 29, "Escape clears the search and the whole menu is back");
     await p.locator("#side-search").fill("email");
     check(/Sending and email/.test(await side(p).innerText()) && /Notifications/.test(await side(p).innerText()), "“email” finds the pages about email");
     await p.locator("#side-search").fill("");
@@ -116,7 +116,7 @@ async function main() {
     await signIn(pastor.page, "pastor.ife@example.org", "/admin");
     await open(pastor.page, "/admin");
     const pastorIds = await menuIds(pastor.page);
-    check(pastorIds.length === 21, `the pastor’s menu has 21 pages (${pastorIds.length})`);
+    check(pastorIds.length === 23, `the pastor’s menu has 23 pages (${pastorIds.length})`);
     check((await side(pastor.page).getByRole("link", { name: /^Answer checks/ }).count()) === 1, "the pastor has Answer checks");
     for (const gone of ["Message log", "People and roles", "Data requests", "Sending and email"]) {
       check((await side(pastor.page).getByRole("link", { name: new RegExp(`^${gone}`) }).count()) === 0, `…and not ${gone}`);
@@ -132,7 +132,7 @@ async function main() {
     const bothIds = await menuIds(both.page);
     check(new Set(bothIds).size === bothIds.length, "the menu of an admin who is also a pastor lists no page twice");
     check(adminIds.every((id) => bothIds.includes(id)) && pastorIds.every((id) => bothIds.includes(id)), "…and has every page either role has");
-    check(bothIds.length === 27, `…27 in all (${bothIds.length})`);
+    check(bothIds.length === 30, `…30 in all (${bothIds.length})`);
     check((await both.page.locator("aside nav[aria-label='Admin menu']").getByRole("link", { name: /^Answer checks/ }).count()) === 1, "…including the pastor-only Answer checks");
     check((await tid(both.page, "hat-all").count()) === 1 && (await tid(both.page, "hat-admin").count()) === 1 && (await tid(both.page, "hat-pastor").count()) === 1, "Today has a chip for each hat");
     await open(both.page, "/admin/leader-quality");
@@ -165,7 +165,7 @@ async function main() {
       const box = await links.nth(i).boundingBox();
       if (box) smallest = Math.min(smallest, box.height);
     }
-    check(count === 26 && smallest >= 40, `the sheet has all 26 pages and the smallest is ${Math.round(smallest)}px tall`);
+    check(count === 29 && smallest >= 40, `the sheet has all 29 pages and the smallest is ${Math.round(smallest)}px tall`);
     await shot(f, "29-sheet-phone");
     const sheetBox = await sheet.boundingBox();
     check(Boolean(sheetBox) && sheetBox!.width <= 391 && sheetBox!.y > 0, "the sheet fits the screen");

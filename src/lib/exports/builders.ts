@@ -78,6 +78,13 @@ const none = (t: Table, what: string): Table => (t.rows.length === 0 ? { ...t, c
 
 export type TribeSheetData = { tribe?: J; members?: J[]; young_count?: number };
 
+/** Where a member stands with the tribe, in the words of the roster: their own choice, a yes, or a place still waiting for their reply. */
+function standingOf(m: J): string {
+  const placement = str(m.placement);
+  if (!placement) return "Chose this tribe";
+  return placement === "confirmed" ? "Said yes" : "Waiting for a reply";
+}
+
 export function buildTribeSheet(ctx: Ctx, d: TribeSheetData): Workbook {
   const tribe = obj(d.tribe);
   const members = arr(d.members);
@@ -89,7 +96,8 @@ export function buildTribeSheet(ctx: Ctx, d: TribeSheetData): Workbook {
     caption: "As your roster shows them, in the order they joined.",
     columns: [
       col.text("name", "Name", "The member's name.", 28),
-      col.phone("whatsapp", "WhatsApp", "The member's WhatsApp number. Blank unless they agreed to share it and did not ask for it to be withheld.", 18),
+      col.text("standing", "Where they stand", "Chose this tribe: the member picked it themselves. Said yes: the church placed them and they pressed “Yes, I’m in”. Waiting for a reply: the church placed them and they have not answered.", 26),
+      col.phone("whatsapp", "WhatsApp", "The member's WhatsApp number. Blank until the member has said yes, and blank for anyone who asked for it to be withheld.", 18),
       col.date("joined", "Joined", "The day the member joined the tribe.", 13),
       col.date("first_meeting_by", "First meeting by", "The day by which the member should have come to a first meeting.", 16),
       col.yesno("called", "Called", "Whether someone has called the member since they joined.", 9),
@@ -99,6 +107,7 @@ export function buildTribeSheet(ctx: Ctx, d: TribeSheetData): Workbook {
     ],
     rows: members.map((m): Cell[] => [
       str(m.name) ?? str(m.first_name),
+      standingOf(m),
       str(m.whatsapp),
       dayOf(m.joined_at),
       dayOf(m.first_meeting_by),
@@ -116,7 +125,7 @@ export function buildTribeSheet(ctx: Ctx, d: TribeSheetData): Workbook {
     [["Tribe", name], ["Members listed", String(members.length)]],
     [
       "Your tribe's members as your roster shows them. A member the church has placed but not yet told you about is not listed.",
-      "A WhatsApp number is here only if the member agreed to WhatsApp and did not ask for their number to be withheld.",
+      "A WhatsApp number is here only if the member agreed to WhatsApp, did not ask for their number to be withheld, and (if the church placed them) has said yes.",
       young > 0 ? `${young} ${young === 1 ? "member is" : "members are"} under 18: counted here, never listed.` : "No member under 18 is in this tribe, so none is left out.",
       "The private notes members wrote for their leader are never in a file.",
     ],

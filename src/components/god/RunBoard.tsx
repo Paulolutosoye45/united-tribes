@@ -360,8 +360,8 @@ function Teams({ teams, live = null }: { teams: Team[]; live?: { runId: string }
                     <td className="p-3">
                       <span className="font-semibold" data-testid="team-state">{st.label}</span>
                       <span className="block text-soft">
-                        {t.state === "holding" && t.opensAt ? `Opens ${dayAndTime(t.opensAt)}` : st.line}
-                        {t.unanswered > 0 && OPENABLE.has(t.state) ? ` ${pluralise(t.unanswered, "member")} yet to answer.` : ""}
+                        {t.state === "holding" && t.opensAt ? `Leader emailed from ${dayAndTime(t.opensAt)}` : st.line}
+                        {t.unanswered > 0 && OPENABLE.has(t.state) ? ` ${pluralise(t.unanswered, "member")} yet to say yes.` : ""}
                       </span>
                     </td>
                   ) : null}
@@ -387,8 +387,8 @@ function Teams({ teams, live = null }: { teams: Team[]; live?: { runId: string }
           </p>
           <p className="t-small">
             {unansweredAll === 0
-              ? "Every member in these tribes has answered or their day has passed, so this only emails each leader their team now."
-              : `${pluralise(unansweredAll, "member")} who ${unansweredAll === 1 ? "has" : "have"} not answered will have their email and WhatsApp number given to their leader.`}{" "}
+              ? "Every member in these tribes has said yes, so this only emails each leader their team now."
+              : `${pluralise(unansweredAll, "member")} ${unansweredAll === 1 ? "has" : "have"} not said yes. Opening overrides that: their email and WhatsApp number will be given to their leader anyway.`}{" "}
             Members who said “don’t share my details” stay withheld. Each leader is emailed their team, and these tribes can no longer be undone.
           </p>
           <div className="flex gap-3">
@@ -408,8 +408,8 @@ function Teams({ teams, live = null }: { teams: Team[]; live?: { runId: string }
           </p>
           <p className="t-small">
             {target.unanswered === 0
-              ? `Everyone in ${target.name} has answered or their day has passed, so this only emails ${target.leaderFirst || "the leader"} their team now.`
-              : `${pluralise(target.unanswered, "member")} who ${target.unanswered === 1 ? "has" : "have"} not answered will have their email and WhatsApp number given to ${target.leaderFirst || "the leader"}.`}{" "}
+              ? `Everyone in ${target.name} has said yes, so this only emails ${target.leaderFirst || "the leader"} their team now.`
+              : `${pluralise(target.unanswered, "member")} ${target.unanswered === 1 ? "has" : "have"} not said yes. Opening overrides that: their email and WhatsApp number will be given to ${target.leaderFirst || "the leader"} anyway.`}{" "}
             Members who said “don’t share my details” stay withheld. {target.leaderFirst || "The leader"} is emailed their team, and this tribe can no longer be undone.
           </p>
           <div className="flex gap-3">

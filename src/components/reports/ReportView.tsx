@@ -197,7 +197,7 @@ export function ReportView({ report }: { report: ReportDetail }) {
       {d.funnel && d.funnel.length > 0 ? <Funnel steps={d.funnel} /> : null}
 
       {d.retention && d.retention.cohort > 0 && d.retention.points.length > 0 ? (
-        <Section id="retention" title="Who is still coming" note={`${d.retention.cohort} people were placed in a tribe this season. Someone counts as still coming if they came that week or the week before.`}>
+        <Section id="retention" title="Who is still coming" note={`${d.retention.cohort} people said yes to a tribe this season. Someone counts as still coming if they came that week or the week before.`}>
           <RetentionChart weeks={d.season.weeks} current={d.retention} earlier={d.earlier ?? []} name={d.season.name} />
         </Section>
       ) : null}

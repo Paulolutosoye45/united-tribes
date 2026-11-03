@@ -2,12 +2,16 @@
  * The placement mix-up, end to end: God Mode places six members in one tribe, and the tribe's leader sees them at once.
  *
  *  - Right after placing, the leader opens My tribe and sees all six by name, each marked, and not one WhatsApp number or email except
- *    the member who agreed on the form. The old line "No one has joined yet" is gone. The Lead page lists the same six.
- *  - A member whose email has not gone out is marked "not yet reached"; a member in the hold says the day it ends.
- *  - A member's own page and email do not give the WhatsApp group link until they have answered about sharing; "Yes, I'm in" shows it
- *    at once, with the warning that joining shows their number.
+ *    the member who said yes. A member who agreed to share on the form is still waiting for a reply: the tick opens nothing.
+ *    The old line "No one has joined yet" is gone. The Lead page lists the same six.
+ *  - A member whose email has not gone out is marked "not yet reached"; a member who has not said yes is "waiting for a reply".
+ *  - A member's own page and email do not give the WhatsApp group link until they say "Yes, I'm in"; that shows it at once, with the
+ *    warning that joining shows their number.
+ *  - The leader's "Your WhatsApp group" list: the member who said yes is ready to add, with their number; the others are names only. The
+ *    leader ticks the member as added, and the tick stays.
  *  - The owner opens God Mode's run board: it says why the tribe is closed, in words. The owner presses Open now; the confirm box says
- *    how many members' details will be shared. The numbers appear on the leader's page; the member who held back stays held back.
+ *    how many members have not said yes and that opening overrides that. The numbers appear on the leader's page; the member who held
+ *    back stays held back.
  *  - Nothing the leader sees names the owner.
  *
  * Everything that is only arranged here (members with finished forms, the plan placed through the database as the owner would, the
@@ -79,7 +83,7 @@ async function main() {
     await open(m.page, `/placed/${links[lanre.id]}`);
     const body = await text(m.page);
     check(!body.includes(GROUP), "a member who has not answered is not given the WhatsApp group link on their private page");
-    check(/WhatsApp group link will appear here/.test(body) && /shows your number to everyone in it/.test(body), "…it says when it will appear, and why it waits");
+    check(/WhatsApp group link will appear here as soon as you press/.test(body) && /shows your number to everyone in it/.test(body), "…it says it comes with their yes, and why it waits");
     check(/Ngozi can see your name/.test(body), "…and that the leader can already see their name");
     await m.page.getByRole("button", { name: /Don.t share my details/ }).click();
     await m.page.getByText(/will not be given your email or your WhatsApp number/).first().waitFor({ timeout: 15000 });
@@ -114,13 +118,37 @@ async function main() {
     check(/said yes/.test(await memberRow(l.page, "Mayowa Test").innerText()), "…Mayowa is marked as having said yes");
     check(/details withheld/.test(await memberRow(l.page, "Lanre Test").innerText()), "…Lanre, who held back, is marked withheld");
     check(/not yet reached/.test(await memberRow(l.page, "Nneka Test").innerText()) && /not yet reached/.test(await memberRow(l.page, "Obi Test").innerText()), "…Nneka (email failed) and Obi (email waiting) are marked not yet reached");
-    check(/yet to answer/.test(await memberRow(l.page, "Kemi Test").innerText()) === false, "…Kemi, who agreed on the form, is not asked to answer");
-    check((await wa(l.page, "Kemi Test")) === 1 && (await wa(l.page, "Mayowa Test")) === 1, "…Kemi (agreed on the form) and Mayowa (said yes) can be messaged on WhatsApp");
-    for (const nm of ["Lanre Test", "Nneka Test", "Obi Test", "Pelumi Test"]) check((await wa(l.page, nm)) === 0, `…${nm.split(" ")[0]} has no WhatsApp button yet`);
+    check(/waiting for a reply/.test(await memberRow(l.page, "Kemi Test").innerText()), "…Kemi, who agreed on the form but has not said yes, is waiting for a reply");
+    check((await wa(l.page, "Mayowa Test")) === 1, "…Mayowa, who said yes, can be messaged on WhatsApp");
+    for (const nm of ["Kemi Test", "Lanre Test", "Nneka Test", "Obi Test", "Pelumi Test"]) check((await wa(l.page, nm)) === 0, `…${nm.split(" ")[0]} has no WhatsApp button yet`);
     const html = await l.page.content();
-    check([1, 3, 4, 5].every((i) => !html.includes(digits(i))), "…and none of their numbers is anywhere in the page, links included");
+    check([0, 1, 3, 4, 5].every((i) => !html.includes(digits(i))), "…and none of their numbers is anywhere in the page, links included");
     check(!/Platform Owner|\bOwner\b|God Mode/.test(all), "…and nothing names the owner");
     await shot(l.page, "38-leader-before");
+    await l.ctx.close();
+  }
+  // ---- The leader's WhatsApp group list -----------------------------------------------------------------------------------------------------
+  {
+    const l = await newPage(browser, "desktop");
+    await signIn(l.page, A.leader.email, "/lead/tribe");
+    await open(l.page, "/lead/tribe");
+    await l.page.getByTestId("group-admit").waitFor({ timeout: 20000 });
+    const rows = l.page.getByTestId("group-admit-row");
+    check((await rows.count()) === 1 && /Mayowa Test/.test(await rows.first().innerText()), "“Your WhatsApp group” lists only Mayowa, who said yes, as ready to add");
+    check((await rows.first().innerText()).includes(phone(2)), "…with her number, so the leader can add her");
+    const waiting = await l.page.getByTestId("group-waiting").innerText();
+    check(["Kemi", "Lanre", "Nneka", "Obi", "Pelumi"].every((nm) => waiting.includes(`${nm} Test`)), "…and the other five, who have not said yes, are names under “waiting for a reply”");
+    const page = await l.page.content();
+    check([0, 1, 3, 4, 5].every((i) => !page.includes(digits(i))), "…with none of their numbers anywhere in the page");
+    const tick = rows.first().getByTestId("group-admitted");
+    check(!(await tick.isChecked()), "…Mayowa is not yet ticked as added");
+    await tick.click();
+    await l.page.waitForFunction(() => document.querySelector('[data-testid="group-admitted"]')?.matches(":checked"), null, { timeout: 15000 });
+    await l.page.reload();
+    await l.page.getByTestId("group-admit").waitFor({ timeout: 20000 });
+    check(await l.page.getByTestId("group-admit-row").first().getByTestId("group-admitted").isChecked(), "…the tick is still there after the page is reloaded");
+    await noOverflow(l.page, "the group list, on a desktop");
+    await shot(l.page, "38-group-list");
     await l.ctx.close();
   }
   {
@@ -169,7 +197,7 @@ async function main() {
   const confirm = page.getByTestId("open-now-confirm");
   await confirm.waitFor();
   const said = await confirm.innerText();
-  check(/Open Journey Visibility Tribe now\?/.test(said) && /3 members who have not answered/.test(said), "pressing Open now asks first, and says how many members’ details will be shared");
+  check(/Open Journey Visibility Tribe now\?/.test(said) && /4 members have not said yes/.test(said) && /overrides that/.test(said), "pressing Open now asks first, and says how many members have not said yes, and that opening overrides it");
   check(/don.t share my details.*stay withheld/i.test(said) && /can no longer be undone/.test(said), "…says a member who held back stays held back, and that the tribe can no longer be undone");
   check((await one("select count(*)::int n from public.messages where template = 'placement_your_team' and tribe_id = $1", [A.tribe]))?.n === before?.n, "…and nothing has changed until it is confirmed");
   await shot(page, "38-open-now-confirm");

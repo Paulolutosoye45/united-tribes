@@ -46,7 +46,7 @@ Members are emailed no faster than the pace you set (100 an hour to start), betw
 One rule, kept in one place (the database function `placement_contact`), for every screen a leader looks at:
 
 - **Names, at once.** The moment a member is placed, the leader and the assistant see them by name on My tribe, the weekly log, the Lead page and the Dashboard, marked *Placed by the church, yet to answer* or *said yes*. Names were never what the hold protected: the member's own email already names the leader.
-- **Email and WhatsApp number, member by member.** A member's details open when that member has said yes, agreed on the form, or their own email went out and the hours you set (24 to start) have passed. A member who said **Don't share my details** is never opened, for anyone, whichever role. A member whose email failed or never went is listed as *not yet reached*, and their details never open by themselves; God Mode can open them (below).
+- **Email and WhatsApp number, member by member.** **Changed 3 November 2026: a member's details open when that member has said yes, and on nothing else** (see `docs/SAID-YES.md`). They no longer open because the hours you set (24 to start) have passed, or because the member ticked "agreed to share" on the form; after the wait with no reply the member is marked *unanswered* and stays closed. A member who said **Don't share my details** is never opened, for anyone, whichever role. A member whose email failed or never went is listed as *not yet reached*, and their details never open by themselves; God Mode can open them (below).
 - **The raw lists apply it too.** The lists themselves (`tribe_roster`, `tribe_week`) now apply the rule, so no screen and no direct call can skip it. A coach, pastor or director still sees what they always saw, except that a member who held back is hidden for everyone.
 - **The group link follows the same rule**, and is a God Mode setting (*Hold back the WhatsApp group link until a member has answered*, on to start). Turn it off and the link is shown at once and goes in every first email, as before.
 
@@ -56,7 +56,7 @@ An email, **Your team**, listing **every member by name**. A member whose detail
 
 It is queued, tribe by tribe, as soon as nobody in the tribe is still waiting for their email or sitting in the hold, or **72 hours after the tribe's last planned email**, whatever is still stuck, so one stuck email can no longer hold a tribe closed. It is also sent when you press **Open now**. The assistant leader is sent the same email. The switch no longer decides whether a leader is told: with the switch Off or Rehearsal the heartbeat starts nothing new, but it still finishes telling the leaders of people already placed.
 
-On the form, an optional line asks the member to agree that a leader may be given their name, email and WhatsApp number if they are placed. Leaving it empty means the member's own day applies; saying no later, on the private page, holds their details back until they have actually opened (after that it is too late, and the page says so).
+On the form, an optional line asks the member to agree that a leader may be given their name, email and WhatsApp number if they are placed. **Since 3 November 2026 it opens nothing by itself**: ticked or not, the leader is given the email and number only after the member presses *Yes, I'm in*, and the form says so. Saying no later, on the private page, holds their details back until they have actually opened (after that it is too late, and the page says so).
 
 ### Undo
 

@@ -1,6 +1,6 @@
 import {
   ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, CONTACT_GAP_ROLES, DATA_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PIPELINE_VIEW_ROLES,
-  OVERSIGHT_ROLES, PRIVACY_ROLES, REFEREE_MANAGER_ROLES, REMINDER_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, TEMPLATE_VIEW_ROLES, hasAnyRole, type Role,
+  OVERSIGHT_ROLES, PLACE_ROLES, PRIVACY_ROLES, REFEREE_MANAGER_ROLES, REMINDER_ROLES, REMOVAL_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, TEMPLATE_VIEW_ROLES, hasAnyRole, type Role,
 } from "@/lib/auth/roles";
 
 /**
@@ -96,6 +96,13 @@ export const SECTIONS: readonly NavSection[] = [
         synonyms: ["invite", "team", "staff", "users", "roles", "make a pastor", "give a role", "remove a role", "who is who", "permissions"],
       },
       {
+        href: "/admin/tribes",
+        label: "Place or move a member",
+        about: "Add a member to a tribe, move one to another, and see who the office placed lately",
+        roles: PLACE_ROLES,
+        synonyms: ["place a member", "add a member", "put someone in a tribe", "move a member", "move to another tribe", "place in a tribe", "seat", "undo a placement", "ask the owner"],
+      },
+      {
         href: "/admin/people/contact-gaps",
         label: "Contact gaps",
         about: "Members a leader cannot reach on WhatsApp, and why",
@@ -158,6 +165,14 @@ export const SECTIONS: readonly NavSection[] = [
         about: "A leader’s recommendation for an assistant: approve it, decline it, or replace the one they have",
         roles: OVERSIGHT_ROLES,
         synonyms: ["assistant leader", "assistants", "recommend an assistant", "replace an assistant", "second leader", "co-leader", "pair an assistant"],
+      },
+      {
+        href: "/growth/removals",
+        label: "Removal requests",
+        about: "A leader’s request to change a member’s place in their tribe: read what the coach recommends, then approve, decline or ask",
+        roles: REMOVAL_ROLES,
+        tag: "Growth",
+        synonyms: ["remove a member", "take someone out of a tribe", "leader asked", "member’s place", "change a place", "approve a removal", "coach recommends", "recommendation"],
       },
       {
         href: "/review/templates",

@@ -51,7 +51,7 @@ export function TribeResults({ tribes, verdicts, canOpen, complete }: { tribes: 
                   <Badge tone={v.tone}>{v.text}</Badge>
                 </div>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-5">
-                  <Stat label="Members" value={`${c.members} of ${c.capacity}`} />
+                  <Stat label="Members" value={`${c.members} of ${c.capacity}${(c.waiting ?? 0) > 0 ? ` · ${c.waiting} waiting` : ""}`} />
                   <Stat label="Came" value={pct(c.attendance_rate)} />
                   <Stat label="Thriving" value={c.thriving_rate === null ? "–" : `${c.thriving} · ${pct(c.thriving_rate)}`} />
                   <Stat label="Success Picture" value={c.gain_avg === null ? "–" : signed(c.gain_avg)} />

@@ -1,4 +1,3 @@
-import { formatLagosDay, formatLagosTime } from "@/lib/dates";
 import { LEADER_MARKS } from "./wording";
 
 /** What a leader's list carries about a member the church placed (the database adds these only for such members). */
@@ -16,8 +15,6 @@ export type Mark = {
   note: string | null;
 };
 
-const when = (iso: string) => `${formatLagosDay(iso)}, ${formatLagosTime(iso)}`;
-
 /**
  * The mark beside a church-placed member. A leader sees such a member by name from the moment they are placed; this says where their
  * email and WhatsApp number stand. A member who chose their own seat carries no mark.
@@ -33,13 +30,11 @@ export function placementMark(m: MarkInput, firstName: string): Mark | null {
     case "open":
       return { label: `Placed by the church · ${LEADER_MARKS.details.toLowerCase()}`, note: null };
     case "holding":
-      return {
-        label: "Placed by the church · yet to answer",
-        note: m.contact_opens_at ? `Their email and WhatsApp number open ${when(m.contact_opens_at)}, unless ${who} says no first.` : "Their email and WhatsApp number open when their day has passed.",
-      };
+    case "unanswered":
+      return { label: "Placed by the church · waiting for a reply", note: `${who} has not said yes yet, so their email and WhatsApp number are not open. They open when ${who} says yes.` };
     case "waiting":
     case "not_reached":
-      return { label: `Placed by the church · ${LEADER_MARKS.notReached.toLowerCase()}`, note: `${who} has not been reached yet, so their email and WhatsApp number are not open. They open once ${who} has answered.` };
+      return { label: `Placed by the church · ${LEADER_MARKS.notReached.toLowerCase()}`, note: `${who} has not been reached yet, so their email and WhatsApp number are not open. They open once ${who} has said yes.` };
     default:
       return { label: "Placed by the church · yet to answer", note: null };
   }

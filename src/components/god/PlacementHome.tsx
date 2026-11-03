@@ -8,9 +8,10 @@ import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { OfficeRequests } from "@/components/placement/OfficeRequests";
 import { Select } from "@/components/ui/Input";
 import { formatLagosDay, formatLagosTime, formatShortDate } from "@/lib/dates";
-import { MODES, type Hold, type Overview, type PlacementMode, type Settings } from "@/lib/placement/types";
+import { MODES, type Hold, type OfficeCounts, type OfficeRequest, type Overview, type PlacementMode, type Settings } from "@/lib/placement/types";
 import { HEARTBEAT_HINT, IN_SEASON_PROMISES, MODE_WORDS, PLAN_PROMISES, RUN_STATUS_TEXT, ZONE_TEXT, count, hourText, pluralise, windowLine } from "@/lib/placement/wording";
 
 type Community = { id: string; name: string };
@@ -19,7 +20,7 @@ type Community = { id: string; name: string };
  * The Placement overview: the switch, who there is to place and room to place them, the plan in progress or a new one, the church's
  * choices, and the members set aside. Nothing here places anyone. A run is read and approved on its own page.
  */
-export function PlacementHome({ overview, communities, holds }: { overview: Overview; communities: Community[]; holds: Hold[] }) {
+export function PlacementHome({ overview, communities, holds, counts, requests }: { overview: Overview; communities: Community[]; holds: Hold[]; counts: OfficeCounts | null; requests: OfficeRequest[] }) {
   const { settings: s, supply } = overview;
   return (
     <div className="flex flex-col gap-8" data-testid="placement-home">
@@ -27,6 +28,7 @@ export function PlacementHome({ overview, communities, holds }: { overview: Over
       <Supply overview={overview} />
       {overview.openRun ? <OpenRun run={overview.openRun} /> : <NewRun settings={s} communities={communities} window={overview.window} />}
       <PlaceOnePointer />
+      <Office counts={counts} requests={requests} />
       <Choices settings={s} />
       <Holds holds={holds} onHold={supply.onHold} />
       <Past runs={overview.runs} />
@@ -232,6 +234,57 @@ function NewRun({ settings, communities, window }: { settings: Settings; communi
   );
 }
 
+/** What admins and directors have placed from Admin, by person, and the requests they made to you. */
+function Office({ counts, requests }: { counts: OfficeCounts | null; requests: OfficeRequest[] }) {
+  const open = requests.filter((r) => r.status === "open");
+  const closed = requests.filter((r) => r.status !== "open");
+  return (
+    <section aria-labelledby="office-heading" className="flex flex-col gap-4" data-testid="office-placement">
+      <div className="flex flex-col gap-1">
+        <h2 id="office-heading" className="t-heading">
+          Placed from Admin
+        </h2>
+        <p className="t-small measure text-soft">
+          Admins and directors can place or move one member at a time, with the same checks you have. Anything past a warning only you may accept comes to you here, and lapses after 7 days.
+        </p>
+      </div>
+      <h3 className="font-semibold" data-testid="office-requests-heading">
+        {open.length === 0 ? "No requests are waiting for you" : `${open.length} ${open.length === 1 ? "request is" : "requests are"} waiting for you`}
+      </h3>
+      <OfficeRequests requests={open} owner />
+      {closed.length > 0 ? (
+        <details>
+          <summary className="t-small cursor-pointer font-semibold">Answered, taken back or lapsed in the last 30 days ({closed.length})</summary>
+          <div className="mt-3">
+            <OfficeRequests requests={closed} owner />
+          </div>
+        </details>
+      ) : null}
+      <div className="flex flex-col gap-2">
+        <h3 className="font-semibold">By person, the last 30 days</h3>
+        {counts && counts.byPerson.length > 0 ? (
+          <ul className="card divide-y divide-line overflow-hidden" data-testid="office-counts">
+            {counts.byPerson.map((p) => (
+              <li key={`${p.name}-${p.role}`} className="flex flex-wrap items-center justify-between gap-2 p-4">
+                <p className="t-body">
+                  <span className="font-semibold">{p.name}</span> <span className="text-soft">({p.role})</span>
+                </p>
+                <p className="t-small text-soft">
+                  {p.placed} placed · {p.moved} moved · {p.undone} undone · {p.today} today{p.last ? ` · last ${formatLagosDay(p.last)}` : ""}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="t-small text-soft" data-testid="office-counts-none">
+            Nobody has placed or moved anyone from Admin yet.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function PlaceOnePointer() {
   return (
     <section aria-labelledby="one-heading" className="flex flex-col gap-1" data-testid="place-one-pointer">
@@ -239,7 +292,7 @@ function PlaceOnePointer() {
         Place one person
       </h2>
       <p className="t-small measure text-soft">
-        To place one person in one tribe, open them in <Link href="/god/people" className="font-semibold underline underline-offset-4">People</Link> and use “Place in a tribe”. It needs Placement to be On, and each warning it gives needs a tick and a reason.
+        To place one person in one tribe, open them in <Link href="/god/people" className="font-semibold underline underline-offset-4">People</Link> and use “Place in a tribe”, or “Move to another tribe” for a member who has a seat. It needs Placement to be On, and each warning it gives needs a tick and a reason.
       </p>
     </section>
   );
@@ -252,7 +305,7 @@ const FIELDS: { key: keyof Settings; column: string; name: string; hint: string;
   { key: "pacePerHour", column: "pace_per_hour", name: "Emails an hour", hint: "How fast members are told.", min: 1, max: 1000 },
   { key: "sendFrom", column: "send_from", name: "Start sending at (hour)", hint: "Lagos time, 24-hour clock.", min: 6, max: 20 },
   { key: "sendUntil", column: "send_until", name: "Stop sending at (hour)", hint: "Lagos time, 24-hour clock.", min: 7, max: 21 },
-  { key: "holdHours", column: "hold_hours", name: "Hours before a leader is told", hint: "Time for a member to say “don’t share my details”.", min: 0, max: 72 },
+  { key: "holdHours", column: "hold_hours", name: "Hours before a leader is told", hint: "How long the leader’s first email waits, so quick yeses can be in it. Nothing opens when it ends.", min: 0, max: 72 },
   { key: "reminderDays", column: "reminder_days", name: "Days before the one reminder", hint: "Sent once, only to members who have not answered.", min: 1, max: 14 },
 ];
 
@@ -292,7 +345,7 @@ function Choices({ settings }: { settings: Settings }) {
           <input type="checkbox" className="mt-1 h-5 w-5" checked={holdLink} onChange={(e) => setHoldLink(e.target.checked)} />
           <span className="flex flex-col gap-0.5">
             <span className="text-[0.95rem] font-medium">Hold back the WhatsApp group link until a member has answered</span>
-            <span className="t-small text-soft">Joining a group shows a member’s number to everyone in it, so the link waits until they say yes, agreed on the form, or their day has passed. Untick to give the link in the first email, as before.</span>
+            <span className="t-small text-soft">Joining a group shows a member’s number to everyone in it, so the link waits until they say yes. Untick to give the link in the first email, as before.</span>
           </span>
         </label>
         <div className="flex items-center gap-3">

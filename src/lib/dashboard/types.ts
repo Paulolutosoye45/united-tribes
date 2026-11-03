@@ -28,7 +28,10 @@ export type SeasonInfo = {
 };
 
 export type Headline = {
+  /** Members who said yes (chose their seat, or pressed "Yes, I'm in"). */
   members: number;
+  /** Placed by the church and not yet answered: counted beside the members, never in them. Absent on an older database. */
+  waiting?: number;
   tribes: number;
   /** False until three weeks have passed: no rate is shown before then. */
   measured: boolean;
@@ -68,6 +71,8 @@ export type DashTribe = {
   community: string | null;
   track: string | null;
   members: number;
+  /** Seats held for people who have not answered yet; they still count against the capacity. */
+  waiting?: number;
   capacity: number;
   held: number;
   attendance_rate: number | null;
@@ -82,7 +87,7 @@ export type DashTribe = {
 
 export type FunnelStep = { key: string; label: string; count: number };
 
-export type SupplyCell = { community: string; track: string; wants: number; seats: number; placed: number };
+export type SupplyCell = { community: string; track: string; wants: number; seats: number; placed: number; waiting?: number };
 
 export type Supply = {
   communities: string[];
@@ -91,6 +96,7 @@ export type Supply = {
   wants: number;
   seats: number;
   placed: number;
+  waiting?: number;
   unmet: number;
 };
 
@@ -127,6 +133,8 @@ export type Dashboard = {
   weeks?: DashWeek[];
   tribes?: DashTribe[];
   // Church only
+  /** Members the church placed who have not said yes yet. */
+  waiting?: number;
   funnel?: FunnelStep[];
   supply?: Supply;
   communities?: CommunityRow[];
@@ -138,6 +146,8 @@ export type Dashboard = {
 export type ProgressMember = {
   person_id: string;
   name: string;
+  /** Placed by the church and not yet answered. */
+  waiting?: boolean;
   attended: number;
   steps_set: number;
   steps_done: number;
@@ -161,6 +171,7 @@ export type TribeProgress = {
   tribe: { id: string; name: string; capacity: number };
   season: Omit<SeasonInfo, "id" | "starts_on"> & { name: string };
   members: number;
+  waiting?: number;
   attendance_rate: number | null;
   held: number;
   steps_done_rate: number | null;

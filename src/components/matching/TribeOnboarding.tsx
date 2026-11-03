@@ -106,7 +106,7 @@ export function TribeOnboarding({ roster, leaderFirstName }: { roster: Roster; l
                   <p className="t-small text-soft">
                     {m.withheld
                       ? `${m.first_name} asked that their number is not shared. They have your details and will reach out. You can message them in the tribe’s WhatsApp group.`
-                      : mark?.note && (m.contact === "holding" || m.contact === "waiting" || m.contact === "not_reached")
+                      : mark?.note && (m.contact === "holding" || m.contact === "waiting" || m.contact === "not_reached" || m.contact === "unanswered")
                         ? mark.note
                         : `No WhatsApp number shared. Ask your coach how to reach ${m.first_name}.`}
                   </p>

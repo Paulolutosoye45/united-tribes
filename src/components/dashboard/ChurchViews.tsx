@@ -4,7 +4,7 @@ import type { Accuracy, CareStats, FunnelStep, Supply, Targets, TestimonyStats, 
 import { pct, signed } from "@/lib/dashboard/wording";
 
 /** From a started form to a thriving member: where people fall away. */
-export function Funnel({ steps }: { steps: FunnelStep[] }) {
+export function Funnel({ steps, waiting = 0 }: { steps: FunnelStep[]; waiting?: number }) {
   const top = Math.max(steps[0]?.count ?? 0, 1);
   return (
     <section aria-labelledby="funnel-heading" className="card flex flex-col gap-5 p-5 sm:p-7">
@@ -12,7 +12,7 @@ export function Funnel({ steps }: { steps: FunnelStep[] }) {
         <h2 id="funnel-heading" className="t-heading">
           The journey
         </h2>
-        <p className="t-small text-soft">How many people reached each step, and what share of the step before.</p>
+        <p className="t-small text-soft">How many people reached each step, and what share of the step before.{waiting > 0 ? ` ${waiting} more ${waiting === 1 ? "was" : "were"} placed by the church and ${waiting === 1 ? "has" : "have"} not answered yet, so ${waiting === 1 ? "is" : "are"} not counted.` : ""}</p>
       </div>
       <ol className="flex flex-col gap-3.5">
         {steps.map((s, i) => {
@@ -128,7 +128,7 @@ export function Communities({ rows, minCell }: { rows: CommunityRow[]; minCell: 
         <h2 id="communities-heading" className="t-heading">
           By community
         </h2>
-        <p className="t-small text-soft">A rate is shown only for communities with at least {minCell} members placed, so nobody can be picked out.</p>
+        <p className="t-small text-soft">A rate is shown only for communities with at least {minCell} members matched, so nobody can be picked out.</p>
       </div>
       <ul className="flex flex-col gap-3">
         {rows.map((r, i) => (
@@ -136,7 +136,7 @@ export function Communities({ rows, minCell }: { rows: CommunityRow[]; minCell: 
             <div className="flex items-baseline justify-between gap-3">
               <span className="font-medium">{r.community}</span>
               <span className="t-small text-soft [font-variant-numeric:tabular-nums]">
-                {r.members} placed · {r.thriving_rate === null ? "too few to show a rate" : `${pct(r.thriving_rate)} thriving`}
+                {r.members} matched · {r.thriving_rate === null ? "too few to show a rate" : `${pct(r.thriving_rate)} thriving`}
                 {r.gain_avg !== null ? ` · ${signed(r.gain_avg)} Success Picture` : ""}
               </span>
             </div>
@@ -160,7 +160,7 @@ function RateRows({ rows, minCell, measured }: { rows: { label: string; n: numbe
           <div className="flex items-baseline justify-between gap-3">
             <span className="font-medium">{r.label}</span>
             <span className="t-small text-soft [font-variant-numeric:tabular-nums]">
-              {r.n} placed · {r.thriving_rate === null ? (r.n < minCell ? `needs ${minCell}` : measured ? "–" : "after week 3") : `${pct(r.thriving_rate)} thriving`}
+              {r.n} matched · {r.thriving_rate === null ? (r.n < minCell ? `needs ${minCell}` : measured ? "–" : "after week 3") : `${pct(r.thriving_rate)} thriving`}
             </span>
           </div>
           <div className="h-2.5 overflow-hidden rounded-full bg-surface-strong" aria-hidden="true">
@@ -190,7 +190,7 @@ export function AccuracyPanel({ a, targets, measured }: { a: Accuracy; targets: 
           How well the matching works
         </h2>
         <p className="t-small text-soft">
-          {a.average_degree === null ? "Nobody has been placed yet." : `Members were placed at an average of ${a.average_degree}% compatibility. Does a higher score mean a member who thrives?`}
+          {a.average_degree === null ? "Nobody has been matched yet." : `Members were matched at an average of ${a.average_degree}% compatibility. Does a higher score mean a member who thrives?`}
         </p>
       </div>
       {compare ? <p className="t-body font-medium">{compare}</p> : <p className="t-small text-soft">There is not enough yet to say whether a higher score predicts thriving. It needs {targets.min_cell} people in a group and three weeks of the season.</p>}

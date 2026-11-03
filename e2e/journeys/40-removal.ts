@@ -3,11 +3,14 @@
  *
  *  - Everything starts Off: the leader's page has no way to ask, the coach's Growth page has no tile, the board says it is not open, and a member's
  *    Home page has nothing.
- *  - The owner (alone, on the console's Features page) opens it as Rehearsal. The leader sees "Practice", asks about a member, the coach decides it:
- *    nothing is released and nothing is written to anyone.
- *  - The owner opens it for the whole church. The leader asks about the same member; the coach asks a question, the leader answers it on her page, the
- *    coach approves. The seat is released, the member is told by email (kindly, with no reason and no names) and in the app, and the leader is told.
- *  - The member reads her notice on Home, asks the Care Lead to look again, and the Care Lead puts her place back; she and the leader are told.
+ *  - The owner (alone, on the console's Features page) opens it as Rehearsal. The leader sees "Practice", asks about a member, the coach recommends
+ *    (and has no way to decide), an admin reads the recommendation first and approves: nothing is released and nothing is written to anyone.
+ *  - The owner opens it for the whole church (the staff email groups that take part start On). The leader asks about the same member; the coach
+ *    recommends asking a question; the admin finds "1 removal request waiting" on Admin → Today and the page in the Admin menu, asks the question, the
+ *    leader answers it on her page, the admin approves. The seat is released, the member goes on a hold so no run places her for three days, she is
+ *    told by email (kindly, with no reason and no names) and in the app, and the leader is told.
+ *  - The member reads her notice on Home, asks the Care Lead to look again, and the Care Lead puts her place back; she and the leader are told, and
+ *    the hold is lifted.
  *  - Nothing the member wrote or attended is touched at any point, and nothing scrolls sideways on a phone.
  *
  * What is only arranged here (a season, a tribe with members and a meeting record) is arranged in the database the way the database tests do it; everything
@@ -76,6 +79,7 @@ async function main() {
   const browser = await launch();
   const COACH = "coach.sade@example.org";
   const CARE = "care_lead.dayo@example.org";
+  const ADMIN = "admin.mary@example.org";
 
   // ---- Everything Off: nobody finds anything -----------------------------------------------------------------------------------------------
   {
@@ -163,6 +167,22 @@ async function main() {
     const card = c.page.getByTestId("removal-card").first();
     has("the coach reads who, which tribe, why and what the leader wrote", /Bola Adewale[\s\S]*Removal Tribe[\s\S]*Lara Leader[\s\S]*Repeated absence[\s\S]*missed five weeks/, await card.innerText());
     has("…and the attendance in the tribe", /1 present, 2 absent, 0 excused/, await card.innerText());
+    check((await card.getByTestId("removal-decide").count()) === 0, "the coach is offered no way to decide: a coach recommends");
+    check((await card.getByTestId("removal-recommend").count()) === 1, "…only to say what they would do");
+    await card.getByText("I would approve it", { exact: true }).click();
+    await card.getByTestId("removal-recommend-note").fill("I know Bola. I think the leader is right to ask.");
+    await card.getByRole("button", { name: "Send my recommendation" }).click();
+    await eventually("the practice recommendation is kept", async () => (await one("select rec_decision, status from public.removal_requests where rehearsal and member_id = $1", [bola.id]))?.rec_decision === "approve");
+    check((await one("select status from public.removal_requests where rehearsal and member_id = $1", [bola.id]))?.status === "open", "…and a recommendation decides nothing: the request is still open");
+    await c.ctx.close();
+  }
+  {
+    const a = await newPage(browser, "desktop");
+    await signIn(a.page, ADMIN, "/growth/removals");
+    await open(a.page, "/growth/removals");
+    await a.page.getByTestId("removal-board").waitFor({ timeout: 20000 });
+    const card = a.page.getByTestId("removal-card").first();
+    has("an admin reads the coach's recommendation first, above what the leader wrote", /recommends: approving it[\s\S]*I think the leader is right to ask[\s\S]*What the leader wrote/, await card.innerText());
     await card.getByText("Approve: release their place", { exact: true }).click();
     await card.getByTestId("removal-decision-note").fill(WHY);
     await card.getByRole("button", { name: "Send my decision" }).click();
@@ -170,7 +190,8 @@ async function main() {
     check((await seat(bola.id)).status === "active", "approving practice releases nothing: Bola still has her seat");
     check((await n("select count(*)::int n from public.messages where template like 'removal_%'")) === 0, "…and no one is written to");
     check((await n("select count(*)::int n from public.removal_blocks")) === 0, "…and no tribe is kept from her");
-    await c.ctx.close();
+    check((await n("select count(*)::int n from public.placement_holds where person_id = $1", [bola.id])) === 0, "…and no hold is put on her");
+    await a.ctx.close();
   }
 
   // ---- On: the real road --------------------------------------------------------------------------------------------------------------------
@@ -198,19 +219,47 @@ async function main() {
   await lead.page.getByTestId("removal-mine-card").first().waitFor({ timeout: 20000 });
   has("the leader sees it waiting", /Waiting/, await text(lead.page));
 
-  // The coach asks a question; the leader answers on her page; the coach approves
+  // The coach recommends; the admin finds it on Today, asks a question, the leader answers on her page, and the admin approves
   const coachPage = await newPage(browser, "desktop");
   await signIn(coachPage.page, COACH, "/growth/removals");
   await open(coachPage.page, "/growth/removals");
   await coachPage.page.getByTestId("removal-board").waitFor({ timeout: 20000 });
   {
     const card = coachPage.page.getByTestId("removal-card").filter({ hasText: "Waiting for a decision" }).first();
+    check((await card.getByTestId("removal-decide").count()) === 0, "On, the coach still has no way to decide");
+    await card.getByText("I would ask the leader a question first", { exact: true }).click();
+    await card.getByTestId("removal-recommend-note").fill("Please ask how many weeks she has missed, and whether anyone has visited her.");
+    await card.getByRole("button", { name: "Send my recommendation" }).click();
+  }
+  await eventually("the recommendation is kept", async () => (await one("select rec_decision from public.removal_requests where not rehearsal and member_id = $1", [bola.id]))?.rec_decision === "ask");
+  check((await one("select status from public.removal_requests where not rehearsal and member_id = $1", [bola.id]))?.status === "open", "…and the request is still open");
+  await lead.page.reload();
+  await lead.page.getByTestId("removal-mine-card").first().waitFor({ timeout: 20000 });
+  check((await lead.page.getByText(/Please ask how many weeks/).count()) === 0, "…and the leader never sees it");
+
+  const adminPage = await newPage(browser, "desktop");
+  await signIn(adminPage.page, ADMIN, "/admin");
+  await open(adminPage.page, "/admin");
+  await adminPage.page.getByTestId("needs-attention").waitFor({ timeout: 20000 });
+  has("Admin → Today says one removal request is waiting", /1 removal request waiting/, await adminPage.page.getByTestId("attention-removals").innerText());
+  check((await adminPage.page.getByTestId("menu-growth-removals").count()) >= 1, "…and Removal requests is in the Admin menu, under Leaders");
+  await shot(adminPage.page, "40-admin-today");
+  await adminPage.page.getByTestId("attention-removals").getByRole("link").first().click();
+  await adminPage.page.waitForURL(/\/growth\/removals/, { timeout: 15000 });
+  await adminPage.page.getByTestId("removal-board").waitFor({ timeout: 20000 });
+  {
+    const card = adminPage.page.getByTestId("removal-card").filter({ hasText: "Waiting for a decision" }).first();
+    has("the admin reads the coach's recommendation first", /recommends: asking the leader a question first[\s\S]*whether anyone has visited her[\s\S]*What the leader wrote/, await card.innerText());
+    await shot(adminPage.page, "40-admin-board");
     await card.getByText("Ask the leader a question", { exact: true }).click();
     await card.getByTestId("removal-decision-note").fill("How many weeks has she missed, and has anyone visited her?");
     await card.getByRole("button", { name: "Send my decision" }).click();
   }
   await eventually("the leader has been asked", async () => (await one("select waiting_on from public.removal_requests where not rehearsal and member_id = $1", [bola.id]))?.waiting_on === "leader");
   check((await n("select count(*)::int n from public.messages where person_id = $1 and template = 'removal_leader_decided'", [mine.leader.id])) === 1, "the leader is emailed that there is a question (and nothing about its words)");
+  await open(adminPage.page, "/admin");
+  await adminPage.page.getByTestId("needs-attention").waitFor({ timeout: 20000 });
+  check((await adminPage.page.getByTestId("attention-removals").count()) === 0, "while it waits for the leader's answer, Today no longer lists it");
   await open(lead.page, "/lead/tribe");
   await lead.page.getByTestId("removal-question").waitFor({ timeout: 20000 });
   has("the leader reads the question on her page", /How many weeks has she missed/, await text(lead.page));
@@ -218,12 +267,14 @@ async function main() {
   await lead.page.getByRole("button", { name: "Send my answer" }).click();
   await eventually("the answer is kept", async () => (await one("select waiting_on from public.removal_requests where not rehearsal and member_id = $1", [bola.id]))?.waiting_on === "approver");
 
-  await open(coachPage.page, "/growth/removals");
-  await coachPage.page.getByTestId("removal-board").waitFor({ timeout: 20000 });
+  await open(adminPage.page, "/admin");
+  await adminPage.page.getByTestId("attention-removals").waitFor({ timeout: 20000 });
+  check(true, "when the leader has answered, it is back on Today");
+  await open(adminPage.page, "/growth/removals");
+  await adminPage.page.getByTestId("removal-board").waitFor({ timeout: 20000 });
   {
-    const card = coachPage.page.getByTestId("removal-card").filter({ hasText: "Waiting for a decision" }).first();
-    has("the coach reads the answer under the request", /The leader answered: Five weeks/, await card.innerText());
-    await shot(coachPage.page, "40-coach-board");
+    const card = adminPage.page.getByTestId("removal-card").filter({ hasText: "Waiting for a decision" }).first();
+    has("the admin reads the answer under the request", /The leader answered: Five weeks/, await card.innerText());
     await card.getByText("Approve: release their place", { exact: true }).click();
     await card.getByTestId("removal-decision-note").fill(WHY);
     await card.getByRole("button", { name: "Send my decision" }).click();
@@ -231,11 +282,22 @@ async function main() {
   await eventually("the seat is released", async () => (await seat(bola.id)).status === "released");
   check((await seat(bola.id)).release_reason === "Place changed by the church", "…with the church's own words as the reason, not the leader's");
   check((await seat(chidi.id)).status === "active", "the other member's seat is untouched");
+  {
+    const hold = await one("select source, until, request_id from public.placement_holds where person_id = $1", [bola.id]);
+    check(hold?.source === "removal" && hold.until !== null, "Bola is on a three-day hold, so no automatic run places her before she can choose for herself");
+    const hours = Number((await one("select extract(epoch from (until - now())) / 3600 as h from public.placement_holds where person_id = $1", [bola.id]))?.h ?? 0);
+    check(hours > 71 && hours < 73, "…which ends in three days");
+    check((await n("select count(*)::int n from public.placement_holds where person_id = $1", [chidi.id])) === 0, "…and nobody else is held");
+  }
   check((await attendance()) === attendedBefore, "nothing Bola attended was touched");
   const told = await one("select params, force_channel from public.messages where person_id = $1 and template = 'removal_member_told'", [bola.id]);
   check(told?.force_channel === "email" && JSON.stringify(Object.keys(told.params as object).sort()) === JSON.stringify(["appeal_days", "contact_first", "tribe"]), "Bola is emailed, with only the tribe, a named person and the days to ask again");
   check(!/five weeks|absence|conflict|Lara/i.test(JSON.stringify(told?.params)), "…and nothing in it says why or who asked");
   check((await n("select count(*)::int n from public.messages where person_id = $1 and template = 'removal_leader_decided'", [mine.leader.id])) === 2, "the leader is told it was approved");
+  await open(adminPage.page, "/admin");
+  await adminPage.page.getByTestId("needs-attention").waitFor({ timeout: 20000 });
+  check((await adminPage.page.getByTestId("attention-removals").count()) === 0, "decided, it leaves Admin → Today");
+  await adminPage.ctx.close();
 
   // The leader's page after the decision
   await open(lead.page, "/lead/tribe");
@@ -284,6 +346,7 @@ async function main() {
   }
   await eventually("her seat is back", async () => (await seat(bola.id)).status === "active");
   check((await n("select count(*)::int n from public.messages where person_id = $1 and template = 'removal_member_reinstated'", [bola.id])) === 1, "Bola is emailed that her place is back");
+  check((await n("select count(*)::int n from public.placement_holds where person_id = $1", [bola.id])) === 0, "…and the hold is lifted");
   check((await attendance()) === attendedBefore, "still nothing she attended was touched");
   await open(member.page, "/home");
   await member.page.getByTestId("removed-notice").waitFor({ timeout: 20000 });

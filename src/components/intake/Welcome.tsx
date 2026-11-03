@@ -83,7 +83,7 @@ export function Welcome({
             checked={share}
             onChange={(e) => onShare(e.target.checked)}
             title={TEAM_CONTACT_CONSENT}
-            description="Optional. If you leave it empty, we tell you your tribe first and give you a day to say no before your leader is given anything."
+            description="Optional. Your leader sees your name when you are placed. Your email and number are never given to them before you press “Yes, I’m in”, ticked or not."
           />
         ) : null}
       </fieldset>

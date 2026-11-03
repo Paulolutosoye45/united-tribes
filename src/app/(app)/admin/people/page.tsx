@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageHead } from "@/components/admin/PageHead";
 import { InviteForm } from "@/components/admin/InviteForm";
 import { PeopleList, type PersonRow } from "@/components/admin/PeopleList";
+import { FindMember } from "@/components/placement/FindMember";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { daysUntil, formatShortDate } from "@/lib/dates";
@@ -64,6 +65,16 @@ export default async function PeoplePage() {
         </h2>
         <div className="card p-5 sm:p-7">
           <InviteForm roles={grantable} />
+        </div>
+      </section>
+
+      <section aria-labelledby="find-heading" className="flex flex-col gap-4">
+        <h2 id="find-heading" className="t-heading">
+          Find a member to place or move
+        </h2>
+        <p className="t-body measure text-soft">Search every member by name, e-mail or phone number, then open their page to put them in a tribe or move them to another.</p>
+        <div className="card p-5 sm:p-7">
+          <FindMember hrefBase="/admin/people" />
         </div>
       </section>
 

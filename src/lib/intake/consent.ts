@@ -12,8 +12,11 @@ export const MATCHING_CONSENT =
 export const AI_CONSENT =
   "I agree that what I write or say about my season may be read by an AI service so it can suggest options and draft a sentence for me. A voice note is turned into words and the recording is deleted straight away. Contact details are removed first, and my private notes and the rest of my profile stay out of it.";
 
-/** Optional. Saying yes lets a leader be told straight away; saying nothing gives the member a day to say no after they are told their tribe. */
+/**
+ * Optional, and it opens nothing by itself. A leader sees a church-placed member's name at once; their email and WhatsApp number are given only
+ * after the member presses "Yes, I'm in", whether or not this is ticked. Ticking it records that they are happy for that to happen.
+ */
 export const TEAM_CONTACT_CONSENT =
-  "If the church places me in a tribe, my leader may be given my name, my email and my WhatsApp number (if I gave one) so they can say hello.";
+  "If the church places me in a tribe, my leader may be given my email and my WhatsApp number (if I gave one) once I press “Yes, I’m in”, so they can say hello.";
 
 export const WHATSAPP_CONSENT = "You may message me on WhatsApp about my tribe.";

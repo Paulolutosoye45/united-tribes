@@ -5,8 +5,8 @@ import { makeCast, type Cast } from "./profiles-kit";
 // WhatsApp that cannot fail quietly, stage 4: leader removal requests. What these prove:
 //   * it ships Off, and Off means no function answers, nothing is written, and the matching is as it was
 //   * only the leader of a tribe (not the assistant) can ask, with a reason, 20 to 500 characters, "I have spoken to them", and at most two open
-//   * the coach (ordinary requests), the Care Lead, a director and an admin decide; a request about safety, someone under 18 or a member with an open care
-//     flag is decided only by the Care Lead, a director or an admin; a pastor reads all; nobody decides their own or one about themselves
+//   * the Care Lead, a director or an admin decides; the coach of the tribe only RECOMMENDS an ordinary request (a request about safety, someone under 18
+//     or a member with an open care flag is not the coach's to recommend on); a pastor reads all; nobody decides their own or one about themselves
 //   * approve / decline / ask the leader a question, always with a note; silence never removes anyone
 //   * approved: the seat is released, nothing the member wrote or did is touched, the member is told kindly (never the reason or the note) and offered other tribes
 //     but never that one, the leader is told; declined: the member is told nothing
@@ -42,7 +42,12 @@ beforeEach(async () => {
 });
 
 const REASON = "Trying removal requests with everyone";
-const on = () => c.set("removal_requests", "on", { reason: REASON });
+/** Switches it On the way the owner does (which also starts the staff email groups that take part), then puts the groups back as they were so each test says for itself when notices go out. */
+const on = async () => {
+  const before = await c.sql("select group_key, mode from public.notice_settings");
+  await c.set("removal_requests", "on", { reason: REASON });
+  for (const g of before) await c.sql("update public.notice_settings set mode = $2 where group_key = $1", [g.group_key, g.mode]);
+};
 const rehearse = () => c.set("removal_requests", "rehearsal", { reason: REASON });
 const NOTE = "He has missed five weeks and does not answer calls, and I have asked twice.";
 const WHY = "Looked at this carefully and agree with the leader.";
@@ -180,14 +185,17 @@ describe("the ask", () => {
     const f = await fresh();
     const r = await ask(f);
     const items = await c.sql("select person_id, group_key, kind, path from public.notice_items where event = $1 order by kind", [`removal:${r.id}`]);
-    expect(items.map((i) => i.kind)).toEqual(["care_removal_ask", "coach_removal_ask"]);
+    // the Care Team, the coach and (new) every admin and director, each once
+    expect(items.map((i) => i.kind)).toEqual(["admin_removal_ask", "admin_removal_ask", "care_removal_ask", "coach_removal_ask"]);
     expect(items.find((i) => i.kind === "coach_removal_ask")!.person_id).toBe(coach);
+    expect(items.filter((i) => i.kind === "admin_removal_ask").map((i) => i.person_id).sort()).toEqual([c.admin, c.director].sort());
+    expect(items.filter((i) => i.kind === "admin_removal_ask").map((i) => i.group_key).sort()).toEqual(["admin", "directors"]);
     expect(items.every((i) => i.path === "/growth/removals")).toBe(true);
-    // the narrow list: the care team only, the coach is not told in the notice
+    // the narrow list: the Care Team and the office, but not the coach, who has no part in these
     await c.sql("delete from public.notice_items");
     const g = await fresh();
     const r2 = await ask(g, g.members[0], { reason: "safety_or_conduct" });
-    expect((await c.sql("select kind from public.notice_items where event = $1", [`removal:${r2.id}`])).map((i) => i.kind)).toEqual(["care_removal_ask"]);
+    expect((await c.sql("select kind from public.notice_items where event = $1 order by kind", [`removal:${r2.id}`])).map((i) => i.kind)).toEqual(["admin_removal_ask", "admin_removal_ask", "care_removal_ask"]);
   });
 
   it("is the leader's own view: their requests, how many are waiting, and the question put to them", async () => {
@@ -205,13 +213,15 @@ describe("the ask", () => {
 });
 
 describe("who decides", () => {
-  it("lets the coach, the Care Lead, a director and an admin decide an ordinary request, and not a pastor, a stranger, the leader or the member", async () => {
+  it("lets the Care Lead, a director and an admin decide an ordinary request, and not the coach, a pastor, a stranger, the leader or the member", async () => {
     await on();
     const f = await fresh();
     const r = await ask(f);
-    for (const who of [coach2, c.pastor, f.members[1], c.member, f.leader, f.members[0]]) await expectCode(decide(r.id, who, "decline"), "42501");
+    for (const who of [coach, coach2, c.pastor, f.members[1], c.member, f.leader, f.members[0]]) await expectCode(decide(r.id, who, "decline"), "42501");
     expect(await row(r.id)).toMatchObject({ status: "open" });
-    await decide(r.id, coach, "decline");
+    // the coach's own board does not offer to decide, only to recommend
+    expect((await c.as(coach, "removal_board")).requests.find((q: { id: string }) => q.id === r.id)).toMatchObject({ can_decide: false, can_recommend: true });
+    await decide(r.id, c.admin, "decline");
     for (const who of [careLead, c.director, c.admin]) {
       const g = await fresh();
       const q = await ask(g);
@@ -227,7 +237,7 @@ describe("who decides", () => {
     await expectCode(decide(r.id, coach, "approve"), "42501");
     await expectCode(decide(r.id, c.pastor, "approve"), "42501");
     const asCoach = (await c.as(coach, "removal_board")).requests.find((q: { id: string }) => q.id === r.id);
-    expect(asCoach).toMatchObject({ restricted: true, can_decide: false });
+    expect(asCoach).toMatchObject({ restricted: true, can_decide: false, can_recommend: false });
     expect((await c.as(c.pastor, "removal_board")).requests.find((q: { id: string }) => q.id === r.id)).toMatchObject({ can_decide: false });
     expect((await c.as(careLead, "removal_board")).requests.find((q: { id: string }) => q.id === r.id)).toMatchObject({ can_decide: true });
     await decide(r.id, careLead, "approve");
@@ -270,9 +280,9 @@ describe("the answer", () => {
     await on();
     const f = await fresh();
     const r = await ask(f);
-    await expectCode(decide(r.id, coach, "approve", "ok"), "22023");
-    await expectCode(decide(r.id, coach, "decline", "x".repeat(501)), "22023");
-    await expectCode(decide(r.id, coach, "maybe"), "22023");
+    await expectCode(decide(r.id, c.admin, "approve", "ok"), "22023");
+    await expectCode(decide(r.id, c.admin, "decline", "x".repeat(501)), "22023");
+    await expectCode(decide(r.id, c.admin, "maybe"), "22023");
     expect((await row(r.id)).status).toBe("open");
   });
 
@@ -280,9 +290,9 @@ describe("the answer", () => {
     await on();
     const f = await fresh();
     const r = await ask(f);
-    await decide(r.id, coach, "ask", "How many weeks has he missed, and has anyone visited him?");
+    await decide(r.id, c.admin, "ask", "How many weeks has he missed, and has anyone visited him?");
     expect(await row(r.id)).toMatchObject({ status: "open", waiting_on: "leader" });
-    await expectCode(decide(r.id, coach, "ask", "Another question for you again."), "22023");
+    await expectCode(decide(r.id, c.admin, "ask", "Another question for you again."), "22023");
     expect((await c.as(f.leader, "removal_mine", f.tribe)).requests[0]).toMatchObject({ waiting_on: "leader", question: "How many weeks has he missed, and has anyone visited him?" });
     const told = await mails("removal_leader_decided", f.leader);
     expect(told).toHaveLength(1);
@@ -303,8 +313,8 @@ describe("the answer", () => {
     await on();
     const f = await fresh();
     const r = await ask(f);
-    await decide(r.id, coach, "decline", "Please keep visiting him. He is going through a hard time.");
-    expect(await row(r.id)).toMatchObject({ status: "declined", decided_by: coach });
+    await decide(r.id, c.admin, "decline", "Please keep visiting him. He is going through a hard time.");
+    expect(await row(r.id)).toMatchObject({ status: "declined", decided_by: c.admin });
     expect((await seat(f.members[0], f.tribe)).status).toBe("active");
     const told = await mails("removal_leader_decided", f.leader);
     expect(told[0].params).toMatchObject({ decision: "declined" });
@@ -320,12 +330,12 @@ describe("the answer", () => {
     await on();
     const f = await fresh();
     const r = await ask(f);
-    await decide(r.id, coach, "decline");
+    await decide(r.id, c.admin, "decline");
     await expectCode(decide(r.id, careLead, "approve"), "22023");
     const g = await fresh();
     const q = await ask(g);
     await c.as(g.leader, "removal_withdraw", q.id);
-    await expectCode(decide(q.id, coach, "approve"), "22023");
+    await expectCode(decide(q.id, c.admin, "approve"), "22023");
     await expectCode(c.as(f.leader, "removal_withdraw", q.id), "42501");
   });
 
@@ -344,7 +354,7 @@ describe("the answer", () => {
     };
     expect(before).toEqual({ attendance: 3, testimonies: 1, consents: 1, profile: 1 });
     const r = await ask(f);
-    await decide(r.id, coach, "approve");
+    await decide(r.id, c.admin, "approve");
     expect(await seat(m, f.tribe)).toMatchObject({ status: "released", release_reason: "Place changed by the church" });
     expect((await row(r.id)).status).toBe("approved");
     expect((await c.one("select count(*)::int n from public.tribe_attendance where person_id = $1", [m])).n).toBe(before.attendance);
@@ -361,7 +371,7 @@ describe("the answer", () => {
     await on();
     const f = await fresh();
     const r = await ask(f, f.members[0], { reason: "conflict" });
-    await decide(r.id, coach, "approve", "Agreed, the note is clear. Handled with care.");
+    await decide(r.id, c.admin, "approve", "Agreed, the note is clear. Handled with care.");
     const told = await mails("removal_member_told", f.members[0]);
     expect(told).toHaveLength(1);
     expect(told[0].force_channel).toBe("email");
@@ -387,7 +397,7 @@ describe("the answer", () => {
     expect(await candidates(m)).toEqual(expect.arrayContaining([f.tribe, other.tribe]));
     expect(await placers(m)).toEqual(expect.arrayContaining([f.tribe, other.tribe]));
     const r = await ask(f);
-    await decide(r.id, coach, "approve");
+    await decide(r.id, c.admin, "approve");
     const after = await candidates(m);
     expect(after).toContain(other.tribe);
     expect(after).not.toContain(f.tribe);
@@ -425,9 +435,9 @@ describe("rehearsal", () => {
     const r = await ask(f, f.members[0], { urgent: true });
     expect(r.rehearsal).toBe(true);
     expect(await c.sql("select 1 from public.care_tasks where tribe_id = $1", [f.tribe])).toHaveLength(0);
-    await decide(r.id, coach, "ask", "A practice question for you here.");
+    await decide(r.id, c.admin, "ask", "A practice question for you here.");
     await c.as(f.leader, "removal_answer", r.id, "A practice answer back to you.");
-    await decide(r.id, coach, "approve");
+    await decide(r.id, c.admin, "approve");
     expect(await row(r.id)).toMatchObject({ status: "approved", rehearsal: true });
     expect((await seat(f.members[0], f.tribe)).status).toBe("active");
     expect(await c.sql("select 1 from public.removal_blocks")).toHaveLength(0);
@@ -448,7 +458,7 @@ describe("the member's side", () => {
     await on();
     const f = await fresh();
     const r = await ask(f);
-    await decide(r.id, coach, "approve");
+    await decide(r.id, c.admin, "approve");
     return { f, id: r.id as string, m: f.members[0] };
   }
 
@@ -480,7 +490,7 @@ describe("the member's side", () => {
     await expectCode(c.as(f.members[1], "removal_appeal", id, null), "22023");
     const g = await fresh();
     const q = await ask(g);
-    await decide(q.id, coach, "decline");
+    await decide(q.id, c.admin, "decline");
     await expectCode(c.as(g.members[0], "removal_appeal", q.id, null), "22023");
   });
 
@@ -496,12 +506,12 @@ describe("putting the seat back", () => {
     await on();
     const f = await fresh();
     const r = await ask(f);
-    await decide(r.id, coach, "approve");
+    await decide(r.id, c.admin, "approve");
     return { f, id: r.id as string, m: f.members[0] };
   }
 
   it("is done by the Care Lead, a director, an admin or whoever approved it, with a note, and tells the member and the leader", async () => {
-    for (const who of [careLead, c.director, c.admin, coach]) {
+    for (const who of [careLead, c.director, c.admin]) {
       const { f, id, m } = await removed();
       await c.sql("delete from public.messages");
       await expectCode(c.as(who, "removal_reinstate", id, "short"), "22023");
@@ -564,7 +574,8 @@ describe("waiting, and silence", () => {
     await backdate(r.id, 4);
     expect(await c.sql("select public.worker_removal_tick($1) as r", [token]).then((x) => x[0].r)).toMatchObject({ reminded: 1, escalated: 0 });
     const kinds = async () => (await c.sql("select kind, event from public.notice_items order by kind, event")).map((i) => `${i.kind}`);
-    expect(await kinds()).toEqual(["care_removal_waiting", "coach_removal_waiting"]);
+    // the Care Team, the coach, and (new) every admin and director are reminded once, each in their own words
+    expect(await kinds()).toEqual(["admin_removal_waiting", "admin_removal_waiting", "care_removal_waiting", "coach_removal_waiting"]);
     expect(await c.sql("select public.worker_removal_tick($1) as r", [token]).then((x) => x[0].r)).toMatchObject({ reminded: 0, escalated: 0 });
     await backdate(r.id, 8);
     expect(await c.sql("select public.worker_removal_tick($1) as r", [token]).then((x) => x[0].r)).toMatchObject({ reminded: 0, escalated: 1 });
@@ -584,12 +595,13 @@ describe("waiting, and silence", () => {
     const f = await fresh();
     const restricted = await ask(f, f.members[0], { reason: "safety_or_conduct" });
     const answered = await ask(f, f.members[1]);
-    await decide(answered.id, coach, "decline");
+    await decide(answered.id, c.admin, "decline");
     await backdate(restricted.id, 4);
     await backdate(answered.id, 4);
     await c.sql("delete from public.notice_items");
     await c.sql("select public.worker_removal_tick($1)", [token]);
-    expect((await c.sql("select kind from public.notice_items")).map((i) => i.kind)).toEqual(["care_removal_waiting"]);
+    // a restricted request is not the coach's to recommend on, so the coach is not reminded; the office is
+    expect((await c.sql("select kind from public.notice_items order by kind")).map((i) => i.kind)).toEqual(["admin_removal_waiting", "admin_removal_waiting", "care_removal_waiting"]);
     await c.reset();
     await rehearse();
     const g = await fresh();
@@ -604,9 +616,9 @@ describe("waiting, and silence", () => {
     await on();
     const f = await fresh();
     const r = await ask(f);
-    await decide(r.id, coach, "ask", "What have you tried so far with her?");
+    await decide(r.id, c.admin, "ask", "What have you tried so far with her?");
     await c.as(f.leader, "removal_answer", r.id, "Calls, visits and a long talk after the meeting.");
-    await decide(r.id, coach, "decline", "Please keep trying; we will support you.");
+    await decide(r.id, c.admin, "decline", "Please keep trying; we will support you.");
     await c.sql("update public.removal_requests set created_at = now() - interval '13 months' where id = $1", [r.id]);
     await c.set("removal_requests", "off", { reason: REASON });
     expect(await c.sql("select public.worker_removal_tick($1) as r", [token]).then((x) => x[0].r)).toMatchObject({ on: false, cleared: 1 });

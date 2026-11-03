@@ -359,7 +359,9 @@ describe("placing one person", () => {
 
     c = await o.call("placement_one_check", b, w.C.tribe);
     expect(codes(c)).toEqual(["after_cutoff", "full", "no_score"]);
-    await expect(o.call("placement_one_place", b, w.C.tribe, ["after_cutoff", "no_score"], "Please", false)).rejects.toThrow(/tick/);
+    // leaving out only the full tribe is the answer a second click gets when the last seat has just gone: it says so in plain words
+    await expect(o.call("placement_one_place", b, w.C.tribe, ["after_cutoff", "no_score"], "Please", false)).rejects.toThrow(/This tribe is full \(4 of 4\)/);
+    await expect(o.call("placement_one_place", b, w.C.tribe, ["after_cutoff"], "Please", false)).rejects.toThrow(/tick/);
     const second = await o.call("placement_one_place", b, w.C.tribe, codes(c), "Her leader asked", false);
     expect(second.ok).toBe(true);
     expect(

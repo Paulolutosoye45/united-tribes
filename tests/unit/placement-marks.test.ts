@@ -11,16 +11,21 @@ describe("the mark beside a member the church placed", () => {
     expect(placementMark({ placement: null, contact: "open" }, "Ada")).toBeNull();
   });
 
-  it("says yes, details open, or yet to answer, in that order of what is known", () => {
+  it("says yes, details open (God Mode opened them), or waiting for a reply, in that order of what is known", () => {
     expect(placementMark({ placement: "confirmed", contact: "open" }, "Ada")?.label).toBe("Placed by the church · said yes");
     expect(placementMark({ placement: "pending", contact: "open" }, "Ada")?.label).toBe("Placed by the church · details open");
-    expect(placementMark({ placement: "pending", contact: "holding", contact_opens_at: "2027-02-12T10:00:00Z" }, "Ada")?.label).toBe("Placed by the church · yet to answer");
+    expect(placementMark({ placement: "pending", contact: "holding", contact_opens_at: "2027-02-12T10:00:00Z" }, "Ada")?.label).toBe("Placed by the church · waiting for a reply");
+    expect(placementMark({ placement: "pending", contact: "unanswered" }, "Ada")?.label).toBe("Placed by the church · waiting for a reply");
   });
 
-  it("says when a held member's details open, in Lagos time, and that a no still stops it", () => {
-    const m = placementMark({ placement: "pending", contact: "holding", contact_opens_at: "2027-02-12T10:00:00Z" }, "Ada");
-    expect(m?.note).toMatch(/open Fri 12 Feb, 11:00 am/);
-    expect(m?.note).toMatch(/unless Ada says no first/);
+  it("says a member who has not said yes has not opened their details, and gives no date for it", () => {
+    for (const contact of ["holding", "unanswered"]) {
+      const m = placementMark({ placement: "pending", contact, contact_opens_at: "2027-02-12T10:00:00Z" }, "Ada");
+      expect(m?.note).toMatch(/has not said yes yet/);
+      expect(m?.note).toMatch(/not open/);
+      expect(m?.note).toMatch(/when Ada says yes/);
+      expect(m?.note).not.toMatch(/Feb|a day/);
+    }
   });
 
   it("says a member who was not reached is not reached, and that their contact is not open", () => {
@@ -40,7 +45,7 @@ describe("the mark beside a member the church placed", () => {
   });
 
   it("never carries a number, an email or anything the member told us in private", () => {
-    for (const contact of ["open", "holding", "waiting", "not_reached", "withheld", undefined]) {
+    for (const contact of ["open", "holding", "unanswered", "waiting", "not_reached", "withheld", undefined]) {
       const m = placementMark({ placement: "pending", contact, contact_opens_at: "2027-02-12T10:00:00Z" }, "Ada");
       expect(`${m?.label} ${m?.note}`).not.toMatch(/\+\d|@|faith|grief|score|percent/i);
     }
@@ -67,9 +72,11 @@ const placed = (o: Partial<PlacedState> = {}): PlacedState => ({
 });
 
 describe("what a placed member is told about their details", () => {
-  it("says the leader can already see their name, and when the rest opens", () => {
-    expect(contactLine(placed({ contact: "waiting" }))).toMatch(/Ngozi can see your name\. A day after we have emailed you/);
-    expect(contactLine(placed({ contact: "holding", contactOpensAt: "2027-02-12T10:00:00Z" }))).toMatch(/Ngozi can see your name\. They are given your email and your WhatsApp number on Fri 12 Feb, 11:00 am/);
+  it("says the leader can already see their name, and that the rest opens when they say yes", () => {
+    expect(contactLine(placed({ contact: "waiting" }))).toMatch(/Ngozi can see your name\. They are given your email and your WhatsApp number only after you press “Yes, I’m in”/);
+    expect(contactLine(placed({ contact: "holding", contactOpensAt: "2027-02-12T10:00:00Z" }))).toMatch(/only after you press “Yes, I’m in”/);
+    expect(contactLine(placed({ contact: "unanswered" }))).toMatch(/only after you press “Yes, I’m in”/);
+    expect(contactLine(placed({ contact: "holding", contactOpensAt: "2027-02-12T10:00:00Z" }))).not.toMatch(/Feb|a day/);
     expect(contactLine(placed({ contact: "open" }))).toBe("Ngozi has been given your name, your email and your WhatsApp number.");
     expect(contactLine(placed({ contact: "withheld", withheld: true }))).toMatch(/will not be given your email and your WhatsApp number/);
   });
@@ -79,8 +86,9 @@ describe("what a placed member is told about their details", () => {
   });
 
   it("explains why there is no group link yet, and warns that joining shows their number", () => {
-    expect(groupNote(placed())).toMatch(/as soon as you press “Yes, I’m in”, or a day after we have emailed you/);
-    expect(groupNote(placed({ groupOpensAt: "2027-02-12T10:00:00Z" }))).toMatch(/on Fri 12 Feb, 11:00 am/);
+    expect(groupNote(placed())).toMatch(/as soon as you press “Yes, I’m in”/);
+    expect(groupNote(placed())).not.toMatch(/a day after/);
+    expect(groupNote(placed({ groupOpensAt: "2027-02-12T10:00:00Z" }))).not.toMatch(/Feb/);
     expect(groupNote(placed())).toMatch(/shows your number to everyone in it/);
   });
 

@@ -350,8 +350,8 @@ export type PlacedState = {
   canChange: boolean;
   fit: string;
   hasWhatsapp: boolean;
-  /** Whether the leader has this member's contact yet: open, or holding until a date, or waiting for the member's email. */
-  contact: "open" | "withheld" | "holding" | "waiting" | "not_reached";
+  /** Whether the leader has this member's contact yet: open once they say yes; otherwise closed (hold running, email queued, not reached, or no reply). */
+  contact: "open" | "withheld" | "holding" | "waiting" | "not_reached" | "unanswered";
   contactOpensAt: string | null;
   /** True once the clock or God Mode has opened the member's details: the only time "don't share my details" comes too late. */
   contactLate: boolean;
@@ -377,7 +377,7 @@ export function parsePlaced(json: unknown): PlacedState | null {
     canChange: json.can_change === true,
     fit: str(json.fit),
     hasWhatsapp: json.has_whatsapp === true,
-    contact: (["open", "withheld", "holding", "waiting", "not_reached"] as const).find((x) => x === json.contact) ?? (json.withheld === true ? "withheld" : "open"),
+    contact: (["open", "withheld", "holding", "waiting", "not_reached", "unanswered"] as const).find((x) => x === json.contact) ?? (json.withheld === true ? "withheld" : "open"),
     contactOpensAt: strOrNull(json.contact_opens_at),
     contactLate: json.contact_late === true,
     // an older database has no such field and always showed the link
@@ -402,6 +402,10 @@ export type OneOption = {
   degree: number | null;
   label: string | null;
   belowFloor: boolean;
+  /** The church took this person out of this tribe, so it cannot be offered again. */
+  removed: boolean;
+  /** The tribe they sit in now (a move never offers it). */
+  current: boolean;
 };
 
 export function parseOneOptions(json: unknown): OneOption[] {
@@ -409,12 +413,15 @@ export function parseOneOptions(json: unknown): OneOption[] {
     if (!isObject(o)) return [];
     const tribe = uuid(o.tribe);
     return tribe
-      ? [{ tribe, name: str(o.name), leader: str(o.leader), active: int(o.active), capacity: int(o.capacity), degree: intOrNull(o.degree), label: strOrNull(o.label), belowFloor: o.below_floor === true }]
+      ? [{ tribe, name: str(o.name), leader: str(o.leader), active: int(o.active), capacity: int(o.capacity), degree: intOrNull(o.degree), label: strOrNull(o.label), belowFloor: o.below_floor === true, removed: o.removed === true, current: o.current === true }]
       : [];
   });
 }
 
-export type OneNote = { code: string; text: string };
+/** A blocker or a warning. `ownerOnly` is true for a warning that an admin or a director may not accept: it goes to the owner as a request. */
+export type OneNote = { code: string; text: string; ownerOnly: boolean };
+
+export type PlacerRole = "owner" | "admin" | "director";
 
 /** What the database says about placing one person into one tribe: what stops it, and what needs a tick and a reason. */
 export type OneCheck = {
@@ -426,11 +433,18 @@ export type OneCheck = {
   degree: number | null;
   label: string | null;
   window: JoiningWindow | null;
+  /** Whose authority the check ran with. */
+  who: PlacerRole;
+  /** A check for moving a member who holds a seat; `from` is the tribe they would leave. */
+  move: boolean;
+  from: { id: string; name: string } | null;
 };
 
 export function parseOneCheck(json: unknown): OneCheck | null {
   if (!isObject(json)) return null;
-  const notes = (v: unknown): OneNote[] => arr(v).flatMap((n) => (isObject(n) && strOrNull(n.code) && strOrNull(n.text) ? [{ code: str(n.code), text: str(n.text) }] : []));
+  const notes = (v: unknown): OneNote[] =>
+    arr(v).flatMap((n) => (isObject(n) && strOrNull(n.code) && strOrNull(n.text) ? [{ code: str(n.code), text: str(n.text), ownerOnly: n.owner_only === true }] : []));
+  const from = isObject(json.from) && uuid(json.from.id) ? { id: str(json.from.id), name: str(json.from.name) } : null;
   const p = isObject(json.person) ? json.person : null;
   const t = isObject(json.tribe) ? json.tribe : null;
   const pid = p ? uuid(p.id) : null;
@@ -445,5 +459,165 @@ export function parseOneCheck(json: unknown): OneCheck | null {
     degree: intOrNull(json.degree),
     label: strOrNull(json.label),
     window: parseWindow(json.window),
+    who: json.who === "admin" || json.who === "director" ? json.who : "owner",
+    move: json.move === true,
+    from,
+  };
+}
+
+
+// ---------------------------------------------------------------------------
+// Placing or moving one person from Admin
+// ---------------------------------------------------------------------------
+
+/** A member found by the search: where they sit now, whether they finished Find my tribe, and whether they lead (and so cannot be placed). */
+export type FindRow = { id: string; name: string; email: string; tribe: string | null; hasForm: boolean; leads: boolean };
+
+export function parseFind(json: unknown): FindRow[] {
+  return arr(json).flatMap((r) => {
+    if (!isObject(r)) return [];
+    const id = uuid(r.id);
+    return id ? [{ id, name: str(r.name), email: str(r.email), tribe: strOrNull(r.tribe), hasForm: r.has_form === true, leads: r.leads === true }] : [];
+  });
+}
+
+/** The last placement of a person (or one of a tribe's recent ones): who placed it, and whether it can still be undone. */
+export type OfficePlacement = { run: string; tribe: string; name: string; at: string | null; moved: boolean; by: string | null; undoable: boolean };
+
+const parsePlacement = (r: unknown, fallback: { tribe?: string; name?: string } = {}): OfficePlacement | null => {
+  if (!isObject(r)) return null;
+  const run = uuid(r.run);
+  return run
+    ? { run, tribe: str(r.tribe) || fallback.tribe || "", name: str(r.name) || fallback.name || "", at: strOrNull(r.at), moved: r.moved === true, by: strOrNull(r.by), undoable: r.undoable === true }
+    : null;
+};
+
+export type OfficePerson = {
+  mode: PlacementMode;
+  role: PlacerRole;
+  person: { id: string; name: string; email: string };
+  member: boolean;
+  leads: boolean;
+  form: boolean;
+  seat: { tribe: string; name: string; leader: string } | null;
+  hold: { source: string; until: string | null } | null;
+  last: OfficePlacement | null;
+};
+
+const modeOf = (v: unknown): PlacementMode => (v === "on" || v === "rehearsal" ? v : "off");
+
+export function parseOfficePerson(json: unknown): OfficePerson | null {
+  if (!isObject(json) || !isObject(json.person)) return null;
+  const id = uuid(json.person.id);
+  if (!id) return null;
+  const seat = isObject(json.seat) && uuid(json.seat.tribe) ? { tribe: str(json.seat.tribe), name: str(json.seat.name), leader: str(json.seat.leader) } : null;
+  const hold = isObject(json.hold) ? { source: str(json.hold.source), until: strOrNull(json.hold.until) } : null;
+  return {
+    mode: modeOf(json.mode),
+    role: json.role === "admin" || json.role === "director" ? json.role : "owner",
+    person: { id, name: str(json.person.name), email: str(json.person.email) },
+    member: json.member === true,
+    leads: json.leads === true,
+    form: json.form === true,
+    seat,
+    hold,
+    last: parsePlacement(json.last),
+  };
+}
+
+export type OfficeTribeRow = { id: string; name: string; leader: string; active: number; capacity: number; open: boolean };
+
+export function parseOfficeTribes(json: unknown): { mode: PlacementMode; role: PlacerRole; tribes: OfficeTribeRow[] } | null {
+  if (!isObject(json)) return null;
+  return {
+    mode: modeOf(json.mode),
+    role: json.role === "admin" || json.role === "director" ? json.role : "owner",
+    tribes: arr(json.tribes).flatMap((t) => {
+      if (!isObject(t)) return [];
+      const id = uuid(t.id);
+      return id ? [{ id, name: str(t.name), leader: str(t.leader), active: int(t.active), capacity: int(t.capacity), open: t.open === true }] : [];
+    }),
+  };
+}
+
+export type OfficeTribe = {
+  mode: PlacementMode;
+  role: PlacerRole;
+  tribe: OfficeTribeRow & { window: JoiningWindow | null };
+  recent: (OfficePlacement & { person: string })[];
+};
+
+export function parseOfficeTribe(json: unknown): OfficeTribe | null {
+  if (!isObject(json) || !isObject(json.tribe)) return null;
+  const id = uuid(json.tribe.id);
+  if (!id) return null;
+  const t = json.tribe;
+  return {
+    mode: modeOf(json.mode),
+    role: json.role === "admin" || json.role === "director" ? json.role : "owner",
+    tribe: { id, name: str(t.name), leader: str(t.leader), active: int(t.active), capacity: int(t.capacity), open: t.open === true, window: parseWindow(t.window) },
+    recent: arr(json.recent).flatMap((r) => {
+      const p = parsePlacement(r, { tribe: str(t.name) });
+      const person = isObject(r) ? uuid(r.person) : null;
+      return p && person ? [{ ...p, person }] : [];
+    }),
+  };
+}
+
+export type RequestStatus = "open" | "approved" | "declined" | "withdrawn" | "lapsed";
+
+/** A request an admin or a director made to the owner, to place someone past a warning only the owner may accept. */
+export type OfficeRequest = {
+  id: string;
+  person: string;
+  name: string;
+  tribe: string;
+  tribeName: string;
+  move: boolean;
+  askedBy: string;
+  askedRole: "admin" | "director";
+  mine: boolean;
+  codes: string[];
+  reason: string;
+  told: boolean;
+  askedAt: string;
+  expiresAt: string;
+  status: RequestStatus;
+  decidedAt: string | null;
+  decisionNote: string | null;
+  run: string | null;
+};
+
+const STATUSES: readonly RequestStatus[] = ["open", "approved", "declined", "withdrawn", "lapsed"];
+
+export function parseRequests(json: unknown): OfficeRequest[] {
+  return arr(json).flatMap((r) => {
+    if (!isObject(r)) return [];
+    const id = uuid(r.id);
+    const person = uuid(r.person);
+    const tribe = uuid(r.tribe);
+    const status = STATUSES.find((x) => x === r.status);
+    if (!id || !person || !tribe || !status) return [];
+    return [{
+      id, person, tribe, status, name: str(r.name), tribeName: str(r.tribe_name), move: r.move === true, askedBy: str(r.asked_by),
+      askedRole: r.asked_role === "director" ? "director" : "admin", mine: r.mine === true, codes: arr(r.codes).filter((c): c is string => typeof c === "string"),
+      reason: str(r.reason), told: r.told === true, askedAt: str(r.asked_at), expiresAt: str(r.expires_at), decidedAt: strOrNull(r.decided_at),
+      decisionNote: strOrNull(r.decision_note), run: uuid(r.run),
+    }];
+  });
+}
+
+export type OfficeCounts = {
+  requestsOpen: number;
+  byPerson: { name: string; role: string; placed: number; moved: number; undone: number; today: number; last: string | null }[];
+};
+
+export function parseOfficeCounts(json: unknown): OfficeCounts | null {
+  if (!isObject(json)) return null;
+  return {
+    requestsOpen: int(json.requests_open),
+    byPerson: arr(json.by_person).flatMap((p) =>
+      isObject(p) ? [{ name: str(p.name), role: str(p.role), placed: int(p.placed), moved: int(p.moved), undone: int(p.undone), today: int(p.today), last: strOrNull(p.last) }] : [],
+    ),
   };
 }

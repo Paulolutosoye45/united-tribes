@@ -28,6 +28,8 @@ export default async function GodPlacementPage() {
           overview={overview}
           communities={((communities.data as { id: string; name: string }[] | null) ?? []).map((c) => ({ id: String(c.id), name: String(c.name) }))}
           holds={holds}
+          counts={null}
+          requests={[]}
         />
       ) : (
         <p className="card t-body p-5 text-soft">Placement is not available right now. Reload the page, or unlock the console again.</p>

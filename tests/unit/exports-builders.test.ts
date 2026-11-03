@@ -61,16 +61,29 @@ describe("the tribe sheet and the register (People packs)", () => {
   it("lists the members with typed columns and says what was left out", () => {
     const w = buildTribeSheet(ctx("tribe_sheet", "people"), data);
     const t = w.tables[0];
-    expect(t.columns.map((c) => c.label)).toEqual(["Name", "WhatsApp", "Joined", "First meeting by", "Called", "Called on", "Group roles", "Success sentence"]);
+    expect(t.columns.map((c) => c.label)).toEqual(["Name", "Where they stand", "WhatsApp", "Joined", "First meeting by", "Called", "Called on", "Group roles", "Success sentence"]);
     expect(t.rows).toHaveLength(2);
-    expect(t.rows[0]).toEqual(["Ada Okafor", "+2348031234567", "2026-09-14", "2026-09-28", true, "2026-09-15", "Encourager, Host", "To find a mentor"]);
+    expect(t.rows[0]).toEqual(["Ada Okafor", "Chose this tribe", "+2348031234567", "2026-09-14", "2026-09-28", true, "2026-09-15", "Encourager, Host", "To find a mentor"]);
     // 20:30 UTC on the 14th is 21:30 in Lagos, still the 14th; a late evening one moves to the next day
-    expect(buildTribeSheet(ctx("tribe_sheet", "people"), { ...data, members: [{ ...data.members[0], joined_at: "2026-09-14T23:30:00Z" }] }).tables[0].rows[0][2]).toBe("2026-09-15");
-    expect(t.rows[1][1]).toBeNull();
+    expect(buildTribeSheet(ctx("tribe_sheet", "people"), { ...data, members: [{ ...data.members[0], joined_at: "2026-09-14T23:30:00Z" }] }).tables[0].rows[0][3]).toBe("2026-09-15");
+    expect(t.rows[1][2]).toBeNull();
     expect(w.notes.join(" ")).toContain("2 members are under 18: counted here, never listed.");
     expect(w.notes.join(" ")).toContain("never in a file");
     expect(w.facts.find(([k]) => k === "Reason")?.[1]).toBe("Planning");
     expect(w.lane).toBe("people");
+  });
+
+  it("says where each member stands: their own choice, a yes, or a place still waiting for their reply", () => {
+    const w = buildTribeSheet(ctx("tribe_sheet", "people"), {
+      ...data,
+      members: [
+        { name: "Chi", placement: "confirmed", whatsapp: "+2348030000001" },
+        { name: "Dayo", placement: "pending", whatsapp: null },
+        { name: "Eze" },
+      ],
+    });
+    expect(w.tables[0].rows.map((r) => r[1])).toEqual(["Said yes", "Waiting for a reply", "Chose this tribe"]);
+    expect(w.notes.join(" ")).toContain("has said yes");
   });
 
   it("never carries an id or a sealed note, even if the source gave one", () => {

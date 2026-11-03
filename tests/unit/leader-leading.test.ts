@@ -62,7 +62,7 @@ describe("a leader's list marks the people the church placed", () => {
       ],
     });
     expect(people?.map((p) => p.mark)).toEqual([
-      "Placed by the church · yet to answer",
+      "Placed by the church · waiting for a reply",
       "Placed by the church · said yes",
       "Placed by the church · details withheld",
       "Placed by the church · not yet reached",

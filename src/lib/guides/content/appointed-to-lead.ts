@@ -115,6 +115,16 @@ export const appointedToLead: Guide = {
           shot: leading({ ring: [{ role: "heading", name: "For your tribe" }], tag: "Link and date", alt: "A box for the WhatsApp group invite link and a date for the first meeting.", minHeight: 520, lead: 40 }),
         },
         {
+          id: "group-add",
+          title: "Add people to the group after they say yes",
+          do: [
+            "Under **Your WhatsApp group**, **Ready to add** lists the people who have pressed Yes, I’m in, with their number where they allow it. Add each one to your WhatsApp group, then tick [[Added to the group]].",
+            "People the church placed who have not yet said yes appear as names only. Their number and the group link open when they say yes, and not before, because joining a WhatsApp group shows a person’s number to everyone in it.",
+            "If someone leaves your tribe, they appear under **If they joined the group, remove them**. Take them out of the group and tick [[Removed from the group]].",
+          ],
+          tip: "Your assistant sees your ticks, so nobody is added twice.",
+        },
+        {
           id: "assistant",
           title: "Recommend an assistant leader",
           do: ["Under **Your assistant leader**, type the email of someone you trust, say why in a line or two, and press [[Recommend an assistant]].", "The church office decides, and tells you."],

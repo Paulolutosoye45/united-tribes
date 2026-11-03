@@ -45,18 +45,23 @@ export function Headline({ h, season, targets, scopeLabel, state }: { h: Headlin
                 {rate !== null
                   ? `${h.thriving} of ${plural(h.members, "member")}`
                   : h.members === 0
-                    ? "Nobody placed yet"
+                    ? "Nobody has said yes yet"
                     : state === "before"
-                      ? `${plural(h.members, "member")} placed`
+                      ? `${plural(h.members, "member")} said yes`
                       : "Starts in week 4"}
               </p>
               <p className="t-small text-white/80">
                 {rate !== null
                   ? `Target ${pct(targets.thriving_rate)}, ${against(rate, targets.thriving_rate)}.`
                   : h.members === 0
-                    ? "Members appear here once they have chosen a tribe."
-                    : `A rate shows after ${targets.min_weeks} weeks of the season${state === "running" ? `. ${plural(h.members, "member")} placed so far.` : "."}`}
+                    ? "Members appear here once they have said yes to a tribe."
+                    : `A rate shows after ${targets.min_weeks} weeks of the season${state === "running" ? `. ${plural(h.members, "member")} matched so far.` : "."}`}
               </p>
+              {(h.waiting ?? 0) > 0 ? (
+                <p className="t-small text-white/80" data-testid="waiting-line">
+                  {plural(h.waiting ?? 0, "more member")} placed by the church, waiting for a reply. Not counted here until they say yes.
+                </p>
+              ) : null}
             </div>
           </div>
           <p className="t-small max-w-prose text-white/70">{thrivingDefinition(season.meetings_needed, season.weeks, targets)}</p>

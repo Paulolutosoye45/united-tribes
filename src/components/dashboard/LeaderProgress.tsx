@@ -87,9 +87,12 @@ export function LeaderProgress({ p, weekHref }: { p: TribeProgress; weekHref: st
                 <div className="min-w-0">
                   <p className="font-semibold leading-snug">{m.name}</p>
                   <p className="t-small text-soft">
-                    Came to {m.attended} of {s.weeks_over} meetings so far · {m.steps_set === 0 ? "no steps chosen yet" : `finished ${m.steps_done} of ${plural(m.steps_set, "step")}`}
+                    {m.waiting
+                      ? "Placed by the church. Waiting for a reply, so not counted in the tribe’s figures yet."
+                      : `Came to ${m.attended} of ${s.weeks_over} meetings so far · ${m.steps_set === 0 ? "no steps chosen yet" : `finished ${m.steps_done} of ${plural(m.steps_set, "step")}`}`}
                   </p>
                 </div>
+                {m.waiting ? <Badge tone="gold">Waiting for a reply</Badge> : null}
                 {m.pace ? <Badge tone={m.pace === "on_pace" ? "gold" : "flame"}>{m.pace === "on_pace" ? "On pace" : "Behind"}</Badge> : null}
               </li>
             ))}

@@ -15,7 +15,7 @@ export async function loadRemovalMine(supabase: SupabaseClient, tribe: string): 
   }
 }
 
-/** The requests the signed-in person may read: a coach their own tribes' ordinary ones, the Care Team, directors, admins and pastors all. */
+/** The requests the signed-in person may read: a coach their own tribes' ordinary ones (to recommend on, not to decide), the Care Team, directors, admins and pastors all. */
 export async function loadRemovalBoard(supabase: SupabaseClient): Promise<Board> {
   try {
     const { data, error } = await supabase.rpc("removal_board");

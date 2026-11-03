@@ -49,8 +49,7 @@ select t.id as tribe,
        case when pt.mail_queued_at is not null then 'leader already told'
             when count(*) filter (where m.id is null or m.status in ('queued','sending')) > 0 then 'waiting for member emails to go out'
             when count(*) filter (where m.status in ('sent','delivered','read')) = 0 then 'no member email has gone out'
-            when coalesce(bool_and(public.consent_granted(tm.person_id, 'team_contact')) filter (where m.status in ('sent','delivered','read')), true)
-              or max(m.sent_at) + make_interval(hours => (select hold_hours from r)) < now()
+            when max(m.sent_at) + make_interval(hours => (select hold_hours from r)) < now()
               then 'due now: opens on the next heartbeat (if it stays like this, the switch is not On or the heartbeat is not running)'
             else 'in the hold, opens ' || to_char((max(m.sent_at) + make_interval(hours => (select hold_hours from r))) at time zone 'Africa/Lagos', 'DD Mon HH24:MI') || ' Lagos' end as state
   from r
@@ -131,7 +130,7 @@ describe("the board says why each tribe is closed", () => {
     const b = await team(B);
     const c = await team(C);
     const d = await team(D);
-    expect(a).toMatchObject({ state: "due", sent: 6, waiting: 0, failed: 0, holding: 0, unanswered: 0 });
+    expect(a).toMatchObject({ state: "due", sent: 6, waiting: 0, failed: 0, holding: 0, unanswered: 6 }); // the hold is over, and nobody has said yes
     expect(b).toMatchObject({ state: "holding", sent: 5, waiting: 0, holding: 5, unanswered: 5 });
     expect(Math.abs(new Date(b.opens_at as string).getTime() - (Date.now() + 22 * 3600 * 1000))).toBeLessThan(10 * 60 * 1000);
     expect(c).toMatchObject({ state: "waiting", sent: 0, waiting: 4, failed: 1, unanswered: 5 });
@@ -140,9 +139,9 @@ describe("the board says why each tribe is closed", () => {
     for (const t of [a, b, c, d]) expect(c4[t.tribe]).toBe(WORDS[t.state]);
   });
 
-  it("counts a member who agreed on the form as answered, not as holding", async () => {
+  it("does not count a member who agreed on the form as answered: only a yes does", async () => {
     await db.admin.query("insert into public.consents (person_id, purpose, granted, version) values ($1, 'team_contact', true, 't')", [bm[0].id]);
-    expect(await team(B)).toMatchObject({ state: "holding", holding: 4, unanswered: 4 });
+    expect(await team(B)).toMatchObject({ state: "holding", holding: 5, unanswered: 5 });
   });
 });
 
@@ -160,10 +159,10 @@ describe("Open now", () => {
     await expectCode(o.call("placement_open_now", "00000000-0000-4000-8000-000000000000", A.tribe), "P0002");
   });
 
-  it("opens one tribe: the members who have not answered are shared, the leader is emailed, and no other tribe moves", async () => {
+  it("opens one tribe: the members who have not said yes are shared, the leader is emailed, and no other tribe moves", async () => {
     expect(await anon(db, "worker_placed_withhold", wt, links[bm[2].id])).toEqual({ ok: true, late: false });
     const b = await team(B);
-    expect(b.unanswered).toBe(3); // five seated: one agreed on the form, one held back just now, three still in the hold
+    expect(b.unanswered).toBe(4); // five seated: one held back just now, four with no yes (one of them ticked the form, which opens nothing)
     const r = await o.call("placement_open_now", run, B.tribe);
     expect(r).toMatchObject({ ok: true, shared: b.unanswered });
 
@@ -187,7 +186,7 @@ describe("Open now", () => {
     expect(await team(A)).toMatchObject({ state: "due", mail_queued_at: null, contact_opened_at: null });
     expect((await team(C)).state).toBe("waiting");
     expect((await team(D)).state).toBe("none_sent");
-    expect((await one("select count(*)::int n, max((meta ->> 'shared')::int) as shared from public.event_log where action = 'placement.opened'"))).toMatchObject({ n: 1, shared: 3 });
+    expect((await one("select count(*)::int n, max((meta ->> 'shared')::int) as shared from public.event_log where action = 'placement.opened'"))).toMatchObject({ n: 1, shared: 4 });
   });
 
   it("says it has already been opened if it is pressed again, and shares nothing more", async () => {
@@ -233,13 +232,13 @@ describe("Open now", () => {
 describe("Open all", () => {
   it("opens every tribe that is fully placed and not yet told, and reports how many members were shared", async () => {
     const r = await o.call("placement_open_all", run);
-    // A is due with nobody left to answer (nobody shared); D had no email go out, so its four members are opened by the church. B and C were done.
-    expect(r).toMatchObject({ ok: true, tribes: 2, shared: 4 });
+    // A is due and nobody there has said yes, so its six are opened by the church; D had no email go out, so its four are opened too. B and C were done.
+    expect(r).toMatchObject({ ok: true, tribes: 2, shared: 10 });
     expect((await team(A)).state).toBe("opened");
     expect((await team(D)).state).toBe("opened");
     expect((await teamMails()).some((m) => m.person_id === A.leader.id)).toBe(true);
     expect((await teamMails()).some((m) => m.person_id === D.leader.id)).toBe(true);
-    expect((await one("select count(*)::int n, max((meta ->> 'shared')::int) as shared, max((meta ->> 'tribes')::int) as tribes from public.event_log where action = 'placement.opened_all'"))).toMatchObject({ n: 1, shared: 4, tribes: 2 });
+    expect((await one("select count(*)::int n, max((meta ->> 'shared')::int) as shared, max((meta ->> 'tribes')::int) as tribes from public.event_log where action = 'placement.opened_all'"))).toMatchObject({ n: 1, shared: 10, tribes: 2 });
     expect((await one("select status from public.placement_runs where id = $1", [run])).status).toBe("closed");
   });
 

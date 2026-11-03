@@ -9,10 +9,10 @@ import type { Context, EmailContent, Params, TemplateDef } from "./types";
  *   - "Your tribe" never carries a member's answers, faith journey, support needs, any score or who else is in the tribe. It says in one
  *     plain sentence what the leader will be given, and it gives three links: yes, other tribes, and don't share my details
  *   - "Your team" lists every member by name. A member whose details are open comes with an email and a WhatsApp number, and nothing else
- *     about them. A member who held back says so; one still in the hold says the day it ends; one who has not been reached says so. It
+ *     about them. A member who held back says so; one who has not said yes says so, and one who has not been reached says so. It
  *     never carries an answer, a need, an age or how well they fit
- *   - the tribe's WhatsApp group link goes in "Your tribe" only for a member who has already answered about sharing; otherwise the email
- *     says when it will appear. Either way it says joining a group shows your number to everyone in it
+ *   - the tribe's WhatsApp group link is never in the first "Your tribe" email, unless God Mode has switched the wait off: the email says
+ *     it will be on the tribe page after "Yes, I'm in". Either way it says joining a group shows your number to everyone in it
  *   - the links to the private page carry a secret the database made; if there is none the email falls back to the signed-in page
  *   - one idea and one main button; a subject that fits on a phone's lock screen
  */
@@ -64,17 +64,15 @@ function build(s: Spec): TemplateDef {
   };
 }
 
-/** The group link, or the day it will appear. Joining a WhatsApp group shows your number to everyone in it, so a member who has not yet
- * answered about sharing is told when the link will come instead. */
+/** The group link, or when it will appear. Joining a WhatsApp group shows your number to everyone in it, so a member who has not yet
+ * said yes is told the link comes with the yes. */
 function groupLines(p: Params): string[] {
   if (clean(p.group_url)) {
     return [`The tribe’s WhatsApp group: ${clean(p.group_url)}`, "Joining a WhatsApp group shows your number to everyone in it."];
   }
   if (p.group_held === true) {
-    const hold = Math.max(0, Math.round(num(p.hold_hours, 24)));
-    const when = hold > 0 ? `in ${hold} hours` : "shortly";
     return [
-      `The tribe’s WhatsApp group link will be on your tribe page as soon as you press “Yes, I’m in”, or ${when}. Joining a WhatsApp group shows your number to everyone in it, so we wait until you have had the chance to say “Don’t share my details”.`,
+      "The tribe’s WhatsApp group link will be on your tribe page as soon as you press “Yes, I’m in”. Joining a WhatsApp group shows your number to everyone in it, so the link waits for your yes.",
     ];
   }
   return [];
@@ -85,14 +83,10 @@ const fitWord = (p: Params) => {
   return f === "excellent" || f === "strong" || f === "good" ? f : "";
 };
 
-/** What the leader will be given, in one honest sentence. */
+/** What the leader will be given, in one honest sentence: your name now, and the rest only after your yes. */
 function sharing(p: Params): string {
-  const hold = Math.max(0, Math.round(num(p.hold_hours, 24)));
-  const what = p.has_whatsapp === true ? "your name, your email and your WhatsApp number" : "your name and your email";
-  if (p.agreed_to_share === true) {
-    return `Because you agreed on the form, your leader will be given ${what} so they can say hello. If you would rather they were not, press “Don’t share my details” below first.`;
-  }
-  return `In ${hold} hours, ${firstOf(p, "leader_first")} will be given ${what} so they can say hello. If you would rather they were not, press “Don’t share my details” below before then.`;
+  const what = p.has_whatsapp === true ? "your email and your WhatsApp number" : "your email";
+  return `${firstOf(p, "leader_first")} can see your name. They are given ${what} only after you press “Yes, I’m in”, so they can say hello. If you would rather they were not given them even then, press “Don’t share my details” below.`;
 }
 
 function pictureLines(p: Params): string[] {
@@ -177,7 +171,10 @@ const withheld = build({
             `You are welcome to join the tribe’s WhatsApp group: ${clean(p.group_url)}`,
             `Joining a WhatsApp group shows your number to everyone in it, so join only if you are happy with that. If you would rather not, come to the first meeting, or tell ${firstOf(p, "leader_first")} you are coming, so they can meet you.`,
           ]
-        : [`Please come to the first meeting, or tell ${firstOf(p, "leader_first")} you are coming, so they can meet you.`]),
+        : [
+            `Your place is confirmed when you press “Yes, I’m in” on your tribe page, and the tribe’s WhatsApp group link is there once you have.`,
+            `Please come to the first meeting, or tell ${firstOf(p, "leader_first")} you are coming, so they can meet you.`,
+          ]),
     ],
     cta: { label: "See my tribe", url: c.link("/tribe") },
   }),
@@ -187,8 +184,8 @@ const withheld = build({
 // The leader and the assistant
 // ---------------------------------------------------------------------------
 
-type Person = { name: string; email: string; whatsapp: string; withheld: boolean; state: "open" | "withheld" | "holding" | "waiting" | "not_reached"; opensOn: string };
-const STATES = ["open", "withheld", "holding", "waiting", "not_reached"] as const;
+type Person = { name: string; email: string; whatsapp: string; withheld: boolean; state: "open" | "withheld" | "holding" | "waiting" | "not_reached" | "unanswered"; opensOn: string };
+const STATES = ["open", "withheld", "holding", "waiting", "not_reached", "unanswered"] as const;
 function peopleOf(v: unknown): Person[] {
   if (!Array.isArray(v)) return [];
   return v
@@ -219,7 +216,7 @@ const yourTeam = build({
   email: (p, c) => {
     const people = peopleOf(p.members);
     const rehearsal = p.rehearsal === true;
-    const notYet = people.some((m) => m.state === "holding" || m.state === "waiting" || m.state === "not_reached");
+    const notYet = people.some((m) => m.state === "holding" || m.state === "waiting" || m.state === "not_reached" || m.state === "unanswered");
     return {
       paragraphs: [
         p.in_season === true
@@ -229,11 +226,11 @@ const yourTeam = build({
         ...people.map((m) => {
           if (m.state === "withheld") return `${m.name}: contact withheld; they have your details`;
           if (rehearsal) return m.name;
-          if (m.state === "holding") return `${m.name}: details open ${m.opensOn ? `on ${shortDay(m.opensOn)}` : "when their day has passed"}`;
-          if (m.state === "waiting" || m.state === "not_reached") return `${m.name}: not yet reached. Their details will come once they have answered`;
+          if (m.state === "holding" || m.state === "unanswered") return `${m.name}: waiting for a reply. Their details come once they say yes`;
+          if (m.state === "waiting" || m.state === "not_reached") return `${m.name}: not yet reached. Their details come once they say yes`;
           return [m.name, m.email, m.whatsapp].filter(Boolean).join(", ");
         }),
-        ...(notYet && !rehearsal ? ["The others’ details will appear on your tribe page as each member answers or their day passes."] : []),
+        ...(notYet && !rehearsal ? ["The others’ details will appear on your tribe page as each member says yes."] : []),
         "These details are for you to say hello and to look after the tribe. Please keep them private.",
       ],
       cta: { label: "Open my tribe", url: c.link("/lead/tribe") },

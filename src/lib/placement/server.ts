@@ -1,6 +1,9 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseHolds, parseItems, parseLeadersView, parseOneOptions, parseOverview, parsePlaced, parseRunView, type Hold, type LeadersView, type OneOption, type Overview, type PlacedState, type RunView } from "./types";
+import {
+  parseHolds, parseItems, parseLeadersView, parseOfficeCounts, parseOfficePerson, parseOfficeTribe, parseOfficeTribes, parseOneOptions, parseOverview, parsePlaced, parseRequests, parseRunView,
+  type Hold, type LeadersView, type OfficeCounts, type OfficePerson, type OfficeRequest, type OfficeTribe, type OneOption, type Overview, type PlacedState, type RunView,
+} from "./types";
 
 // Each loader returns null when the database refuses (the person is not the owner, or is locked) or is unreachable. The pages treat
 // null as "not available": the database has already decided.
@@ -23,3 +26,11 @@ export const loadMyPlacement = async (s: SupabaseClient): Promise<PlacedState | 
 
 /** The tribes one person could be placed into, best fit first. Empty when the database refuses or has none. */
 export const loadOneOptions = async (s: SupabaseClient, person: string): Promise<OneOption[]> => parseOneOptions(await load(s, "placement_one_options", { p_person: person }));
+
+/** One person for the Admin person page: where they sit, whether they can be placed, and their last placement. Null when the database refuses. */
+export const loadOfficePerson = async (s: SupabaseClient, person: string): Promise<OfficePerson | null> => parseOfficePerson(await load(s, "placement_office_person", { p_person: person }));
+export const loadOfficeTribes = async (s: SupabaseClient) => parseOfficeTribes(await load(s, "placement_office_tribes"));
+export const loadOfficeTribe = async (s: SupabaseClient, tribe: string): Promise<OfficeTribe | null> => parseOfficeTribe(await load(s, "placement_office_tribe", { p_tribe: tribe }));
+/** The requests to the owner: all of them for the owner, one's own for an admin or a director. */
+export const loadRequests = async (s: SupabaseClient, person: string | null = null): Promise<OfficeRequest[]> => parseRequests(await load(s, "placement_requests_list", { p_person: person }));
+export const loadOfficeCounts = async (s: SupabaseClient): Promise<OfficeCounts | null> => parseOfficeCounts(await load(s, "placement_office_counts"));

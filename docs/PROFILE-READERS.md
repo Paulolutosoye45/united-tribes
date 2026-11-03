@@ -50,7 +50,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `multiplication_board` | reader | groups tribes by track for the multiplication board |
 | `my_tribe` | reader | tells the leader their card is missing a track |
 | `placement_candidates` | reader | the placement run's list of tribes for a member, by track |
-| `placement_one_check` | reader | warns the owner when the tribe's track is not the track of the person's age range, before one person is placed |
+| `placement_check_core` | reader | warns when the tribe's track is not the track of the person's age range, before the owner, an admin or a director places or moves one person |
 | `placement_run_approve` | reader | checks teen-track rules when a placement run is approved |
 | `review_queue` | reader | shows the track from each application in the panel's queue |
 | `save_tribe_card` | reader | saves the track a leader chooses on their Tribe Card |
@@ -107,7 +107,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `message_blocker` | reader | stops messages to members under 18 |
 | `notice_is_young` | reader | stops notices to members under 18 |
 | `placement_candidates` | reader | the placement run's list of tribes for a member, by the track of their age range |
-| `placement_one_check` | reader | compares the person's age range track with the tribe's before one person is placed |
+| `placement_check_core` | reader | compares the person's age range track with the tribe's before the owner, an admin or a director places or moves one person |
 | `placement_run_approve` | reader | checks the young people's rules when a placement run is approved |
 | `profile_teen_guard` | reader | refuses a profile change that would cross the line between under and over 18 |
 
@@ -139,7 +139,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 - Held today in: the person's own record (the name they asked to be called)
 - Found by scanning for: `preferred_name` in database functions and `preferredName|preferred_name` in source files
 
-### Database functions (26)
+### Database functions (27)
 
 | Function | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -166,6 +166,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `leader_goal_guard` | reader | names the leader in the message about their season goal |
 | `leader_offer_respond` | reader | greets the leader accepting an offer by the name they use |
 | `person_display_name` | reader | gives every list and page the one display name for a person |
+| `placement_find` | reader | finds a member for an admin or a director by the name they use, e-mail or number, to place or move them |
 | `signin_admin_overview` | reader | names who signed in, in the admin overview |
 | `start_tribe_card` | reader | puts the leader's first name on the new tribe card |
 | `swap_members` | reader | finds a member to swap by the name they use |

@@ -186,12 +186,12 @@ describe("Your tribe", () => {
     expect(mail.text).toMatch(/email|WhatsApp/i);
   });
 
-  it("holds the WhatsApp group link back until the member has answered about sharing, and says when it will appear", () => {
+  it("holds the WhatsApp group link back until the member says yes, and says so without a date", () => {
     const base = { ...PLACEMENT_SAMPLES.placement_your_tribe };
     const held = renderEmail(message("placement_your_tribe", { ...base, group_url: null, group_held: true, hold_hours: 24 }, SECRET), SITE);
     expect(held.text).not.toContain("chat.whatsapp.com");
-    expect(held.text).toMatch(/link will be on your tribe page/);
-    expect(held.text).toMatch(/in 24 hours/);
+    expect(held.text).toMatch(/link will be on your tribe page as soon as you press “Yes, I’m in”/);
+    expect(held.text).not.toMatch(/in 24 hours|a day/);
     expect(held.text).toMatch(/shows your number to everyone in it/);
     const open = renderEmail(message("placement_your_tribe", { ...base, group_url: "https://chat.whatsapp.com/abcdef", group_held: false }, SECRET), SITE);
     expect(open.text).toContain("https://chat.whatsapp.com/abcdef");
@@ -246,7 +246,7 @@ describe("Your team", () => {
     expect(mail.text).toMatch(/3 members/);
   });
 
-  it("lists every member by name at once: a member still in the hold says the day it ends, and one not yet reached says so, without a number", () => {
+  it("lists every member by name at once: a member who has not said yes says so, and one not yet reached says so, without a number", () => {
     const mail = renderEmail(
       message("placement_your_team", {
         tribe: "Builders Tribe",
@@ -255,18 +255,21 @@ describe("Your team", () => {
           { name: "Dayo", email: "dayo@example.org", whatsapp: "+2348039999999", withheld: false, state: "holding", opens_on: "2027-02-12" },
           { name: "Eze", email: "eze@example.org", whatsapp: "+2348038888888", withheld: false, state: "not_reached" },
           { name: "Funmi", email: "funmi@example.org", whatsapp: "+2348037777777", withheld: false, state: "waiting" },
+          { name: "Gbenga", email: "gbenga@example.org", whatsapp: "+2348036666666", withheld: false, state: "unanswered" },
         ],
       }),
       SITE,
     );
-    expect(mail.text).toMatch(/6 members/);
-    expect(mail.text).toMatch(/Dayo: details open on /);
+    expect(mail.text).toMatch(/7 members/);
+    expect(mail.text).toContain("Dayo: waiting for a reply. Their details come once they say yes");
+    expect(mail.text).toContain("Gbenga: waiting for a reply. Their details come once they say yes");
     expect(mail.text).toContain("Eze: not yet reached");
     expect(mail.text).toContain("Funmi: not yet reached");
     // a member whose details are not yet open never has a number or an email in the leader's mail, whatever the row carries
-    for (const hidden of ["dayo@example.org", "+2348039999999", "eze@example.org", "+2348038888888", "funmi@example.org", "+2348037777777"])
+    for (const hidden of ["dayo@example.org", "+2348039999999", "eze@example.org", "+2348038888888", "funmi@example.org", "+2348037777777", "gbenga@example.org", "+2348036666666"])
       expect(mail.text).not.toContain(hidden);
-    expect(mail.text).toMatch(/appear on your tribe page/);
+    expect(mail.text).toMatch(/appear on your tribe page as each member says yes/);
+    expect(mail.text).not.toMatch(/opens? on|a day|24 hours/);
   });
 
   it("carries only what it is meant to, whatever else the member row holds", () => {

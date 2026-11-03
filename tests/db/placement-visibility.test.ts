@@ -7,13 +7,14 @@ import { anon, asUser, linkFor, openSeason, placeRun, planRun, proposedCount, re
 // Placement: one rule for who sees a church-placed member, and when (the placement mix-up fix, parts A, B and C).
 //
 //   * a leader sees every church-placed member by name from the moment of placing, on every screen, with no number
-//   * a member's number opens on that member's own clock: they said yes, or agreed on the form, or their own email went and 24 hours passed
+//   * a member's number opens on one thing only: they said yes (or chose the seat themselves). Not a day passing, not the form's tick.
+//     God Mode's Open now / Open all stay as the pastor's override
 //   * a member who held back stays held back; a member whose email never went is "not yet reached" and never opens by itself
 //   * the raw lists apply the rule themselves
 //   * the leader's email goes tribe by tribe, when nobody in the tribe is waiting for an email or sitting in the hold, or 72 hours after
 //     the tribe's last planned email, whatever is still stuck
 //   * the finishing step keeps running when the switch is Off or Rehearsal; Off with nothing to finish does nothing
-//   * the group link follows the member's answer, and is a God Mode setting
+//   * the group link follows the member's yes, and is a God Mode setting
 
 let db: TestDb;
 let k: Kit;
@@ -107,14 +108,14 @@ describe("right after God Mode places people", () => {
     expect(leading.members).toBe(10);
     const dash = await asUser(db, A.leader.id, "tribe_progress", A.tribe);
     expect(dash.member_rows.map((m: { person_id: string }) => m.person_id).sort()).toEqual(everyone);
-    // the same people on all four, and no number for anyone the church placed (AM6 agreed on the form, so theirs is open: see below)
+    // the same people on all four, and no number for anyone the church placed (AM6 agreed on the form, and that opens nothing either)
     for (const m of mine.members as RosterMember[]) {
       if (m.person_id === selfSeated) continue;
       expect(m.placement).toBe("pending");
-      if (m.name !== "AM6 Test") expect(m.whatsapp).toBeNull();
+      expect(m.whatsapp).toBeNull();
     }
     for (const m of week.members as RosterMember[]) {
-      if (m.person_id === selfSeated || m.name === "AM6 Test") continue;
+      if (m.person_id === selfSeated) continue;
       expect(m.whatsapp).toBeNull();
     }
     expect(JSON.stringify(dash)).not.toMatch(/\+234/);
@@ -127,9 +128,9 @@ describe("right after God Mode places people", () => {
     expect(by["AM0 Test"]).toMatchObject({ placement: "pending", contact: "waiting", whatsapp: null });
   });
 
-  it("opens at once the contact of a member who agreed on the form, and withholds a member who said no there", async () => {
+  it("does not open the contact of a member who agreed on the form, and still withholds a member who said no there", async () => {
     const by = byName(await roster(A.leader.id, A.tribe));
-    expect(by["AM6 Test"]).toMatchObject({ contact: "open", whatsapp: "+2348020000006" });
+    expect(by["AM6 Test"]).toMatchObject({ contact: "waiting", whatsapp: null });
     expect(by["AM8 Test"]).toMatchObject({ contact: "withheld", withheld: true, whatsapp: null });
   });
 
@@ -185,11 +186,11 @@ describe("each member's own clock", () => {
     expect(await anon(db, "worker_placed_withhold", wt, (await linkFor(db, am[5].id))!)).toEqual({ ok: true, late: false });
   });
 
-  it("opens a member's number when their own hold has run out, said yes, or agreed on the form", async () => {
+  it("opens a member's number only when they said yes: not when their own hold has run out, not when they agreed on the form", async () => {
     const by = byName(await roster(A.leader.id, A.tribe));
-    expect(by["AM0 Test"]).toMatchObject({ contact: "open", whatsapp: "+2348020000000" }); // 30 hours since their email
+    expect(by["AM0 Test"]).toMatchObject({ contact: "unanswered", placement: "pending", whatsapp: null }); // 30 hours since their email, no reply
     expect(by["AM4 Test"]).toMatchObject({ contact: "open", placement: "confirmed", whatsapp: "+2348020000004" }); // said yes
-    expect(by["AM6 Test"]).toMatchObject({ contact: "open", whatsapp: "+2348020000006" }); // agreed on the form
+    expect(by["AM6 Test"]).toMatchObject({ contact: "waiting", whatsapp: null }); // agreed on the form, email not gone yet
   });
 
   it("keeps a member in the hold closed, and says when it ends", async () => {
@@ -229,15 +230,18 @@ describe("each member's own clock", () => {
     await db.admin.query("update public.placement_teams set contact_opened_at = null where run_id = $1 and tribe_id = $2", [run, A.tribe]);
   });
 
-  it("lets a member hold back until their own details have opened, and not after", async () => {
+  it("lets a member hold back until God Mode has opened their details, and not after", async () => {
     // AM1 is in the hold: still in time
     expect(await anon(db, "worker_placed_withhold", wt, (await linkFor(db, am[1].id))!)).toEqual({ ok: true, late: false });
     expect(byName(await roster(A.leader.id, A.tribe))["AM1 Test"]).toMatchObject({ contact: "withheld", whatsapp: null });
-    // AM4 said yes and nobody has been given their number by the clock: still in time
-    expect(await anon(db, "worker_placed_withhold", wt, (await linkFor(db, am[4].id))!)).toEqual({ ok: true, late: false });
-    // AM0's hold ran out 6 hours ago: too late, and nothing changes for them
-    expect(await anon(db, "worker_placed_withhold", wt, (await linkFor(db, am[0].id))!)).toEqual({ ok: true, late: true });
-    expect(byName(await roster(A.leader.id, A.tribe))["AM0 Test"]).toMatchObject({ contact: "open", whatsapp: "+2348020000000" });
+    // AM0's hold ran out 6 hours ago and nothing opened: still in time
+    expect(await anon(db, "worker_placed_withhold", wt, (await linkFor(db, am[0].id))!)).toEqual({ ok: true, late: false });
+    expect(byName(await roster(A.leader.id, A.tribe))["AM0 Test"]).toMatchObject({ contact: "withheld", whatsapp: null });
+    // God Mode opens the tribe: AM3 (no answer) is now open, and too late to take back
+    await db.admin.query("update public.placement_teams set contact_opened_at = now() where run_id = $1 and tribe_id = $2", [run, A.tribe]);
+    expect(await anon(db, "worker_placed_withhold", wt, (await linkFor(db, am[3].id))!)).toEqual({ ok: true, late: true });
+    expect(byName(await roster(A.leader.id, A.tribe))["AM3 Test"]).toMatchObject({ contact: "open", whatsapp: "+2348020000003" });
+    await db.admin.query("update public.placement_teams set contact_opened_at = null where run_id = $1 and tribe_id = $2", [run, A.tribe]);
     // a member whose email failed, or has not gone yet, is never late
     await setMsg(cm[3].id, "failed", null, ", error = 'bounced'");
     expect(await anon(db, "worker_placed_withhold", wt, (await linkFor(db, cm[3].id))!)).toEqual({ ok: true, late: false });
@@ -263,8 +267,9 @@ describe("the leader's email", () => {
     const members = mails[0].params.members as { name: string; state: string; email: string | null; whatsapp: string | null; withheld: boolean; opens_on: string | null }[];
     expect(members.length).toBe(9);
     const m = Object.fromEntries(members.map((x) => [x.name, x]));
-    expect(m["AM0 Test"]).toMatchObject({ state: "open", whatsapp: "+2348020000000" });
-    expect(m["AM0 Test"].email).toMatch(/@/);
+    expect(m["AM4 Test"]).toMatchObject({ state: "open", whatsapp: "+2348020000004" });
+    expect(m["AM4 Test"].email).toMatch(/@/);
+    expect(m["AM0 Test"]).toMatchObject({ state: "withheld", withheld: true, email: null, whatsapp: null });
     expect(m["AM2 Test"]).toMatchObject({ state: "not_reached", email: null, whatsapp: null });
     expect(m["AM3 Test"]).toMatchObject({ state: "waiting", email: null, whatsapp: null });
     expect(m["AM7 Test"]).toMatchObject({ state: "holding", email: null, whatsapp: null });
@@ -279,9 +284,12 @@ describe("the leader's email", () => {
     const by = byName(await roster(A.leader.id, A.tribe));
     expect(by["AM7 Test"]).toMatchObject({ contact: "holding", whatsapp: null });
     expect(by["AM2 Test"]).toMatchObject({ contact: "not_reached", whatsapp: null });
-    // and when the member's own hold ends, the number is on the page without another email
+    // when the member's own hold ends, the number is still closed: nothing opens it but a yes
     await db.admin.query("update public.messages set sent_at = now() - interval '26 hours' where template = 'placement_your_tribe' and person_id = $1", [am[7].id]);
-    expect(byName(await roster(A.leader.id, A.tribe))["AM7 Test"]).toMatchObject({ contact: "open", whatsapp: "+2348020000007" });
+    expect(byName(await roster(A.leader.id, A.tribe))["AM7 Test"]).toMatchObject({ contact: "unanswered", whatsapp: null });
+    // and their yes opens it on the page, without another email to the leader
+    expect(await anon(db, "worker_placed_confirm", wt, (await linkFor(db, am[7].id))!, "2026-12-v4")).toMatchObject({ ok: true });
+    expect(byName(await roster(A.leader.id, A.tribe))["AM7 Test"]).toMatchObject({ contact: "open", placement: "confirmed", whatsapp: "+2348020000007" });
     expect((await teamMails()).length).toBe(2);
   });
 
@@ -294,7 +302,8 @@ describe("the leader's email", () => {
     expect((await sql("select public.placement_team_mail($1) as r", [run]))[0].r).toBe(1);
     const mail = (await teamMails()).find((m) => m.person_id === B.leader.id)!;
     const states = (mail.params.members as { state: string }[]).map((x) => x.state).sort();
-    expect(states).toEqual(["not_reached", "open", "open", "open", "open"]);
+    // sent 30 hours ago and not answered: closed, whatever the clock says
+    expect(states).toEqual(["not_reached", "unanswered", "unanswered", "unanswered", "unanswered"]);
   });
 });
 
@@ -397,20 +406,19 @@ describe("the group link", () => {
     expect(e.group_held).toBe(true);
   });
 
-  it("puts the link in the first email of a member who agreed on the form, or said no there (they have answered)", async () => {
-    expect((await memberEmail(members[0].id)).params).toMatchObject({ group_url: "https://chat.whatsapp.com/VisibilityGroupG", group_held: false });
-    expect((await memberEmail(members[1].id)).params).toMatchObject({ group_url: "https://chat.whatsapp.com/VisibilityGroupG", group_held: false });
+  it("keeps the link out of the first email of a member who agreed on the form, or said no there: only a yes releases it", async () => {
+    expect((await memberEmail(members[0].id)).params).toMatchObject({ group_url: null, group_held: true });
+    expect((await memberEmail(members[1].id)).params).toMatchObject({ group_url: null, group_held: true });
   });
 
-  it("keeps the link off the member's page and the private link page until they say yes, with the date it will come", async () => {
+  it("keeps the link off the member's page and the private link page until they say yes, and gives no date for it", async () => {
     const link = (await linkFor(db, members[2].id))!;
     await setMsg(members[2].id, "sent", 2);
     const info = await anon(db, "worker_placed_info", wt, link);
     expect(info.group_visible).toBe(false);
     expect(info.tribe.group_url).toBeNull();
     expect(info.contact).toBe("holding");
-    expect(info.group_opens_at).toBeTruthy();
-    expect(info.contact_opens_at).toBe(info.group_opens_at);
+    expect(info.group_opens_at).toBeNull();
     const match = await asUser(db, members[2].id, "my_match");
     expect(match.placement.group_url).toBeNull();
     const week = await asUser(db, members[2].id, "my_week");
@@ -427,18 +435,22 @@ describe("the group link", () => {
     expect((await asUser(db, members[2].id, "my_week")).tribe.group_url).toBe("https://chat.whatsapp.com/VisibilityGroupG");
   });
 
-  it("shows the link when the member's hold has ended, without anything else", async () => {
+  it("keeps the link off when the member's hold has ended with no reply: a day passing opens nothing", async () => {
     await setMsg(members[3].id, "sent", 30);
-    expect((await asUser(db, members[3].id, "my_match")).placement.group_url).toBe("https://chat.whatsapp.com/VisibilityGroupG");
+    expect((await asUser(db, members[3].id, "my_match")).placement.group_url).toBeNull();
+    expect((await asUser(db, members[3].id, "my_week")).tribe.group_url).toBeNull();
+    expect((await anon(db, "worker_placed_info", wt, (await linkFor(db, members[3].id))!)).group_visible).toBe(false);
   });
 
-  it("gives a member who held back the link, with the first-email params that say so, because they have answered", async () => {
+  it("does not give a member who only held back the link: keeping details private is not a yes, and their yes releases it later", async () => {
     await setMsg(members[4].id, "sent", 2);
     expect((await asUser(db, members[4].id, "my_match")).placement.group_url).toBeNull();
     expect(await anon(db, "worker_placed_withhold", wt, (await linkFor(db, members[4].id))!)).toEqual({ ok: true, late: false });
-    expect((await asUser(db, members[4].id, "my_match")).placement.group_url).toBe("https://chat.whatsapp.com/VisibilityGroupG");
+    expect((await asUser(db, members[4].id, "my_match")).placement.group_url).toBeNull();
     const withheld = await one("select params from public.messages where template = 'placement_withheld' and person_id = $1", [members[4].id]);
-    expect(withheld.params.group_url).toBe("https://chat.whatsapp.com/VisibilityGroupG");
+    expect(withheld.params).toMatchObject({ group_url: null, group_held: true });
+    expect(await anon(db, "worker_placed_confirm", wt, (await linkFor(db, members[4].id))!, "2026-12-v4")).toMatchObject({ ok: true });
+    expect((await asUser(db, members[4].id, "my_match")).placement.group_url).toBe("https://chat.whatsapp.com/VisibilityGroupG");
   });
 
   it("restores today's behaviour when the setting is Off: the link shows at once, and goes in every first email", async () => {

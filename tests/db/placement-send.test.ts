@@ -332,8 +332,8 @@ describe("a member's private link", () => {
       "can_change",
       "change_until", // the day joining closes: a placed member may look at other tribes until then
       "confirmed",
-      "contact", // where the leader's view of their contact stands: waiting, holding, open, not_reached or withheld
-      "contact_late", // true once the clock or God Mode has opened it: "don't share" is too late
+      "contact", // where the leader's view of their contact stands: waiting, holding, unanswered, open, not_reached or withheld
+      "contact_late", // true once God Mode has opened it: "don't share" is too late
       "contact_opens_at",
       "first_name",
       "fit",
@@ -659,44 +659,41 @@ describe("telling each tribe's leader", () => {
       "select person_id, params, status, force_channel from public.messages where template = 'placement_your_team' order by created_at, id",
     );
 
-  it("waits 24 hours after the last member of the tribe was told, unless every member listed agreed on the form", async () => {
+  it("waits 24 hours after the last member of the tribe was told, whatever the members ticked on the form", async () => {
     await markSent(db, 2); // every member email went out two hours ago
     await db.admin.query(
       "update public.messages set status = 'failed', error = 'bounced' where template = 'placement_your_tribe' and person_id = $1",
       [mem[7].id],
     );
-    // Sunday B: both members ticked the contact line, so the leader hears at once. Mid A: not yet.
+    // Sunday B: both members ticked the contact line on the form, and that no longer hurries anything. Neither tribe is told yet.
     expect(
       (await rows(db, "select public.placement_team_mail($1) as r", [run]))[0]
         .r,
-    ).toBe(1);
-    const first = await teamMails();
-    expect(first.length).toBe(1);
-    expect(first[0].person_id).toBe(B.leader.id);
-    expect(
-      (
-        await rows(
-          db,
-          "select mail_queued_at is not null as q from public.placement_teams where run_id = $1 and tribe_id = $2",
-          [run, A.tribe],
-        )
-      )[0].q,
-    ).toBe(false);
-    // after the 24 hours Mid A's leader and assistant are told
+    ).toBe(0);
+    expect((await teamMails()).length).toBe(0);
+    for (const t of [A.tribe, B.tribe]) {
+      expect(
+        (
+          await rows(
+            db,
+            "select mail_queued_at is not null as q from public.placement_teams where run_id = $1 and tribe_id = $2",
+            [run, t],
+          )
+        )[0].q,
+      ).toBe(false);
+    }
+    // after the 24 hours Mid A's leader and assistant, and Sunday B's leader, are told
     await db.admin.query(
       "update public.messages set sent_at = now() - interval '26 hours' where template = 'placement_your_tribe' and status = 'sent'",
     );
     expect(
       (await rows(db, "select public.placement_team_mail($1) as r", [run]))[0]
         .r,
-    ).toBe(1);
+    ).toBe(2);
     const all = await teamMails();
-    expect(
-      all
-        .filter((m) => m.person_id !== B.leader.id)
-        .map((m) => m.person_id)
-        .sort(),
-    ).toEqual([A.leader.id, A.assistant!.id].sort());
+    expect(all.map((m) => m.person_id).sort()).toEqual(
+      [A.leader.id, A.assistant!.id, B.leader.id].sort(),
+    );
     for (const m of all) expect(m.force_channel).toBe("email");
   });
 
@@ -752,20 +749,23 @@ describe("telling each tribe's leader", () => {
     expect(byName["Mem3 Test"].withheld).toBe(true); // said no on the form
     expect(byName["Mem1 Test"].withheld).toBe(true); // said no from the link
     expect(byName["Mem0 Test"].whatsapp).toBe("+2348012345000"); // consented to be contacted there
-    // Sunday B: one member has a number and one does not
+    // Sunday B: both ticked the contact line on the form and neither has said yes, so the leader has their names and no numbers
     const sun = (await teamMails()).find((m) => m.person_id === B.leader.id)!;
     const sunBy = Object.fromEntries(
       sun.params.members.map((m: { name: string }) => [m.name, m]),
     );
-    expect(sunBy["Mem6 Test"].whatsapp).toBe("+2348012345006");
-    expect(sunBy["Mem13 Test"].whatsapp).toBeNull(); // no number
-    expect(sunBy["Mem13 Test"].withheld).toBe(false);
+    expect(sunBy["Mem6 Test"]).toMatchObject({ state: "unanswered", email: null, whatsapp: null, withheld: false });
+    expect(sunBy["Mem13 Test"]).toMatchObject({ state: "unanswered", email: null, whatsapp: null, withheld: false });
+    // and in Mid A the clock has opened nothing either: whoever has not said yes is "unanswered", with no number
+    const quiet = mail.params.members.filter((m: { state: string }) => m.state === "unanswered");
+    expect(quiet.length).toBeGreaterThan(0);
+    for (const m of quiet) expect(m).toMatchObject({ email: null, whatsapp: null, withheld: false });
   });
 
   it("carries nothing but names, addresses and numbers: no answers, scores, faith journey or needs", async () => {
     for (const m of await teamMails()) {
       expect(JSON.stringify(m.params)).not.toMatch(
-        /degree|compat|score|faith|answer|need|care|sensitive|support|journey/i,
+        /degree|compat|score|faith|(?<!un)answer|need|care|sensitive|support|journey/i, // "unanswered" is a member's state, not an answer they gave
       );
     }
   });
@@ -820,11 +820,11 @@ describe("telling each tribe's leader", () => {
     );
   });
 
-  it("treats a 'don't share' that comes after the leader was told as late, and changes nothing for them", async () => {
+  it("still counts a 'don't share' that comes after the leader was told: that email carried no details for a member who had not said yes", async () => {
     const l = (await linkFor(db, mem[13].id))!;
     expect(await anon(db, "worker_placed_withhold", wt, l)).toEqual({
       ok: true,
-      late: true,
+      late: false,
     });
     expect(
       (
@@ -834,9 +834,30 @@ describe("telling each tribe's leader", () => {
           [mem[13].id, run],
         )
       )[0].contact_withheld,
-    ).toBe(false);
+    ).toBe(true);
     expect((await anon(db, "worker_placed_info", wt, l)).leader_told).toBe(
       true,
     );
+  });
+
+  it("treats a 'don't share' that comes after God Mode opened the tribe as late, and changes nothing for them", async () => {
+    await db.admin.query(
+      "update public.placement_teams set contact_opened_at = now() where run_id = $1 and tribe_id = $2",
+      [run, B.tribe],
+    );
+    const l = (await linkFor(db, mem[6].id))!;
+    expect(await anon(db, "worker_placed_withhold", wt, l)).toEqual({
+      ok: true,
+      late: true,
+    });
+    expect(
+      (
+        await rows(
+          db,
+          "select contact_withheld from public.tribe_members where person_id = $1 and placed_by_run = $2",
+          [mem[6].id, run],
+        )
+      )[0].contact_withheld,
+    ).toBe(false);
   });
 });

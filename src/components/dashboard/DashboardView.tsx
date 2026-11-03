@@ -57,7 +57,7 @@ export function DashboardView({ d, canOpen, insight }: { d: Dashboard; canOpen: 
 
       {church && insight ? <InsightViews insight={insight} /> : null}
 
-      {church && d.funnel ? <Funnel steps={d.funnel} /> : null}
+      {church && d.funnel ? <Funnel steps={d.funnel} waiting={d.waiting ?? 0} /> : null}
       {church && d.supply ? <SupplyMap supply={d.supply} /> : null}
       {church && d.communities ? <Communities rows={d.communities} minCell={d.targets.min_cell} /> : null}
       {church && d.accuracy ? <AccuracyPanel a={d.accuracy} targets={d.targets} measured={h.measured} /> : null}

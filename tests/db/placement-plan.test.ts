@@ -212,8 +212,10 @@ describe("who may use the console", () => {
 
   it("refuses every other role, a visitor, and the owner until they have unlocked on this sign-in", async () => {
     for (const [fn, args] of CALLS) {
+      // Since "place or move from Admin" an admin and a director may undo a run of one person, so for them the door is open and the run is not found
+      const office = fn === "placement_undo";
       for (const who of [adminId, director, pastor, leader, member])
-        await expectCode(run(who, fn, args), "42501");
+        await expectCode(run(who, fn, args), office && (who === adminId || who === director) ? "P0002" : "42501");
       await expectCode(run(null, fn, args), "42501");
       await expectCode(run(o.owner.id, fn, args, randomUUID()), "42501");
     }

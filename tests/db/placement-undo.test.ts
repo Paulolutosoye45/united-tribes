@@ -120,6 +120,7 @@ describe("undoing a run", () => {
       released: n - 2,
       kept_confirmed: 2,
       kept_leader_told: 0,
+      restored: false, // new with "place or move from Admin": true only when an undone move put the old seat back
     });
     const after = await rows(
       db,

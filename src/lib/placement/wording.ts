@@ -83,10 +83,9 @@ export const PLACED_PROMISES = {
   withhold: "My leader will see my name, but will not be given my email or my WhatsApp number. They will be told to expect me instead.",
 } as const;
 
-/** The group link, said to a member who has not yet answered about sharing. Joining a WhatsApp group shows your number to everyone in it. */
+/** The group link, said to a member who has not yet said yes. Joining a WhatsApp group shows your number to everyone in it, so the link waits for the yes. */
 export const PLACED_CONTACT_WORDS = {
-  groupWhen: (when: string) => `The tribe’s WhatsApp group link will appear here on ${when}, or as soon as you press “Yes, I’m in”. Joining a WhatsApp group shows your number to everyone in it.`,
-  groupWaiting: "The tribe’s WhatsApp group link will appear here as soon as you press “Yes, I’m in”, or a day after we have emailed you. Joining a WhatsApp group shows your number to everyone in it.",
+  groupWaiting: "The tribe’s WhatsApp group link will appear here as soon as you press “Yes, I’m in”. Joining a WhatsApp group shows your number to everyone in it.",
   groupWarning: "Joining a WhatsApp group shows your number to everyone in it.",
 } as const;
 
@@ -102,14 +101,14 @@ export const LEADER_MARKS = {
 
 /** The empty page for a leader whose tribe has no one in it yet. */
 export const LEADER_EMPTY =
-  "No one has been placed in your tribe yet. Members who choose your tribe appear here the moment they join. Members the church places appear here by name as soon as they are placed; their email and WhatsApp number follow when each has said yes, or a day after they are told.";
+  "No one has been placed in your tribe yet. Members who choose your tribe appear here the moment they join. Members the church places appear here by name as soon as they are placed; their email and WhatsApp number follow when each has said yes. Until then you see a name and “waiting for a reply”.";
 
 /** What each state on the God Mode board means, in the words of Check 4 in the blueprint. */
 export const TEAM_STATE_TEXT: Record<string, { label: string; line: string }> = {
   rehearsal: { label: "Rehearsal", line: "A rehearsal. Nobody was seated." },
   placing: { label: "Still placing", line: "Some members of this tribe are still to be placed." },
   waiting: { label: "Waiting for emails", line: "At least one member’s email has not gone out yet." },
-  holding: { label: "In the hold", line: "Every email has gone. Some members’ details open when their day has passed." },
+  holding: { label: "In the hold", line: "Every email has gone. The leader is emailed once the hold ends; details are shared only for members who have said yes." },
   none_sent: { label: "No email has gone", line: "Every member email failed or was skipped. Fix sending, then ask for a re-send." },
   due: { label: "Due now", line: "Ready. The leader is told on the next heartbeat." },
   told: { label: "Leader told", line: "The leader has their team." },
@@ -119,7 +118,7 @@ export const TEAM_STATE_TEXT: Record<string, { label: string; line: string }> = 
 
 /** The line under the consent box on the form. Shown once, before the form is sent. */
 export const TEAM_CONTACT_LINE =
-  "If the church places me in a tribe, my leader will see my name at once, and may be given my email and my WhatsApp number (if I gave one) a day after I am told. I can say no at any time before then.";
+  "If the church places me in a tribe, my leader will see my name at once. They are given my email and my WhatsApp number (if I gave one) only after I press “Yes, I’m in”. I can say no at any time.";
 
 /** Where the season stands for placing, in one or two sentences. Written here so the page, the run board and the tests say the same thing. */
 export function windowLine(
@@ -145,7 +144,7 @@ export const IN_SEASON_PROMISES = [
 
 export const PLAN_PROMISES = [
   "Members are told their tribe by email, a hundred or so at a time through the day, not all at once.",
-  "A leader sees everyone the church places in their tribe, by name, as soon as they are placed. Each member’s email and WhatsApp number open a day after that member was emailed, or at once if they say yes. A member who says “don’t share my details” stays withheld. The tribe’s WhatsApp group link follows the same rule. You can open a tribe early on the run board.",
+  "A leader sees everyone the church places in their tribe, by name, as soon as they are placed. Each member’s email and WhatsApp number open only when that member says yes. A member who says “don’t share my details” stays withheld. The tribe’s WhatsApp group link follows the same rule. You can open a tribe early on the run board, as an override; it tells you how many have not answered.",
   "You can undo the whole run until a tribe’s leader has been told. After that, that tribe stays as it is.",
   "Nobody under 18 is placed. Nobody who has not agreed to be matched is placed.",
 ] as const;

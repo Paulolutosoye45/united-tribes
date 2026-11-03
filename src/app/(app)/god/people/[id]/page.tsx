@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { PlaceOne } from "@/components/god/PlaceOne";
+import { PersonPlace } from "@/components/placement/PersonPlace";
 import { RoleManager } from "@/components/god/RoleManager";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -41,9 +41,9 @@ export default async function GodPersonPage({ params }: { params: Params }) {
   const supabase = await createClient();
   const p = await loadPerson(supabase, id);
   if (!p) notFound();
-  // Placing one person: only for a member who holds no seat and does not lead. The database checks it all again.
+  // Placing one person, or moving one who holds a seat: only for a member who does not lead. The database checks it all again.
   const roleList = parseRoles(p.roles);
-  const canPlace = !p.placement && p.leads.length === 0 && !roleList.some((r) => r === "leader" || r === "assistant_leader");
+  const canPlace = p.leads.length === 0 && !roleList.some((r) => r === "leader" || r === "assistant_leader");
   const [placeOptions, overview] = canPlace ? await Promise.all([loadOneOptions(supabase, id), loadPlacementOverview(supabase)]) : [[], null];
   const now = clock();
   const name = p.person.full_name ?? p.person.preferred_name ?? p.person.email;
@@ -71,11 +71,7 @@ export default async function GodPersonPage({ params }: { params: Params }) {
         <RoleManager person={p.person.id} email={p.person.email} roles={parseRoles(p.roles)} />
       </Section>
 
-      {canPlace ? (
-        <Section title="Place in a tribe">
-          <PlaceOne person={p.person.id} name={name} options={placeOptions} mode={overview?.settings.mode ?? null} />
-        </Section>
-      ) : null}
+      {canPlace ? <PersonPlace person={p.person.id} name={name} options={placeOptions} mode={overview?.settings.mode ?? null} role="owner" hasSeat={Boolean(p.placement)} ownerLink /> : null}
 
       <Section title="Where they are">
         {p.form ? (

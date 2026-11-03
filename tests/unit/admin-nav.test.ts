@@ -49,7 +49,7 @@ describe("the one list of Admin pages", () => {
     expect(new Set(hrefs).size).toBe(hrefs.length);
     expect(new Set(PAGES.map((p) => p.label)).size).toBe(PAGES.length);
     for (const href of hrefs) expect(SECTIONS.filter((s) => s.pages.some((p) => p.href === href)), href).toHaveLength(1);
-    expect(PAGES).toHaveLength(28);
+    expect(PAGES).toHaveLength(30);
   });
 
   it("has a page for every address under Admin, so a new page cannot be left out of the menu", () => {
@@ -83,7 +83,7 @@ describe("the one list of Admin pages", () => {
   it("tells the pages that open in another area of the app", () => {
     const tagged = Object.fromEntries(PAGES.filter((p) => p.tag).map((p) => [p.href, p.tag]));
     expect(tagged).toEqual({
-      "/growth/swaps": "Growth", "/growth/multiply": "Growth", "/growth/model": "Growth",
+      "/growth/swaps": "Growth", "/growth/multiply": "Growth", "/growth/model": "Growth", "/growth/removals": "Growth",
       "/care/teens": "Care", "/care/asks": "Care",
       "/review/templates": "Review",
     });
@@ -175,7 +175,7 @@ describe("the menu, for one person and for one who holds two roles", () => {
     expect(champion.map((s) => s.label)).toEqual(["Messages"]);
     expect(champion[0].pages.map((p) => p.href)).toEqual(["/admin/announcements"]);
     const care = menuFor(["care_lead"]).flatMap((s) => s.pages.map((p) => p.href));
-    expect(care).toEqual(["/growth/swaps", "/admin/people/contact-gaps", "/care/teens", "/care/asks"]);
+    expect(care).toEqual(["/growth/swaps", "/admin/people/contact-gaps", "/care/teens", "/growth/removals", "/care/asks"]);
   });
 
   it("puts the number waiting beside a page, never a negative or a fraction", () => {

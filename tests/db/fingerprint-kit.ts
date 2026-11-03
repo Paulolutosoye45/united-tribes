@@ -148,13 +148,33 @@ const sorted = (v: unknown): unknown =>
 /** The readers that give back rows, not one value. */
 const SETS = new Set(["kpi_members", "kpi_tribes", "match_candidates"]);
 
+/**
+ * What a later change added to the dashboard's answer. The recording predates it, so it is set aside here, but only while it says nothing: the
+ * "waiting" figure (members placed by the church who have not said yes) is zero when every seat was chosen by its member, as in this story, and
+ * the funnel step "Chose a tribe" is now named "Said yes to a tribe" for the same count. A number in "waiting" would show up as a difference.
+ */
+function setAside(fn: string, out: unknown): unknown {
+  if (fn !== "dashboard" || typeof out !== "object" || out === null) return out;
+  type Holder = { waiting?: number };
+  const d = JSON.parse(JSON.stringify(out)) as Holder & {
+    headline?: Holder;
+    tribes?: Holder[];
+    supply?: Holder & { cells?: Holder[] };
+    funnel?: { key: string; label: string }[];
+  };
+  for (const holder of [d, d.headline, d.supply, ...(d.supply?.cells ?? []), ...(d.tribes ?? [])]) if (holder && holder.waiting === 0) delete holder.waiting;
+  // The step is the same step; it is now named for what it counts (members who said yes)
+  for (const step of d.funnel ?? []) if (step.key === "chose" && step.label === "Said yes to a tribe") step.label = "Chose a tribe";
+  return d;
+}
+
 /** Calls one function as one person and keeps what came back, or the code it refused with. */
 async function seen(db: TestDb, who: string | "db" | null, fn: string, params: unknown[] = []): Promise<unknown> {
   const args = params.map((_, i) => `$${i + 1}`).join(", ");
   const sql = SETS.has(fn) ? `select to_jsonb(r) as r from public.${fn}(${args}) r` : `select public.${fn}(${args}) as r`;
   try {
     const out = await (who === "db" ? db.admin.query(sql, params) : who ? db.asUser(who, (q) => q(sql, params)) : db.asAnon((q) => q(sql, params)));
-    return SETS.has(fn) ? { rows: out.rows.map((r) => r.r) } : { ok: out.rows[0]?.r ?? null };
+    return SETS.has(fn) ? { rows: out.rows.map((r) => r.r) } : { ok: setAside(fn, out.rows[0]?.r ?? null) };
   } catch (e) {
     const err = e as { code?: string; message?: string };
     return { refused: err.code ?? "error", message: String(err.message ?? "").slice(0, 120) };

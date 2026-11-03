@@ -100,6 +100,8 @@ export type Insight = {
   season?: { id: string; name: string; starts_on: string; ends_on: string; weeks: number; current_week: number | null; weeks_over: number };
   measured?: boolean;
   members?: number;
+  /** Placed by the church and not yet answered, beside the members. */
+  waiting?: number;
   retention?: Retention;
   earlier?: EarlierSeason[];
   kpis?: Kpi[];

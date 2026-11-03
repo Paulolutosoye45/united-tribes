@@ -118,6 +118,9 @@ export const OFFICE_ROLES: readonly Role[] = ["admin", "director", "pastor", "da
 /** Creates and moves seasons; changes the catalogue; appoints community champions. */
 export const PROGRAMME_ROLES: readonly Role[] = ["admin", "director"];
 
+/** Who may place or move one member from Admin (the owner does it from God Mode). The database checks it again. */
+export const PLACE_ROLES: readonly Role[] = ["admin", "director"];
+
 /** Edits the weekly guides and the church's own words. The guides are the pastorate's to approve. */
 export const CONTENT_ROLES: readonly Role[] = ["admin", "director", "pastor"];
 

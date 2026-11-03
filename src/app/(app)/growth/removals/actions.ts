@@ -11,6 +11,12 @@ export async function decideRemovalAction(request: string, decision: string, not
   return plain(await run("removal_decide", { p_req: request, p_decision: decision, p_note: text(note, 600) }, PAGES));
 }
 
+/** The coach of the tribe says what they would do with an ordinary request. It decides nothing; the person deciding reads it first. */
+export async function recommendRemovalAction(request: string, decision: string, note: string): Promise<Result> {
+  if (!isUuid(request) || !["approve", "decline", "ask"].includes(decision)) return { ok: false, message: TRY_AGAIN };
+  return plain(await run("removal_recommend", { p_req: request, p_decision: decision, p_note: text(note, 600) }, PAGES));
+}
+
 /** Puts a member's place back (the Care Lead, a director, an admin, or whoever approved it). */
 export async function reinstateRemovalAction(request: string, note: string): Promise<Result> {
   if (!isUuid(request)) return { ok: false, message: TRY_AGAIN };

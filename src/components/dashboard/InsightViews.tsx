@@ -87,7 +87,7 @@ function RetentionPanel({ retention, earlier, weeks, name, state }: { retention:
           Who is still coming
         </h2>
         <p className="t-small text-soft">
-          {retention.cohort} people were placed in a tribe this season.{" "}
+          {retention.cohort} people said yes to a tribe this season.{" "}
           {last
             ? `After week ${last.week}, ${last.retained} of them (${pct(last.rate)}) ${state === "complete" ? "were" : "are"} still coming${gone > 0 ? `, and ${gone} ${gone === 1 ? "has" : "have"} gone quiet` : ""}.`
             : "The curve starts after the first week."}{" "}

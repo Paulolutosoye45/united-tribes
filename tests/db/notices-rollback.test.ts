@@ -146,6 +146,8 @@ describe("the way back from the team's emails", () => {
             // …nor the tables that same feature made, nor the Switchboard's own column and range check it added or widened (a way back puts them as they were)
             .replace(/\bdrop\s+table\s+if\s+exists\s+public\.([a-z_0-9]+)\s*;/gi, (all, t: string) => (LATER_TABLES.has(t.toLowerCase()) ? "" : all))
             .replace(/\balter\s+table\s+public\.feature_registry\b[^;]*;/gi, "")
+            // …and the holds the removal change put on people (a removal or a care hold exists only since that change; the older code cannot end a hold)
+            .replace(/\bdelete\s+from\s+public\.placement_holds\s+where\s+source\s+in\s+\('removal',\s*'care'\)\s*;/gi, "")
         : lines;
       expect(code, f).not.toMatch(LATER_DOWN.includes(f) ? /\b(delete|truncate|insert)\b\s/i : /\b(delete|truncate|insert|update)\b\s/i);
       expect(code, f).not.toMatch(/\bdrop\s+(table|column|schema)\b/i);

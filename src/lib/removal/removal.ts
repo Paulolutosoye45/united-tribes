@@ -81,6 +81,8 @@ export function parseMine(data: unknown): Mine {
 // The board for the people who decide
 // ---------------------------------------------------------------------------
 export type ThreadLine = { side: "approver" | "leader"; body: string | null; at: string };
+/** What the coach of the tribe suggested, for the person deciding to read first. The leader who asked never receives it. */
+export type Recommendation = { decision: "approve" | "decline" | "ask"; note: string | null; by: string | null; at: string };
 export type BoardRequest = {
   id: string;
   tribe: string;
@@ -104,6 +106,9 @@ export type BoardRequest = {
   decided_by: string | null;
   decision_note: string | null;
   can_decide: boolean;
+  /** The coach of the tribe may recommend an ordinary request; they cannot close it. */
+  can_recommend: boolean;
+  recommendation: Recommendation | null;
   can_reinstate: boolean;
   can_judge_appeal: boolean;
   reinstated_at: string | null;
@@ -122,6 +127,7 @@ export function parseBoard(data: unknown): Board {
     if (!id) return [];
     const a = isObj(r.attendance) ? r.attendance : {};
     const ap = isObj(r.appeal) ? r.appeal : null;
+    const rec = isObj(r.recommendation) ? r.recommendation : null;
     return [
       {
         id,
@@ -146,6 +152,11 @@ export function parseBoard(data: unknown): Board {
         decided_by: str(r.decided_by),
         decision_note: str(r.decision_note),
         can_decide: r.can_decide === true,
+        can_recommend: r.can_recommend === true,
+        recommendation:
+          rec && (rec.decision === "approve" || rec.decision === "decline" || rec.decision === "ask")
+            ? { decision: rec.decision, note: str(rec.note), by: str(rec.by), at: str(rec.at) ?? "" }
+            : null,
         can_reinstate: r.can_reinstate === true,
         can_judge_appeal: r.can_judge_appeal === true,
         reinstated_at: str(r.reinstated_at),
@@ -162,8 +173,9 @@ export function parseBoard(data: unknown): Board {
   return { state: state(data.state), requests };
 }
 
-/** The requests that need a person now: waiting for an answer, or an appeal waiting to be looked at. */
-export const needsAction = (r: BoardRequest) => (r.status === "open" && r.can_decide) || (r.appeal?.status === "open" && r.can_judge_appeal);
+/** The requests that need a person now: waiting for a decision (or, for a coach, for their recommendation), or an appeal waiting to be looked at. */
+export const needsAction = (r: BoardRequest) =>
+  (r.status === "open" && r.can_decide) || (r.status === "open" && r.can_recommend && r.recommendation === null) || (r.appeal?.status === "open" && r.can_judge_appeal);
 
 // ---------------------------------------------------------------------------
 // The member's own notice
@@ -226,7 +238,7 @@ export const REMOVAL_WORDS = {
   limit: (open: number, max: number) => `You have ${open} of ${max} requests waiting. Wait for an answer to one before you ask about another.`,
   practice: "Practice: this is a rehearsal. Nothing will change for the member and no one is written to.",
   mineTitle: "Requests about a member’s place",
-  mineIntro: "What you have asked the church, and the answer. Only you, your coach and the Care Team can read what you wrote.",
+  mineIntro: "What you have asked the church, and the answer. Only you, your coach and the church’s team (the Care Team, directors, admins and pastors) can read what you wrote.",
   waitingApprover: "Waiting for the church to look at it.",
   waitingLeader: "The church has a question for you.",
   answerLabel: "Your answer",
@@ -242,12 +254,24 @@ export const REMOVAL_WORDS = {
   // The people who decide
   boardTitle: "Requests about a member’s place",
   boardIntro:
-    "A leader never removes anyone: they ask, and a person with the right to decide does. Silence never removes anyone either. A coach decides the ordinary ones; anything about safety or conduct, a young person, or someone the Care Team is already caring for is decided only by the Care Lead, a director or an admin.",
+    "A leader never removes anyone: they ask, and a person with the right to decide does. Silence never removes anyone either. An admin, a director or the Care Lead decides. The coach of the tribe can say what they would do, and the person deciding reads that first. Anything about safety or conduct, a young person, or someone the Care Team is already caring for is the Care Team’s to handle: the coach does not advise on it.",
   boardOff: "Leader removal requests are not open yet. The owner turns them on from God Mode → Features.",
   boardEmpty: "No requests right now.",
   practiceBanner: "Practice mode: requests here are rehearsals. Deciding one changes nothing and tells no one.",
   restricted: "Only the Care Team, a director or an admin can decide this.",
   restrictedRead: "You can read this, but it is for the Care Team to decide.",
+  coachReadOnly: "You can read this and say what you would do. An admin, a director or the Care Lead decides.",
+  recommendHeading: "What would you do?",
+  recommendHint: `Your recommendation goes to the person deciding, who reads it first. It decides nothing. At least ${DECISION_NOTE_MIN} characters.`,
+  recommendApprove: "I would approve it",
+  recommendDecline: "I would decline it",
+  recommendAsk: "I would ask the leader a question first",
+  recommendSubmit: "Send my recommendation",
+  recommendUpdate: "Change my recommendation",
+  recommendSent: "Sent. The person deciding will read it first.",
+  recommendationBy: (by: string | null) => `${by ?? "The coach"} recommends`,
+  recommendationWord: { approve: "approving it", decline: "declining it", ask: "asking the leader a question first" },
+  decideFirst: "The coach’s recommendation is above. It is advice: the decision is yours.",
   under18: "Under 18: the Care Lead speaks to their parent or guardian. They are not emailed.",
   urgent: "Marked urgent",
   decideLabel: "Your decision",

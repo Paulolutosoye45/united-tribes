@@ -12,6 +12,8 @@ import { NextSeasonTribes } from "@/components/leaders/NextSeasonTribes";
 import { AssistantRecommend } from "@/components/matching/AssistantRecommend";
 import { TribeOnboarding } from "@/components/matching/TribeOnboarding";
 import { loadRoster } from "@/lib/matching/server";
+import { GroupAdmit } from "@/components/leaders/GroupAdmit";
+import { loadGroupList } from "@/lib/placement/group-server";
 import { RemovalAsk } from "@/components/removal/RemovalAsk";
 import { loadRemovalMine } from "@/lib/removal/server";
 import { parseMyAssistant } from "@/lib/placement/assistants";
@@ -72,6 +74,8 @@ export default async function TribePage() {
   const roster = card.status === "approved" ? await loadRoster(supabase, card.id) : null;
   // The leader's own requests about a member's place. Only extra: while the church has not opened it, or if it cannot be read, nothing is shown.
   const removal = roster && card.role === "leader" ? await loadRemovalMine(supabase, card.id) : null;
+  // Who may be added to the WhatsApp group (people who said yes), who is still to answer, and who has left. Only extra: if it cannot be read, nothing is shown.
+  const group = roster ? await loadGroupList(supabase, card.id) : null;
   // The leader's own page for recommending an assistant. Only extra: if it cannot be read, nothing is shown.
   const mineAssistant = card.role === "leader" && card.status === "approved" ? await supabase.rpc("assistant_my_state", { p_tribe: card.id }) : null;
   const assistantState = mineAssistant && !mineAssistant.error ? parseMyAssistant(mineAssistant.data) : null;
@@ -98,6 +102,7 @@ export default async function TribePage() {
       ) : null}
       {card.status === "approved" ? <ExportEntrance packs={["tribe_sheet", "attendance_register"]} tribe={card.id} /> : null}
       {roster ? <TribeOnboarding roster={roster} leaderFirstName={firstName(card.leader.name)} /> : null}
+      {roster && group ? <GroupAdmit tribeId={card.id} list={group} /> : null}
       {roster && removal ? <RemovalAsk tribeId={card.id} mine={removal} members={roster.members.map((m) => ({ person_id: m.person_id, first_name: m.first_name }))} /> : null}
       {assistantState ? <AssistantRecommend tribeId={card.id} state={assistantState} /> : null}
       {card.role === "leader" ? (

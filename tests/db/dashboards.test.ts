@@ -398,7 +398,7 @@ describe("the church-wide views", () => {
     const s = (await dash(S.director.id, season1)).supply;
     // only the certified leader's tribe counts as seats; everyone placed counts as placed
     expect(s).toMatchObject({ wants: 12, seats: 12, placed: 11, unmet: 1 });
-    expect(s.cells).toEqual([{ community: "Professionals", track: "Builders", wants: 12, seats: 12, placed: 11 }]);
+    expect(s.cells).toEqual([{ community: "Professionals", track: "Builders", wants: 12, seats: 12, placed: 11, waiting: 0 }]);
     expect(s.communities).toHaveLength(11);
     expect(s.tracks).toEqual(["Rising", "Builders", "Stewards", "Sages"]); // the teens track is not open yet
   });

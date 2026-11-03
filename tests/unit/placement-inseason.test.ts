@@ -70,7 +70,7 @@ describe("what the database says is read, or refused", () => {
       tribe: { id: "22222222-2222-4222-8222-222222222222", name: "Mid", leader: "Ngozi", active: 4, capacity: 4 },
       degree: null, label: null, window: null,
     });
-    expect(check?.blockers).toEqual([{ code: "has_seat", text: "They already have a seat" }]);
+    expect(check?.blockers).toEqual([{ code: "has_seat", text: "They already have a seat", ownerOnly: false }]);
     expect(check?.warnings[0].code).toBe("full");
     expect(check?.degree).toBeNull();
     expect(parseOneCheck({ ok: true })).toBeNull();

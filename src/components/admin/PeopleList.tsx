@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { removeRoleAction } from "@/app/(app)/admin/actions";
 import { Avatar } from "@/components/ui/Avatar";
@@ -100,6 +101,11 @@ export function PeopleList({ people, limit }: { people: PersonRow[]; limit: numb
                     </li>
                   ))}
                   {extra.length === 0 ? <li className="t-small text-soft">Member</li> : null}
+                  <li>
+                    <Link href={`/admin/people/${p.id}`} className="t-small font-semibold underline underline-offset-4" data-testid={`person-open-${p.id}`}>
+                      Open
+                    </Link>
+                  </li>
                 </ul>
               </li>
             );

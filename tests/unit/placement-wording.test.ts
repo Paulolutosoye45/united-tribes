@@ -107,8 +107,9 @@ describe("the words on the Placement screens", () => {
     expect(PLACED_PROMISES.withhold).toMatch(/will not be given my email/);
   });
 
-  it("asks for the contact consent in one sentence on the form, with the day's wait and the right to say no", () => {
-    expect(TEAM_CONTACT_LINE).toMatch(/a day after/);
+  it("asks for the contact consent in one sentence on the form, with the yes it waits for and the right to say no", () => {
+    expect(TEAM_CONTACT_LINE).toMatch(/only after I press “Yes, I’m in”/);
+    expect(TEAM_CONTACT_LINE).not.toMatch(/a day after/);
     expect(TEAM_CONTACT_LINE).toMatch(/say no/);
     expect(TEAM_CONTACT_LINE).toMatch(/email/);
     expect(TEAM_CONTACT_LINE).toMatch(/WhatsApp/);
@@ -131,18 +132,21 @@ describe("the words on the Placement screens", () => {
 
   it("tells a leader plainly that church-placed members appear by name at once, and the empty page no longer says only “the moment they join”", () => {
     expect(PLAN_PROMISES.join(" ")).toMatch(/by name, as soon as they are placed/);
+    expect(PLAN_PROMISES.join(" ")).toMatch(/open only when that member says yes/);
     expect(PLAN_PROMISES.join(" ")).toMatch(/group link follows the same rule/);
     expect(LEADER_EMPTY).toMatch(/placed in your tribe yet/);
     expect(LEADER_EMPTY).toMatch(/by name as soon as they are placed/);
+    expect(LEADER_EMPTY).toMatch(/each has said yes/);
     expect(LEADER_MARKS.yetToAnswer).toBe("Placed by the church, yet to answer");
     expect(LEADER_MARKS.saidYes).toBe("Said yes");
   });
 
   it("warns a member, in the same breath as the group link, that joining a WhatsApp group shows their number", () => {
     expect(PLACED_CONTACT_WORDS.groupWarning).toMatch(/shows your number to everyone in it/);
-    expect(PLACED_CONTACT_WORDS.groupWhen("Fri 12 Feb")).toMatch(/Fri 12 Feb/);
-    expect(PLACED_CONTACT_WORDS.groupWhen("Fri 12 Feb")).toMatch(/shows your number to everyone in it/);
     expect(PLACED_CONTACT_WORDS.groupWaiting).toMatch(/shows your number to everyone in it/);
+    // the link waits for the yes, not for a date
+    expect(PLACED_CONTACT_WORDS.groupWaiting).toMatch(/“Yes, I’m in”/);
+    expect(PLACED_CONTACT_WORDS).not.toHaveProperty("groupWhen");
   });
 
   it("has a label and a sentence for every state a tribe can be in on the God Mode board, none of which names a member", () => {

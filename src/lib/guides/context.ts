@@ -41,6 +41,8 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/admin/messages", slug: "whatsapp-health" },
   { prefix: "/growth/removals", slug: "decide-a-place-change" },
   { prefix: "/admin/people/contact-gaps", slug: "contact-gaps" },
+  { prefix: "/admin/tribes", slug: "place-or-move-a-member" },
+  { prefix: "/admin/people", slug: "place-or-move-a-member" },
   // Pages people reach from an email or before they have an account: open to anyone with the link
   { prefix: "/sign-in", slug: "sign-in" },
   { prefix: "/reference", slug: "give-a-reference" },
