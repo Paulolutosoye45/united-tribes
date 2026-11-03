@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Input";
 import { formatLagosDay, formatLagosTime, formatShortDate } from "@/lib/dates";
 import { MODES, type Hold, type Overview, type PlacementMode, type Settings } from "@/lib/placement/types";
-import { HEARTBEAT_HINT, MODE_WORDS, PLAN_PROMISES, RUN_STATUS_TEXT, ZONE_TEXT, count, hourText, pluralise } from "@/lib/placement/wording";
+import { HEARTBEAT_HINT, IN_SEASON_PROMISES, MODE_WORDS, PLAN_PROMISES, RUN_STATUS_TEXT, ZONE_TEXT, count, hourText, pluralise, windowLine } from "@/lib/placement/wording";
 
 type Community = { id: string; name: string };
 
@@ -25,7 +25,8 @@ export function PlacementHome({ overview, communities, holds }: { overview: Over
     <div className="flex flex-col gap-8" data-testid="placement-home">
       <Switch mode={s.mode} lastTickAt={s.lastTickAt} />
       <Supply overview={overview} />
-      {overview.openRun ? <OpenRun run={overview.openRun} /> : <NewRun settings={s} communities={communities} />}
+      {overview.openRun ? <OpenRun run={overview.openRun} /> : <NewRun settings={s} communities={communities} window={overview.window} />}
+      <PlaceOnePointer />
       <Choices settings={s} />
       <Holds holds={holds} onHold={supply.onHold} />
       <Past runs={overview.runs} />
@@ -114,7 +115,7 @@ function Supply({ overview }: { overview: Overview }) {
           Who there is to place
         </h2>
         <p className="t-small text-soft">
-          {season ? `${season.name}, starting ${formatShortDate(season.startsOn)}. ` : "No season is open. "}A member is placed only in a tribe at or above {settings.floor}% compatibility, and a seat is always kept free.
+          {windowLine(overview.window ?? (season ? { name: season.name, started: false, week: null, weeks: 0, open: true } : null), season?.startsOn ?? null, overview.window?.closesOn ?? null, formatShortDate)}A member is placed only in a tribe at or above {settings.floor}% compatibility, and a seat is always kept free.
         </p>
       </div>
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -148,19 +149,22 @@ function OpenRun({ run }: { run: NonNullable<Overview["openRun"]> }) {
   );
 }
 
-function NewRun({ settings, communities }: { settings: Settings; communities: Community[] }) {
+function NewRun({ settings, communities, window }: { settings: Settings; communities: Community[]; window: Overview["window"] }) {
   const router = useRouter();
   const d = useDo();
   const [community, setCommunity] = useState("");
   const [zone, setZone] = useState("");
   const [pace, setPace] = useState(String(settings.pacePerHour));
+  const [afterCutoff, setAfterCutoff] = useState(false);
   const off = settings.mode === "off";
+  const closed = Boolean(window && window.started && !window.open);
+  const inSeason = Boolean(window && window.started);
 
   async function start() {
     const n = Number(pace);
     let id: string | null = null;
     const ok = await d.go("new", async () => {
-      const r = await newRunAction({ community: community || undefined, zone: zone || undefined, pace: Number.isFinite(n) && pace.trim() !== "" ? n : undefined });
+      const r = await newRunAction({ community: community || undefined, zone: zone || undefined, pace: Number.isFinite(n) && pace.trim() !== "" ? n : undefined, afterCutoff: closed && afterCutoff });
       if (r.ok) id = r.run;
       return r.ok ? { ok: true as const } : r;
     });
@@ -198,13 +202,45 @@ function NewRun({ settings, communities }: { settings: Settings; communities: Co
           <span className="t-small text-soft">Between {hourText(settings.sendFrom)} and {hourText(settings.sendUntil)}, Lagos time.</span>
         </label>
       </div>
+      {inSeason ? (
+        <div className="flex flex-col gap-2 rounded-[var(--radius-control)] bg-surface-strong p-4" data-testid="in-season">
+          <p className="font-semibold">The season has started</p>
+          <ul className="t-small flex list-disc flex-col gap-1 pl-5">
+            {IN_SEASON_PROMISES.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {closed ? (
+        <label className="flex items-start gap-3" data-testid="after-cutoff">
+          <input type="checkbox" className="mt-1 h-5 w-5" checked={afterCutoff} onChange={(e) => setAfterCutoff(e.target.checked)} />
+          <span className="flex flex-col gap-0.5">
+            <span className="text-[0.95rem] font-medium">Place after the cut-off</span>
+            <span className="t-small text-soft">Joining closed on {window ? formatShortDate(window.closesOn) : ""}. Tick this only if you mean to place people now anyway.</span>
+          </span>
+        </label>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
-        <Button size="md" variant="solid" loading={d.busy === "new"} disabled={off} onClick={() => void start()}>
+        <Button size="md" variant="solid" loading={d.busy === "new"} disabled={off || (closed && !afterCutoff)} onClick={() => void start()}>
           Plan a run
         </Button>
         {off ? <span className="t-small text-soft">Switch to Rehearsal or On first.</span> : null}
       </div>
       <Notice error={d.error} />
+    </section>
+  );
+}
+
+function PlaceOnePointer() {
+  return (
+    <section aria-labelledby="one-heading" className="flex flex-col gap-1" data-testid="place-one-pointer">
+      <h2 id="one-heading" className="t-heading">
+        Place one person
+      </h2>
+      <p className="t-small measure text-soft">
+        To place one person in one tribe, open them in <Link href="/god/people" className="font-semibold underline underline-offset-4">People</Link> and use “Place in a tribe”. It needs Placement to be On, and each warning it gives needs a tick and a reason.
+      </p>
     </section>
   );
 }
@@ -314,11 +350,13 @@ function Past({ runs }: { runs: Overview["runs"] }) {
           <li key={r.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
             <div className="min-w-0">
               <p className="font-semibold">
-                Run {r.seq} {r.rehearsal ? <Badge tone="outline">Rehearsal</Badge> : null}
+                {r.single ? "Single placement" : `Run ${r.seq}`} {r.rehearsal ? <Badge tone="outline">Rehearsal</Badge> : null}
+                {r.inSeason ? <Badge tone="outline">Running season</Badge> : null}
               </p>
               <p className="t-small text-soft">
                 {RUN_STATUS_TEXT[r.status] ?? r.status}
                 {r.createdAt ? ` · ${formatShortDate(r.createdAt)}` : ""} · {pluralise(r.placed, "member")} placed · {count(r.confirmed)} said yes
+                {r.note ? ` · “${r.note}”` : ""}
               </p>
             </div>
             <Link href={`/god/placement/${r.id}`} className="font-semibold underline underline-offset-4">

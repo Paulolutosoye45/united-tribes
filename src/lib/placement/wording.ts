@@ -121,6 +121,28 @@ export const TEAM_STATE_TEXT: Record<string, { label: string; line: string }> = 
 export const TEAM_CONTACT_LINE =
   "If the church places me in a tribe, my leader will see my name at once, and may be given my email and my WhatsApp number (if I gave one) a day after I am told. I can say no at any time before then.";
 
+/** Where the season stands for placing, in one or two sentences. Written here so the page, the run board and the tests say the same thing. */
+export function windowLine(
+  w: { name: string; started: boolean; week: number | null; weeks: number; open: boolean } | null,
+  startsOn: string | null,
+  closesOn: string | null,
+  day: (iso: string) => string,
+): string {
+  if (!w) return "No season is open. ";
+  if (!w.started) return `${w.name}, starting ${startsOn ? day(startsOn) : "soon"}. `;
+  const week = `${w.name} is running, in week ${w.week ?? 1} of ${w.weeks}.`;
+  if (w.open) return `${week} Joining is open until ${closesOn ? day(closesOn) : "the end of week 2"}, so people can still be placed. `;
+  return `${week} Joining closed on ${closesOn ? day(closesOn) : "the end of week 2"}. Tick “place after the cut-off” to place people now anyway. `;
+}
+
+/** What is different about a run in a season that has already started. Shown beside the Plan a run button. */
+export const IN_SEASON_PROMISES = [
+  "A tribe that has started is never held back for being small: a new member is welcome in any tribe that is already meeting.",
+  "A member who changed their answers or ran the matching in the last two days is left to choose for themselves.",
+  "The first meeting is asked for within a week of being placed. A member can still look at other tribes until joining closes.",
+  "A leader hears about new members at most once a day.",
+] as const;
+
 export const PLAN_PROMISES = [
   "Members are told their tribe by email, a hundred or so at a time through the day, not all at once.",
   "A leader sees everyone the church places in their tribe, by name, as soon as they are placed. Each member’s email and WhatsApp number open a day after that member was emailed, or at once if they say yes. A member who says “don’t share my details” stays withheld. The tribe’s WhatsApp group link follows the same rule. You can open a tribe early on the run board.",

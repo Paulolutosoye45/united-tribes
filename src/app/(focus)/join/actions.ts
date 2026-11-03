@@ -7,6 +7,7 @@ import { enabledChannels, firstProblem, hasWords, normaliseWhatsapp, parseDraftA
 import { areaBySlug } from "@/lib/intake/areas";
 import { CONSENT_VERSION } from "@/lib/intake/consent";
 import { parseNumberRule } from "@/lib/messaging/number-rule";
+import { loadJoinSeason } from "@/lib/placement/season";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; message: string; step?: string };
@@ -63,7 +64,7 @@ export async function submitIntakeAction(raw: unknown, activeSeconds: number, is
     answers.community ? supabase.from("communities").select("id, active").eq("slug", answers.community).maybeSingle() : Promise.resolve({ data: null }),
     answers.community && answers.secondCommunity ? supabase.from("communities").select("id, active").eq("slug", answers.secondCommunity).maybeSingle() : Promise.resolve({ data: null }),
     answers.goal ? supabase.from("season_goals").select("id, community_id, active").eq("slug", answers.goal).maybeSingle() : Promise.resolve({ data: null }),
-    supabase.from("seasons").select("id").in("status", ["planning", "open"]).order("starts_on", { ascending: true }).limit(1).maybeSingle(),
+    loadJoinSeason(supabase),
     supabase.from("member_profiles").select("duration_seconds, submitted_at, community_id, second_community_id, season_goal_id").eq("person_id", personId).maybeSingle(),
   ]);
 
@@ -111,7 +112,7 @@ export async function submitIntakeAction(raw: unknown, activeSeconds: number, is
   // The phone number is left out of this row on purpose: save_contact below owns it, along with each channel's yes or no.
   const row = {
     person_id: personId,
-    season_id: season.data?.id ?? null,
+    season_id: season?.id ?? null,
     age_range_id: range.data.id,
     birthday_day: answers.birthdayDay ?? null,
     birthday_month: answers.birthdayMonth ?? null,

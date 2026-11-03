@@ -12,7 +12,9 @@ import { parentPermission } from "./content/parent-permission";
 import { runYourWeek } from "./content/run-your-week";
 import { shareATestimony } from "./content/share-a-testimony";
 import { signIn } from "./content/sign-in";
+import { sendByWhatsapp } from "./content/send-by-whatsapp";
 import { whatsappHealth } from "./content/whatsapp-health";
+import { whatsappMode } from "./content/whatsapp-mode";
 import { yourInformation } from "./content/your-information";
 import { youHaveBeenPlaced } from "./content/you-have-been-placed";
 import { yourTribesSeason } from "./content/your-tribes-season";
@@ -23,6 +25,6 @@ import type { Guide } from "./types";
  * Every guide in the library, in the order of the plan. The Tribe Card guide (L0) was made first and lives at /tutorial; the library page
  * lists it and links to it, and it is not in this list.
  */
-export const GUIDES: readonly Guide[] = [signIn, findYourTribe, joinYourTribe, yourWeek, shareATestimony, yourInformation, applyToLead, afterYouApply, leaderAcademy, runYourWeek, yourTribesSeason, appointedToLead, askAboutAPlace, assistantLeader, whatsappHealth, decideAPlaceChange, giveAReference, parentPermission, youHaveBeenPlaced];
+export const GUIDES: readonly Guide[] = [signIn, findYourTribe, joinYourTribe, yourWeek, shareATestimony, yourInformation, applyToLead, afterYouApply, leaderAcademy, runYourWeek, yourTribesSeason, appointedToLead, askAboutAPlace, assistantLeader, whatsappHealth, decideAPlaceChange, giveAReference, parentPermission, youHaveBeenPlaced, whatsappMode, sendByWhatsapp];
 
 export const guideBySlug = (slug: string): Guide | undefined => GUIDES.find((g) => g.slug === slug);

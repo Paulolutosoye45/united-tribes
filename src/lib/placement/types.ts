@@ -64,13 +64,42 @@ export type RunSummary = {
   pool: number;
   placed: number;
   confirmed: number;
+  /** A run of one person placed by hand, and the owner's reason for it. */
+  single: boolean;
+  inSeason: boolean;
+  note: string | null;
 };
+
+/** Where a season stands for joining: when it started, which week it is, and the day joining closes. */
+export type JoiningWindow = {
+  name: string;
+  startsOn: string;
+  started: boolean;
+  /** The week of the season it is now, or null before it starts. */
+  week: number | null;
+  weeks: number;
+  closesOn: string;
+  open: boolean;
+};
+
+export function parseWindow(json: unknown): JoiningWindow | null {
+  if (!isObject(json)) return null;
+  const startsOn = strOrNull(json.starts_on);
+  const closesOn = strOrNull(json.closes_on);
+  if (!startsOn || !closesOn) return null;
+  return {
+    name: str(json.name), startsOn, started: json.started === true, week: intOrNull(json.week), weeks: int(json.weeks), closesOn,
+    open: json.open !== false,
+  };
+}
 
 export type OpenRun = { id: string; seq: number; status: string; phase: string; rehearsal: boolean; pool: number; told: number };
 
 export type Overview = {
   settings: Settings;
   season: { id: string; name: string; startsOn: string } | null;
+  /** The joining window of the season being placed into. Null on a database that does not have it yet. */
+  window: JoiningWindow | null;
   openRun: OpenRun | null;
   runs: RunSummary[];
   supply: { tribesOpen: number; seatsOpen: number; membersWithForm: number; membersWithoutForm: number; onHold: number };
@@ -87,12 +116,13 @@ export function parseOverview(json: unknown): Overview | null {
   return {
     settings,
     season: s && uuid(s.id) ? { id: str(s.id), name: str(s.name), startsOn: str(s.starts_on) } : null,
+    window: parseWindow(json.window),
     openRun: o && openId ? { id: openId, seq: int(o.seq), status: str(o.status), phase: str(o.phase), rehearsal: o.rehearsal === true, pool: int(o.pool), told: int(o.told) } : null,
     runs: arr(json.runs).flatMap((r) => {
       if (!isObject(r)) return [];
       const id = uuid(r.id);
       return id
-        ? [{ id, seq: int(r.seq), status: str(r.status), rehearsal: r.rehearsal === true, createdAt: strOrNull(r.created_at), pool: int(r.pool), placed: int(r.placed), confirmed: int(r.confirmed) }]
+        ? [{ id, seq: int(r.seq), status: str(r.status), rehearsal: r.rehearsal === true, createdAt: strOrNull(r.created_at), pool: int(r.pool), placed: int(r.placed), confirmed: int(r.confirmed), single: r.single === true, inSeason: r.in_season === true, note: strOrNull(r.note) }]
         : [];
     }),
     supply: {
@@ -358,5 +388,62 @@ export function parsePlaced(json: unknown): PlacedState | null {
       mode: str(t.mode), placeNote: str(t.place_note), groupUrl: strOrNull(t.group_url), firstMeetingBy: strOrNull(t.first_meeting_by),
       season: str(t.season), startsOn: str(t.starts_on), god: str(t.god), others: str(t.others), life: str(t.life),
     },
+  };
+}
+
+
+/** A tribe a person could be placed into, with how well the matching rates the fit (null when it would not offer it). */
+export type OneOption = {
+  tribe: string;
+  name: string;
+  leader: string;
+  active: number;
+  capacity: number;
+  degree: number | null;
+  label: string | null;
+  belowFloor: boolean;
+};
+
+export function parseOneOptions(json: unknown): OneOption[] {
+  return arr(json).flatMap((o) => {
+    if (!isObject(o)) return [];
+    const tribe = uuid(o.tribe);
+    return tribe
+      ? [{ tribe, name: str(o.name), leader: str(o.leader), active: int(o.active), capacity: int(o.capacity), degree: intOrNull(o.degree), label: strOrNull(o.label), belowFloor: o.below_floor === true }]
+      : [];
+  });
+}
+
+export type OneNote = { code: string; text: string };
+
+/** What the database says about placing one person into one tribe: what stops it, and what needs a tick and a reason. */
+export type OneCheck = {
+  ok: boolean;
+  blockers: OneNote[];
+  warnings: OneNote[];
+  person: { id: string; name: string };
+  tribe: { id: string; name: string; leader: string; active: number; capacity: number };
+  degree: number | null;
+  label: string | null;
+  window: JoiningWindow | null;
+};
+
+export function parseOneCheck(json: unknown): OneCheck | null {
+  if (!isObject(json)) return null;
+  const notes = (v: unknown): OneNote[] => arr(v).flatMap((n) => (isObject(n) && strOrNull(n.code) && strOrNull(n.text) ? [{ code: str(n.code), text: str(n.text) }] : []));
+  const p = isObject(json.person) ? json.person : null;
+  const t = isObject(json.tribe) ? json.tribe : null;
+  const pid = p ? uuid(p.id) : null;
+  const tid = t ? uuid(t.id) : null;
+  if (!p || !t || !pid || !tid) return null;
+  return {
+    ok: json.ok === true,
+    blockers: notes(json.blockers),
+    warnings: notes(json.warnings),
+    person: { id: pid, name: str(p.name) },
+    tribe: { id: tid, name: str(t.name), leader: str(t.leader), active: int(t.active), capacity: int(t.capacity) },
+    degree: intOrNull(json.degree),
+    label: strOrNull(json.label),
+    window: parseWindow(json.window),
   };
 }

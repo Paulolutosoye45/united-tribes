@@ -52,6 +52,29 @@ const whatsappSignal: TemplateDef = {
   }),
 };
 
+const whatsappModeAlert: TemplateDef = {
+  key: "whatsapp_mode_alert",
+  audience: "office",
+  emailOnly: true,
+  title: "WhatsApp mode has changed by itself, or the month's cost is near its ceiling",
+  email: (p, c) => ({
+    subject: "WhatsApp mode needs a look",
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      `${flat(p.what, "WhatsApp mode changed")}.`.replace(/\.+$/, "."),
+      "Nobody is left out: members are reached by the next channel they agreed to, and anything that cannot be sent is listed for a leader to send by hand.",
+      "Open the page below to see what changed, why, and how to put it back.",
+    ],
+    cta: { label: "Open WhatsApp mode", url: c.link("/admin/messages/whatsapp-mode") },
+  }),
+  sms: (_p, c) => smsLine("WhatsApp mode has changed. Please look at it here:", c.link("/admin/messages/whatsapp-mode")),
+  whatsapp: (_p, c) => ({
+    body: "Hi {{1}}, WhatsApp mode has changed and needs a look. Please open it here: {{2}}",
+    example: ["Ngozi", "https://unitedtribes.example/admin/messages/whatsapp-mode"],
+    vars: [flat(c.first), flat(c.link("/admin/messages/whatsapp-mode"))],
+  }),
+};
+
 /** The one message sent to try the account: to the person who asked, on WhatsApp only, saying nothing but that it arrived. */
 const whatsappTest: TemplateDef = {
   key: "whatsapp_test",
@@ -70,11 +93,12 @@ const whatsappTest: TemplateDef = {
   }),
 };
 
-export const WHATSAPP_TEMPLATES: TemplateDef[] = [whatsappPaused, whatsappSignal, whatsappTest];
+export const WHATSAPP_TEMPLATES: TemplateDef[] = [whatsappPaused, whatsappSignal, whatsappModeAlert, whatsappTest];
 
 /** Believable fields for the templates, as the database supplies them. Used by the tests. */
 export const WHATSAPP_SAMPLES: Record<string, Params> = {
   whatsapp_paused: { code: 131030, count: 5, minutes: 30 },
   whatsapp_signal: { what: "The message wording ut_welcome is now REJECTED (INVALID_FORMAT)" },
+  whatsapp_mode_alert: { what: "WhatsApp mode dropped from Full to Saver: the month's estimate reached US$100" },
   whatsapp_test: {},
 };

@@ -22,6 +22,7 @@ export function LeaderWeek({
   layer,
   extras,
   careOpen,
+  handOpen,
 }: {
   week: TribeWeek;
   callerFirst: string;
@@ -32,6 +33,8 @@ export function LeaderWeek({
   careOpen: number;
   /** The path and query to keep when moving between weeks, such as `/lead/week?tribe=…`. */
   base: string;
+  /** WhatsApp mode is switched on, so the page for sending WhatsApp yourself is offered. */
+  handOpen?: boolean;
 }) {
   const r = week.report;
   const status = STATUS_LABELS[r.status];
@@ -72,6 +75,11 @@ export function LeaderWeek({
           {week.state !== "before" ? (
             <Link href={base.replace("/lead/week", "/lead/progress")} className="btn btn-night inline-flex h-10 items-center rounded-[var(--radius-control)] px-4 text-[0.9rem] font-medium">
               The season so far
+            </Link>
+          ) : null}
+          {handOpen ? (
+            <Link href={base.replace("/lead/week", "/lead/hand")} data-testid="lead-hand-link" className="btn btn-night inline-flex h-10 items-center rounded-[var(--radius-control)] px-4 text-[0.9rem] font-medium">
+              Send by WhatsApp
             </Link>
           ) : null}
           {week.log_open && !week.log && week.can_edit ? (

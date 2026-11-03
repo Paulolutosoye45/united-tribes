@@ -41,9 +41,9 @@ describe("the Meta refusals that mean the account", () => {
 
 describe("the alert to the office", () => {
   it("is one email-only message that says what happened and where to look", () => {
-    expect(WHATSAPP_TEMPLATES.map((t) => t.key)).toEqual(["whatsapp_paused", "whatsapp_signal", "whatsapp_test"]);
-    // only the test message is ever put to Meta: the two alarms must not depend on the channel that is failing
-    expect(WHATSAPP_TEMPLATES.filter((t) => t.emailOnly).map((t) => t.key)).toEqual(["whatsapp_paused", "whatsapp_signal"]);
+    expect(WHATSAPP_TEMPLATES.map((t) => t.key)).toEqual(["whatsapp_paused", "whatsapp_signal", "whatsapp_mode_alert", "whatsapp_test"]);
+    // only the test message is ever put to Meta: the three alarms must not depend on the channel that is failing
+    expect(WHATSAPP_TEMPLATES.filter((t) => t.emailOnly).map((t) => t.key)).toEqual(["whatsapp_paused", "whatsapp_signal", "whatsapp_mode_alert"]);
     expect(TEMPLATES.whatsapp_paused).toBeDefined();
     expect(TEMPLATES.whatsapp_paused.emailOnly).toBe(true);
     const mail = renderEmail(

@@ -160,7 +160,7 @@ async function main() {
   check(true, "God Mode finds Features in its menu");
   await noOverflow(page, "the Features switchboard on a desktop");
   await shot(page, "36-board-off");
-  check((await page.locator('[data-testid^="feature-"][data-testid$="-open"]').count()) === 11, "eleven functions can be moved (the three of stage 1 and the four of stage 2 of Profiles, and the four whole-church functions of WhatsApp reliability); the rest can be read and not moved");
+  check((await page.locator('[data-testid^="feature-"][data-testid$="-open"]').count()) === 12, "twelve functions can be moved (the three of stage 1 and the four of stage 2 of Profiles, the four whole-church functions of WhatsApp reliability, and WhatsApp mode); the rest can be read and not moved");
   for (const key of ["my_page", "details_check", "hold_card", "my_details", "my_story", "role_panels", "still_right"]) {
     check(/Off/.test(await page.getByTestId(`feature-${key}`).innerText()), `${key} starts Off`);
   }

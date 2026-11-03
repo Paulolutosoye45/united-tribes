@@ -121,11 +121,15 @@ const yourTribe = build({
     return {
       paragraphs: [
         `You told us about your season, and we have not wanted you to wait. The church has placed you in ${clean(p.tribe, "a tribe")}, led by ${who}${fit ? `. It is ${fit === "excellent" ? "an excellent" : `a ${fit}`} fit for what you asked for` : ""}.`,
-        `It meets ${meetsText(p)}. The season begins on ${shortDay(str(p.starts_on)) || "its first day"}, and your first meeting should be by ${shortDay(str(p.first_meeting_by)) || "the first weeks"}.`,
+        p.in_season === true
+          ? `It meets ${meetsText(p)}. ${clean(p.season, "The season")} is already under way, in week ${typeof p.week === "number" ? p.week : 1}, so your first meeting should be within the week, by ${shortDay(str(p.first_meeting_by)) || "the end of the week"}.`
+          : `It meets ${meetsText(p)}. The season begins on ${shortDay(str(p.starts_on)) || "its first day"}, and your first meeting should be by ${shortDay(str(p.first_meeting_by)) || "the first weeks"}.`,
         ...(picture.length > 0 ? ["What the tribe is for:", ...picture] : []),
         ...groupLines(p),
         sharing(p),
-        "If this is not right for you, choose another tribe at any time before the season starts. Nothing is lost.",
+        p.in_season === true && clean(p.change_until)
+          ? `If this is not right for you, choose another tribe until joining closes on ${shortDay(str(p.change_until))}. Nothing is lost.`
+          : "If this is not right for you, choose another tribe at any time before the season starts. Nothing is lost.",
       ],
       cta: yes ? { label: "Yes, I’m in", url: yes } : { label: "See my tribe", url: c.link("/tribe") },
       ...(yes && other && hold ? { options: [{ label: "Show me other tribes", url: other }, { label: "Don’t share my details", url: hold }] } : {}),
@@ -147,7 +151,9 @@ const reminder = build({
     return {
       paragraphs: [
         `A few days ago the church placed you in ${clean(p.tribe, "a tribe")}, led by ${firstOf(p, "leader_first")}. It meets ${meetsText(p)}.`,
-        "If it suits you, one tap confirms it. If it does not, you can look at other tribes any time before the season begins.",
+        p.in_season === true && clean(p.change_until)
+          ? `If it suits you, one tap confirms it. If it does not, you can look at other tribes until joining closes on ${shortDay(str(p.change_until))}.`
+          : "If it suits you, one tap confirms it. If it does not, you can look at other tribes any time before the season begins.",
       ],
       cta: yes ? { label: "Yes, I’m in", url: yes } : { label: "See my tribe", url: c.link("/tribe") },
       ...(yes && other && hold ? { options: [{ label: "Show me other tribes", url: other }, { label: "Don’t share my details", url: hold }] } : {}),
@@ -207,7 +213,7 @@ const yourTeam = build({
   key: "placement_your_team",
   audience: "leader",
   title: "Who is on your team",
-  subject: (p) => `Your team: ${clean(p.tribe, "your tribe")}`.slice(0, 78),
+  subject: (p) => (p.in_season === true ? `New members for ${clean(p.tribe, "your tribe")}` : `Your team: ${clean(p.tribe, "your tribe")}`).slice(0, 78),
   path: "/lead/tribe",
   line: (p) => `your team for ${clean(p.tribe, "your tribe")} is ready. Please call each person.`,
   email: (p, c) => {
@@ -216,7 +222,9 @@ const yourTeam = build({
     const notYet = people.some((m) => m.state === "holding" || m.state === "waiting" || m.state === "not_reached");
     return {
       paragraphs: [
-        `${clean(p.tribe, "Your tribe")} has ${people.length === 1 ? "one member" : `${people.length} members`}, placed by the church. Please call or message each of them${clean(p.call_by) ? ` by ${shortDay(str(p.call_by))}` : " within three days"}. A warm first word matters.`,
+        p.in_season === true
+          ? `${people.length === 1 ? "One new member has" : `${people.length} new members have`} joined ${clean(p.tribe, "your tribe")}, placed by the church${typeof p.week === "number" ? ` in week ${p.week}` : ""}. Please call or message ${people.length === 1 ? "them" : "each of them"}${clean(p.call_by) ? ` by ${shortDay(str(p.call_by))}` : " within three days"}. A warm first word matters, and the tribe is already meeting.`
+          : `${clean(p.tribe, "Your tribe")} has ${people.length === 1 ? "one member" : `${people.length} members`}, placed by the church. Please call or message each of them${clean(p.call_by) ? ` by ${shortDay(str(p.call_by))}` : " within three days"}. A warm first word matters.`,
         ...(clean(p.first_meeting_by) ? [`The first meeting should be by ${shortDay(str(p.first_meeting_by))}.`] : []),
         ...people.map((m) => {
           if (m.state === "withheld") return `${m.name}: contact withheld; they have your details`;

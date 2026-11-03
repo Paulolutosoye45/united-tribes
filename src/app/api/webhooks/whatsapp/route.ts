@@ -1,6 +1,7 @@
 import { parseWhatsAppEvents, verifyMetaSignature } from "@/lib/messaging/inbound";
 import { sameSecret } from "@/lib/messaging/auth";
 import { workerRpc, workerToken } from "@/lib/messaging/worker";
+import { keysForTemplateName } from "@/lib/whatsapp/names";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,11 @@ export async function POST(request: Request) {
   // database that does not have the function yet, never makes Meta think the receipts failed.
   for (const sig of events.signals) {
     await rpc("worker_whatsapp_signal", { p_kind: sig.kind, p_subject: sig.subject, p_status: sig.status, p_detail: sig.detail ?? null });
+    // WhatsApp mode: when Meta files a wording as Marketing (which costs more), the message types that use it are kept off WhatsApp until it is Utility again.
+    // Optional like the line above: a database without WhatsApp mode answers with an error that is ignored.
+    if (sig.kind === "template" && sig.status.startsWith("CATEGORY_")) {
+      for (const key of keysForTemplateName(sig.subject)) await rpc("worker_whatsapp_marketing", { p_key: key, p_marketing: sig.status === "CATEGORY_MARKETING" });
+    }
   }
   // A 5xx makes Meta try again later; every handler above is safe to repeat.
   if (failures > 0) return Response.json({ ok: false }, { status: 500, headers: NO_STORE });

@@ -6,6 +6,7 @@ import { siteUrl, workerRpc, workerToken } from "@/lib/messaging/worker";
 import { whatsappSignInEnabled } from "@/lib/env";
 import { runLeaderJobs } from "@/lib/leaders/quality/jobs";
 import { runSigninTick } from "@/lib/signin/tick";
+import { asker, gateFetch, senderForMode } from "@/lib/whatsapp/mode";
 import { senderFromEnv } from "@/lib/whatsapp/provider";
 import { writePendingSummaries } from "@/lib/reports/summary";
 
@@ -120,7 +121,8 @@ async function handle(request: Request) {
     // WhatsApp sign-in: how the sending number is, and the housekeeping behind the limits and the breaker.
     let signin: { status: string | null; signal: string | null } | null = null;
     if (whatsappSignInEnabled()) {
-      const ticked = await runSigninTick({ rpc, sender: senderFromEnv() });
+      const ask = asker(rpc);
+      const ticked = await runSigninTick({ rpc, sender: await senderForMode(senderFromEnv(process.env, gateFetch(fetch, ask)), ask) });
       summary.problems.push(...ticked.problems);
       signin = { status: ticked.status, signal: ticked.signal };
     }

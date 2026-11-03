@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseHolds, parseItems, parseLeadersView, parseOverview, parsePlaced, parseRunView, type Hold, type LeadersView, type Overview, type PlacedState, type RunView } from "./types";
+import { parseHolds, parseItems, parseLeadersView, parseOneOptions, parseOverview, parsePlaced, parseRunView, type Hold, type LeadersView, type OneOption, type Overview, type PlacedState, type RunView } from "./types";
 
 // Each loader returns null when the database refuses (the person is not the owner, or is locked) or is unreachable. The pages treat
 // null as "not available": the database has already decided.
@@ -20,3 +20,6 @@ export const loadLeadersView = async (s: SupabaseClient, run: string | null = nu
 
 /** The signed-in member's own placement, when the church placed them. Null for everyone else. */
 export const loadMyPlacement = async (s: SupabaseClient): Promise<PlacedState | null> => parsePlaced(await load(s, "my_placement"));
+
+/** The tribes one person could be placed into, best fit first. Empty when the database refuses or has none. */
+export const loadOneOptions = async (s: SupabaseClient, person: string): Promise<OneOption[]> => parseOneOptions(await load(s, "placement_one_options", { p_person: person }));

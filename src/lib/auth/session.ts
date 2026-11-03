@@ -92,9 +92,15 @@ export async function requireSession(returnTo = "/home"): Promise<Session> {
   return session;
 }
 
-/** For pages only some roles may open. Others go back home. */
+/**
+ * For pages only some roles may open. A person who may not open a leaders' page is shown why (who they are signed in as, how to switch account,
+ * who to tell) instead of being sent home without a word. For any other page they go back home, as before.
+ */
 export async function requireRole(allowed: readonly Role[], returnTo: string): Promise<Session> {
   const session = await requireSession(returnTo);
-  if (!hasAnyRole(session.roles, allowed)) redirect("/home");
+  if (!hasAnyRole(session.roles, allowed)) {
+    const leaders = allowed.some((r) => r === "leader" || r === "assistant_leader");
+    redirect(leaders ? `/no-access?for=leader&from=${encodeURIComponent(returnTo)}` : "/home");
+  }
   return session;
 }

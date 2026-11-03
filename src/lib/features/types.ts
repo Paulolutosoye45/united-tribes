@@ -27,6 +27,7 @@ export const FEATURE_KEYS = [
   "whatsapp_health",
   "number_required",
   "removal_requests",
+  "whatsapp_mode",
 ] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 

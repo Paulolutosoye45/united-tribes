@@ -16,6 +16,7 @@ export function Done({
   isEdit,
   seasonName,
   seasonStarts,
+  seasonRunning = false,
   teen = false,
   companion,
 }: {
@@ -24,6 +25,7 @@ export function Done({
   isEdit: boolean;
   seasonName: string | null;
   seasonStarts: string | null;
+  seasonRunning?: boolean;
   /** Under 18: a parent or guardian has to say yes before tribes are shown. */
   teen?: boolean;
   /** How much the Companion filled in, and how much of that the person kept. */
@@ -42,6 +44,8 @@ export function Done({
               ? "Your changes are saved. We’ll use them when we match you."
               : teen
                 ? "Your answers are saved. Next, your parent or guardian needs to say yes, and one of our Care Team will phone them. Then we’ll show you your tribes."
+                : seasonName && seasonRunning
+                ? `Your answers are saved. ${seasonName} is already under way, so we’ll show you your three best-fit tribes now, each with its own score. You can join one straight away.`
                 : seasonName
                 ? `Your answers are saved. ${seasonStarts ? `${seasonName} starts on ${seasonStarts}. ` : ""}Before it begins, we’ll show you your three best-fit tribes, each with its own score.`
                 : "Your answers are saved. We’ll show you your three best-fit tribes, each with its own score, when the season opens."}

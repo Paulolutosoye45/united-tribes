@@ -13,6 +13,7 @@ import { resumeStep } from "@/lib/intake/steps";
 import { pilotFor } from "@/lib/guides/pilot";
 import { readContact } from "@/lib/messaging/contact";
 import { parseNumberRule } from "@/lib/messaging/number-rule";
+import { loadJoinSeason } from "@/lib/placement/season";
 import { loadMyGuardian } from "@/lib/growth/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,13 +33,7 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
     supabase.from("intake_drafts").select("step, answers, active_seconds, sealed").eq("person_id", session.person.id).maybeSingle(),
     supabase.rpc("has_consent", { p_purpose: "matching" }),
     supabase.rpc("has_consent", { p_purpose: "ai_assist" }),
-    supabase
-      .from("seasons")
-      .select("name, starts_on")
-      .in("status", ["planning", "open"])
-      .order("starts_on", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+    loadJoinSeason(supabase),
     supabase.rpc("my_contact"),
     // Whether the church has made the phone number compulsory. Off (or the database not having it yet), nothing changes.
     supabase.rpc("my_number_rule"),
@@ -49,8 +44,10 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
   const aiAvailable = providerFromEnv() !== null;
   const voiceAvailable = speechFromEnv() !== null;
   const hasMatchingConsent = matching.data === true;
-  const seasonName = season.data?.name ?? null;
-  const seasonStarts = season.data?.starts_on ? formatDate(season.data.starts_on) : null;
+  const seasonName = season?.name ?? null;
+  const seasonStarts = season?.startsOn ? formatDate(season.startsOn) : null;
+  // A season already under way (inside its joining window): the pages say so instead of "starts on"
+  const seasonRunning = season?.started === true;
   const editing = edit === "1" && Boolean(profile.data) && hasMatchingConsent;
 
   // Already finished: show where things stand, with a way to change answers.
@@ -67,6 +64,7 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
           catalogue={catalogue}
           seasonName={seasonName}
           seasonStarts={seasonStarts}
+      seasonRunning={seasonRunning}
           teen={guardian.needed && guardian.state !== "ready"}
         />
       </AppShell>
@@ -113,6 +111,7 @@ export default async function JoinPage({ searchParams }: { searchParams: SearchP
       help={<HowToPilot data={pilotFor(session.roles, [])} variant="inline" />}
       seasonName={seasonName}
       seasonStarts={seasonStarts}
+      seasonRunning={seasonRunning}
       initial={{ view, answers, activeSeconds, ai: aiConsent.data === true, isEdit: editing }}
     />
   );

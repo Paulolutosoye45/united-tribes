@@ -4,6 +4,7 @@ import { hashSalt } from "@/lib/signin/hash";
 import { hookFailure, respond } from "@/lib/signin/outcome";
 import { runSendCode } from "@/lib/signin/send-code";
 import { readHookRequest } from "@/lib/whatsapp/payload";
+import { asker, FREE_WORDS, gateFetch, senderForMode } from "@/lib/whatsapp/mode";
 import { senderFromEnv } from "@/lib/whatsapp/provider";
 import { verifyWebhook } from "@/lib/whatsapp/webhook";
 
@@ -20,9 +21,12 @@ const MAX_BODY = 4096;
  */
 export async function POST(request: Request) {
   const secret = process.env.SEND_SMS_HOOK_SECRET;
-  const sender = senderFromEnv();
   const token = workerToken();
-  if (!secret || !sender || !token) return respond(hookFailure(503, "WhatsApp sign-in is not set up."));
+  // WhatsApp mode: the official road is Meta's, and Meta is shut in Free mode (the ordinary-number road is not Meta and stays open). The mode is asked
+  // only after the signature has been checked below, so a stranger's request never costs the database a question.
+  const ask = token ? asker(workerRpc(token)) : null;
+  const found = senderFromEnv(process.env, ask ? gateFetch(fetch, ask) : fetch);
+  if (!secret || !found || !token || !ask) return respond(hookFailure(503, "WhatsApp sign-in is not set up."));
 
   // Refuse a large request before reading it.
   const declared = Number(request.headers.get("content-length") ?? 0);
@@ -47,6 +51,12 @@ export async function POST(request: Request) {
   }
   const hook = readHookRequest(json);
   if (!hook) return respond(hookFailure(400, "No number to send to."));
+
+  const sender = await senderForMode(found, ask);
+  if (!sender) {
+    const said = await ask();
+    return respond(hookFailure(503, said.mode === "free" && said.known ? `${FREE_WORDS}, so no sign-in code can go by WhatsApp. Use email.` : "WhatsApp sign-in is not available right now."));
+  }
 
   try {
     return respond(await runSendCode(hook, { sender, rpc: workerRpc(token), salt: hashSalt(), seal, log: (line) => console.error(line) }));

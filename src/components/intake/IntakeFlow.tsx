@@ -51,6 +51,8 @@ export type IntakeProps = {
   help?: ReactNode;
   seasonName: string | null;
   seasonStarts: string | null;
+  /** The season is already under way (a person joining inside its joining window). */
+  seasonRunning?: boolean;
   initial: { view: View; answers: Answers; activeSeconds: number; ai: boolean; isEdit: boolean };
 };
 
@@ -67,7 +69,7 @@ function draftOf(answers: Answers, teensOpen: boolean): Answers {
 }
 
 
-export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, email, numberRequired = false, help, seasonName, seasonStarts, initial }: IntakeProps) {
+export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, email, numberRequired = false, help, seasonName, seasonStarts, seasonRunning = false, initial }: IntakeProps) {
   const router = useRouter();
   const [view, setView] = useState<View>(initial.view);
   const [dir, setDir] = useState<"forward" | "back">("forward");
@@ -307,6 +309,7 @@ export function IntakeFlow({ personId, catalogue, aiAvailable, voiceAvailable, e
         isEdit={initial.isEdit}
         seasonName={seasonName}
         seasonStarts={seasonStarts}
+        seasonRunning={seasonRunning}
         teen={isTeen}
         companion={{ filled: cmp.filledCount, kept: cmp.kept.size }}
       />

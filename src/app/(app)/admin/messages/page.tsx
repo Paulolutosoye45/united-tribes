@@ -14,6 +14,7 @@ import { formatLagosDay } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { loadWhatsappGuard } from "@/lib/whatsapp/guard-server";
 import { loadWhatsappHealth } from "@/lib/whatsapp/health-server";
+import { loadWhatsappMode } from "@/lib/whatsapp/mode-server";
 
 export const metadata: Metadata = { title: "Message log" };
 
@@ -28,7 +29,13 @@ export default async function MessagesPage({ searchParams }: { searchParams: Sea
   const template = q.template && /^[a-z_]{2,60}$/.test(q.template) ? q.template : null;
   const days = q.days === "1" || q.days === "30" ? Number(q.days) : 7;
   const supabase = await createClient();
-  const [stats, log, guard, health] = await Promise.all([loadMessageStats(supabase, days), loadMessageLog(supabase, status, template, 100), loadWhatsappGuard(supabase), loadWhatsappHealth(supabase)]);
+  const [stats, log, guard, health, mode] = await Promise.all([
+    loadMessageStats(supabase, days),
+    loadMessageLog(supabase, status, template, 100),
+    loadWhatsappGuard(supabase),
+    loadWhatsappHealth(supabase),
+    loadWhatsappMode(supabase),
+  ]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -45,6 +52,18 @@ export default async function MessagesPage({ searchParams }: { searchParams: Sea
             WhatsApp health
           </Link>{" "}
           · is WhatsApp working, and if not, why?
+        </p>
+      ) : null}
+
+      {mode && mode.state !== "off" ? (
+        <p className="t-small" data-testid="wa-mode-link">
+          <Link href="/admin/messages/whatsapp-mode" className="font-medium underline">
+            WhatsApp mode
+          </Link>{" "}
+          · Full, Saver or Free, and what it costs ·{" "}
+          <Link href="/admin/messages/whatsapp-cost" className="underline">
+            WhatsApp cost
+          </Link>
         </p>
       ) : null}
 

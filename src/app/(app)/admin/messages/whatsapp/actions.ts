@@ -4,6 +4,8 @@ import { run, plain, type Result } from "@/lib/admin/rpc";
 import { loadWhatsappHealth } from "@/lib/whatsapp/health-server";
 import { runHealthChecks } from "@/lib/whatsapp/health";
 import { createClient } from "@/lib/supabase/server";
+import { workerRpc, workerToken } from "@/lib/messaging/worker";
+import { asker, FREE_WORDS, gateFetch } from "@/lib/whatsapp/mode";
 
 const PAGES = ["/admin/messages/whatsapp", "/admin/messages"];
 
@@ -13,7 +15,19 @@ export async function runWhatsappChecksAction(): Promise<Result> {
   const view = await loadWhatsappHealth(supabase);
   if (!view) return { ok: false, message: "The WhatsApp health page is not switched on." };
   if (!view.canCheck) return { ok: false, message: "Only the admin, a director or the data lead can run the checks." };
-  const report = await runHealthChecks();
+  // Free mode: nothing is asked of Meta, so the check is not run. (The fetch is gated too, so no road can reach Meta by mistake.)
+  const token = workerToken();
+  const ask = token ? asker(workerRpc(token)) : null;
+  if (ask) {
+    const said = await ask();
+    if (!said.meta) {
+      return {
+        ok: false,
+        message: said.mode === "free" ? `${FREE_WORDS}, so the account is not checked. Choose Saver or Full on the WhatsApp mode page to check it.` : "WhatsApp mode could not be read just now, so the account was not checked. Try again in a minute.",
+      };
+    }
+  }
+  const report = await runHealthChecks(process.env, ask ? gateFetch(fetch, ask) : fetch);
   return plain(await run("whatsapp_check_save", { p_result: report }, PAGES));
 }
 

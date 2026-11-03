@@ -3,7 +3,7 @@
 import { run, type Done } from "@/lib/admin/rpc";
 import { getSession } from "@/lib/auth/session";
 import { TRY_AGAIN, isUuid } from "@/lib/leaders/errors";
-import { parseItems, parseOptions, parseRunView, type RunItem, type RunView, type TribeOption } from "@/lib/placement/types";
+import { parseItems, parseOneCheck, parseOptions, parseRunView, type OneCheck, type RunItem, type RunView, type TribeOption } from "@/lib/placement/types";
 
 const PAGES = ["/god/placement", "/god"];
 
@@ -44,7 +44,7 @@ export async function saveSettingsAction(changes: Record<string, unknown>): Prom
 }
 
 /** Starts a plan. `scope` narrows it to one community or area, for a first small run. */
-export async function newRunAction(options: { community?: string; zone?: string; pace?: number }): Promise<{ ok: true; run: string } | Fail> {
+export async function newRunAction(options: { community?: string; zone?: string; pace?: number; afterCutoff?: boolean }): Promise<{ ok: true; run: string } | Fail> {
   if (!(await ownerOnly())) return NOT_AVAILABLE;
   const o: Record<string, unknown> = {};
   if (options?.community) {
@@ -59,6 +59,8 @@ export async function newRunAction(options: { community?: string; zone?: string;
     if (typeof options.pace !== "number" || !Number.isInteger(options.pace) || options.pace < 1 || options.pace > 1000) return { ok: false, message: "Use a whole number for the pace." };
     o.pace_per_hour = options.pace;
   }
+  // Placing after joining has closed is a choice the owner makes on purpose, so it is only ever sent when it was ticked
+  if (options?.afterCutoff === true) o.after_cutoff = true;
   const done = (await run("placement_run_new", { p_options: o }, PAGES)) as Done<{ run?: string } | null>;
   if (!done.ok) return done;
   const id = done.data?.run;
@@ -187,4 +189,38 @@ export async function openAllAction(runId: string): Promise<{ ok: true; tribes: 
   if (!done.ok) return done;
   const d = done.data ?? {};
   return { ok: true, tribes: count(d.tribes), shared: count(d.shared) };
+}
+
+
+/** Asks the database what would stop placing this person in this tribe, and what would need a reason. Changes nothing. */
+export async function placeOneCheckAction(person: string, tribe: string): Promise<{ ok: true; check: OneCheck } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  if (!isUuid(person) || !isUuid(tribe)) return bad();
+  const done = (await run("placement_one_check", { p_person: person, p_tribe: tribe })) as Done<unknown>;
+  if (!done.ok) return done;
+  const check = parseOneCheck(done.data);
+  return check ? { ok: true, check } : bad();
+}
+
+/** Places one person. Every warning the check gave must be ticked (sent as `accept`) and explained; the database checks it all again. */
+export async function placeOneAction(input: {
+  person: string;
+  tribe: string;
+  accept: string[];
+  reason: string;
+  agreed: boolean;
+}): Promise<{ ok: true; run: string } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  if (!input || !isUuid(input.person) || !isUuid(input.tribe)) return bad();
+  if (!Array.isArray(input.accept) || input.accept.length > 20 || input.accept.some((c) => typeof c !== "string" || !/^[a-z_]{2,30}$/.test(c))) return bad();
+  const reason = typeof input.reason === "string" ? input.reason.trim() : "";
+  if (reason.length > 200) return { ok: false, message: "Keep the reason under 200 characters." };
+  const done = (await run(
+    "placement_one_place",
+    { p_person: input.person, p_tribe: input.tribe, p_accept: input.accept, p_reason: reason || null, p_agreed: input.agreed === true },
+    [...PAGES, `/god/people/${input.person}`],
+  )) as Done<{ run?: string } | null>;
+  if (!done.ok) return done;
+  const id = done.data?.run;
+  return isUuid(id) ? { ok: true, run: id } : bad();
 }

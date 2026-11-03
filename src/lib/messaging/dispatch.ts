@@ -3,6 +3,7 @@ import type { ChannelProvider, SendResult } from "./providers/types";
 import type { WorkerRpc } from "./worker";
 import type { AiProvider } from "@/lib/ai/types";
 import { enrichMessage } from "./summary";
+import { asker, guardProvider } from "@/lib/whatsapp/mode";
 
 /**
  * The daily jobs inside the heartbeat (reporting numbers, clearing out old personal data) report their own faults in
@@ -26,6 +27,8 @@ export type DispatchSummary = {
   /** What the referee check's housekeeping did this time (old hashes and codes forgotten). */
   referees?: unknown;
   removals?: unknown;
+  /** What WhatsApp mode's heartbeat did this time (the monthly cost watched). Absent when the database does not have WhatsApp mode. */
+  whatsapp?: unknown;
   claimed: number;
   sent: number;
   retried: number;
@@ -125,6 +128,20 @@ export async function runDispatch(o: Options): Promise<DispatchSummary> {
     else summary.removals = removals.data;
   }
 
+  // WhatsApp mode: the month's cost is watched against the ceiling, and a warning or the drop from Full to Saver is made. It answers "off" at once while the
+  // function is Off, and an older database without it is not a fault. A fault is reported and never stops a message.
+  if (o.tick !== false) {
+    const whatsapp = await o.rpc("worker_whatsapp_tick");
+    if (whatsapp.error) {
+      if (!/could not find the function|does not exist|PGRST202|42883/i.test(`${whatsapp.error.code ?? ""} ${whatsapp.error.message}`)) summary.problems.push(`whatsapp mode: ${whatsapp.error.message}`);
+    } else if (whatsapp.data !== null && whatsapp.data !== undefined) summary.whatsapp = whatsapp.data;
+  }
+
+  // Free mode: nothing goes to Meta. The mode is asked once for the whole pass; a WhatsApp message that is claimed while the mode forbids Meta is turned
+  // back unsent, so the database moves it to the next channel or lists it to be sent by hand.
+  const ask = asker(o.rpc);
+  const providers: Record<Channel, ChannelProvider | null> = { ...o.providers, whatsapp: guardProvider(o.providers.whatsapp, ask) };
+
   for (let batch = 0; batch < (o.maxBatches ?? 8); batch++) {
     if (o.budgetMs !== undefined && now() - started > o.budgetMs) break;
     const claim = await o.rpc("worker_claim", { p_limit: batchSize });
@@ -139,7 +156,7 @@ export async function runDispatch(o: Options): Promise<DispatchSummary> {
     for (let i = 0; i < messages.length; i += concurrency) {
       await Promise.all(
         messages.slice(i, i + concurrency).map(async (msg) => {
-          const result = await sendOne(await enrichMessage(msg, o.ai ?? null), o.providers[msg.channel], o.site);
+          const result = await sendOne(await enrichMessage(msg, o.ai ?? null), providers[msg.channel], o.site);
           const reported = await report(o.rpc, msg, result);
           if (!reported) summary.problems.push(`report failed for ${msg.template}`);
           if (result.ok) summary.sent++;

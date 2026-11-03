@@ -1,6 +1,7 @@
 import { whatsappTemplateName } from "@/lib/messaging/render";
 import { TEMPLATES } from "@/lib/messaging/templates";
 import { ACCOUNT_FAULT_CODES, faultCause, faultFix } from "./faults";
+import { keysForTemplateNames } from "./names";
 
 /**
  * The checks behind the WhatsApp health page: ask Meta whether the church's WhatsApp account is set up the way the site needs, and say what is wrong
@@ -13,7 +14,14 @@ import { ACCOUNT_FAULT_CODES, faultCause, faultFix } from "./faults";
 
 export type HealthState = "good" | "warn" | "bad" | "unknown";
 export type HealthItem = { key: string; title: string; state: HealthState; words: string; fix?: string; list?: string[] };
-export type HealthReport = { ok: boolean; items: HealthItem[]; sender: { number: string | null; name: string | null; quality: string | null; tier: string | null; test: boolean } | null };
+/** What WhatsApp mode keeps from a check: the message types Meta has filed as Marketing, how Meta rates the number, and how many people it may start talking to in a day. */
+export type HealthFacts = { marketing: string[]; quality: string | null; limit: number | null };
+export type HealthReport = {
+  ok: boolean;
+  items: HealthItem[];
+  sender: { number: string | null; name: string | null; quality: string | null; tier: string | null; test: boolean } | null;
+  facts?: HealthFacts;
+};
 
 type Env = Record<string, string | undefined>;
 const clean = (v: string | undefined) => (v ?? "").trim();
@@ -84,6 +92,14 @@ export function expectedTemplates(): string[] {
     .sort();
 }
 
+/** The number of people a tier lets the number start talking to in a day; no limit gives null. */
+export function tierPeople(tier: string | null): number | null {
+  const t = (tier ?? "").toUpperCase();
+  const m = /^TIER_(\d+)(K)?$/.exec(t);
+  if (!m) return null;
+  return Number(m[1]) * (m[2] ? 1000 : 1);
+}
+
 const QUALITY: Record<string, { state: HealthState; words: string }> = {
   GREEN: { state: "good", words: "High quality: people are not reporting the messages." },
   YELLOW: { state: "warn", words: "Medium quality: some people are blocking or reporting the messages. If it falls to Low, Meta will limit sending." },
@@ -119,6 +135,7 @@ export async function runHealthChecks(env: Env = process.env, fetcher: typeof fe
   const language = clean(env.WHATSAPP_TEMPLATE_LANGUAGE) || "en";
   const base = (clean(env.WHATSAPP_API_BASE) || "https://graph.facebook.com").replace(/\/+$/, "");
   let sender: HealthReport["sender"] = null;
+  const facts: HealthFacts = { marketing: [], quality: null, limit: null };
 
   // 1. The settings on the website
   if (clean(env.MESSAGING_MODE).toLowerCase() === "log") {
@@ -165,6 +182,8 @@ export async function runHealthChecks(env: Env = process.env, fetcher: typeof fe
     const tier = (str(b.messaging_limit_tier) ?? "").toUpperCase() || null;
     const test = looksLikeTestNumber(display, name) || (str(b.account_mode) ?? "").toUpperCase() === "SANDBOX";
     sender = { number: display, name, quality: quality || null, tier, test };
+    facts.quality = quality || null;
+    facts.limit = tierPeople(tier);
 
     if (test) {
       push({
@@ -230,11 +249,18 @@ export async function runHealthChecks(env: Env = process.env, fetcher: typeof fe
     push({ key: "templates", title: "Message wording approved by Meta", state: r.state, words: r.words, fix: r.fix });
   } else {
     push(templateItem(templates.rows, language));
+    facts.marketing = marketingKeys(templates.rows, language);
     const signin = clean(env.WHATSAPP_TEMPLATE_NAME);
     if (signin) push(signInTemplateItem(templates.rows, signin, language));
   }
 
-  return { ok: !items.some((i) => i.state === "bad"), items, sender };
+  return { ok: !items.some((i) => i.state === "bad"), items, sender, facts };
+}
+
+/** The message types whose wording Meta has filed as Marketing (which costs more, and which WhatsApp mode therefore keeps off WhatsApp). */
+export function marketingKeys(rows: TemplateRow[], language: string): string[] {
+  const names = rows.filter((r) => r.language === language && r.status === "APPROVED" && r.category === "MARKETING").map((r) => r.name);
+  return keysForTemplateNames(names);
 }
 
 function sameHost(a: string, b: string): boolean {

@@ -11,12 +11,14 @@ export function JoinedView({
   catalogue,
   seasonName,
   seasonStarts,
+  seasonRunning = false,
   teen = false,
 }: {
   answers: Answers;
   catalogue: Catalogue;
   seasonName: string | null;
   seasonStarts: string | null;
+  seasonRunning?: boolean;
   /** Under 18 and not yet cleared: the next step is the parent or guardian, not the tribes. */
   teen?: boolean;
 }) {
@@ -35,7 +37,7 @@ export function JoinedView({
               {teen
                 ? "Because you are under 18, your parent or guardian needs to say yes before we show you tribes."
                 : seasonName
-                  ? `We’ll match you for ${seasonName}${seasonStarts ? `, which starts on ${seasonStarts}` : ""}. See which tribes fit you, each with its own score.`
+                  ? `We’ll match you for ${seasonName}${seasonRunning ? ", which is already under way" : seasonStarts ? `, which starts on ${seasonStarts}` : ""}. See which tribes fit you, each with its own score.`
                   : "See which tribes fit you, each with its own score."}
             </p>
             <div className="pt-1">

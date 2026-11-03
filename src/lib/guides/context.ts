@@ -19,6 +19,7 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/lead/week", slug: "assistant-leader", when: (roles) => roles.includes("assistant_leader") && !roles.includes("leader") },
   { prefix: "/lead/week", slug: "run-your-week" },
   { prefix: "/lead/progress", slug: "your-tribes-season" },
+  { prefix: "/lead/hand", slug: "send-by-whatsapp" },
   { prefix: "/lead/academy", slug: "leader-academy" },
   { prefix: "/lead/apply", slug: "apply-to-lead" },
   { prefix: "/lead/tribe", slug: "appointed-to-lead" },
@@ -32,6 +33,9 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/profile", slug: "your-information" },
   { prefix: "/privacy", slug: "your-information" },
   // The church's own people
+  { prefix: "/admin/messages/whatsapp-mode", slug: "whatsapp-mode" },
+  { prefix: "/admin/messages/whatsapp-cost", slug: "whatsapp-mode" },
+  { prefix: "/admin/messages/by-hand", slug: "whatsapp-mode" },
   { prefix: "/admin/messages/whatsapp", slug: "whatsapp-health" },
   { prefix: "/admin/messages", slug: "whatsapp-health" },
   { prefix: "/growth/removals", slug: "decide-a-place-change" },

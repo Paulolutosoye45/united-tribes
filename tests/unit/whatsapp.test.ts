@@ -259,9 +259,9 @@ describe("the send-code hook", () => {
     const sent = JSON.parse((fetcher.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
     expect(sent.to).toBe("2348031234567");
     expect(sent.template.components[0].parameters[0].text).toBe("123456");
-    // The database was asked first, and told afterwards that it went.
-    expect(db.calls.map((c) => c.fn)).toEqual(["worker_signin_gate", "worker_signin_record"]);
-    expect(db.calls[1].args).toMatchObject({ p_attempt: 7, p_outcome: "sent" });
+    // WhatsApp mode is asked whether Meta may be spoken to; then the database is asked about the limits, and told afterwards that it went.
+    expect(db.calls.map((c) => c.fn)).toEqual(["worker_whatsapp_allowed", "worker_signin_gate", "worker_signin_record"]);
+    expect(db.calls[2].args).toMatchObject({ p_attempt: 7, p_outcome: "sent" });
   });
 
   it("does nothing for a bad signature, a missing one, or an old one", async () => {

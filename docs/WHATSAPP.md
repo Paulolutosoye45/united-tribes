@@ -10,6 +10,8 @@ Three functions on the owner's Features page (God Mode → Features), all for th
 
 A fourth function, [Leader removal requests](REMOVAL-REQUESTS.md), came in the same package and has nothing to do with WhatsApp.
 
+A later function, **WhatsApp mode** (`whatsapp_mode`), sits on top of the safety net: it lets the church choose Full, Saver or Free (Free sends nothing through Meta), shows what WhatsApp costs, protects the number, and gives leaders tools to send WhatsApp themselves. See [WhatsApp mode](WHATSAPP-MODES.md).
+
 Migrations: `20270103000100_whatsapp_safety.sql`, `…0200_whatsapp_health.sql`, `…0300_number_required.sql`. Ways back: the same names in `supabase/rollback/`, ending `.down.sql`. Tests: `tests/db/whatsapp-safety.test.ts`, `whatsapp-health.test.ts`, `number-required.test.ts` and their rollback tests, and the unit tests `tests/unit/whatsapp*.test.ts` and `number-rule.test.ts`.
 
 ## Why you saw "meta 131030"

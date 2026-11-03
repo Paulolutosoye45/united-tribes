@@ -95,7 +95,7 @@ function Page({ state, done, pointed, token, q }: { state: PlacedState; done: Ch
           {q.late ? "Your leader has already been given your details, so this could not be undone. Tell them if you would rather they did not use them." : "Understood. Your leader can see your name, but will not be given your email or your WhatsApp number."}
         </p>
       ) : null}
-      {q.started ? <p role="alert" className="rounded-[var(--radius-control)] bg-gold/25 px-4 py-3 font-medium">The season has started, so this place can no longer be given up here. Ask your leader or coach.</p> : null}
+      {q.started ? <p role="alert" className="rounded-[var(--radius-control)] bg-gold/25 px-4 py-3 font-medium">Joining for this season has closed, so this place can no longer be given up here. Ask your leader or coach.</p> : null}
       {q.problem ? <p role="alert" className="rounded-[var(--radius-control)] bg-danger/10 px-4 py-3 font-medium text-danger">That didn’t save. Please try again.</p> : null}
 
       <section className="card flex flex-col gap-3 p-6" aria-labelledby="tribe-heading">

@@ -254,6 +254,9 @@ describe("a run that places people", () => {
       "has_whatsapp",
       "agreed_to_share",
       "hold_hours",
+      "in_season",
+      "week",
+      "change_until",
     ]);
     for (const m of await rows(
       db,
@@ -327,6 +330,7 @@ describe("a member's private link", () => {
     expect(Object.keys(info).sort()).toEqual([
       "active",
       "can_change",
+      "change_until", // the day joining closes: a placed member may look at other tribes until then
       "confirmed",
       "contact", // where the leader's view of their contact stands: waiting, holding, open, not_reached or withheld
       "contact_late", // true once the clock or God Mode has opened it: "don't share" is too late
@@ -337,6 +341,7 @@ describe("a member's private link", () => {
       "group_opens_at",
       "group_visible",
       "has_whatsapp",
+      "in_season", // whether the season is already running, so the page and the email say so
       "leader_told",
       "placed_by_church",
       "tribe",
@@ -577,10 +582,11 @@ describe("a member's private link", () => {
     });
   });
 
-  it("will not give up a seat once the season has started", async () => {
+  it("will not give up a seat once joining has closed", async () => {
     const l = (await link(4))!;
+    // Joining has closed (the cut-off is two weeks after the season starts); inside the window a placed member may still ask
     await db.admin.query(
-      "update public.seasons set starts_on = public.today_lagos() - 1 where id = $1",
+      "update public.seasons set starts_on = public.today_lagos() - 20 where id = $1",
       [season],
     );
     try {
@@ -717,8 +723,10 @@ describe("telling each tribe's leader", () => {
     expect(Object.keys(mail.params).sort()).toEqual([
       "call_by",
       "first_meeting_by",
+      "in_season",
       "members",
       "tribe",
+      "week",
     ]);
     const names = mail.params.members.map((m: { name: string }) => m.name);
     expect(names).toContain("Mem0 Test");

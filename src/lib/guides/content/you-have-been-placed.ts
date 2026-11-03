@@ -75,7 +75,7 @@ export const youHaveBeenPlaced: Guide = {
         {
           id: "other-tribes",
           title: "Ask for a different tribe",
-          do: ["If it does not suit you, press [[Show me other tribes]]. You give up this place, and you can look at tribes that fit you.", "This button is there only until the season begins."],
+          do: ["If it does not suit you, press [[Show me other tribes]]. You give up this place, and you can look at tribes that fit you.", "This button is there until joining closes, a couple of weeks after the season begins."],
           careful: "Pressing it gives up your place in this tribe at once. Another tribe is not promised until you choose it.",
           shot: placed({ ring: [{ role: "button", name: "Show me other tribes" }], tag: "Only if needed", alt: "The Show me other tribes button.", minHeight: 420, lead: 120 }),
         },

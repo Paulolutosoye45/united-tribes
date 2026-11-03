@@ -13,7 +13,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 - Held today in: the leader's tribe (its track), the answer on the leader's application, the office's short form at the appointment; and, once confirmed, the facts store
 - Found by scanning for: `track_id|calling,track|form ->> 'track'|life_stage` in database functions and `life_stage|lifeStage|calling\.track|trackId|track_id` in source files
 
-### Database functions (42)
+### Database functions (43)
 
 | Function | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -50,6 +50,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `multiplication_board` | reader | groups tribes by track for the multiplication board |
 | `my_tribe` | reader | tells the leader their card is missing a track |
 | `placement_candidates` | reader | the placement run's list of tribes for a member, by track |
+| `placement_one_check` | reader | warns the owner when the tribe's track is not the track of the person's age range, before one person is placed |
 | `placement_run_approve` | reader | checks teen-track rules when a placement run is approved |
 | `review_queue` | reader | shows the track from each application in the panel's queue |
 | `save_tribe_card` | reader | saves the track a leader chooses on their Tribe Card |
@@ -79,7 +80,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 - Held today in: the member's profile (their answer on the joining form); and, once confirmed, the facts store
 - Found by scanning for: `age_range_id|age_ranges|age_range` in database functions and `age_range_id|ageRange|age_range|age_ranges` in source files
 
-### Database functions (25)
+### Database functions (26)
 
 | Function | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -106,6 +107,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `message_blocker` | reader | stops messages to members under 18 |
 | `notice_is_young` | reader | stops notices to members under 18 |
 | `placement_candidates` | reader | the placement run's list of tribes for a member, by the track of their age range |
+| `placement_one_check` | reader | compares the person's age range track with the tribe's before one person is placed |
 | `placement_run_approve` | reader | checks the young people's rules when a placement run is approved |
 | `profile_teen_guard` | reader | refuses a profile change that would cross the line between under and over 18 |
 
@@ -168,7 +170,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `start_tribe_card` | reader | puts the leader's first name on the new tribe card |
 | `swap_members` | reader | finds a member to swap by the name they use |
 
-### Source files (24)
+### Source files (25)
 
 | File | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -178,6 +180,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `src/app/(app)/god/people/[id]/page.tsx` | reader | names the person on the owner's page about them |
 | `src/app/(app)/home/page.tsx` | reader | greets the person on Home |
 | `src/app/(app)/lead/page.tsx` | reader | names the applicant when they ask their referees |
+| `src/app/(app)/lead/hand/page.tsx` | reader | signs the words a leader sends by WhatsApp from their own phone with their first name |
 | `src/app/(app)/lead/week/page.tsx` | reader | signs the leader's week with their name |
 | `src/app/(app)/profile/page.tsx` | reader | names the person beside their photo |
 | `src/app/(app)/review/rhythm/page.tsx` | reader | signs the Care Team's review with the reviewer's name |
@@ -266,7 +269,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `run_calendar` | reader | tells the leader the day before a member's birthday |
 | `tribe_week` | reader | puts a member's birthday in the leader's week |
 
-### Source files (12)
+### Source files (13)
 
 | File | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -282,6 +285,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `src/lib/profile/types.ts` | owner | the shapes of a fact |
 | `src/lib/rhythm/types.ts` | reader | the shape of a birthday in the leader's week |
 | `src/lib/rhythm/wording.ts` | reader | the words of a birthday in the leader's week |
+| `src/lib/whatsapp/classes.ts` | reader | names the two birthday messages among those that can go by WhatsApp, and which class each belongs to |
 
 ## About me (`about_me`)
 
