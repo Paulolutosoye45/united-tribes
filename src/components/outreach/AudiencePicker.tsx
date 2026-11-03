@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { deleteAudienceAction, previewAudienceAction, saveAudienceAction } from "@/app/(app)/admin/announcements/actions";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { APPLICATION_STAGES, AUDIENCE_KINDS, LEFT_OUT_REASONS, STAFF_ROLES, audienceLabel } from "@/lib/outreach/labels";
+import { APPLICATION_STAGES, AUDIENCE_KINDS, LEFT_OUT_REASONS, REACH_CAUSES, STAFF_ROLES, audienceLabel } from "@/lib/outreach/labels";
 import type { AudiencePreview, AudienceSpec, SavedAudience } from "@/lib/outreach/types";
 import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
@@ -18,12 +18,14 @@ type Props = {
   communities: Community[];
   /** A champion writes to their own community only. */
   champion: boolean;
+  /** Contact gaps is On: "cannot be reached on WhatsApp" is offered as a choice. */
+  reach?: boolean;
 };
 
 const select = "h-12 w-full rounded-[var(--radius-control)] border-[1.5px] border-line bg-raised px-3 text-base focus:border-ink focus:outline-none";
 
 /** Who it is for: a rule over live records, with a live count. Never a list of people, and never an uploaded one. */
-export function AudiencePicker({ spec, onChange, onPreview, saved, communities, champion }: Props) {
+export function AudiencePicker({ spec, onChange, onPreview, saved, communities, champion, reach = false }: Props) {
   const [preview, setPreview] = useState<AudiencePreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -58,8 +60,10 @@ export function AudiencePicker({ spec, onChange, onPreview, saved, communities, 
   }, [JSON.stringify(spec)]);
 
   const set = (next: AudienceSpec) => onChange(next, audienceLabel(next, communities));
-  const kinds = champion ? AUDIENCE_KINDS.filter((k) => ["everyone", "started", "finished_no_tribe", "in_tribe"].includes(k.kind)) : AUDIENCE_KINDS;
-  const withCommunity = ["everyone", "started", "finished_no_tribe", "in_tribe"].includes(spec.kind);
+  const kinds = champion
+    ? AUDIENCE_KINDS.filter((k) => ["everyone", "started", "finished_no_tribe", "in_tribe"].includes(k.kind))
+    : AUDIENCE_KINDS.filter((k) => k.kind !== "cannot_reach" || reach || spec.kind === "cannot_reach");
+  const withCommunity = ["everyone", "started", "finished_no_tribe", "in_tribe", "cannot_reach"].includes(spec.kind);
   const left = preview ? Object.entries(preview.skipped).filter(([, n]) => n > 0) : [];
   const toggle = (list: string[] | undefined, v: string) => (list?.includes(v) ? list.filter((x) => x !== v) : [...(list ?? []), v]);
 
@@ -75,7 +79,7 @@ export function AudiencePicker({ spec, onChange, onPreview, saved, communities, 
                 key={k.kind}
                 type="button"
                 aria-pressed={on}
-                onClick={() => set({ kind: k.kind, ...(champion && spec.community ? { community: spec.community } : {}) })}
+                onClick={() => set({ kind: k.kind, ...(k.kind === "cannot_reach" ? { cause: "either" as const } : {}), ...(champion && spec.community ? { community: spec.community } : {}) })}
                 className={`press card flex flex-col gap-0.5 p-4 text-left transition-colors ${on ? "ring-2 ring-ink" : "hover:bg-surface"}`}
               >
                 <span className="font-semibold">{k.label}</span>
@@ -97,6 +101,32 @@ export function AudiencePicker({ spec, onChange, onPreview, saved, communities, 
             <option value={21}>Three weeks or more</option>
           </select>
         </label>
+      ) : null}
+
+      {spec.kind === "cannot_reach" ? (
+        <div className="flex flex-col gap-3">
+          <label className="flex flex-col gap-2">
+            <span className="t-small font-medium">Which of them</span>
+            <select className={select} value={spec.cause ?? "either"} onChange={(e) => set({ ...spec, cause: e.target.value as AudienceSpec["cause"] })}>
+              {REACH_CAUSES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="t-small text-soft">
+            People who have chosen not to share, people whose contact has not opened yet and people with no way to be emailed are never included. Nobody is asked more than three times, or twice in two weeks.
+          </p>
+          {spec.tribe ? (
+            <p className="t-small">
+              Only one tribe.{" "}
+              <button type="button" className="underline" onClick={() => set({ ...spec, tribe: undefined })}>
+                Every tribe instead
+              </button>
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {spec.kind === "finished_no_tribe" ? (

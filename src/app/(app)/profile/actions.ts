@@ -61,6 +61,17 @@ export async function dismissNumberPromptAction(): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
+/** "Not now" on the prompt about how a leader can reach the person: it stays away for a week. Nothing is asked of them and nothing is sent to anyone. */
+export async function dismissReachPromptAction(): Promise<{ ok: boolean }> {
+  const session = await getSession();
+  if (!session) return { ok: false };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reach_prompt_dismiss");
+  if (error) return { ok: false };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 /** Withdrawing agreement erases the saved answers and any draft (the database does this). */
 export async function deleteAnswersAction() {
   await record("matching", false);

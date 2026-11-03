@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ShieldProgress } from "@/components/brand/ShieldProgress";
 import { NumberNotice } from "@/components/profile/NumberNotice";
+import { ReachNotice } from "@/components/profile/ReachNotice";
 import { RemovedNotice } from "@/components/removal/RemovedNotice";
 import { loadMyRemoval } from "@/lib/removal/server";
 import { StillRightStrip } from "@/components/profile/StillRightStrip";
@@ -16,6 +17,7 @@ import { requireSession } from "@/lib/auth/session";
 import { loadMyAcademy } from "@/lib/academy/server";
 import { parseAcademyModes, trainingShown } from "@/lib/academy/modes";
 import { loadMatches, readMatch } from "@/lib/matching/server";
+import { loadReach } from "@/lib/contact-gaps/server";
 import { loadNumberRule } from "@/lib/messaging/number-rule-server";
 import { loadStillRight } from "@/lib/profile/server";
 import { loadTribeWeek, loadMyCareTasks, loadMyWeek } from "@/lib/rhythm/server";
@@ -42,7 +44,7 @@ export default async function HomePage() {
   if (session.god === "open") redirect("/god");
   const supabase = await createClient();
 
-  const [season, profile, draft, leaderApp, firstRead, rhythm, stillRight, numberRule, removed] = await Promise.all([
+  const [season, profile, draft, leaderApp, firstRead, rhythm, stillRight, numberRule, removed, reach] = await Promise.all([
     supabase
       .from("seasons")
       .select("name, starts_on, ends_on, weeks, status")
@@ -61,6 +63,8 @@ export default async function HomePage() {
     loadNumberRule(supabase),
     // A member whose place in a tribe the church has changed: said kindly, for 30 days. Nothing while the switch is Off.
     loadMyRemoval(supabase),
+    // A member a leader cannot reach on WhatsApp: one quiet prompt. Nothing while Contact gaps is Off.
+    loadReach(supabase),
   ]);
 
   // The first time someone with a finished form lands here, run the match once so Home can say the tribes are ready.
@@ -145,6 +149,7 @@ export default async function HomePage() {
 
       {/* Only the prompt on Home: the note about two numbers lives on My page and with the contact form */}
       <NumberNotice rule={{ ...numberRule, mismatch: null }} />
+      <ReachNotice reach={reach} numberPromptShown={numberRule.prompt} />
 
       {training && academy && !academy.state.certified ? (
         <section aria-label="Your next step" className="night rise-in rounded-[var(--radius-sheet)] p-6 sm:p-10">

@@ -133,6 +133,14 @@ export const AUDIENCE_KINDS = [
   { kind: "leader_applicants", label: "Leader applicants", hint: "By how far they have got." },
   { kind: "leaders", label: "Leaders", hint: "Everyone leading a tribe." },
   { kind: "staff", label: "Team members", hint: "By role." },
+  { kind: "cannot_reach", label: "Cannot be reached on WhatsApp", hint: "No number saved, or no yes to WhatsApp. Asked by email, never more than three times." },
+] as const;
+
+/** Who “cannot be reached on WhatsApp” means. */
+export const REACH_CAUSES = [
+  { value: "either", label: "Both groups" },
+  { value: "no_number", label: "No number saved" },
+  { value: "no_yes", label: "A number, but WhatsApp not agreed" },
 ] as const;
 
 export const STAFF_ROLES = [
@@ -154,6 +162,9 @@ export const LEFT_OUT_REASONS: Record<string, string> = {
   bounced: "Address does not work",
   weekly_cap: "Already had enough this week",
   cancelled: "Cancelled before sending",
+  asked_recently: "Asked in the last two weeks",
+  asked_enough: "Already asked three times",
+  gap_closed: "Put it right since the list was made",
 };
 
 export const BROADCAST_STATUS: Record<string, { label: string; tone: "grey" | "amber" | "green" | "red" | "blue" }> = {
@@ -179,7 +190,7 @@ export const APPLICATION_STAGES = [
 ] as const;
 
 /** A short sentence for a rule, for lists and for the summary before sending. */
-export function audienceLabel(spec: { kind: string; community?: string; idle_days?: number; no_fit?: string; stages?: string[]; roles?: string[] }, communities: { id: string; name: string }[] = []): string {
+export function audienceLabel(spec: { kind: string; community?: string; idle_days?: number; no_fit?: string; stages?: string[]; roles?: string[]; cause?: string; tribe?: string }, communities: { id: string; name: string }[] = []): string {
   const base = AUDIENCE_KINDS.find((k) => k.kind === spec.kind)?.label ?? "Members";
   const parts: string[] = [];
   if (spec.kind === "started" && spec.idle_days) parts.push(`quiet for ${spec.idle_days}+ days`);
@@ -187,6 +198,9 @@ export function audienceLabel(spec: { kind: string; community?: string; idle_day
   if (spec.kind === "finished_no_tribe" && spec.no_fit === "only") parts.push("only those with no tribe that fits");
   if (spec.kind === "leader_applicants" && spec.stages?.length) parts.push(spec.stages.map((s) => APPLICATION_STAGES.find((x) => x.value === s)?.label ?? s).join(", ").toLowerCase());
   if (spec.kind === "staff" && spec.roles?.length) parts.push(spec.roles.map((r) => STAFF_ROLES.find((x) => x.value === r)?.label ?? r).join(", ").toLowerCase());
+  if (spec.kind === "cannot_reach" && spec.cause === "no_number") parts.push("no number saved");
+  if (spec.kind === "cannot_reach" && spec.cause === "no_yes") parts.push("number saved, WhatsApp not agreed");
+  if (spec.kind === "cannot_reach" && spec.tribe) parts.push("one tribe");
   if (spec.community) parts.push(`in ${communities.find((c) => c.id === spec.community)?.name ?? "one community"}`);
   return parts.length ? `${base} (${parts.join("; ")})` : base;
 }
@@ -228,5 +242,47 @@ export const STARTERS = [
     paragraphs: ["We wanted to say thank you for being part of United Tribes. Nobody at The Covenant Nation should walk through a season alone, and you are part of making that true.", "We are praying for you."],
     button_label: null,
     button_target: null,
+  },
+] as const;
+
+/** Notes about how people are reached. Offered only while Contact gaps is On. Each says plainly that the choice is theirs and who can see a number. */
+export const REACH_STARTERS = [
+  {
+    id: "how_to_reach",
+    title: "How would you like to be reached?",
+    for: "everyone",
+    subject: "How would you like to be reached, {first_name}?",
+    paragraphs: [
+      "Your tribe’s leader would like to reach you in the way that suits you. You decide how, and you can change it whenever you like.",
+      "On your profile you can add a phone number, say whether you are happy to be messaged on WhatsApp, and choose which emails you get. Only your tribe’s leader, their assistant and your coach can see your number, and only if you have said yes to WhatsApp. Other members never see it.",
+      "If you would rather not share a number, that is fine. We will use email.",
+    ],
+    button_label: "Choose how I am reached",
+    button_target: "/profile",
+  },
+  {
+    id: "add_number",
+    title: "Add your number",
+    for: "cannot_reach",
+    subject: "Your leader would like to reach you, {first_name}",
+    paragraphs: [
+      "We do not have a phone number for you yet, so your leader can only reach you by email.",
+      "If you are happy to, add one on your profile and say whether WhatsApp is fine. Only your tribe’s leader, their assistant and your coach can see it, and only if WhatsApp is ticked. You can change or remove it whenever you like.",
+      "If you would rather not, that is completely fine.",
+    ],
+    button_label: "Add my number",
+    button_target: "/profile",
+  },
+  {
+    id: "tick_whatsapp",
+    title: "Tick WhatsApp if you are happy",
+    for: "cannot_reach",
+    subject: "Is WhatsApp all right for you, {first_name}?",
+    paragraphs: [
+      "Thank you for giving us your number. Your leader cannot see it yet, because WhatsApp is not ticked on your profile.",
+      "If you are happy for your leader to message you on WhatsApp, tick it. If you would rather be reached another way, leave it as it is. Nothing changes unless you change it.",
+    ],
+    button_label: "Choose how I am reached",
+    button_target: "/profile",
   },
 ] as const;

@@ -9,7 +9,7 @@ import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { Button } from "@/components/ui/Button";
 import { announcementSpec, wordingProblem } from "@/lib/outreach/compose";
-import { BUTTON_TARGETS, LEFT_OUT_REASONS, NAME_FIELDS, STARTERS, audienceLabel } from "@/lib/outreach/labels";
+import { BUTTON_TARGETS, LEFT_OUT_REASONS, NAME_FIELDS, REACH_STARTERS, STARTERS, audienceLabel } from "@/lib/outreach/labels";
 import type { AudiencePreview, AudienceSample, AudienceSpec, Broadcast, SavedAudience } from "@/lib/outreach/types";
 import { AudiencePicker } from "./AudiencePicker";
 import { EmailFrame } from "./EmailFrame";
@@ -24,6 +24,10 @@ type Props = {
   threshold: number;
   perMinute: number;
   hours: { from: number; to: number };
+  /** Contact gaps is On: the “cannot be reached” audience and its three notes are offered. */
+  reach?: boolean;
+  /** Where to begin, from a link on the Contact gaps page. A draft that already exists wins. */
+  start?: AudienceSpec | null;
 };
 
 const STEPS = ["Who", "Write", "When", "Send"] as const;
@@ -39,13 +43,13 @@ const lagosTomorrow = () => {
 };
 const hourText = (h: number) => `${h % 12 === 0 ? 12 : h % 12}:00 ${h < 12 ? "am" : "pm"}`;
 
-export function Composer({ initial, saved, communities, champion, site, church, threshold, perMinute, hours }: Props) {
+export function Composer({ initial, saved, communities, champion, site, church, threshold, perMinute, hours, reach = false, start = null }: Props) {
   const router = useRouter();
   const d = useDo();
   const [step, setStep] = useState(0);
   const [id, setId] = useState<string | null>(initial?.id ?? null);
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [spec, setSpec] = useState<AudienceSpec>(initial?.audience ?? (champion ? { kind: "started", community: communities[0]?.id } : { kind: "started" }));
+  const [spec, setSpec] = useState<AudienceSpec>(initial?.audience ?? (!champion && reach && start ? start : champion ? { kind: "started", community: communities[0]?.id } : { kind: "started" }));
   const [label, setLabel] = useState(initial?.audience_label ?? "");
   const [subject, setSubject] = useState(initial?.subject ?? "");
   const [paragraphs, setParagraphs] = useState<string[]>(initial?.paragraphs?.length ? initial.paragraphs : [""]);
@@ -130,7 +134,7 @@ export function Composer({ initial, saved, communities, champion, site, church, 
   }
 
   function startWith(starterId: string) {
-    const s = STARTERS.find((x) => x.id === starterId);
+    const s = [...STARTERS, ...REACH_STARTERS].find((x) => x.id === starterId);
     if (!s) return;
     setSubject(s.subject);
     setParagraphs([...s.paragraphs]);
@@ -226,6 +230,7 @@ export function Composer({ initial, saved, communities, champion, site, church, 
           <AudiencePicker
             spec={spec}
             champion={champion}
+            reach={reach}
             communities={communities}
             saved={saved}
             onChange={(s, l) => {
@@ -249,7 +254,7 @@ export function Composer({ initial, saved, communities, champion, site, church, 
             <div className="flex flex-col gap-2">
               <p className="t-small font-medium">Start from a note (optional)</p>
               <div className="flex flex-wrap gap-2">
-                {STARTERS.map((s) => (
+                {(reach && !champion ? [...STARTERS, ...REACH_STARTERS] : STARTERS).map((s) => (
                   <button key={s.id} type="button" onClick={() => startWith(s.id)} className="press t-small min-h-11 rounded-full border-[1.5px] border-line bg-raised px-4 font-medium hover:border-soft">
                     {s.title}
                   </button>

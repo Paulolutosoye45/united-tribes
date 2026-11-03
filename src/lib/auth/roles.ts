@@ -235,6 +235,10 @@ export const REFEREE_DECIDER_ROLES: readonly Role[] = ["pastor", "director"];
 /** Makes the call-backs: the short call to a referee who was flagged or picked at random. */
 export const REFEREE_CARE_ROLES: readonly Role[] = ["care_lead", "pastor", "director", "admin"];
 
+/** Reads the list of members a leader cannot reach on WhatsApp. The first three also download it and ask people; the pastor and the care lead only look. The database checks the same. */
+export const CONTACT_GAP_ROLES: readonly Role[] = ["admin", "director", "data_lead", "pastor", "care_lead"];
+export const CONTACT_GAP_ACT_ROLES: readonly Role[] = ["admin", "director", "data_lead"];
+
 /** Who reads the leader supply-and-demand board, the suggestions and the offers. Only the pastor, directors and the admin make or withdraw an offer. The database checks the same. */
 export const BOARD_VIEW_ROLES: readonly Role[] = ["admin", "director", "pastor", "data_lead"];
 export const BOARD_OFFER_ROLES: readonly Role[] = ["admin", "director", "pastor"];

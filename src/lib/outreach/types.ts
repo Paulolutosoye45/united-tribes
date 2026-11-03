@@ -7,6 +7,9 @@ export type AudienceSpec = {
   no_fit?: "include" | "exclude" | "only";
   stages?: string[];
   roles?: string[];
+  /** Contact gaps: who is meant (no number saved, no yes to WhatsApp, or either), and one tribe if narrowed. */
+  cause?: "no_number" | "no_yes" | "either";
+  tribe?: string;
 };
 
 export type AudiencePreview = {

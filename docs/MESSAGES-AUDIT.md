@@ -2,7 +2,7 @@
 
 *Written by `npm run messages-audit` from the templates in `src/lib/messaging`. Do not edit it here; change the template and run the command again. A test fails when a check below fails or when this file is out of date.*
 
-**153 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 39 for leader, 22 for member, 44 for office, 5 for referee.
+**154 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 39 for leader, 23 for member, 44 for office, 5 for referee.
 
 Each message is written out from believable details and checked for what the office would check by eye:
 
@@ -130,6 +130,7 @@ Each message is written out from believable details and checked for what the off
 
 | Message | What it is | Subject | Email words | Text characters | WhatsApp name | Links (site / other) | Queued by |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `contact_ask_leader` | A member is asked, by email, to add a number or to say yes to WhatsApp | Grace would like to reach you | 125 | 116 | email only | 1 / 0 | database |
 | `friday_checkin` | Friday: one-tap step check-in and testimony prompt | How did your step go? | 71 | 166 | `ut_friday_checkin` +3 buttons | 5 / 0 | database |
 | `meeting_recap` | The morning after: recap and your step | Last night in Builders Tribe | 60 | 92 | `ut_meeting_recap` | 2 / 0 | app, database |
 | `meeting_reminder` | Two hours before the meeting | Tonight at 8:00 pm: Builders Tribe | 42 | 72 | `ut_meeting_reminder` | 1 / 1 | app, database |

@@ -28,6 +28,7 @@ import { loadApplyModes, loadLeadingPeople, loadMyApplication, loadMyLeading, lo
 import { isDecided, isInReview, stageStates } from "@/lib/leaders/status";
 import { isStepId, minutesLeft, resolveStep, shieldFills } from "@/lib/leaders/steps";
 import { outlineDetails, stageDetails, statusLine } from "@/lib/leaders/wording";
+import { loadReachGaps } from "@/lib/contact-gaps/server";
 import { loadNumberGaps } from "@/lib/messaging/number-rule-server";
 import { loadMyPage } from "@/lib/profile/server";
 import { createClient } from "@/lib/supabase/server";
@@ -62,6 +63,8 @@ export default async function LeadPage() {
   const people = leading && leading.tribeStatus === "approved" ? await loadLeadingPeople(supabase, leading.tribeId) : null;
   // Who in the tribe has not added a phone number yet (so the leader can ask in person). Nobody, while the rule is Off.
   const gaps = leading && people ? await loadNumberGaps(supabase, leading.tribeId) : null;
+  // Who the leader cannot reach on WhatsApp, with a button to ask them (Contact gaps). Nobody, while that is Off.
+  const reach = leading && people ? await loadReachGaps(supabase, leading.tribeId) : null;
 
   // ------------------------------------------------------------------ appointed
   // A leader the church appointed has no application to show, so the page would call them someone who has never applied. The database
@@ -108,7 +111,7 @@ export default async function LeadPage() {
 
         <DetailsStrip count={toCheck} />
 
-        {leading && people ? <LeadingPeople leading={leading} people={people} gaps={gaps} /> : null}
+        {leading && people ? <LeadingPeople leading={leading} people={people} gaps={gaps} reach={reach} /> : null}
 
         <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
           <StageList stages={steps} states={steps} />
@@ -170,7 +173,7 @@ export default async function LeadPage() {
 
         <DetailsStrip count={toCheck} />
 
-        {people ? <LeadingPeople leading={leading} people={people} gaps={gaps} /> : null}
+        {people ? <LeadingPeople leading={leading} people={people} gaps={gaps} reach={reach} /> : null}
       </div>
     );
   }
@@ -321,7 +324,7 @@ export default async function LeadPage() {
 
       {approved ? <DetailsStrip count={toCheck} /> : null}
 
-      {approved && leading && people ? <LeadingPeople leading={leading} people={people} gaps={gaps} /> : null}
+      {approved && leading && people ? <LeadingPeople leading={leading} people={people} gaps={gaps} reach={reach} /> : null}
 
       {!approved && leading ? <LeadingStrip leading={leading} /> : null}
 

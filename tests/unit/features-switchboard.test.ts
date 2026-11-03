@@ -20,7 +20,7 @@ describe("the list of functions", () => {
     const added = [...block2.matchAll(/^\s+\('([a-z_]+)',.*, (\d+)\)[,;]\s*$/gm)].sort((a, b) => Number(a[2]) - Number(b[2])).map((m) => m[1]);
     expect(added).toEqual(["my_details", "my_story", "role_panels", "still_right"]);
     // the WhatsApp and number/removal functions come after them, in the order their migrations add them (sort 22 to 26)
-    const later = ["whatsapp_guard", "whatsapp_health", "number_required", "removal_requests", "whatsapp_mode"];
+    const later = ["whatsapp_guard", "whatsapp_health", "number_required", "removal_requests", "whatsapp_mode", "contact_gaps"];
     expect([...keys.slice(0, 3), ...added, ...keys.slice(3), ...later]).toEqual([...FEATURE_KEYS]);
   });
 

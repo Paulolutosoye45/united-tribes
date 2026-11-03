@@ -16,8 +16,10 @@ import { hasAnyRole } from "@/lib/auth/roles";
 import { formatShortDate } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { readContact } from "@/lib/messaging/contact";
+import { loadReach } from "@/lib/contact-gaps/server";
 import { loadNumberRule } from "@/lib/messaging/number-rule-server";
 import { NumberNotice } from "@/components/profile/NumberNotice";
+import { ReachNotice } from "@/components/profile/ReachNotice";
 import { readMyRequest } from "@/lib/privacy/wording";
 import { currentChannel } from "@/lib/signin/deps";
 import { setAssistantAction } from "./actions";
@@ -32,7 +34,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
   const leads = hasAnyRole(session.roles, ["leader", "assistant_leader", "coach"]);
   const staff = hasAnyRole(session.roles, ["admin", "pastor", "director", "care_lead", "coach"]);
-  const [profile, draft, ai, contactRow, photoRow, erasure, switches, noticePrefs, numberRule] = await Promise.all([
+  const [profile, draft, ai, contactRow, photoRow, erasure, switches, noticePrefs, numberRule, reach] = await Promise.all([
     supabase.from("member_profiles").select("submitted_at").eq("person_id", session.person.id).maybeSingle(),
     supabase.from("intake_drafts").select("updated_at").eq("person_id", session.person.id).maybeSingle(),
     supabase.rpc("has_consent", { p_purpose: "ai_assist" }),
@@ -43,6 +45,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     staff ? loadMyNoticePrefs() : Promise.resolve([]),
     // The compulsory phone number: Off (or not in the database yet), nothing here changes
     loadNumberRule(supabase),
+    // How a leader can reach this person: the prompt and the sign-in number offer. Off (or not in the database yet), nothing here changes
+    loadReach(supabase),
   ]);
   const photo = (photoRow.data as { has?: boolean; updated_at?: string | null } | null) ?? null;
   const contact = readContact(contactRow.data);
@@ -109,7 +113,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           How we reach you
         </h2>
         <NumberNotice rule={numberRule} here="profile" />
-        <ContactCard contact={contact} numberRequired={numberRule.required} />
+        <ReachNotice reach={reach} numberPromptShown={numberRule.prompt} here="profile" />
+        <ContactCard contact={contact} numberRequired={numberRule.required} reach={reach} />
       </section>
 
       {switches ? (

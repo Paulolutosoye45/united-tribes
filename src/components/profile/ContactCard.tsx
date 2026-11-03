@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { saveContactAction, type ContactState } from "@/app/(app)/profile/actions";
 import { Button } from "@/components/ui/Button";
 import { Choice } from "@/components/ui/Choice";
 import { Input } from "@/components/ui/Input";
 import { displayPhone } from "@/lib/auth/phone";
+import { REACH_OFF, REACH_WORDS, type Reach } from "@/lib/contact-gaps/gaps";
 import type { Contact, Preferred } from "@/lib/messaging/contact";
 import { NUMBER_WORDS } from "@/lib/messaging/number-rule";
 
@@ -19,10 +20,11 @@ const LABELS: Record<Preferred, string> = { whatsapp: "WhatsApp", email: "Email"
  * Friday check-in and anything from a leader or coach go by the channel they prefer,
  * and move to the next one only if that one fails.
  */
-export function ContactCard({ contact, numberRequired = false }: { contact: Contact; numberRequired?: boolean }) {
+export function ContactCard({ contact, numberRequired = false, reach = REACH_OFF }: { contact: Contact; numberRequired?: boolean; reach?: Reach }) {
   const [state, action, pending] = useActionState(saveContactAction, initial);
   const [on, setOn] = useState({ whatsapp: contact.whatsapp, sms: contact.sms, email: contact.email_ok });
   const [preferred, setPreferred] = useState<Preferred>(contact.preferred);
+  const phoneRef = useRef<HTMLInputElement>(null);
 
   const enabled = (["whatsapp", "email", "sms"] as const).filter((c) => on[c]);
   const effective = enabled.includes(preferred) ? preferred : (enabled[0] ?? preferred);
@@ -32,6 +34,7 @@ export function ContactCard({ contact, numberRequired = false }: { contact: Cont
       <Input
         label={numberRequired ? NUMBER_WORDS.label : "Phone number"}
         name="phone"
+        ref={phoneRef}
         type="tel"
         inputMode="tel"
         autoComplete="tel"
@@ -41,6 +44,32 @@ export function ContactCard({ contact, numberRequired = false }: { contact: Cont
         optional={!numberRequired}
         hint={numberRequired ? NUMBER_WORDS.explain : "Used for WhatsApp and text messages. Your leader sees it only if you choose WhatsApp."}
       />
+      {reach.on ? (
+        <div className="-mt-2 flex flex-col gap-2" data-testid="reach-card-help">
+          <p className="t-small text-soft">{REACH_WORDS.whoSees}</p>
+          {reach.signin ? (
+            <div className="flex flex-col items-start gap-1">
+              <Button
+                type="button"
+                size="sm"
+                variant="quiet"
+                data-testid="reach-use-signin"
+                onClick={() => {
+                  // Only fills the box. It saves nothing and ticks nothing.
+                  const el = phoneRef.current;
+                  if (!el) return;
+                  el.value = reach.signin ?? "";
+                  el.dispatchEvent(new Event("input", { bubbles: true }));
+                  el.focus();
+                }}
+              >
+                {REACH_WORDS.useSignin(reach.signin)}
+              </Button>
+              <p className="t-small text-soft">{REACH_WORDS.signinNote}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <fieldset className="flex flex-col gap-2.5">
         <legend className="mb-1 text-[0.95rem] font-medium">You can message me by</legend>

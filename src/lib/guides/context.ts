@@ -31,6 +31,7 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/tribe/testimony", slug: "share-a-testimony" },
   { prefix: "/tribe", slug: "join-your-tribe" },
   { prefix: "/profile", slug: "your-information" },
+  { prefix: "/profile", slug: "be-reached" },
   { prefix: "/privacy", slug: "your-information" },
   // The church's own people
   { prefix: "/admin/messages/whatsapp-mode", slug: "whatsapp-mode" },
@@ -39,6 +40,7 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/admin/messages/whatsapp", slug: "whatsapp-health" },
   { prefix: "/admin/messages", slug: "whatsapp-health" },
   { prefix: "/growth/removals", slug: "decide-a-place-change" },
+  { prefix: "/admin/people/contact-gaps", slug: "contact-gaps" },
   // Pages people reach from an email or before they have an account: open to anyone with the link
   { prefix: "/sign-in", slug: "sign-in" },
   { prefix: "/reference", slug: "give-a-reference" },

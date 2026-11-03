@@ -5,6 +5,7 @@ import { INVITATION_TEMPLATES } from "./templates-invitation";
 import { LEADER_WELCOME_TEMPLATES } from "./templates-leader-welcome";
 import { DETAILS_TEMPLATES } from "./templates-details";
 import { WHATSAPP_TEMPLATES } from "./templates-whatsapp";
+import { REACH_TEMPLATES } from "./templates-reach";
 import { REMOVAL_TEMPLATES } from "./templates-removal";
 import { PLACEMENT_TEMPLATES } from "./templates-placement";
 import { salutation } from "@/lib/leaders/status";
@@ -1523,6 +1524,7 @@ export const TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(
     ...DETAILS_TEMPLATES,
     ...WHATSAPP_TEMPLATES,
     ...REMOVAL_TEMPLATES,
+    ...REACH_TEMPLATES,
   ].map((t) => [t.key, signed(t)]),
 );
 

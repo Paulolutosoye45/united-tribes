@@ -2,6 +2,7 @@ import { DETAILS_SAMPLES } from "@/lib/messaging/templates-details";
 import { INVITATION_SAMPLES } from "@/lib/messaging/templates-invitation";
 import { LEADER_WELCOME_SAMPLES } from "@/lib/messaging/templates-leader-welcome";
 import { WHATSAPP_SAMPLES } from "@/lib/messaging/templates-whatsapp";
+import { REACH_SAMPLES } from "@/lib/messaging/templates-reach";
 import { REMOVAL_SAMPLES } from "@/lib/messaging/templates-removal";
 import { PLACEMENT_SAMPLES } from "@/lib/messaging/templates-placement";
 import type { Params } from "@/lib/messaging/types";
@@ -112,6 +113,7 @@ const OVERRIDES: Record<string, Params> = {
   ...DETAILS_SAMPLES,
   ...WHATSAPP_SAMPLES,
   ...REMOVAL_SAMPLES,
+  ...REACH_SAMPLES,
 };
 
 export function sampleParams(template: string): Params {

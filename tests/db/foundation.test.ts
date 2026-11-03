@@ -1067,6 +1067,15 @@ describe("locked-down defaults", () => {
       "my_number_rule",
       "number_prompt_dismiss",
       "tribe_number_gaps",
+      // Contact gaps (members a leader cannot reach on WhatsApp). The office list and its download are for the office only, the leader's list and ask are for
+      // the leader of that tribe, and the member's prompt answers about the signed-in person only. Each answers "off" or refuses until the owner moves the switch.
+      "contact_gaps_state",
+      "contact_gaps_report",
+      "contact_gaps_export",
+      "tribe_reach_gaps",
+      "contact_ask_send",
+      "my_reach",
+      "reach_prompt_dismiss",
       // WhatsApp that cannot fail quietly, stage 4 (leader removal requests). Each answers "off" or refuses until the owner moves the switch; who may ask,
       // read and decide is checked inside each one, and the heartbeat (worker_removal_tick, below) needs the sending service's token.
       "removal_ask",
