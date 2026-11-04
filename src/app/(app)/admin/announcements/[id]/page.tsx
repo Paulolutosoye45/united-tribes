@@ -8,6 +8,7 @@ import { Results } from "@/components/outreach/Results";
 import { StatusBadge } from "@/components/outreach/StatusBadge";
 import { ANNOUNCE_ROLES, ANNOUNCE_VIEW_ROLES, APPROVE_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
+import { loadContactGapsOn } from "@/lib/contact-gaps/server";
 import { isUuid } from "@/lib/leaders/errors";
 import { announcementSpec } from "@/lib/outreach/compose";
 import { loadAnnounceContext, loadBroadcast, loadResults } from "@/lib/outreach/server";
@@ -48,6 +49,7 @@ export default async function AnnouncementPage({ params, searchParams }: { param
           threshold={ctx.threshold}
           perMinute={ctx.perMinute}
           hours={ctx.hours}
+          reach={await loadContactGapsOn(supabase)}
         />
       </div>
     );

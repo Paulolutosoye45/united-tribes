@@ -3,15 +3,30 @@ import { PageHead } from "@/components/admin/PageHead";
 import { Composer } from "@/components/outreach/Composer";
 import { ANNOUNCE_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
+import { loadContactGapsOn } from "@/lib/contact-gaps/server";
 import { loadAnnounceContext } from "@/lib/outreach/server";
+import type { AudienceSpec } from "@/lib/outreach/types";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Write an announcement" };
 
-export default async function NewAnnouncementPage() {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function NewAnnouncementPage({ searchParams }: { searchParams: Promise<{ audience?: string; cause?: string; tribe?: string; community?: string }> }) {
   const session = await requireRole(ANNOUNCE_ROLES, "/admin/announcements/new");
+  const q = await searchParams;
   const supabase = await createClient();
-  const ctx = await loadAnnounceContext(supabase, session);
+  const [ctx, reach] = await Promise.all([loadAnnounceContext(supabase, session), loadContactGapsOn(supabase)]);
+  // The Contact gaps page opens the composer already pointed at the people it lists. Anything else, or while the function is Off, starts as it always did.
+  const start: AudienceSpec | null =
+    reach && q.audience === "cannot_reach"
+      ? {
+          kind: "cannot_reach",
+          cause: q.cause === "no_number" || q.cause === "no_yes" ? q.cause : "either",
+          ...(q.tribe && UUID.test(q.tribe) ? { tribe: q.tribe } : {}),
+          ...(q.community && UUID.test(q.community) ? { community: q.community } : {}),
+        }
+      : null;
   return (
     <div className="flex flex-col gap-8">
       <PageHead title="Write an announcement" back={{ href: "/admin/announcements", label: "Announcements" }}>
@@ -27,6 +42,8 @@ export default async function NewAnnouncementPage() {
         threshold={ctx.threshold}
         perMinute={ctx.perMinute}
         hours={ctx.hours}
+        reach={reach}
+        start={start}
       />
     </div>
   );
