@@ -2,7 +2,7 @@
 
 *Written by `npm run messages-audit` from the templates in `src/lib/messaging`. Do not edit it here; change the template and run the command again. A test fails when a check below fails or when this file is out of date.*
 
-**157 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 39 for leader, 23 for member, 47 for office, 5 for referee.
+**161 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 40 for leader, 26 for member, 47 for office, 5 for referee.
 
 Each message is written out from believable details and checked for what the office would check by eye:
 
@@ -104,6 +104,7 @@ Each message is written out from believable details and checked for what the off
 | `leader_assistant_added` | An assistant was added to your tribe | Someone is now your assistant | 49 | 69 | email only | 2 / 0 | — |
 | `leader_card_approved` | Your Tribe Card was approved | Builders Tribe was approved | 44 | 67 | email only | 2 / 0 | — |
 | `leader_card_changes` | Your Tribe Card needs a few changes | Builders Tribe needs a few changes | 62 | 74 | email only | 2 / 0 | — |
+| `leader_card_reminder` | A leader is reminded, by email, that their Tribe Card is waiting | Your Tribe Card is waiting for you | 100 | 90 | email only | 2 / 0 | database |
 | `leader_certified` | You are certified | You are certified | 38 | 51 | email only | 2 / 0 | app |
 | `leader_log_link` | After the meeting: the two-minute log | Log tonight’s meeting (two minutes) | 44 | 90 | `ut_leader_log_link` | 2 / 0 | database |
 | `leader_log_reminder` | The meeting has not been logged (24 hours) | Your week 3 log is waiting | 51 | 104 | `ut_leader_log_reminder` | 2 / 0 | database |
@@ -143,6 +144,8 @@ Each message is written out from believable details and checked for what the off
 | `placement_reminder` | A gentle reminder about the tribe you were placed in | Builders Tribe is holding your place | 80 | 108 | email only | 4 / 0 | database |
 | `placement_withheld` | Your details are kept private; here is how to reach your tribe | Your details are private. Here is how to join | 110 | 113 | email only | 2 / 1 | database |
 | `placement_your_tribe` | The church has placed you in a tribe | A place for you in Builders Tribe | 196 | 131 | email only | 4 / 1 | database |
+| `reach_new_link` | A member whose link ran out is sent a new one | Your new link | 71 | 170 | email only | 2 / 0 | database |
+| `reach_series` | A member is asked, by email, to add a WhatsApp number or to say yes to WhatsApp (the four-email series) | Grace would like to message you on WhatsApp | 113 | 201 | email only | 2 / 0 | app, database |
 | `reminder_email` | A reminder from one of the four journeys | You’re part-way to your tribe, Ada | 91 | 88 | email only | 3 / 0 | app, database |
 | `removal_member_reinstated` | A member is told their place in a tribe has been put back | Your place in Builders Tribe is back | 66 | 97 | email only | 2 / 0 | database |
 | `removal_member_told` | A member is told their place in a tribe has changed | Your place in Builders Tribe has changed | 144 | 125 | email only | 2 / 0 | database |
@@ -151,6 +154,7 @@ Each message is written out from believable details and checked for what the off
 | `swap_declined` | About your request to change tribe | About your request to change tribe | 69 | 120 | `ut_swap_declined` | 2 / 0 | database |
 | `swap_offered` | A tribe that could suit you | A tribe that could suit you | 66 | 129 | `ut_swap_offered` | 2 / 0 | database |
 | `triad_prompt` | Tuesday: check in with your triad | Check in with your triad | 64 | 125 | `ut_triad_prompt` | 2 / 0 | database |
+| `tribe_note` | A note from a tribe’s leader to the whole tribe, by email | A note from Grace (Builders Tribe) | 92 | 96 | email only | 2 / 0 | app, database |
 | `week_start` | Monday: the week’s passage, confession and step | Week 3: Pray with expectation, not performance | 80 | 159 | `ut_week_start` | 2 / 0 | app, database |
 | `welcome` | Welcome to your tribe | You’re in: welcome to Builders Tribe | 71 | 139 | `ut_welcome` | 2 / 1 | app, database |
 

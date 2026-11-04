@@ -1,5 +1,5 @@
 import {
-  ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, CONTACT_GAP_ROLES, DATA_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PIPELINE_VIEW_ROLES,
+  ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, CONTACT_GAP_ROLES, DATA_ROLES, LEADER_CARD_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PIPELINE_VIEW_ROLES,
   OVERSIGHT_ROLES, PLACE_ROLES, PRIVACY_ROLES, REFEREE_MANAGER_ROLES, REMINDER_ROLES, REMOVAL_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, TEMPLATE_VIEW_ROLES, hasAnyRole, type Role,
 } from "@/lib/auth/roles";
 
@@ -108,6 +108,13 @@ export const SECTIONS: readonly NavSection[] = [
         about: "Members a leader cannot reach on WhatsApp, and why",
         roles: CONTACT_GAP_ROLES,
         synonyms: ["whatsapp number", "no number", "missing number", "cannot reach", "can't reach", "how to be contacted", "phone number", "number missing", "reach members", "ask for a number"],
+      },
+      {
+        href: "/admin/people/leader-cards",
+        label: "Leader cards",
+        about: "Where each leader’s Tribe Card is, and whether their email arrived",
+        roles: LEADER_CARD_ROLES,
+        synonyms: ["tribe card", "leader card", "appointed leaders", "did not get the email", "email did not arrive", "has not started", "not started", "remind leaders", "chase leaders", "heads of department", "hod", "call sheet", "department", "send the email again", "leaders who have not signed in"],
       },
       {
         href: "/admin/champions",

@@ -152,7 +152,7 @@ async function main() {
   for (const key of ["my_details", "my_story", "role_panels", "still_right"]) {
     check(/Off/.test(await page.getByTestId(`feature-${key}`).innerText()), `${key} starts Off`);
   }
-  check((await page.locator('[data-testid^="feature-"][data-testid$="-open"]').count()) === 13, "thirteen functions can be moved: the three of stage 1 and the four of stage 2 of Profiles, the four whole-church functions of WhatsApp reliability, WhatsApp mode and Contact gaps");
+  check((await page.locator('[data-testid^="feature-"][data-testid$="-open"]').count()) === 15, "fifteen functions can be moved: the three of stage 1 and the four of stage 2 of Profiles, the four whole-church functions of WhatsApp reliability, WhatsApp mode and Contact gaps, and the two of the contact series, Reach series and Tribe note");
   has("the board says what each does and who sees it", /Nobody else sees them in this release/, board);
 
   // A new function cannot be opened before My page

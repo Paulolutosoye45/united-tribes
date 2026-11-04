@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SeriesState } from "@/lib/reach/series";
 import {
   GAP_REPORT_OFF,
   REACH_GAPS_OFF,
@@ -18,7 +19,7 @@ import {
 // Each loader answers "Off" when the database refuses, does not have the function yet, or cannot be reached: a website deployed before the database file
 // is applied behaves exactly as it always did.
 
-export type GapFilter = { cause?: GapCause | null; tribe?: string | null; community?: string | null; limit?: number; offset?: number };
+export type GapFilter = { cause?: GapCause | null; tribe?: string | null; community?: string | null; series?: SeriesState | null; limit?: number; offset?: number };
 
 /** The office list: counts by cause, the people, and the trend. */
 export async function loadGapReport(supabase: SupabaseClient, f: GapFilter = {}): Promise<GapReport> {
@@ -29,6 +30,8 @@ export async function loadGapReport(supabase: SupabaseClient, f: GapFilter = {})
       p_community: f.community ?? null,
       p_limit: f.limit ?? 100,
       p_offset: f.offset ?? 0,
+      // Sent only when a stage is chosen, so a database that has not had the series file applied still answers
+      ...(f.series ? { p_series: f.series } : {}),
     });
     return error ? GAP_REPORT_OFF : parseGapReport(data);
   } catch {

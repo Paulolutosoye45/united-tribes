@@ -59,6 +59,32 @@ async function handle(request: Request) {
     } catch {
       detailsFaults.push("details check: could not run this time");
     }
+    // The leaders whose Tribe Card is still open: on the chosen days (Thursday, Friday and Saturday to begin with) the database queues one kind email to
+    // each, so it goes out in this same beat. Off it does nothing at all; in Rehearsal it only writes down who it would have written to. A fault here is
+    // listed but never stops anything.
+    const cardFaults: string[] = [];
+    let leaderCards: { mode: string; queued: number; wouldSend: number } = { mode: "off", queued: 0, wouldSend: 0 };
+    try {
+      const ran = await rpc("worker_leader_card_reminders");
+      if (ran.error) cardFaults.push(`leader card reminders: ${ran.error.message}`);
+      else if (ran.data && typeof ran.data === "object") {
+        const d = ran.data as { mode?: string; queued?: number; would_send?: number };
+        leaderCards = { mode: d.mode ?? "off", queued: d.queued ?? 0, wouldSend: d.would_send ?? 0 };
+      }
+    } catch {
+      cardFaults.push("leader card reminders: could not run this time");
+    }
+    // The contact series (seats and contacts): people with a gap are put in, every running series takes one step, and what is due is queued so it goes out
+    // in this same beat. With the switch Off (or the Master pause on) the database does nothing at all. A fault here is listed but never stops the messages.
+    const reachFaults: string[] = [];
+    let reachSeries: { ran: boolean } = { ran: false };
+    try {
+      const ran = await rpc("worker_reach_tick");
+      if (ran.error) reachFaults.push(`contact series: ${ran.error.message}`);
+      else if (ran.data && typeof ran.data === "object") reachSeries = { ran: (ran.data as { ran?: boolean }).ran === true };
+    } catch {
+      reachFaults.push("contact series: could not run this time");
+    }
     const summary = await runDispatch({
       rpc,
       providers: providersFromEnv(),
@@ -70,7 +96,7 @@ async function handle(request: Request) {
     // in "problems" but never turns a working tick into a failed one.
     summary.problems.push(...early);
     const status = summary.problems.length > 0 && summary.sent === 0 && summary.claimed === 0 ? 502 : 200;
-    summary.problems.push(...detailsFaults);
+    summary.problems.push(...detailsFaults, ...cardFaults, ...reachFaults);
     // Reports the database has just made get their opening paragraph. A fault here never stops the messages.
     const reports = await writePendingSummaries(rpc, ai, { budgetMs: 12_000 });
     summary.problems.push(...reports.problems);
@@ -128,7 +154,7 @@ async function handle(request: Request) {
     }
     // A daily job that failed (the numbers, the clean-up) is listed too, so a monitor on this endpoint hears of it.
     summary.problems.push(...dailyJobFaults(summary.calendar));
-    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, exportsSwept, signin, placement }, { status, headers: NO_STORE });
+    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, exportsSwept, signin, placement, leaderCards, reachSeries }, { status, headers: NO_STORE });
   } catch (error) {
     console.error("cron tick failed", error instanceof Error ? error.message : "unknown");
     return Response.json({ error: "tick failed" }, { status: 500, headers: NO_STORE });

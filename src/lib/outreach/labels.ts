@@ -134,6 +134,7 @@ export const AUDIENCE_KINDS = [
   { kind: "leaders", label: "Leaders", hint: "Everyone leading a tribe." },
   { kind: "staff", label: "Team members", hint: "By role." },
   { kind: "cannot_reach", label: "Cannot be reached on WhatsApp", hint: "No number saved, or no yes to WhatsApp. Asked by email, never more than three times." },
+  { kind: "leader_cards", label: "Leaders whose Tribe Card is not finished", hint: "Not started, in progress, or sent back for changes. The Leader cards board has the same list." },
 ] as const;
 
 /** Who “cannot be reached on WhatsApp” means. */

@@ -293,7 +293,7 @@ describe("the office list", () => {
     const x0 = await seen("contact_gaps.exported");
     const file = await c.as(c.admin, "contact_gaps_export");
     expect(file.length).toBeGreaterThan(0);
-    expect(Object.keys(file[0]).sort()).toEqual(["asks", "cause", "last_asked", "leader", "name", "tribe"]);
+    expect(Object.keys(file[0]).sort()).toEqual(["asks", "cause", "emails", "last_asked", "leader", "name", "series", "tribe"]);
     expect(await seen("contact_gaps.exported")).toBe(x0 + 1);
   });
 
@@ -645,7 +645,7 @@ describe("who may call what", () => {
     }
     const screens = [
       ["contact_gaps_state", ""],
-      ["contact_gaps_report", "text, uuid, uuid, integer, integer"],
+      ["contact_gaps_report", "text, uuid, uuid, integer, integer, text"],
       ["contact_gaps_export", ""],
       ["tribe_reach_gaps", "uuid"],
       ["contact_ask_send", "uuid"],

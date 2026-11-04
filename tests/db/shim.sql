@@ -14,6 +14,7 @@ create table auth.users (
   email_confirmed_at timestamptz,
   phone text unique,
   phone_confirmed_at timestamptz,
+  last_sign_in_at timestamptz,
   raw_user_meta_data jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );

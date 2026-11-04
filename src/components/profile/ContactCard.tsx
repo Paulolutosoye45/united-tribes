@@ -63,7 +63,7 @@ export function ContactCard({ contact, numberRequired = false, reach = REACH_OFF
                   el.focus();
                 }}
               >
-                {REACH_WORDS.useSignin(reach.signin)}
+                {REACH_WORDS.signinButton(reach.signin)}
               </Button>
               <p className="t-small text-soft">{REACH_WORDS.signinNote}</p>
             </div>

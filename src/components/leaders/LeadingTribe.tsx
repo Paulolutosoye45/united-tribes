@@ -5,7 +5,9 @@ import { formatDate } from "@/lib/dates";
 import { LEADER_EMPTY } from "@/lib/placement/wording";
 import { leadingLine, leadingTitle, peopleLine, type LeadingPerson, type MyLeading } from "@/lib/leaders/leading";
 import { ReachAsk } from "@/components/leaders/ReachAsk";
+import { ReachStrip } from "@/components/leaders/ReachStrip";
 import type { ReachGaps } from "@/lib/contact-gaps/gaps";
+import type { TribeStrip } from "@/lib/reach/series";
 import { NUMBER_WORDS, type NumberGaps } from "@/lib/messaging/number-rule";
 
 /**
@@ -37,12 +39,14 @@ export function LeadingStrip({ leading }: { leading: MyLeading }) {
 }
 
 /** The people who have joined, on the Lead page. The list is the leader's own (the database applies its rules); the welcome work stays on the Tribe Card. */
-export function LeadingPeople({ leading, people, gaps = null, reach = null }: { leading: MyLeading; people: LeadingPerson[]; gaps?: NumberGaps | null; reach?: ReachGaps | null }) {
+export function LeadingPeople({ leading, people, gaps = null, reach = null, strip = null }: { leading: MyLeading; people: LeadingPerson[]; gaps?: NumberGaps | null; reach?: ReachGaps | null; strip?: TribeStrip | null }) {
   if (leading.tribeStatus !== "approved") return null;
   // Only while the church has made the phone number compulsory: how many have none yet, by first name, so the leader can ask in person
   // While Contact gaps is On its list and buttons say this and more, so the line is not said twice
-  const asking = Boolean(reach?.on && reach.people.length > 0);
-  const gapLine = gaps?.on && !reach?.on ? NUMBER_WORDS.leaderNote(gaps.count, gaps.names) : null;
+  // While the contact series (or the tribe note) is On, its strip says all of this and does more, so the one-by-one list is not shown beside it
+  const stripOn = Boolean(strip && (strip.on || strip.note.state !== "off"));
+  const asking = Boolean(reach?.on && reach.people.length > 0) && !stripOn;
+  const gapLine = gaps?.on && !reach?.on && !stripOn ? NUMBER_WORDS.leaderNote(gaps.count, gaps.names) : null;
   return (
     <section aria-labelledby="leading-people-h" className="card flex flex-col gap-4 p-6" data-testid="leading-people">
       <div className="flex flex-col gap-1">
@@ -58,6 +62,7 @@ export function LeadingPeople({ leading, people, gaps = null, reach = null }: { 
           {gapLine}
         </p>
       ) : null}
+      {stripOn && strip ? <ReachStrip tribeId={leading.tribeId} strip={strip} /> : null}
       {asking && reach ? <ReachAsk people={reach.people} /> : null}
       {people.length > 0 ? (
         <ul className="flex flex-col divide-y divide-line">

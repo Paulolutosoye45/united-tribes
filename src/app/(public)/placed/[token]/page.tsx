@@ -10,6 +10,7 @@ import { AGREEMENT_SENTENCE, COVENANT_PROMISES } from "@/lib/matching/wording";
 import { workerRpc, workerToken } from "@/lib/messaging/worker";
 import { contactLine, groupNote } from "@/lib/placement/placed";
 import { parsePlaced, type PlacedState } from "@/lib/placement/types";
+import { PLACED_REACH_WORDS, ADD_NUMBER_WORDS, parsePlacedReach, type PlacedReach } from "@/lib/reach/series";
 import { PLACED_CONTACT_WORDS, PLACED_PROMISES } from "@/lib/placement/wording";
 import { placedAction } from "./actions";
 
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-type Search = { a?: string; done?: string; late?: string; started?: string; invalid?: string; problem?: string };
+type Search = { a?: string; done?: string; late?: string; started?: string; invalid?: string; problem?: string; number?: string };
 
 const CHOICES = ["confirm", "change", "withhold"] as const;
 type Choice = (typeof CHOICES)[number];
@@ -35,6 +36,16 @@ export default async function PlacedPage({ params, searchParams }: { params: Pro
   if (/^[a-f0-9]{64}$/.test(token) && secret && getSupabaseEnv()) {
     const { data } = await workerRpc(secret)("worker_placed_info", { p_link: token });
     state = parsePlaced(data);
+  }
+  // The two extra boxes on "Yes, I’m in": only while the contact series is On and the member has a number or a yes to put right. Anything wrong means no boxes.
+  let reach: PlacedReach | null = null;
+  if (state?.active && !state.confirmed && /^[a-f0-9]{64}$/.test(token) && secret && getSupabaseEnv()) {
+    try {
+      const { data } = await workerRpc(secret)("worker_placed_reach", { p_link: token });
+      reach = parsePlacedReach(data);
+    } catch {
+      reach = null;
+    }
   }
   // Which button the email's link pointed at. It is only highlighted: nothing happens until it is pressed.
   const pointed = (CHOICES as readonly string[]).includes(q.a ?? "") ? (q.a as Choice) : null;
@@ -68,14 +79,14 @@ export default async function PlacedPage({ params, searchParams }: { params: Pro
         ) : !state.active ? (
           <Notice title="You are not in this tribe now." body="You gave up this place, or the church changed it. Open the app to look at tribes that fit you." />
         ) : (
-          <Page state={state} done={done} pointed={pointed} token={token} q={q} />
+          <Page state={state} done={done} pointed={pointed} token={token} q={q} reach={reach} />
         )}
       </main>
     </div>
   );
 }
 
-function Page({ state, done, pointed, token, q }: { state: PlacedState; done: Choice | null; pointed: Choice | null; token: string; q: Search }) {
+function Page({ state, done, pointed, token, q, reach }: { state: PlacedState; done: Choice | null; pointed: Choice | null; token: string; q: Search; reach: PlacedReach | null }) {
   const t = state.tribe;
   const meets = `${dayName(t.meetingDay)}s at ${clockLabel(t.meetingTime)}, ${t.mode === "online" ? "online" : `in person${t.placeNote ? ` (${t.placeNote})` : ""}`}`;
   const picture = [
@@ -97,6 +108,7 @@ function Page({ state, done, pointed, token, q }: { state: PlacedState; done: Ch
       ) : null}
       {q.started ? <p role="alert" className="rounded-[var(--radius-control)] bg-gold/25 px-4 py-3 font-medium">Joining for this season has closed, so this place can no longer be given up here. Ask your leader or coach.</p> : null}
       {q.problem ? <p role="alert" className="rounded-[var(--radius-control)] bg-danger/10 px-4 py-3 font-medium text-danger">That didn’t save. Please try again.</p> : null}
+      {q.number ? <p role="alert" className="rounded-[var(--radius-control)] bg-danger/10 px-4 py-3 font-medium text-danger" data-testid="placed-number-problem">{ADD_NUMBER_WORDS.badNumber} You are not in the tribe yet: fix it, or clear the box, and press Yes, I’m in again.</p> : null}
 
       <section className="card flex flex-col gap-3 p-6" aria-labelledby="tribe-heading">
         <h2 id="tribe-heading" className="t-heading">
@@ -160,7 +172,7 @@ function Page({ state, done, pointed, token, q }: { state: PlacedState; done: Ch
         {state.confirmed ? (
           <p className="t-body font-semibold" role="status">You said yes to this tribe.</p>
         ) : (
-          <Answer token={token} choice="confirm" primary pointed={pointed === "confirm"} label="Yes, I’m in" note={PLACED_PROMISES.confirm} sentence={AGREEMENT_SENTENCE} />
+          <Answer token={token} choice="confirm" primary pointed={pointed === "confirm"} label="Yes, I’m in" note={PLACED_PROMISES.confirm} sentence={AGREEMENT_SENTENCE} extra={reach ? <ReachBoxes reach={reach} /> : undefined} />
         )}
         {state.canChange ? <Answer token={token} choice="change" pointed={pointed === "change"} label="Show me other tribes" note={PLACED_PROMISES.change} /> : null}
         {!state.withheld && !state.contactLate ? <Answer token={token} choice="withhold" pointed={pointed === "withhold"} label="Don’t share my details" note={PLACED_PROMISES.withhold} /> : null}
@@ -187,17 +199,62 @@ function GaveUp() {
   );
 }
 
-function Answer({ token, choice, label, note, primary = false, pointed = false, sentence }: { token: string; choice: Choice; label: string; note: string; primary?: boolean; pointed?: boolean; sentence?: string }) {
+function Answer({ token, choice, label, note, primary = false, pointed = false, sentence, extra }: { token: string; choice: Choice; label: string; note: string; primary?: boolean; pointed?: boolean; sentence?: string; extra?: React.ReactNode }) {
   return (
     <form action={placedAction} className={`flex flex-col gap-2 ${pointed ? "rounded-[var(--radius-control)] ring-2 ring-gold ring-offset-4 ring-offset-page" : ""}`}>
       <input type="hidden" name="token" value={token} />
       <input type="hidden" name="choice" value={choice} />
+      {extra}
       <Button type="submit" variant={primary ? "primary" : "quiet"} size="lg" fullWidth>
         {label}
       </Button>
       <p className="t-small text-soft">{note}</p>
       {sentence ? <p className="t-small text-soft">{sentence}</p> : null}
     </form>
+  );
+}
+
+// Two optional boxes in the same form as "Yes, I’m in": a number (or the one they sign in with) and the tick for WhatsApp. Nothing here is required, and
+// the tick is never pre-ticked. The number is saved before the place is confirmed; a number that does not look right stops the confirm and says so.
+function ReachBoxes({ reach }: { reach: PlacedReach }) {
+  const tickOnly = reach.gap === "no_yes";
+  return (
+    <fieldset className="card flex flex-col gap-3 p-5" data-testid="placed-reach">
+      <legend className="sr-only">{PLACED_REACH_WORDS.title}</legend>
+      <h3 className="font-semibold">{PLACED_REACH_WORDS.title}</h3>
+      <p className="t-small text-soft">{tickOnly ? PLACED_REACH_WORDS.tickOnly : PLACED_REACH_WORDS.body}</p>
+      {tickOnly ? null : (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="placed-phone" className="text-[0.95rem] font-medium">
+            {ADD_NUMBER_WORDS.numberLabel}
+          </label>
+          <input
+            id="placed-phone"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="+234 803 123 4567"
+            maxLength={40}
+            className="h-14 w-full rounded-[var(--radius-control)] border-[1.5px] border-line bg-raised px-4 text-base text-ink hover:border-soft focus:border-ink focus:outline-none"
+          />
+          <p className="t-small text-soft">{ADD_NUMBER_WORDS.numberHint}</p>
+        </div>
+      )}
+      {!tickOnly && reach.signin ? (
+        <label className="flex items-start gap-3">
+          <input type="checkbox" name="signin" className="mt-1 size-5 shrink-0 accent-[var(--crest-flame)]" data-testid="placed-signin" />
+          <span className="font-medium">{ADD_NUMBER_WORDS.signinButton(reach.signin)}</span>
+        </label>
+      ) : null}
+      <label className="flex items-start gap-3">
+        <input type="checkbox" name="whatsapp" className="mt-1 size-5 shrink-0 accent-[var(--crest-flame)]" data-testid="placed-agree" />
+        <span className="flex flex-col gap-1">
+          <span className="font-medium">{ADD_NUMBER_WORDS.agree}</span>
+          <span className="t-small text-soft">{ADD_NUMBER_WORDS.whoSees}</span>
+        </span>
+      </label>
+    </fieldset>
   );
 }
 

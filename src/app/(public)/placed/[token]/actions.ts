@@ -19,9 +19,21 @@ export async function placedAction(formData: FormData) {
   const secret = workerToken();
   if (!secret) redirect(`/placed/${token}?problem=1`);
 
+  const rpc = workerRpc(secret);
+  // "Yes, I’m in" may carry a number and the tick for WhatsApp (the contact series, when it is On). They are saved first, so a number that does not
+  // look right stops here with the place still waiting; a member who left the boxes empty goes straight on.
+  if (choice === "confirm") {
+    const phone = String(formData.get("phone") ?? "").trim().slice(0, 40);
+    const whatsapp = formData.get("whatsapp") === "on";
+    const signin = formData.get("signin") === "on";
+    if (phone || whatsapp || signin) {
+      const saved = await rpc("worker_placed_reach_save", { p_link: token, p_phone: phone, p_whatsapp: whatsapp, p_use_signin: signin });
+      if (saved.error) redirect(`/placed/${token}?${saved.error.code === "22023" ? "number=1" : "problem=1"}`);
+    }
+  }
   const args: Record<string, unknown> = { p_link: token };
   if (choice === "confirm") args.p_version = AGREEMENT_VERSION;
-  const { data, error } = await workerRpc(secret)(FUNCTIONS[choice as Choice], args);
+  const { data, error } = await rpc(FUNCTIONS[choice as Choice], args);
   const result = (data ?? {}) as { ok?: boolean; reason?: string; late?: boolean };
   if (error) redirect(`/placed/${token}?problem=1`);
   if (!result.ok) {

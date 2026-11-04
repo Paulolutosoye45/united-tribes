@@ -25,6 +25,7 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/lead/tribe", slug: "appointed-to-lead" },
   { prefix: "/lead/tribe", slug: "ask-about-a-place", when: holds("leader") },
   { prefix: "/lead", exact: true, slug: "appointed-to-lead", when: holds("leader") },
+  { prefix: "/lead", exact: true, slug: "reach-your-tribe", when: holds("leader") },
   { prefix: "/lead", exact: true, slug: "apply-to-lead" },
   { prefix: "/care", slug: "assistant-leader", when: holds("assistant_leader") },
   { prefix: "/join", slug: "find-your-tribe" },
@@ -41,6 +42,7 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/admin/messages", slug: "whatsapp-health" },
   { prefix: "/growth/removals", slug: "decide-a-place-change" },
   { prefix: "/admin/people/contact-gaps", slug: "contact-gaps" },
+  { prefix: "/admin/people/leader-cards", slug: "leader-cards" },
   { prefix: "/admin/tribes", slug: "place-or-move-a-member" },
   { prefix: "/admin/people", slug: "place-or-move-a-member" },
   // Pages people reach from an email or before they have an account: open to anyone with the link

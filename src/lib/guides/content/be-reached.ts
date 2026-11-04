@@ -53,6 +53,7 @@ export const beReached: Guide = {
           id: "see-who",
           title: "See who you cannot reach",
           do: ["On **Lead**, under **Who has joined**, **People whose number you cannot see** lists their first names. It never shows a number."],
+          tip: "If you see **Reaching your tribe** instead, the church has switched on the four-email series. Open **Reach the members you cannot message on WhatsApp**.",
         },
         {
           id: "ask-them",

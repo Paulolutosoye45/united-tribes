@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseReachSettings, type ReachSettings } from "@/lib/reach/series";
 import { parseBoard, parseLog, parseOverview, parseStates } from "./parse";
 import type { FeatureBoard, FeatureKey, FeatureLogLine, FeatureState, FeatureStates, FeaturesOverview } from "./types";
 
@@ -30,3 +31,6 @@ export const loadFeatureLog = async (s: SupabaseClient, limit = 60): Promise<Fea
 
 /** For the pastor, directors and the admin: what is on, and what has changed, with the owner shown as "an administrator". */
 export const loadFeaturesOverview = async (s: SupabaseClient): Promise<FeaturesOverview | null> => parseOverview(await load(s, "features_overview"));
+
+/** The contact series settings. Null for anyone but the unlocked owner, and when the database does not have the series yet. */
+export const loadReachSettings = async (s: SupabaseClient): Promise<ReachSettings | null> => parseReachSettings(await load(s, "god_reach_settings"));

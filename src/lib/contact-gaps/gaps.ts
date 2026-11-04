@@ -2,6 +2,8 @@
 // tribe_reach_gaps, my_reach), every cause in words, and every sentence the prompts and buttons say. Off, the database answers "off" and every
 // screen behaves exactly as it did. The database never sends a number to any of these screens.
 
+import { SERIES_FILTERS, SERIES_NONE, SERIES_STATS_NONE, parseSeriesCounts, parseSeriesOf, parseSeriesStats, type SeriesOfRow, type SeriesState, type SeriesStats } from "@/lib/reach/series";
+
 export type GapCause = "unreachable" | "no_number" | "no_yes" | "made_up" | "not_open" | "withheld";
 
 /** In the order the list puts them: the people only a person can reach first. */
@@ -31,7 +33,7 @@ const isCause = (v: unknown): v is GapCause => typeof v === "string" && CAUSES.s
 // ---------------------------------------------------------------------------
 // The office list
 // ---------------------------------------------------------------------------
-export type GapRow = { personId: string; name: string; tribeId: string; tribe: string; leader: string; cause: GapCause; asks: number; lastAsked: string | null };
+export type GapRow = { personId: string; name: string; tribeId: string; tribe: string; leader: string; cause: GapCause; asks: number; lastAsked: string | null; series: SeriesOfRow };
 export type GapTrend = { day: string; counts: Partial<Record<GapCause, number>>; adults: number };
 export type GapReport = {
   state: "off" | "rehearsal" | "on";
@@ -43,10 +45,29 @@ export type GapReport = {
   trend: GapTrend[];
   limit: number;
   offset: number;
+  /** The contact series: how many people stand at each stage (the whole church, like the counts above), what it has done so far, and whether it is paused. */
+  seriesCounts: Record<SeriesState, number>;
+  seriesStats: SeriesStats;
+  seriesSwitch: "off" | "rehearsal" | "limited" | "on";
+  seriesPaused: boolean;
 };
 
 export const EMPTY_COUNTS: Record<GapCause, number> = { unreachable: 0, no_number: 0, no_yes: 0, made_up: 0, not_open: 0, withheld: 0 };
-export const GAP_REPORT_OFF: GapReport = { state: "off", role: null, counts: { ...EMPTY_COUNTS }, adults: 0, total: 0, rows: [], trend: [], limit: 100, offset: 0 };
+export const GAP_REPORT_OFF: GapReport = {
+  state: "off",
+  role: null,
+  counts: { ...EMPTY_COUNTS },
+  adults: 0,
+  total: 0,
+  rows: [],
+  trend: [],
+  limit: 100,
+  offset: 0,
+  seriesCounts: parseSeriesCounts(null),
+  seriesStats: SERIES_STATS_NONE,
+  seriesSwitch: "off",
+  seriesPaused: false,
+};
 
 function counts(v: unknown): Record<GapCause, number> {
   const out = { ...EMPTY_COUNTS };
@@ -73,6 +94,7 @@ export function parseGapReport(data: unknown): GapReport {
       cause: r.cause,
       asks: int(r.asks),
       lastAsked: text(r.last_asked),
+      series: r.series === undefined ? SERIES_NONE : parseSeriesOf(r.series),
     });
   }
   const trend: GapTrend[] = [];
@@ -90,6 +112,10 @@ export function parseGapReport(data: unknown): GapReport {
     trend,
     limit: int(data.limit) || 100,
     offset: int(data.offset),
+    seriesCounts: parseSeriesCounts(data.series_counts),
+    seriesStats: parseSeriesStats(data.series_stats),
+    seriesSwitch: data.series_switch === "on" || data.series_switch === "rehearsal" || data.series_switch === "limited" ? data.series_switch : "off",
+    seriesPaused: data.series_paused === true,
   };
 }
 
@@ -112,7 +138,10 @@ export function askedWords(lastAsked: string | null, asks: number, now: number =
 // ---------------------------------------------------------------------------
 // The download: names, tribe, leader, cause, asks. Never a number.
 // ---------------------------------------------------------------------------
-export type GapExportRow = { name: string; tribe: string; leader: string; cause: string; asks: number; last_asked: string | null };
+export type GapExportRow = { name: string; tribe: string; leader: string; cause: string; asks: number; last_asked: string | null; series?: string | null; emails?: number | null };
+
+/** The stage of a person in the series, in words. */
+export const seriesStateLabel = (state: string | null | undefined): string => SERIES_FILTERS.find((f) => f.key === state)?.label ?? "";
 
 const cell = (v: string | number | null): string => {
   // A spreadsheet runs a cell that begins with = + - or @ as a formula: a name never needs to
@@ -122,9 +151,17 @@ const cell = (v: string | number | null): string => {
 };
 
 export function gapsCsv(rows: GapExportRow[]): string {
-  const head = ["Name", "Tribe", "Leader", "Why a leader cannot reach them", "Times asked", "Last asked"];
+  // The two series columns appear only when the database sent them (an older database sends neither), so the file is as it was until the series exists
+  const withSeries = rows.some((r) => r.series !== undefined && r.series !== null);
+  const head = ["Name", "Tribe", "Leader", "Why a leader cannot reach them", "Times asked", "Last asked", ...(withSeries ? ["Contact series", "Series emails sent"] : [])];
   const lines = [head.map(cell).join(",")];
-  for (const r of rows) lines.push([r.name, r.tribe, r.leader, causeLabel(r.cause), r.asks, r.last_asked ? r.last_asked.slice(0, 10) : ""].map(cell).join(","));
+  for (const r of rows) {
+    lines.push(
+      [r.name, r.tribe, r.leader, causeLabel(r.cause), r.asks, r.last_asked ? r.last_asked.slice(0, 10) : "", ...(withSeries ? [seriesStateLabel(r.series), r.emails ?? 0] : [])]
+        .map(cell)
+        .join(","),
+    );
+  }
   // The byte-order mark makes a spreadsheet read the accents in a name
   return "\uFEFF" + lines.join("\r\n") + "\r\n";
 }
@@ -134,7 +171,15 @@ export function parseGapExport(data: unknown): GapExportRow[] {
   const out: GapExportRow[] = [];
   for (const r of data) {
     if (!isObj(r)) continue;
-    out.push({ name: text(r.name) ?? "", tribe: text(r.tribe) ?? "", leader: text(r.leader) ?? "", cause: text(r.cause) ?? "", asks: int(r.asks), last_asked: text(r.last_asked) });
+    out.push({
+      name: text(r.name) ?? "",
+      tribe: text(r.tribe) ?? "",
+      leader: text(r.leader) ?? "",
+      cause: text(r.cause) ?? "",
+      asks: int(r.asks),
+      last_asked: text(r.last_asked),
+      ...(text(r.series) ? { series: text(r.series), emails: Math.min(int(r.emails), 4) } : {}),
+    });
   }
   return out;
 }
@@ -191,7 +236,7 @@ export const REACH_WORDS = {
   later: "Not now",
   /** On the contact card: who sees the number. */
   whoSees: "Only your tribe’s leader, their assistant and your coach can see your number, and only if WhatsApp is ticked. Other members never see it.",
-  useSignin: (signin: string) => `Use ${signin}, the number I sign in with`,
+  signinButton: (signin: string) => `Use ${signin}, the number I sign in with`,
   signinNote: "This only fills the box. Nothing is saved until you press Save, and WhatsApp stays unticked until you tick it.",
   /** A leader's list. */
   leaderTitle: "People whose number you cannot see",

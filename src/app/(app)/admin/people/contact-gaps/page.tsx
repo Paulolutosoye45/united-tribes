@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHead } from "@/components/admin/PageHead";
 import { GapTrend } from "@/components/contact-gaps/GapTrend";
+import { SeriesPause, SeriesStop } from "@/components/contact-gaps/SeriesControls";
 import { Badge } from "@/components/ui/Badge";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { CONTACT_GAP_ROLES, hasAnyRole } from "@/lib/auth/roles";
@@ -9,6 +10,7 @@ import { requireRole } from "@/lib/auth/session";
 import { CAUSES, askableCount, askedWords, causeLabel, gapCount, type GapCause } from "@/lib/contact-gaps/gaps";
 import { loadGapReport } from "@/lib/contact-gaps/server";
 import { loadCommunities } from "@/lib/outreach/server";
+import { OFFICE_SERIES_WORDS as SW, SERIES_FILTERS, isSeriesState, seriesWords } from "@/lib/reach/series";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Contact gaps" };
@@ -16,7 +18,7 @@ export const metadata: Metadata = { title: "Contact gaps" };
 const PAGE = 100;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type SearchParams = Promise<{ cause?: string; tribe?: string; community?: string; page?: string }>;
+type SearchParams = Promise<{ cause?: string; tribe?: string; community?: string; series?: string; page?: string }>;
 
 /** The audience a "write to them" button opens the composer with: no number, no WhatsApp yes, or both. */
 function audienceCause(cause: GapCause | null): "no_number" | "no_yes" | "either" {
@@ -29,10 +31,11 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
   const cause = CAUSES.find((c) => c.key === q.cause)?.key ?? null;
   const tribe = q.tribe && UUID.test(q.tribe) ? q.tribe : null;
   const community = q.community && UUID.test(q.community) ? q.community : null;
+  const series = isSeriesState(q.series) ? q.series : null;
   const page = Math.max(1, Math.min(500, Number.parseInt(q.page ?? "1", 10) || 1));
   const supabase = await createClient();
   const [report, communities] = await Promise.all([
-    loadGapReport(supabase, { cause, tribe, community, limit: PAGE, offset: (page - 1) * PAGE }),
+    loadGapReport(supabase, { cause, tribe, community, series, limit: PAGE, offset: (page - 1) * PAGE }),
     loadCommunities(supabase),
   ]);
 
@@ -54,7 +57,7 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
   const askable = askableCount(report.counts);
   const href = (over: Record<string, string | null>): string => {
     const p = new URLSearchParams();
-    const next = { cause, tribe, community, page: null as string | null, ...over };
+    const next = { cause, tribe, community, series, page: null as string | null, ...over };
     for (const [k, v] of Object.entries(next)) if (v) p.set(k, v);
     const s = p.toString();
     return `/admin/people/contact-gaps${s ? `?${s}` : ""}`;
@@ -66,7 +69,8 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
     return `/admin/announcements/new?${p.toString()}`;
   })();
   const pages = Math.max(1, Math.ceil(report.total / PAGE));
-  const filtered = Boolean(cause || tribe || community);
+  const filtered = Boolean(cause || tribe || community || series);
+  const showSeries = report.seriesSwitch !== "off";
 
   return (
     <div className="flex flex-col gap-8">
@@ -104,11 +108,58 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
         </p>
       </section>
 
+      {showSeries ? (
+        <section aria-labelledby="gaps-series" className="flex flex-col gap-3" data-testid="series-section">
+          <div className="flex flex-col gap-1">
+            <h2 id="gaps-series" className="t-heading">{SW.title}</h2>
+            <p className="t-small max-w-[64ch] text-soft">{SW.line}</p>
+            <p className="t-small text-soft" data-testid="series-stats">
+              {SW.statsLine(report.seriesStats)}
+              {report.seriesStats.fixed > 0
+                ? ` By email 1: ${report.seriesStats.fixedBy["1"]}, email 2: ${report.seriesStats.fixedBy["2"]}, email 3: ${report.seriesStats.fixedBy["3"]}, email 4: ${report.seriesStats.fixedBy["4"]}${report.seriesStats.fixedBy.before > 0 ? `, before any email: ${report.seriesStats.fixedBy.before}` : ""}.`
+                : ""}
+            </p>
+          </div>
+          <ul className="flex flex-wrap gap-2" data-testid="series-stages">
+            {SERIES_FILTERS.filter((f) => f.key !== "rehearsal" || report.seriesCounts.rehearsal > 0).map((f) => {
+              const on = series === f.key;
+              return (
+                <li key={f.key}>
+                  <Link
+                    href={on ? href({ series: null }) : href({ series: f.key })}
+                    aria-current={on ? "true" : undefined}
+                    title={f.line}
+                    data-series={f.key}
+                    className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 text-[0.9rem] ${on ? "border-ink bg-ink text-page" : "border-line bg-raised"}`}
+                  >
+                    <span className="font-semibold tabular-nums" data-testid={`series-count-${f.key}`}>{report.seriesCounts[f.key]}</span>
+                    <span>{f.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          {report.seriesSwitch === "rehearsal" ? (
+            <p className="t-small text-soft" role="status">Rehearsal. People are put in the series on paper only, and no email is sent.</p>
+          ) : null}
+          {act ? <SeriesPause paused={report.seriesPaused} /> : null}
+        </section>
+      ) : null}
+
       <section aria-label="What you can do" className="flex flex-wrap items-center gap-3">
         {canWrite && askable > 0 ? (
           <Link href={writeHref} data-testid="gaps-write" className={buttonClasses({ variant: "primary", size: "md" })}>
             Write to the people who can be asked
           </Link>
+        ) : null}
+        {!(canWrite && askable > 0) ? (
+          <p className="t-small max-w-[64ch] text-soft" data-testid="gaps-write-why">
+            {!live
+              ? "The button to write to the people who can be asked appears here once Contact gaps is switched On. It is Rehearsal now, so nobody is asked."
+              : !hasAnyRole(session.roles, ["admin", "director", "pastor"])
+                ? "Only an admin, a director or a pastor can write to the people who can be asked."
+                : "There is nobody to ask right now, so there is no button to write to them."}
+          </p>
         ) : null}
         {act && report.total + gaps > 0 ? (
           <a href="/admin/people/contact-gaps/download" data-testid="gaps-download" className="t-body font-medium underline">
@@ -137,6 +188,17 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
             ))}
           </select>
         </label>
+        {showSeries ? (
+          <label className="flex flex-col gap-1.5 text-[0.95rem] font-medium">
+            Series
+            <select name="series" defaultValue={series ?? ""} className="h-12 rounded-[var(--radius-control)] border-[1.5px] border-line bg-raised px-3 text-base">
+              <option value="">Any stage</option>
+              {SERIES_FILTERS.map((f) => (
+                <option key={f.key} value={f.key}>{f.label}</option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         {tribe ? <input type="hidden" name="tribe" value={tribe} /> : null}
         <Button type="submit" size="md" variant="quiet">Filter</Button>
         {filtered ? (
@@ -150,7 +212,7 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
         </p>
       ) : (
         <div className="card overflow-x-auto p-0">
-          <table className="w-full min-w-[40rem] text-left" data-testid="gaps-table">
+          <table className="w-full min-w-[48rem] text-left" data-testid="gaps-table">
             <caption className="sr-only">Members a leader cannot reach on WhatsApp</caption>
             <thead>
               <tr className="t-small border-b border-line text-soft">
@@ -159,6 +221,7 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
                 <th scope="col" className="px-4 py-3 font-medium">Leader</th>
                 <th scope="col" className="px-4 py-3 font-medium">Why</th>
                 <th scope="col" className="px-4 py-3 font-medium">Asked</th>
+                {showSeries ? <th scope="col" className="px-4 py-3 font-medium">{SW.stage}</th> : null}
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -173,6 +236,14 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
                     <Badge tone={r.cause === "unreachable" ? "flame" : "neutral"}>{causeLabel(r.cause)}</Badge>
                   </td>
                   <td className="t-small px-4 py-3 text-soft">{askedWords(r.lastAsked, r.asks)}</td>
+                  {showSeries ? (
+                    <td className="t-small px-4 py-3" data-series-state={r.series.state}>
+                      <div className="flex flex-col items-start gap-1.5">
+                        <span>{seriesWords(r.series)}</span>
+                        {act && r.series.state === "in_series" ? <SeriesStop personId={r.personId} name={r.name} /> : null}
+                      </div>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

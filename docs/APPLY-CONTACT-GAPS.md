@@ -36,7 +36,7 @@ Run the database file **first**. If the website goes out first, every new screen
 
 1. **God Mode → Features → Contact gaps**: it says Off. Move it to **Rehearsal** (give a reason). **Admin → People → Contact gaps** now lists people with the reason beside each; the note at the top says nobody is asked yet. A leader and a member see nothing new.
 2. Move it to **On**. Open **Contact gaps** again: press a reason box to narrow the list; press **Download the whole list** and open it (names, tribe, leader, reason: no numbers).
-3. Press **Write to the people who can be asked**: the composer opens on **Cannot be reached on WhatsApp** and counts who will get it. On the next step, **Add your number** fills a note. Do not send it unless you mean to.
+3. On the **Contact gaps** page itself (not on Announcements), press **Write to the people who can be asked**. It is under the boxes, and it shows only when Contact gaps is **On** (not Rehearsal) and you are an admin, a director or a pastor; when it is hidden, a line beside the download says why. The composer opens on **Cannot be reached on WhatsApp** and counts who will get it. On the next step, **Add your number** fills a note. Do not send it unless you mean to.
 4. As a leader with someone in the list, open **Lead**: **People whose number you cannot see**, with **Ask … to add it**. (This sends a real email: use a tribe where that is fine, or a test member.)
 5. As a member with no number, open **Home**: the note appears; **Not now** removes it for a week; **Choose how I am reached** opens the contact card.
 

@@ -67,13 +67,31 @@ export const contactGaps: Guide = {
       ],
     },
     {
+      title: "The four-email series",
+      blurb: "Only once the owner has switched Reach series on. It asks for you, and moves nobody.",
+      steps: [
+        {
+          id: "series-stages",
+          title: "See where everyone is in it",
+          do: ["Under **The contact series**, press a stage to see only those people, or use the **Series** filter. The **Series** column says where each person is, and how many emails they have had."],
+          tip: "**Chose email** and **Leader is following up** are the two you leave alone.",
+        },
+        {
+          id: "series-pause",
+          title: "Pause it, or stop it for one person",
+          do: ["Press [[Pause the series for everyone]] and give a reason, and no more emails go until you press [[Resume the series]]. Beside a name, press **Stop**, give a reason, and that person is not emailed again."],
+          careful: "Both need a reason of at least five letters, and both are kept in the log. Nobody is moved or removed by the series.",
+        },
+      ],
+    },
+    {
       title: "Keep a copy, and watch it improve",
       blurb: "For the data lead, the director and the admin.",
       steps: [
         {
           id: "download",
           title: "Download the list",
-          do: ["Press [[Download the whole list (spreadsheet)]]. It has names, tribe, leader, the reason and how often each was asked. It has no phone numbers."],
+          do: ["Press [[Download the whole list (spreadsheet)]]. It has names, tribe, leader, the reason, how often each was asked, and where each is in the series. It has no phone numbers."],
         },
         {
           id: "trend",

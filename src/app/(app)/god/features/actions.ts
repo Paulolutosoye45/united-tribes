@@ -70,3 +70,16 @@ export async function featureFindAction(scope: string, query: string): Promise<{
   const done = (await run("god_feature_find", { p_scope: scope, p_q: q })) as Done;
   return done.ok ? { ok: true, found: parseFound(done.data) } : done;
 }
+
+/** The contact series settings: the leader's first go, the length of the series, and the notes a tribe may send a week. */
+export async function reachSettingsAction(input: { firstGo: number; release: number; endMode: string; notes: number; reason: string }): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
+  if (!input || !whole(input.firstGo) || !whole(input.release) || !whole(input.notes) || !["silent", "everyone", "list"].includes(input.endMode)) return bad();
+  const done = await run(
+    "god_reach_settings_set",
+    { p_first_go: input.firstGo, p_release: input.release, p_end_mode: input.endMode, p_note_per_week: input.notes, p_reason: reasonOf(input.reason) },
+    PAGES,
+  );
+  return done.ok ? { ok: true } : done;
+}

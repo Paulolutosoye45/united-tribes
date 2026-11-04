@@ -317,6 +317,101 @@ describe("POST /api/cron/tick", () => {
     expect((await thrown.json()).problems.join(" ")).toContain("details check: could not run");
   });
 
+  it("runs the leader card reminders each beat, before the messages go out, and a fault in it never stops anything", async () => {
+    process.env.WORKER_TOKEN = TOKEN;
+    process.env.MESSAGING_MODE = "log";
+    const order: string[] = [];
+    rpc.mockImplementation(async (fn: string) => {
+      order.push(fn);
+      if (fn === "worker_leader_card_reminders") return { data: { mode: "on", queued: 3, would_send: 0 }, error: null };
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const ok = await call("POST", TOKEN_HEADER);
+    expect(ok.status).toBe(200);
+    const body = await ok.json();
+    expect(body.problems).toEqual([]);
+    expect(body.leaderCards).toEqual({ mode: "on", queued: 3, wouldSend: 0 });
+    expect(rpc.mock.calls.filter(([fn]) => fn === "worker_leader_card_reminders")).toHaveLength(1);
+    // an email it queues goes out in this same beat
+    expect(order.indexOf("worker_leader_card_reminders")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("worker_leader_card_reminders")).toBeLessThan(order.indexOf("worker_claim"));
+
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_leader_card_reminders") return { data: null, error: { message: "boom" } };
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const bad = await call("POST", TOKEN_HEADER);
+    expect(bad.status).toBe(200);
+    expect((await bad.json()).problems.join(" ")).toContain("leader card reminders: boom");
+
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_leader_card_reminders") throw new Error("socket closed");
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const thrown = await call("POST", TOKEN_HEADER);
+    expect(thrown.status).toBe(200);
+    expect((await thrown.json()).problems.join(" ")).toContain("leader card reminders: could not run");
+
+    // a database that does not have the function yet (the website went out first) is listed, never fatal
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_leader_card_reminders") return { data: null, error: { message: "Could not find the function public.worker_leader_card_reminders" } };
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    expect((await call("POST", TOKEN_HEADER)).status).toBe(200);
+  });
+
+  it("runs the contact series each beat, before the messages go out, and a fault in it never stops anything", async () => {
+    process.env.WORKER_TOKEN = TOKEN;
+    process.env.MESSAGING_MODE = "log";
+    const order: string[] = [];
+    rpc.mockImplementation(async (fn: string) => {
+      order.push(fn);
+      if (fn === "worker_reach_tick") return { data: { ran: true, enrolled: 2, steps: { sent: 2 } }, error: null };
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const ok = await call("POST", TOKEN_HEADER);
+    expect(ok.status).toBe(200);
+    const body = await ok.json();
+    expect(body.problems).toEqual([]);
+    expect(body.reachSeries).toEqual({ ran: true });
+    expect(rpc.mock.calls.filter(([fn]) => fn === "worker_reach_tick")).toHaveLength(1);
+    // an email it queues goes out in this same beat
+    expect(order.indexOf("worker_reach_tick")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("worker_reach_tick")).toBeLessThan(order.indexOf("worker_claim"));
+
+    // Off: the database says it did not run, and that is not a fault
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_reach_tick") return { data: { ran: false }, error: null };
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const off = await (await call("POST", TOKEN_HEADER)).json();
+    expect(off.reachSeries).toEqual({ ran: false });
+    expect(off.problems).toEqual([]);
+
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_reach_tick") return { data: null, error: { message: "boom" } };
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const bad = await call("POST", TOKEN_HEADER);
+    expect(bad.status).toBe(200);
+    expect((await bad.json()).problems.join(" ")).toContain("contact series: boom");
+
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_reach_tick") throw new Error("socket closed");
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    const thrown = await call("POST", TOKEN_HEADER);
+    expect(thrown.status).toBe(200);
+    expect((await thrown.json()).problems.join(" ")).toContain("contact series: could not run");
+
+    // a database that does not have the function yet (the website went out first) is listed, never fatal
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "worker_reach_tick") return { data: null, error: { message: "Could not find the function public.worker_reach_tick" } };
+      return fn === "worker_claim" ? { data: [], error: null } : { data: { queued: 0 }, error: null };
+    });
+    expect((await call("POST", TOKEN_HEADER)).status).toBe(200);
+  });
+
   it("answers 502 when the database cannot be reached at all", async () => {
     process.env.WORKER_TOKEN = TOKEN;
     rpc.mockResolvedValue({ data: null, error: { message: "connection refused" } });

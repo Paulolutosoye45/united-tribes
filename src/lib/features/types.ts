@@ -29,6 +29,8 @@ export const FEATURE_KEYS = [
   "removal_requests",
   "whatsapp_mode",
   "contact_gaps",
+  "reach_series",
+  "tribe_note",
 ] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 

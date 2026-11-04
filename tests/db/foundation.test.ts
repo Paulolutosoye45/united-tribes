@@ -1089,6 +1089,27 @@ describe("locked-down defaults", () => {
       "contact_ask_send",
       "my_reach",
       "reach_prompt_dismiss",
+      // The contact series and the tribe note (Package 5 of seats and contacts). The leader's strip, Ask my members, "I'll follow this up myself" and the
+      // tribe note are for the leader or assistant of that tribe (the strip also for the coach); the pause for everyone, the stop for one person and the owner's
+      // settings are for the office and the owner. Each checks who is asking inside, and answers "off" or refuses until the owner moves the switch.
+      "tribe_reach",
+      "reach_ask_tribe",
+      "reach_follow_up",
+      "tribe_note_send",
+      "reach_series_pause",
+      "reach_series_stop",
+      "god_reach_settings",
+      "god_reach_settings_set",
+      // Leader cards (where each leader's Tribe Card is, and whether the email arrived). The office board, the department tag, Send again, the failures count,
+      // the two spreadsheets and the reminder setting are for the office only (admin, director, pastor to act; the data lead to look); each checks the role
+      // inside before it reads or writes anything. The reminders' heartbeat (worker_leader_card_reminders, below) needs the sending service's token.
+      "leader_cards_board",
+      "leader_card_department_set",
+      "leader_cards_resend",
+      "leader_cards_failures",
+      "leader_cards_sheet",
+      "leader_card_reminders_get",
+      "leader_card_reminders_set",
       // The leader's two group lists (who to let into the WhatsApp group, and who to take out). Only the tribe's leader or assistant; checked inside each.
       "tribe_group_list",
       "tribe_group_mark",
@@ -1175,6 +1196,16 @@ describe("locked-down defaults", () => {
       "worker_whatsapp_allowed",
       "worker_whatsapp_marketing",
       "worker_removal_tick",
+      "worker_leader_card_reminders",
+      // The private "add my number" page (a link from the series, a tribe note or the placement email) and the heartbeat's series step: each needs the sending
+      // token, and the page's calls also the link's secret
+      "worker_reach_tick",
+      "worker_reach_info",
+      "worker_reach_save",
+      "worker_reach_email_instead",
+      "worker_reach_new_link",
+      "worker_placed_reach",
+      "worker_placed_reach_save",
       "signin_channel_status",
       // Messages & reminders: the email pages and the sending service, each behind a secret
       "worker_reminders_tick",
