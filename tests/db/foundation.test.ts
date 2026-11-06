@@ -1126,6 +1126,12 @@ describe("locked-down defaults", () => {
       "removal_appeal",
       "removal_reinstate",
       "removal_appeal_uphold",
+      // Remove a member from a tribe, from Admin (Package 5b). The admin, a director and the owner only; each begins with the same office check as
+      // Place or move a member, and answers nobody else.
+      "admin_remove_member",
+      "admin_put_back",
+      "admin_tribe_members",
+      "admin_removal_person",
       // Exports and Reports. The switchboard functions each begin god_only() (the platform owner's alone); the rest check who is asking and
       // whether the pack is on for them. A pack that is Off gives nothing to anyone.
       "export_board",

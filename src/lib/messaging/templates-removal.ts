@@ -12,7 +12,7 @@ import type { Context, EmailContent, Params, TemplateDef } from "./types";
  *     by this message: the Care Lead speaks to their parent or guardian
  *   - the leader is told what was decided (approved, declined, a question for them, or the seat put back), by the member's first name only, with a
  *     button to their tribe page, where the words of the person who decided are. The reminder to take the person out of any WhatsApp group the leader
- *     keeps outside this site goes only in the "approved" message
+ *     keeps outside this site goes only in the "approved" message and in "removed" (the office took the place itself, from Admin)
  *   - one idea and one main button; a subject that fits on a phone's lock screen
  */
 
@@ -58,13 +58,18 @@ const memberTold = build({
   email: (p, c) => {
     const tribe = short(p.tribe, "your tribe", 60);
     const contact = short(p.contact_first, "the Care Team", 30);
-    const days = Math.max(1, Math.round(num(p.appeal_days, 14)));
+    // A place the office changed has no appeal to offer; the database says so with a 0. Anything else (including nothing at all) keeps the 14 days.
+    const given = p.appeal_days === undefined || p.appeal_days === null ? 14 : num(p.appeal_days, 14);
+    const noAppeal = given <= 0;
+    const days = Math.max(1, Math.round(given));
     return {
       paragraphs: [
         `Your place in ${tribe} has changed. The church’s leaders looked at this carefully before it was decided, and you are still very much part of this church family.`,
         "You do not lose anything by this. What you have shared with us, and everything you have taken part in, is just as you left it.",
         "Other tribes are open to you, and we would love you to be in one. The button below shows the tribes that fit you best.",
-        `If you would like to talk about it, ${contact} is the person to speak to. If you feel a mistake has been made, you can ask ${contact} to look at it again, from the same page, within ${days} days.`,
+        noAppeal
+          ? `If you would like to talk about it, ${contact} is the person to speak to.`
+          : `If you would like to talk about it, ${contact} is the person to speak to. If you feel a mistake has been made, you can ask ${contact} to look at it again, from the same page, within ${days} days.`,
       ],
       cta: { label: "See other tribes", url: c.link("/tribe") },
     };
@@ -93,9 +98,9 @@ const memberReinstated = build({
 // The leader
 // ---------------------------------------------------------------------------
 
-const decisionOf = (p: Params): "approved" | "declined" | "question" | "reinstated" => {
+const decisionOf = (p: Params): "approved" | "declined" | "question" | "reinstated" | "removed" => {
   const d = str(p.decision);
-  return d === "approved" || d === "declined" || d === "question" || d === "reinstated" ? d : "question";
+  return d === "approved" || d === "declined" || d === "question" || d === "reinstated" || d === "removed" ? d : "question";
 };
 
 const leaderDecided = build({
@@ -108,6 +113,7 @@ const leaderDecided = build({
       case "approved": return `Your request about ${who} was approved`;
       case "declined": return `Your request about ${who} was not approved`;
       case "reinstated": return `${who} is back in your tribe`;
+      case "removed": return `${who}’s place in your tribe has changed`;
       default: return `A question about your request for ${who}`;
     }
   },
@@ -122,6 +128,15 @@ const leaderDecided = build({
             `The church has approved your request about ${who} in ${tribe}. Their place in the tribe has been released, and they have been told kindly and offered other tribes.`,
             "If you keep a WhatsApp group for the tribe outside this site, please take them out of it yourself. We cannot do that for you, and they should not be left in a group they are no longer part of.",
             "Please do not talk about the reason with the tribe. If someone asks, tell them it was a decision of the church and leave it there.",
+          ],
+          cta: { label: "Open my tribe", url: c.link(path) },
+        };
+      case "removed":
+        return {
+          paragraphs: [
+            `The church has changed ${who}’s place in ${tribe}. Their place in the tribe has been released, and they have been told kindly and offered other tribes.`,
+            "If you keep a WhatsApp group for the tribe outside this site, please take them out of it yourself. We cannot do that for you, and they should not be left in a group they are no longer part of.",
+            "Please do not talk about it with the tribe. If someone asks, tell them it was a decision of the church and leave it there.",
           ],
           cta: { label: "Open my tribe", url: c.link(path) },
         };
@@ -157,6 +172,7 @@ const leaderDecided = build({
       case "approved": return `your request about ${who} was approved.`;
       case "declined": return `your request about ${who} was not approved.`;
       case "reinstated": return `${who} is back in your tribe.`;
+      case "removed": return `${who}’s place in your tribe has changed.`;
       default: return `there is a question about your request for ${who}.`;
     }
   },

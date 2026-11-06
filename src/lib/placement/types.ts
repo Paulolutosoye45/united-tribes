@@ -621,3 +621,62 @@ export function parseOfficeCounts(json: unknown): OfficeCounts | null {
     ),
   };
 }
+
+// --- Remove a member from a tribe (Admin) ---
+
+/** A removal the office made in the last 30 days. `reason` is the office's own words, shown only on these Admin pages. */
+export type RemovedLately = {
+  id: string;
+  person: string;
+  tribe: string;
+  tribeName: string;
+  name: string;
+  at: string | null;
+  by: string | null;
+  reason: string | null;
+  putBackAt: string | null;
+  canPutBack: boolean;
+};
+
+const parseRemoved = (list: unknown): RemovedLately[] =>
+  arr(list).flatMap((r) => {
+    if (!isObject(r)) return [];
+    const id = uuid(r.id);
+    const person = uuid(r.person);
+    const tribe = uuid(r.tribe);
+    return id && person && tribe
+      ? [{ id, person, tribe, tribeName: str(r.tribe_name), name: str(r.name), at: strOrNull(r.at), by: strOrNull(r.by), reason: strOrNull(r.reason), putBackAt: strOrNull(r.put_back_at), canPutBack: r.can_put_back === true }]
+      : [];
+  });
+
+export type TribeMember = { person: string; name: string; since: string | null; saidYes: boolean; self: boolean; careOnly: boolean };
+export type TribeRoster = { role: PlacerRole; members: TribeMember[]; lately: RemovedLately[] };
+
+export function parseTribeRoster(json: unknown): TribeRoster | null {
+  if (!isObject(json)) return null;
+  return {
+    role: json.role === "admin" || json.role === "director" ? json.role : "owner",
+    members: arr(json.members).flatMap((m) => {
+      if (!isObject(m)) return [];
+      const person = uuid(m.person);
+      return person ? [{ person, name: str(m.name), since: strOrNull(m.since), saidYes: m.said_yes === true, self: m.self === true, careOnly: m.care_only === true }] : [];
+    }),
+    lately: parseRemoved(json.lately),
+  };
+}
+
+export type PersonRemoval = {
+  role: PlacerRole;
+  seat: { tribe: string; name: string; self: boolean; careOnly: boolean } | null;
+  lately: RemovedLately[];
+};
+
+export function parsePersonRemoval(json: unknown): PersonRemoval | null {
+  if (!isObject(json)) return null;
+  const tribe = isObject(json.seat) ? uuid(json.seat.tribe) : null;
+  return {
+    role: json.role === "admin" || json.role === "director" ? json.role : "owner",
+    seat: tribe && isObject(json.seat) ? { tribe, name: str(json.seat.name), self: json.seat.self === true, careOnly: json.seat.care_only === true } : null,
+    lately: parseRemoved(json.lately),
+  };
+}

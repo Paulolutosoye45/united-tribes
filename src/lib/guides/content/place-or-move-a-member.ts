@@ -1,7 +1,7 @@
 import type { Guide } from "../types";
 
 /**
- * A4. For the admin and the director: putting one member in a tribe, moving one to another, undoing it, and asking the owner for what only the owner may allow.
+ * A4. For the admin and the director: putting one member in a tribe, moving one to another, undoing it, taking one out of a tribe (and putting them back), and asking the owner for what only the owner may allow.
  * The pages work only while the owner has Placement On, so there are no pictures.
  */
 export const placeOrMoveAMember: Guide = {
@@ -12,12 +12,13 @@ export const placeOrMoveAMember: Guide = {
   forWho: "For the admin and the director. The owner has the same tool in God Mode",
   audience: ["admin", "director"],
   seenBy: ["pastor"],
-  minutes: 6,
+  minutes: 8,
   art: "move",
   ready: ["The person’s name, e-mail or phone number, and the tribe you have in mind.", "Placement switched On by the owner. If it is Off or in Rehearsal, the pages say so and nobody can be placed from here."],
   whoSees: [
     "The member gets the same **Your tribe** email as in a church run, with a private link to say yes, keep their details private or look at other tribes. Their leader sees their name now, and their number only after they say yes.",
     "When you move someone, the leader they leave is told. Nobody else is.",
+    "When you take someone out of a tribe, they are emailed kindly with other tribes to look at, and the tribe’s leader is told by first name only. Neither is told your reason.",
   ],
   ifDifferent: "If you cannot find Place or move a member in the Admin menu, you do not hold the admin or director role. If a page says Placement is Off, ask the owner to switch it On.",
   next: [],
@@ -65,6 +66,35 @@ export const placeOrMoveAMember: Guide = {
           title: "Move them, and undo if you must",
           do: ["Press the button. The old seat is given up, they are emailed **Your tribe** for the new one, and the old leader is told.", "[[Undo]] puts the old seat back, until the new tribe’s leader has been told."],
           careful: "If the old tribe has filled up since, Undo cannot put them back. Move them again instead.",
+        },
+      ],
+    },
+    {
+      title: "Take a member out of a tribe",
+      blurb: "From the tribe’s page or the member’s page, with a way back.",
+      steps: [
+        {
+          id: "open-members",
+          title: "Open the tribe",
+          do: ["Open **Admin**, then **Place or move a member**, and press the tribe. Its **Members** list shows everyone in it, with [[Remove]] beside each.", "You can also open a member’s page and use **Remove from this tribe**."],
+          tip: "A member with an open care matter, or a young person, has no button. Only the Care Lead changes that place.",
+        },
+        {
+          id: "remove-them",
+          title: "Say why, and confirm",
+          do: ["Read what will happen, write a reason of 10 to 300 characters, and press the button with their name. [[Keep them]] closes it and changes nothing.", "They go back to the pile of people waiting to be placed. You can place them in another tribe at once; automatic placement leaves them alone for 3 days."],
+          careful: "Only the church’s office reads your reason. It is never in an email, and it is cleared after 12 months. The same tribe is not offered to them again unless you put them back.",
+        },
+        {
+          id: "put-them-back",
+          title: "Put them back if it was a mistake",
+          do: ["Under **Removed here lately** on the tribe’s page (and on the member’s page), press [[Put back]]. It works for 14 days, while the tribe is open, has room and they have not joined another.", "They are emailed that their place is back, and the leader is told."],
+          why: "After 14 days, place them again instead, from the same pages.",
+        },
+        {
+          id: "whatsapp-group",
+          title: "Ask the leader to take them out of the group",
+          do: ["The leader’s email reminds them to take the member out of any WhatsApp group they keep for the tribe. The site cannot do that for them, and the leader’s page lists who to take out."],
         },
       ],
     },

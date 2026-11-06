@@ -131,3 +131,28 @@ export async function decideRequestAction(input: { request: string; person: stri
   )) as Done<{ approved?: boolean } | null>;
   return done.ok ? { ok: true, approved: done.data?.approved === true } : done;
 }
+
+// --- Remove a member from a tribe, and put them back ---
+
+/**
+ * Takes a member out of a tribe: their seat is released and they go back to the pile waiting to be placed. The reason is for the office only.
+ * The database refuses a young person, an open care matter, yourself, a seat that is gone, and more than 20 a day, and says why in words.
+ */
+export async function removeFromTribeAction(input: { tribe: string; person: string; reason: string }): Promise<{ ok: true; name: string } | Fail> {
+  if (!(await who())) return NOT_AVAILABLE;
+  if (!input || !isUuid(input.tribe) || !isUuid(input.person)) return bad();
+  const reason = typeof input.reason === "string" ? input.reason.trim() : "";
+  if (reason.length < 10 || reason.length > 300) return { ok: false, message: "Write a reason of 10 to 300 characters. Only the church’s office will read it." };
+  const done = (await run("admin_remove_member", { p_tribe: input.tribe, p_person: input.person, p_reason: reason }, [...pagesFor(input.person, input.tribe), "/lead/tribe"])) as Done<{ name?: string } | null>;
+  if (!done.ok) return done;
+  return { ok: true, name: typeof done.data?.name === "string" ? done.data.name : "They" };
+}
+
+/** Puts a member back in the tribe the office took them out of, within 14 days, if the tribe is open, has room and they have not joined another. */
+export async function putBackAction(removal: string, person: string, tribe: string): Promise<{ ok: true; name: string } | Fail> {
+  if (!(await who())) return NOT_AVAILABLE;
+  if (!isUuid(removal) || !isUuid(person) || !isUuid(tribe)) return bad();
+  const done = (await run("admin_put_back", { p_removal: removal }, [...pagesFor(person, tribe), "/lead/tribe"])) as Done<{ name?: string } | null>;
+  if (!done.ok) return done;
+  return { ok: true, name: typeof done.data?.name === "string" ? done.data.name : "They" };
+}

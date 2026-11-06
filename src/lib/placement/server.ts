@@ -1,8 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  parseHolds, parseItems, parseLeadersView, parseOfficeCounts, parseOfficePerson, parseOfficeTribe, parseOfficeTribes, parseOneOptions, parseOverview, parsePlaced, parseRequests, parseRunView,
-  type Hold, type LeadersView, type OfficeCounts, type OfficePerson, type OfficeRequest, type OfficeTribe, type OneOption, type Overview, type PlacedState, type RunView,
+  parseHolds, parseItems, parseLeadersView, parseOfficeCounts, parseOfficePerson, parseOfficeTribe, parseOfficeTribes, parseOneOptions, parseOverview, parsePersonRemoval, parsePlaced, parseRequests, parseRunView, parseTribeRoster,
+  type Hold, type LeadersView, type OfficeCounts, type OfficePerson, type OfficeRequest, type OfficeTribe, type OneOption, type Overview, type PersonRemoval, type PlacedState, type RunView, type TribeRoster,
 } from "./types";
 
 // Each loader returns null when the database refuses (the person is not the owner, or is locked) or is unreachable. The pages treat
@@ -34,3 +34,8 @@ export const loadOfficeTribe = async (s: SupabaseClient, tribe: string): Promise
 /** The requests to the owner: all of them for the owner, one's own for an admin or a director. */
 export const loadRequests = async (s: SupabaseClient, person: string | null = null): Promise<OfficeRequest[]> => parseRequests(await load(s, "placement_requests_list", { p_person: person }));
 export const loadOfficeCounts = async (s: SupabaseClient): Promise<OfficeCounts | null> => parseOfficeCounts(await load(s, "placement_office_counts"));
+
+/** A tribe's members with Remove, and what the office took out of it lately. Null when the database refuses. */
+export const loadTribeRoster = async (s: SupabaseClient, tribe: string): Promise<TribeRoster | null> => parseTribeRoster(await load(s, "admin_tribe_members", { p_tribe: tribe }));
+/** Whether Remove is for this person, and what the office took them out of lately. Null when the database refuses. */
+export const loadPersonRemoval = async (s: SupabaseClient, person: string): Promise<PersonRemoval | null> => parsePersonRemoval(await load(s, "admin_removal_person", { p_person: person }));

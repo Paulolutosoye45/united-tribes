@@ -6,12 +6,13 @@ import { PageHead } from "@/components/admin/PageHead";
 import { OfficeRequests } from "@/components/placement/OfficeRequests";
 import { PersonPlace } from "@/components/placement/PersonPlace";
 import { PlacedLately } from "@/components/placement/PlacedLately";
+import { PersonRemove, RemovedLately } from "@/components/placement/RemoveMember";
 import { Badge } from "@/components/ui/Badge";
 import { PLACE_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { formatShortDate } from "@/lib/dates";
 import { isUuid } from "@/lib/leaders/errors";
-import { loadOfficePerson, loadOneOptions, loadRequests } from "@/lib/placement/server";
+import { loadOfficePerson, loadOneOptions, loadPersonRemoval, loadRequests } from "@/lib/placement/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "A member" };
@@ -33,7 +34,11 @@ export default async function PersonPage({ params }: { params: Params }) {
   const info = await loadOfficePerson(supabase, id);
   if (!info) notFound();
   const canPlace = info.member && !info.leads;
-  const [options, requests] = await Promise.all([canPlace ? loadOneOptions(supabase, id) : Promise.resolve([]), loadRequests(supabase, id)]);
+  const [options, requests, removal] = await Promise.all([
+    canPlace ? loadOneOptions(supabase, id) : Promise.resolve([]),
+    loadRequests(supabase, id),
+    info.member ? loadPersonRemoval(supabase, id) : Promise.resolve(null),
+  ]);
   const name = info.person.name;
 
   return (
@@ -81,6 +86,20 @@ export default async function PersonPage({ params }: { params: Params }) {
           {info.leads ? `${name} leads or supports a tribe, so they cannot be placed in one as a member.` : `${name} is not a member who can join a tribe.`}
         </p>
       )}
+
+      {removal && info.member && !info.leads ? (
+        <section aria-label="Remove from a tribe" className="flex flex-col gap-3">
+          <h2 className="t-heading">Remove from a tribe</h2>
+          <div className="card p-5">
+            <PersonRemove person={{ id, name }} seat={removal.seat} />
+          </div>
+          {removal.lately.length > 0 ? (
+            <div className="card p-5">
+              <RemovedLately items={removal.lately} showName={false} empty="" />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section aria-label="Last placement" className="flex flex-col gap-3">
         <h2 className="t-heading">Last placement from Admin</h2>
