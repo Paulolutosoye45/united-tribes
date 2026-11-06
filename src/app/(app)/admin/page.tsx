@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NeedsAttention } from "@/components/admin/NeedsAttention";
+import { buttonClasses } from "@/components/ui/Button";
 import { ExportEntrance } from "@/components/exports/ExportEntrance";
 import { loadAttention } from "@/lib/admin/notices-server";
 import { canOpenDashboard, hatsOf, noticeWarnings, shortcutsFor } from "@/lib/admin/today";
 import { OFFICE_ROLES, ROLE_LABELS } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { formatDate } from "@/lib/dates";
+import { NUDGE_CARD } from "@/lib/placement/nudge";
+import { loadNudgeOverview } from "@/lib/placement/nudge-server";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -19,6 +23,8 @@ const figure = (n: number) => n.toLocaleString("en");
 export default async function AdminPage() {
   const session = await requireRole(OFFICE_ROLES, "/admin");
   const att = await loadAttention();
+  // The placed nudge's card: only while it is On, and only for the people who may use it. Anything wrong means no card.
+  const nudge = await loadNudgeOverview(await createClient());
   const hats = hatsOf(session.roles);
   const shortcuts = shortcutsFor(session.roles);
   const warnings = att ? noticeWarnings(att) : [];
@@ -44,6 +50,22 @@ export default async function AdminPage() {
           We couldn’t load what is waiting. The menu still works. Try again in a moment.
         </p>
       )}
+
+      {nudge.state === "on" ? (
+        <section aria-labelledby="nudge-heading" className="flex flex-col gap-3" data-testid="placed-nudge-card">
+          <h2 id="nudge-heading" className="t-heading">
+            {NUDGE_CARD.title}
+          </h2>
+          <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
+            <p className="t-body measure">{NUDGE_CARD.line(nudge.waiting, nudge.waitedTwoDays)}</p>
+            {nudge.waiting > 0 ? (
+              <Link href="/admin/announcements/new?audience=placed_waiting" className={buttonClasses({ size: "md" })} data-testid="placed-nudge-go">
+                {NUDGE_CARD.button}
+              </Link>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {warnings.length > 0 ? (
         <section aria-labelledby="warnings-heading" className="flex flex-col gap-3" data-testid="notice-warnings">

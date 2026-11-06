@@ -83,3 +83,12 @@ export async function reachSettingsAction(input: { firstGo: number; release: num
   );
   return done.ok ? { ok: true } : done;
 }
+
+/** The placed nudge's three numbers: hours before the first nudge, days between nudges, and the most for one seat. */
+export async function placedNudgeSettingsAction(input: { firstAfter: number; spacing: number; max: number; reason: string }): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
+  if (!input || !whole(input.firstAfter) || !whole(input.spacing) || !whole(input.max)) return bad();
+  const done = await run("god_placed_nudge_settings_set", { p_first_after: input.firstAfter, p_spacing: input.spacing, p_max: input.max, p_reason: reasonOf(input.reason) }, PAGES);
+  return done.ok ? { ok: true } : done;
+}

@@ -9,6 +9,8 @@ import { StatusBadge } from "@/components/outreach/StatusBadge";
 import { ANNOUNCE_ROLES, ANNOUNCE_VIEW_ROLES, APPROVE_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { loadContactGapsOn } from "@/lib/contact-gaps/server";
+import { nudgePreview } from "@/lib/placement/nudge";
+import { loadNudgeState } from "@/lib/placement/nudge-server";
 import { isUuid } from "@/lib/leaders/errors";
 import { announcementSpec } from "@/lib/outreach/compose";
 import { loadAnnounceContext, loadBroadcast, loadResults } from "@/lib/outreach/server";
@@ -50,13 +52,15 @@ export default async function AnnouncementPage({ params, searchParams }: { param
           perMinute={ctx.perMinute}
           hours={ctx.hours}
           reach={await loadContactGapsOn(supabase)}
+          nudge={await loadNudgeState(supabase)}
         />
       </div>
     );
   }
 
   const results = ["sending", "paused", "sent", "cancelled"].includes(b.status) ? await loadResults(supabase, id) : null;
-  const spec = announcementSpec({ subject: b.subject, paragraphs: b.paragraphs, button_label: b.button_label, button_target: b.button_target }, { first_name: "Adaeze", tribe: "Builders Tribe", season_starts: "the start of the season", my_page: "/home" }, ctx.site, ctx.church);
+  const plainSpec = announcementSpec({ subject: b.subject, paragraphs: b.paragraphs, button_label: b.button_label, button_target: b.button_target }, { first_name: "Adaeze", tribe: "Builders Tribe", season_starts: "the start of the season", my_page: "/home" }, ctx.site, ctx.church);
+  const spec = b.audience.kind === "placed_waiting" ? nudgePreview(plainSpec, "Builders Tribe", ctx.site) : plainSpec;
 
   return (
     <div className="flex flex-col gap-8">

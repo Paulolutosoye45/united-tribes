@@ -10,6 +10,9 @@ export type AudienceSpec = {
   /** Contact gaps: who is meant (no number saved, no yes to WhatsApp, or either), and one tribe if narrowed. */
   cause?: "no_number" | "no_yes" | "either";
   tribe?: string;
+  /** The placed-member nudge: everyone waiting, or only those with no number or no WhatsApp yes; and how long since the placement email went. */
+  need?: "all" | "gap";
+  waited_hours?: number;
 };
 
 export type AudiencePreview = {
@@ -77,6 +80,8 @@ export type BroadcastResults = {
   unsubscribed: number;
   tapped: number;
   final_at: string | null;
+  /** The placed nudge only: of those it was for, how many have said yes since, and how many have agreed to WhatsApp since. */
+  placed?: { asked: number; said_yes: number; agreed: number };
 };
 
 export type ApprovalRow = {

@@ -5,6 +5,7 @@ import { deleteAudienceAction, previewAudienceAction, saveAudienceAction } from 
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { APPLICATION_STAGES, AUDIENCE_KINDS, LEFT_OUT_REASONS, REACH_CAUSES, STAFF_ROLES, audienceLabel } from "@/lib/outreach/labels";
+import { NUDGE_AUDIENCE, NUDGE_WAITED_CHOICES, type NudgeState } from "@/lib/placement/nudge";
 import type { AudiencePreview, AudienceSpec, SavedAudience } from "@/lib/outreach/types";
 import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
@@ -20,12 +21,14 @@ type Props = {
   champion: boolean;
   /** Contact gaps is On: "cannot be reached on WhatsApp" is offered as a choice. */
   reach?: boolean;
+  /** The placed nudge: Off hides the choice; Rehearsal shows it and counts; On sends. */
+  nudge?: NudgeState;
 };
 
 const select = "h-12 w-full rounded-[var(--radius-control)] border-[1.5px] border-line bg-raised px-3 text-base focus:border-ink focus:outline-none";
 
 /** Who it is for: a rule over live records, with a live count. Never a list of people, and never an uploaded one. */
-export function AudiencePicker({ spec, onChange, onPreview, saved, communities, champion, reach = false }: Props) {
+export function AudiencePicker({ spec, onChange, onPreview, saved, communities, champion, reach = false, nudge = "off" }: Props) {
   const [preview, setPreview] = useState<AudiencePreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -62,8 +65,8 @@ export function AudiencePicker({ spec, onChange, onPreview, saved, communities, 
   const set = (next: AudienceSpec) => onChange(next, audienceLabel(next, communities));
   const kinds = champion
     ? AUDIENCE_KINDS.filter((k) => ["everyone", "started", "finished_no_tribe", "in_tribe"].includes(k.kind))
-    : AUDIENCE_KINDS.filter((k) => k.kind !== "cannot_reach" || reach || spec.kind === "cannot_reach");
-  const withCommunity = ["everyone", "started", "finished_no_tribe", "in_tribe", "cannot_reach"].includes(spec.kind);
+    : AUDIENCE_KINDS.filter((k) => (k.kind !== "cannot_reach" || reach || spec.kind === "cannot_reach") && (k.kind !== "placed_waiting" || nudge !== "off" || spec.kind === "placed_waiting"));
+  const withCommunity = ["everyone", "started", "finished_no_tribe", "in_tribe", "cannot_reach", "placed_waiting"].includes(spec.kind);
   const left = preview ? Object.entries(preview.skipped).filter(([, n]) => n > 0) : [];
   const toggle = (list: string[] | undefined, v: string) => (list?.includes(v) ? list.filter((x) => x !== v) : [...(list ?? []), v]);
 
@@ -79,7 +82,14 @@ export function AudiencePicker({ spec, onChange, onPreview, saved, communities, 
                 key={k.kind}
                 type="button"
                 aria-pressed={on}
-                onClick={() => set({ kind: k.kind, ...(k.kind === "cannot_reach" ? { cause: "either" as const } : {}), ...(champion && spec.community ? { community: spec.community } : {}) })}
+                onClick={() =>
+                  set({
+                    kind: k.kind,
+                    ...(k.kind === "cannot_reach" ? { cause: "either" as const } : {}),
+                    ...(k.kind === "placed_waiting" ? { need: "all" as const } : {}),
+                    ...(champion && spec.community ? { community: spec.community } : {}),
+                  })
+                }
                 className={`press card flex flex-col gap-0.5 p-4 text-left transition-colors ${on ? "ring-2 ring-ink" : "hover:bg-surface"}`}
               >
                 <span className="font-semibold">{k.label}</span>
@@ -126,6 +136,44 @@ export function AudiencePicker({ spec, onChange, onPreview, saved, communities, 
               </button>
             </p>
           ) : null}
+        </div>
+      ) : null}
+
+      {spec.kind === "placed_waiting" ? (
+        <div className="flex flex-col gap-3" data-testid="nudge-options">
+          {nudge === "rehearsal" ? (
+            <p role="note" className="rounded-[var(--radius-control)] bg-gold/25 px-4 py-3 t-small" data-testid="nudge-rehearsal">
+              {NUDGE_AUDIENCE.rehearsalHelp}
+            </p>
+          ) : null}
+          <label className="flex flex-col gap-2">
+            <span className="t-small font-medium">{NUDGE_AUDIENCE.needTitle}</span>
+            <select className={select} value={spec.need ?? "all"} onChange={(e) => set({ ...spec, need: e.target.value as AudienceSpec["need"] })}>
+              <option value="all">{NUDGE_AUDIENCE.needAll}</option>
+              <option value="gap">{NUDGE_AUDIENCE.needGap}</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-2">
+            <span className="t-small font-medium">{NUDGE_AUDIENCE.waitedTitle}</span>
+            <select className={select} value={spec.waited_hours ?? 24} onChange={(e) => set({ ...spec, waited_hours: Number(e.target.value) === 24 ? undefined : Number(e.target.value) })}>
+              {NUDGE_WAITED_CHOICES.map((h) => (
+                <option key={h} value={h}>
+                  {NUDGE_AUDIENCE.waitedHours(h)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {spec.tribe ? (
+            <p className="t-small">
+              Only one tribe.{" "}
+              <button type="button" className="underline" onClick={() => set({ ...spec, tribe: undefined })}>
+                Every tribe instead
+              </button>
+            </p>
+          ) : null}
+          <p className="t-small text-soft">
+            Members who pressed Don’t share my details, anyone under 18 and anyone who has stopped announcements are never included. Nobody is nudged more than twice, or twice in three days.
+          </p>
         </div>
       ) : null}
 

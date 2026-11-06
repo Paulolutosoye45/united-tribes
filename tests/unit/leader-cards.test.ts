@@ -341,7 +341,7 @@ describe("the announcement audience", () => {
   it("is offered, described in words, and left out of the community narrowing", () => {
     expect(AUDIENCE_KINDS.map((k) => k.kind)).toContain("leader_cards");
     expect(audienceLabel({ kind: "leader_cards" })).toBe("Leaders whose Tribe Card is not finished");
-    expect(read("src/components/outreach/AudiencePicker.tsx")).toMatch(/withCommunity = \["everyone", "started", "finished_no_tribe", "in_tribe", "cannot_reach"\]/);
+    expect(read("src/components/outreach/AudiencePicker.tsx")).toMatch(/withCommunity = \["everyone", "started", "finished_no_tribe", "in_tribe", "cannot_reach", "placed_waiting"\]/);
   });
 });
 

@@ -14,6 +14,15 @@ export function Results({ r }: { r: BroadcastResults }) {
     { label: "Stopped announcements", value: r.unsubscribed, note: r.sent > 0 ? `${((r.unsubscribed / r.sent) * 100).toFixed(1)}% of those sent` : "" },
     { label: "Did not arrive", value: r.bounced, note: "Address did not work" },
   ];
+  const placed = r.placed;
+  if (placed) {
+    tiles.splice(
+      4,
+      0,
+      { label: "Said yes since", value: placed.said_yes, note: `${pct(placed.said_yes, placed.asked)}% of the ${placed.asked.toLocaleString("en")} nudged` },
+      { label: "Agreed to WhatsApp since", value: placed.agreed, note: `${pct(placed.agreed, placed.asked)}% of the ${placed.asked.toLocaleString("en")} nudged` },
+    );
+  }
   return (
     <section aria-labelledby="results-heading" className="flex flex-col gap-4" data-testid="results">
       <h2 id="results-heading" className="t-heading">

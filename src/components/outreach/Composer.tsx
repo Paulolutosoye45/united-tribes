@@ -9,6 +9,7 @@ import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { Button } from "@/components/ui/Button";
 import { announcementSpec, wordingProblem } from "@/lib/outreach/compose";
+import { NUDGE_AUDIENCE, NUDGE_WORDING, nudgePreview, type NudgeState } from "@/lib/placement/nudge";
 import { BUTTON_TARGETS, LEFT_OUT_REASONS, NAME_FIELDS, REACH_STARTERS, STARTERS, audienceLabel } from "@/lib/outreach/labels";
 import type { AudiencePreview, AudienceSample, AudienceSpec, Broadcast, SavedAudience } from "@/lib/outreach/types";
 import { AudiencePicker } from "./AudiencePicker";
@@ -26,6 +27,8 @@ type Props = {
   hours: { from: number; to: number };
   /** Contact gaps is On: the “cannot be reached” audience and its three notes are offered. */
   reach?: boolean;
+  /** The placed nudge: Off hides its audience; Rehearsal counts and tests but cannot send; On sends. */
+  nudge?: NudgeState;
   /** Where to begin, from a link on the Contact gaps page. A draft that already exists wins. */
   start?: AudienceSpec | null;
 };
@@ -43,13 +46,13 @@ const lagosTomorrow = () => {
 };
 const hourText = (h: number) => `${h % 12 === 0 ? 12 : h % 12}:00 ${h < 12 ? "am" : "pm"}`;
 
-export function Composer({ initial, saved, communities, champion, site, church, threshold, perMinute, hours, reach = false, start = null }: Props) {
+export function Composer({ initial, saved, communities, champion, site, church, threshold, perMinute, hours, reach = false, nudge = "off", start = null }: Props) {
   const router = useRouter();
   const d = useDo();
   const [step, setStep] = useState(0);
   const [id, setId] = useState<string | null>(initial?.id ?? null);
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [spec, setSpec] = useState<AudienceSpec>(initial?.audience ?? (!champion && reach && start ? start : champion ? { kind: "started", community: communities[0]?.id } : { kind: "started" }));
+  const [spec, setSpec] = useState<AudienceSpec>(initial?.audience ?? (!champion && start ? start : champion ? { kind: "started", community: communities[0]?.id } : { kind: "started" }));
   const [label, setLabel] = useState(initial?.audience_label ?? "");
   const [subject, setSubject] = useState(initial?.subject ?? "");
   const [paragraphs, setParagraphs] = useState<string[]>(initial?.paragraphs?.length ? initial.paragraphs : [""]);
@@ -65,6 +68,8 @@ export function Composer({ initial, saved, communities, champion, site, church, 
   const focusRef = useRef<{ kind: "subject" } | { kind: "para"; index: number }>({ kind: "subject" });
   const paraRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
+  const isNudge = spec.kind === "placed_waiting";
+  const rehearsal = isNudge && nudge !== "on";
   const resolvedLabel = label || audienceLabel(spec, communities);
   const fields = (): DraftFields => ({
     title: title.trim() || subject.trim().slice(0, 60) || "Untitled announcement",
@@ -72,8 +77,9 @@ export function Composer({ initial, saved, communities, champion, site, church, 
     audience_label: resolvedLabel,
     subject: subject.trim(),
     paragraphs: paragraphs.map((p) => p.trim()).filter(Boolean),
-    button_label: button?.label.trim() || null,
-    button_target: button?.label.trim() ? button.target : null,
+    // A nudge's buttons are fixed: each member gets their own three private links, so the writer adds none
+    button_label: isNudge ? null : button?.label.trim() || null,
+    button_target: isNudge ? null : button?.label.trim() ? button.target : null,
   });
 
   // One person's real values, so the preview shows real names and dates.
@@ -93,10 +99,10 @@ export function Composer({ initial, saved, communities, champion, site, church, 
     () => (sample?.found && sample.vars ? sample.vars : { first_name: "Adaeze", tribe: "Builders Tribe", season_starts: "9 February 2027", my_page: "/home" }),
     [sample],
   );
-  const design = useMemo(
-    () => announcementSpec({ subject, paragraphs, button_label: button?.label ?? null, button_target: button?.target ?? null }, vars, site, church),
-    [subject, paragraphs, button, vars, site, church],
-  );
+  const design = useMemo(() => {
+    const base = announcementSpec({ subject, paragraphs, button_label: isNudge ? null : (button?.label ?? null), button_target: isNudge ? null : (button?.target ?? null) }, vars, site, church);
+    return isNudge ? nudgePreview(base, vars.tribe, site) : base;
+  }, [subject, paragraphs, button, vars, site, church, isNudge]);
 
   const problems = [subject, ...paragraphs, button?.label ?? ""].map((t) => wordingProblem(t)).filter((p): p is string => Boolean(p));
   const written = subject.trim().length > 0 && paragraphs.some((p) => p.trim().length > 0);
@@ -105,7 +111,7 @@ export function Composer({ initial, saved, communities, champion, site, church, 
     { ok: subject.length > 0 && subject.length <= 60, text: subject.length > 60 ? "Subject is long: it may be cut off on a phone" : "Subject fits on a phone" },
     { ok: !/[A-Z]{6,}/.test(subject), text: "No shouting in capitals" },
     { ok: paragraphs.filter((p) => p.trim()).length <= 4, text: "Short enough to read in a minute" },
-    { ok: Boolean(button?.label.trim()) , text: "One clear button" },
+    { ok: isNudge || Boolean(button?.label.trim()), text: "One clear button" },
   ];
 
   function insert(field: string) {
@@ -131,6 +137,13 @@ export function Composer({ initial, saved, communities, champion, site, church, 
         el?.setSelectionRange(at + tag.length, at + tag.length);
       });
     }
+  }
+
+  function useNudgeWording() {
+    setSubject(NUDGE_WORDING.subject);
+    setParagraphs([...NUDGE_WORDING.paragraphs]);
+    setButton(null);
+    if (!title.trim()) setTitle(NUDGE_WORDING.title);
   }
 
   function startWith(starterId: string) {
@@ -231,6 +244,7 @@ export function Composer({ initial, saved, communities, champion, site, church, 
             spec={spec}
             champion={champion}
             reach={reach}
+            nudge={nudge}
             communities={communities}
             saved={saved}
             onChange={(s, l) => {
@@ -251,16 +265,28 @@ export function Composer({ initial, saved, communities, champion, site, church, 
       {step === 1 ? (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
           <div className="flex min-w-0 flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <p className="t-small font-medium">Start from a note (optional)</p>
-              <div className="flex flex-wrap gap-2">
-                {(reach && !champion ? [...STARTERS, ...REACH_STARTERS] : STARTERS).map((s) => (
-                  <button key={s.id} type="button" onClick={() => startWith(s.id)} className="press t-small min-h-11 rounded-full border-[1.5px] border-line bg-raised px-4 font-medium hover:border-soft">
-                    {s.title}
-                  </button>
-                ))}
+            {isNudge ? (
+              <div className="flex flex-col gap-2" data-testid="nudge-wording">
+                <p className="t-small font-medium">Start from the nudge wording</p>
+                <div>
+                  <Button variant="quiet" size="md" onClick={useNudgeWording}>
+                    {NUDGE_AUDIENCE.useWording}
+                  </Button>
+                </div>
+                <p className="t-small text-soft">{NUDGE_AUDIENCE.buttonNote}</p>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="t-small font-medium">Start from a note (optional)</p>
+                <div className="flex flex-wrap gap-2">
+                  {(reach && !champion ? [...STARTERS, ...REACH_STARTERS] : STARTERS).map((s) => (
+                    <button key={s.id} type="button" onClick={() => startWith(s.id)} className="press t-small min-h-11 rounded-full border-[1.5px] border-line bg-raised px-4 font-medium hover:border-soft">
+                      {s.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <label className="flex flex-col gap-2">
               <span className="t-small font-medium">A name for you to find it by (only you see this)</span>
@@ -323,6 +349,9 @@ export function Composer({ initial, saved, communities, champion, site, church, 
               ) : null}
             </div>
 
+            {isNudge ? (
+              <p className="t-small text-soft" data-testid="nudge-locked">{NUDGE_AUDIENCE.lockedNote}</p>
+            ) : (
             <div className="flex flex-col gap-3">
               <label className="flex min-h-11 items-center gap-3">
                 <input type="checkbox" className="size-5 accent-[var(--flame)]" checked={Boolean(button)} onChange={(e) => setButton(e.target.checked ? { label: "Carry on", target: "/home" } : null)} />
@@ -348,6 +377,7 @@ export function Composer({ initial, saved, communities, champion, site, church, 
                 </div>
               ) : null}
             </div>
+            )}
 
             {problems.length > 0 ? (
               <ul role="alert" className="flex flex-col gap-1 rounded-[var(--radius-control)] bg-danger/10 px-4 py-3 text-danger">
@@ -492,7 +522,7 @@ export function Composer({ initial, saved, communities, champion, site, church, 
             </div>
             <div>
               <dt className="t-small text-soft">Button</dt>
-              <dd className="font-semibold">{button?.label.trim() ? button.label : "None"}</dd>
+              <dd className="font-semibold">{isNudge ? "Yes, I’m in · Show me other tribes · Don’t share my details" : button?.label.trim() ? button.label : "None"}</dd>
             </div>
           </dl>
 
@@ -511,8 +541,8 @@ export function Composer({ initial, saved, communities, champion, site, church, 
             <Button variant="ghost" size="md" onClick={() => setStep(2)}>
               Back
             </Button>
-            <Button size="lg" loading={d.busy === "send"} disabled={!written || problems.length > 0 || count === 0} onClick={() => void send()}>
-              {needsApproval ? "Send for approval" : when === "now" ? `Send to ${count.toLocaleString("en")}` : "Schedule it"}
+            <Button size="lg" loading={d.busy === "send"} disabled={!written || problems.length > 0 || count === 0 || rehearsal} onClick={() => void send()}>
+              {rehearsal ? NUDGE_AUDIENCE.rehearsal : needsApproval ? "Send for approval" : when === "now" ? `Send to ${count.toLocaleString("en")}` : "Schedule it"}
             </Button>
           </div>
         </div>

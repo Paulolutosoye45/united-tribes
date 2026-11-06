@@ -20,7 +20,19 @@ export type MyLeading = {
   certified: boolean;
 };
 
-export type LeadingPerson = { name: string; joinedOn: string | null; called: boolean; mark: string | null };
+export type LeadingPerson = {
+  name: string;
+  joinedOn: string | null;
+  called: boolean;
+  mark: string | null;
+  /** Carried so the placed nudge's marks can be set against the right person. */
+  personId?: string;
+  firstName?: string;
+  /** "The church reminded Femi on 10 Nov." Read only, and only for a member still waiting. */
+  reminder?: string | null;
+  /** The number we hold reaches this member (they said yes to WhatsApp and the number is proved). */
+  confirmed?: boolean;
+};
 
 const CARD_STATUSES: readonly string[] = ["draft", "submitted", "changes_requested", "approved"];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,6 +60,8 @@ export function parseLeadingPeople(raw: unknown): LeadingPerson[] | null {
       name: m.name.trim().slice(0, 80),
       joinedOn: typeof m.joined_at === "string" && /^\d{4}-\d{2}-\d{2}/.test(m.joined_at) ? m.joined_at.slice(0, 10) : null,
       called: m.called === true,
+      ...(typeof m.person_id === "string" ? { personId: m.person_id } : {}),
+      ...(typeof m.first_name === "string" && m.first_name.trim() !== "" ? { firstName: m.first_name.trim().slice(0, 80) } : {}),
       mark: placementMark(
         { placement: str(m.placement), contact: str(m.contact), contact_opens_at: str(m.contact_opens_at) || null, withheld: m.withheld === true },
         typeof m.first_name === "string" ? m.first_name : "",

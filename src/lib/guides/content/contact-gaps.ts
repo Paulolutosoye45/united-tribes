@@ -85,6 +85,31 @@ export const contactGaps: Guide = {
       ],
     },
     {
+      title: "Nudge the members we placed",
+      blurb: "Only once the owner has switched Placed nudge on. It writes to members the church placed who have not yet said yes.",
+      steps: [
+        {
+          id: "nudge-open",
+          title: "See who is waiting",
+          do: ["On **Today**, under **Placed members waiting**, press [[Nudge them]]. Or press [[Nudge the members we placed]] on this page. The announcement opens already pointed at the members who are waiting, with the count of who will get it."],
+          why: "The count leaves out anyone placed less than a day ago, anyone who pressed Don’t share my details, anyone nudged in the last three days and anyone already nudged twice.",
+        },
+        {
+          id: "nudge-write",
+          title: "Use the nudge wording",
+          do: ["On the second step, press [[Use the nudge wording]] and change the words if you like.", "The three answers and a line about who can see a number are added for you. They cannot be changed."],
+          tip: "Send a test to yourself first. It has links that open nothing, so you can press them freely.",
+          careful: "While it says Rehearsal, you can count and send yourself a test, but nothing goes to a member.",
+        },
+        {
+          id: "nudge-answer",
+          title: "What the member sees",
+          do: ["Each member gets their own private link. The page has two buttons that both say yes to the tribe: one also lets their leader message them on WhatsApp, and one is email only. Nothing is saved until they press one."],
+          why: "A leader sees a line under a member’s name when the church has reminded them, and Contact gaps shows whose number is confirmed. A number is confirmed when it is the one the member signs in with.",
+        },
+      ],
+    },
+    {
       title: "Keep a copy, and watch it improve",
       blurb: "For the data lead, the director and the admin.",
       steps: [

@@ -1,6 +1,8 @@
 import "server-only";
 import type { Catalogue } from "@/components/intake/types";
 import { loadCatalogue } from "@/lib/intake/server";
+import { LEADER_NUDGE, lagosDay } from "@/lib/placement/nudge";
+import { loadNudgeMarks } from "@/lib/placement/nudge-server";
 import type { createClient } from "@/lib/supabase/server";
 import { parseLeaderAnswers, type LeaderAnswers } from "./answers";
 import { parseLeadingPeople, parseMyLeading, type LeadingPerson, type MyLeading } from "./leading";
@@ -162,7 +164,20 @@ export async function loadMyLeading(supabase: Supabase): Promise<MyLeading | nul
 export async function loadLeadingPeople(supabase: Supabase, tribeId: string): Promise<LeadingPerson[] | null> {
   try {
     const { data, error } = await supabase.rpc("tribe_roster_marked", { p_tribe: tribeId });
-    return error ? null : parseLeadingPeople(data);
+    const people = error ? null : parseLeadingPeople(data);
+    if (!people) return people;
+    // The placed nudge's read-only marks: when a waiting member was reminded, and whose number is confirmed. Nothing when it is Off.
+    const marks = new Map((await loadNudgeMarks(supabase, tribeId)).map((m) => [m.personId, m]));
+    if (marks.size === 0) return people;
+    return people.map((p) => {
+      const mark = p.personId ? marks.get(p.personId) : undefined;
+      if (!mark) return p;
+      return {
+        ...p,
+        reminder: mark.remindedAt && p.mark ? LEADER_NUDGE.reminded(p.firstName || p.name.split(" ")[0], lagosDay(mark.remindedAt)) : null,
+        confirmed: mark.numberConfirmed,
+      };
+    });
   } catch {
     return null;
   }

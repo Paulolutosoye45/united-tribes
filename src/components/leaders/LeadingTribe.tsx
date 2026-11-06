@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { buttonClasses } from "@/components/ui/Button";
 import { formatDate } from "@/lib/dates";
+import { LEADER_NUDGE } from "@/lib/placement/nudge";
 import { LEADER_EMPTY } from "@/lib/placement/wording";
 import { leadingLine, leadingTitle, peopleLine, type LeadingPerson, type MyLeading } from "@/lib/leaders/leading";
 import { ReachAsk } from "@/components/leaders/ReachAsk";
@@ -71,9 +72,15 @@ export function LeadingPeople({ leading, people, gaps = null, reach = null, stri
               <span className="min-w-0">
                 <span className="font-semibold">{p.name}</span>
                 {p.joinedOn ? <span className="t-small ml-2 text-soft">Joined {formatDate(p.joinedOn)}</span> : null}
+                {p.reminder ? (
+                  <span className="t-small block text-soft" data-testid="leading-reminded">
+                    {p.reminder}
+                  </span>
+                ) : null}
               </span>
               <span className="flex flex-wrap items-center gap-2">
                 {p.mark ? <Badge tone="neutral">{p.mark}</Badge> : null}
+                {p.confirmed ? <Badge tone="gold">{LEADER_NUDGE.confirmed}</Badge> : null}
                 {p.called ? <Badge tone="gold">Welcomed</Badge> : <Badge tone="outline">To welcome</Badge>}
               </span>
             </li>

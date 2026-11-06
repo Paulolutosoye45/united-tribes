@@ -1132,6 +1132,15 @@ describe("locked-down defaults", () => {
       "admin_put_back",
       "admin_tribe_members",
       "admin_removal_person",
+      // The placed-member nudge (Package 6a). The office screens each check who is asking and whether the nudge is on for them; the owner's two begin
+      // with god_only(). Everything else it added is closed to every client role.
+      "placed_nudge_state",
+      "placed_nudge_overview",
+      "tribe_nudge_marks",
+      "number_confirmed_for",
+      "whatsapp_confirmed_counts",
+      "god_placed_nudge_settings",
+      "god_placed_nudge_settings_set",
       // Exports and Reports. The switchboard functions each begin god_only() (the platform owner's alone); the rest check who is asking and
       // whether the pack is on for them. A pack that is Off gives nothing to anyone.
       "export_board",
@@ -1212,6 +1221,11 @@ describe("locked-down defaults", () => {
       "worker_reach_new_link",
       "worker_placed_reach",
       "worker_placed_reach_save",
+      // The private page of the placed-member nudge: what to show, the press, and a fresh link. Each needs the sending token, and the link's secret
+      "worker_placed_link_state",
+      "worker_placed_nudge_info",
+      "worker_placed_choose",
+      "worker_placed_new_link",
       "signin_channel_status",
       // Messages & reminders: the email pages and the sending service, each behind a secret
       "worker_reminders_tick",

@@ -3,6 +3,7 @@
  * at the foot of the last email is called, and how each journey and audience is described. One place, so the
  * composer, the previews, the pages people land on and the emails themselves always agree.
  */
+import { NUDGE_AUDIENCE } from "@/lib/placement/nudge";
 
 /** The name fields a message may use. The database accepts exactly these and no others (wording_problem). */
 export const NAME_FIELDS = [
@@ -135,6 +136,7 @@ export const AUDIENCE_KINDS = [
   { kind: "staff", label: "Team members", hint: "By role." },
   { kind: "cannot_reach", label: "Cannot be reached on WhatsApp", hint: "No number saved, or no yes to WhatsApp. Asked by email, never more than three times." },
   { kind: "leader_cards", label: "Leaders whose Tribe Card is not finished", hint: "Not started, in progress, or sent back for changes. The Leader cards board has the same list." },
+  { kind: "placed_waiting", label: NUDGE_AUDIENCE.label, hint: NUDGE_AUDIENCE.help },
 ] as const;
 
 /** Who “cannot be reached on WhatsApp” means. */
@@ -166,6 +168,12 @@ export const LEFT_OUT_REASONS: Record<string, string> = {
   asked_recently: "Asked in the last two weeks",
   asked_enough: "Already asked three times",
   gap_closed: "Put it right since the list was made",
+  answered_since: "Said yes, changed tribe or gave up the seat since the count",
+  not_on: "Not switched on for them yet",
+  withheld: "Pressed Don’t share my details",
+  placed_recent: "Placed less than a day ago",
+  nudged_enough: "Already nudged as many times as allowed",
+  nudged_recently: "Nudged in the last few days",
 };
 
 export const BROADCAST_STATUS: Record<string, { label: string; tone: "grey" | "amber" | "green" | "red" | "blue" }> = {
@@ -191,7 +199,7 @@ export const APPLICATION_STAGES = [
 ] as const;
 
 /** A short sentence for a rule, for lists and for the summary before sending. */
-export function audienceLabel(spec: { kind: string; community?: string; idle_days?: number; no_fit?: string; stages?: string[]; roles?: string[]; cause?: string; tribe?: string }, communities: { id: string; name: string }[] = []): string {
+export function audienceLabel(spec: { kind: string; community?: string; idle_days?: number; no_fit?: string; stages?: string[]; roles?: string[]; cause?: string; tribe?: string; need?: string; waited_hours?: number }, communities: { id: string; name: string }[] = []): string {
   const base = AUDIENCE_KINDS.find((k) => k.kind === spec.kind)?.label ?? "Members";
   const parts: string[] = [];
   if (spec.kind === "started" && spec.idle_days) parts.push(`quiet for ${spec.idle_days}+ days`);
@@ -202,6 +210,9 @@ export function audienceLabel(spec: { kind: string; community?: string; idle_day
   if (spec.kind === "cannot_reach" && spec.cause === "no_number") parts.push("no number saved");
   if (spec.kind === "cannot_reach" && spec.cause === "no_yes") parts.push("number saved, WhatsApp not agreed");
   if (spec.kind === "cannot_reach" && spec.tribe) parts.push("one tribe");
+  if (spec.kind === "placed_waiting" && spec.need === "gap") parts.push("no number or no WhatsApp yes");
+  if (spec.kind === "placed_waiting" && spec.waited_hours && spec.waited_hours > 24) parts.push(`placed over ${spec.waited_hours % 24 === 0 ? `${spec.waited_hours / 24} days` : `${spec.waited_hours} hours`} ago`);
+  if (spec.kind === "placed_waiting" && spec.tribe) parts.push("one tribe");
   if (spec.community) parts.push(`in ${communities.find((c) => c.id === spec.community)?.name ?? "one community"}`);
   return parts.length ? `${base} (${parts.join("; ")})` : base;
 }

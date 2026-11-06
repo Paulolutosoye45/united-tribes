@@ -293,7 +293,7 @@ describe("the office list", () => {
     const x0 = await seen("contact_gaps.exported");
     const file = await c.as(c.admin, "contact_gaps_export");
     expect(file.length).toBeGreaterThan(0);
-    expect(Object.keys(file[0]).sort()).toEqual(["asks", "cause", "emails", "last_asked", "leader", "name", "series", "tribe"]);
+    expect(Object.keys(file[0]).sort()).toEqual(["asks", "cause", "emails", "last_asked", "leader", "name", "number_confirmed", "series", "tribe"]);
     expect(await seen("contact_gaps.exported")).toBe(x0 + 1);
   });
 

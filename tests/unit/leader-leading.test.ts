@@ -39,7 +39,7 @@ describe("reading what the database gives", () => {
         ],
       }),
     ).toEqual([
-      { name: "Ngozi Eze", joinedOn: "2026-10-12", called: true, mark: null },
+      { name: "Ngozi Eze", joinedOn: "2026-10-12", called: true, mark: null, personId: "a" },
       { name: "Tunde Bello", joinedOn: null, called: false, mark: null },
     ]);
   });

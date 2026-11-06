@@ -9,6 +9,8 @@ import { CONTACT_GAP_ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { CAUSES, askableCount, askedWords, causeLabel, gapCount, type GapCause } from "@/lib/contact-gaps/gaps";
 import { loadGapReport } from "@/lib/contact-gaps/server";
+import { CONTACT_GAPS_CONFIRMED } from "@/lib/placement/nudge";
+import { loadConfirmedCounts, loadConfirmedFor, loadNudgeState } from "@/lib/placement/nudge-server";
 import { loadCommunities } from "@/lib/outreach/server";
 import { OFFICE_SERIES_WORDS as SW, SERIES_FILTERS, isSeriesState, seriesWords } from "@/lib/reach/series";
 import { createClient } from "@/lib/supabase/server";
@@ -34,10 +36,15 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
   const series = isSeriesState(q.series) ? q.series : null;
   const page = Math.max(1, Math.min(500, Number.parseInt(q.page ?? "1", 10) || 1));
   const supabase = await createClient();
-  const [report, communities] = await Promise.all([
+  const [report, communities, nudge] = await Promise.all([
     loadGapReport(supabase, { cause, tribe, community, series, limit: PAGE, offset: (page - 1) * PAGE }),
     loadCommunities(supabase),
+    loadNudgeState(supabase),
   ]);
+  // The placed nudge adds a column and a count here once it is switched on for this person; Off, the page is as it was
+  const showConfirmed = nudge !== "off" && report.state !== "off";
+  const confirmedFor: Record<string, string> = showConfirmed ? await loadConfirmedFor(supabase, report.rows.map((r) => r.personId)) : {};
+  const confirmedCounts = showConfirmed ? await loadConfirmedCounts(supabase) : null;
 
   if (report.state === "off") {
     return (
@@ -106,6 +113,18 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
         <p className="t-small text-soft">
           {askable} can be asked by email. The rest are for a person to reach, or are not to be asked at all.
         </p>
+        {showConfirmed && confirmedCounts ? (
+          <p className="t-small text-soft" data-testid="confirmed-counts">
+            {CONTACT_GAPS_CONFIRMED.counts(confirmedCounts.confirmed, confirmedCounts.agreed)}
+          </p>
+        ) : null}
+        {nudge !== "off" && report.counts.not_open > 0 && canWrite ? (
+          <p className="t-small">
+            <Link href="/admin/announcements/new?audience=placed_waiting" className="font-semibold underline underline-offset-4" data-testid="gaps-nudge-link">
+              {CONTACT_GAPS_CONFIRMED.link}
+            </Link>
+          </p>
+        ) : null}
       </section>
 
       {showSeries ? (
@@ -222,6 +241,7 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
                 <th scope="col" className="px-4 py-3 font-medium">Why</th>
                 <th scope="col" className="px-4 py-3 font-medium">Asked</th>
                 {showSeries ? <th scope="col" className="px-4 py-3 font-medium">{SW.stage}</th> : null}
+                {showConfirmed ? <th scope="col" className="px-4 py-3 font-medium">{CONTACT_GAPS_CONFIRMED.column}</th> : null}
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -242,6 +262,11 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
                         <span>{seriesWords(r.series)}</span>
                         {act && r.series.state === "in_series" ? <SeriesStop personId={r.personId} name={r.name} /> : null}
                       </div>
+                    </td>
+                  ) : null}
+                  {showConfirmed ? (
+                    <td className="t-small px-4 py-3" data-confirmed={confirmedFor[r.personId] ? "yes" : "no"}>
+                      {confirmedFor[r.personId] ? CONTACT_GAPS_CONFIRMED.yes : "–"}
                     </td>
                   ) : null}
                 </tr>

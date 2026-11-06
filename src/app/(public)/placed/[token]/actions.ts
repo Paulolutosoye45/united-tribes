@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { AGREEMENT_VERSION } from "@/lib/matching/wording";
 import { workerRpc, workerToken } from "@/lib/messaging/worker";
+import { parseChoose } from "@/lib/placement/nudge";
 
 const FUNCTIONS = { confirm: "worker_placed_confirm", withhold: "worker_placed_withhold", change: "worker_placed_change" } as const;
 type Choice = keyof typeof FUNCTIONS;
@@ -40,4 +41,43 @@ export async function placedAction(formData: FormData) {
     redirect(`/placed/${token}?${result.reason === "started" ? "started=1" : result.reason === "invalid" || result.reason === "not_active" ? "invalid=1" : "problem=1"}`);
   }
   redirect(`/placed/${token}?done=${choice}${result.late ? "&late=1" : ""}`);
+}
+
+/**
+ * The two-button answer of the placed-member nudge: "Yes, I’m in, and message me on WhatsApp" or "Yes, I’m in, email only". One press, one
+ * all-or-nothing step in the database: the place, the number, the WhatsApp yes (only from the first button) and the preference land together, and a number
+ * that does not look right stops all of it. Opening the page saves nothing.
+ */
+export async function placedChooseAction(formData: FormData) {
+  const token = String(formData.get("token") ?? "");
+  const mode = String(formData.get("mode") ?? "");
+  if (!/^[a-f0-9]{64}$/.test(token) || (mode !== "whatsapp" && mode !== "email")) redirect("/");
+  const secret = workerToken();
+  if (!secret) redirect(`/placed/${token}?problem=1`);
+
+  const phone = mode === "whatsapp" ? String(formData.get("phone") ?? "").trim().slice(0, 40) : "";
+  const signin = mode === "whatsapp" && formData.get("signin") === "on";
+  const { data, error } = await workerRpc(secret)("worker_placed_choose", {
+    p_link: token,
+    p_mode: mode,
+    p_phone: phone || null,
+    p_use_signin: signin,
+    p_version: AGREEMENT_VERSION,
+  });
+  if (error) redirect(`/placed/${token}?${error.code === "22023" ? "number=1" : "problem=1"}`);
+  const result = parseChoose(data);
+  if (!result.ok) {
+    redirect(`/placed/${token}?${result.reason === "started" ? "started=1" : result.reason === "invalid" ? "invalid=1" : "problem=1"}`);
+  }
+  redirect(`/placed/${token}?done=confirm&m=${result.mode}${result.confirmed ? "&c=1" : ""}`);
+}
+
+/** "Send me a fresh link": for a link that ran out. The answer is the same whoever asks, so it tells nobody anything. */
+export async function placedFreshLinkAction(formData: FormData) {
+  const token = String(formData.get("token") ?? "");
+  if (!/^[a-f0-9]{64}$/.test(token)) redirect("/");
+  const secret = workerToken();
+  if (!secret) redirect(`/placed/${token}?problem=1`);
+  const { error } = await workerRpc(secret)("worker_placed_new_link", { p_link: token });
+  redirect(`/placed/${token}?${error ? "problem=1" : "fresh=1"}`);
 }

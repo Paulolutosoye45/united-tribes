@@ -138,7 +138,18 @@ export function askedWords(lastAsked: string | null, asks: number, now: number =
 // ---------------------------------------------------------------------------
 // The download: names, tribe, leader, cause, asks. Never a number.
 // ---------------------------------------------------------------------------
-export type GapExportRow = { name: string; tribe: string; leader: string; cause: string; asks: number; last_asked: string | null; series?: string | null; emails?: number | null };
+export type GapExportRow = {
+  name: string;
+  tribe: string;
+  leader: string;
+  cause: string;
+  asks: number;
+  last_asked: string | null;
+  series?: string | null;
+  emails?: number | null;
+  /** The placed nudge: the number we hold reaches this person (it is the one they sign in with). Never the number itself. */
+  numberConfirmed?: boolean;
+};
 
 /** The stage of a person in the series, in words. */
 export const seriesStateLabel = (state: string | null | undefined): string => SERIES_FILTERS.find((f) => f.key === state)?.label ?? "";
@@ -150,14 +161,14 @@ const cell = (v: string | number | null): string => {
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-export function gapsCsv(rows: GapExportRow[]): string {
+export function gapsCsv(rows: GapExportRow[], withConfirmed = false): string {
   // The two series columns appear only when the database sent them (an older database sends neither), so the file is as it was until the series exists
   const withSeries = rows.some((r) => r.series !== undefined && r.series !== null);
-  const head = ["Name", "Tribe", "Leader", "Why a leader cannot reach them", "Times asked", "Last asked", ...(withSeries ? ["Contact series", "Series emails sent"] : [])];
+  const head = ["Name", "Tribe", "Leader", "Why a leader cannot reach them", "Times asked", "Last asked", ...(withSeries ? ["Contact series", "Series emails sent"] : []), ...(withConfirmed ? ["Number confirmed"] : [])];
   const lines = [head.map(cell).join(",")];
   for (const r of rows) {
     lines.push(
-      [r.name, r.tribe, r.leader, causeLabel(r.cause), r.asks, r.last_asked ? r.last_asked.slice(0, 10) : "", ...(withSeries ? [seriesStateLabel(r.series), r.emails ?? 0] : [])]
+      [r.name, r.tribe, r.leader, causeLabel(r.cause), r.asks, r.last_asked ? r.last_asked.slice(0, 10) : "", ...(withSeries ? [seriesStateLabel(r.series), r.emails ?? 0] : []), ...(withConfirmed ? [r.numberConfirmed ? "Yes" : "No"] : [])]
         .map(cell)
         .join(","),
     );
@@ -179,6 +190,7 @@ export function parseGapExport(data: unknown): GapExportRow[] {
       asks: int(r.asks),
       last_asked: text(r.last_asked),
       ...(text(r.series) ? { series: text(r.series), emails: Math.min(int(r.emails), 4) } : {}),
+      ...(typeof r.number_confirmed === "boolean" ? { numberConfirmed: r.number_confirmed } : {}),
     });
   }
   return out;

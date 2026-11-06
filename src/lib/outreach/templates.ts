@@ -1,4 +1,5 @@
-import { flat, num, smsLine, str } from "@/lib/messaging/format";
+import { clock, dayName, flat, num, smsLine, str } from "@/lib/messaging/format";
+import { NUDGE_BUTTONS, NUDGE_WHY, SUBJECT_MAX, isNudgeLink, withLocked } from "@/lib/placement/nudge";
 import type { Context, Params, TemplateDef } from "@/lib/messaging/types";
 import { adaptParagraphs, churchOf, fieldValues, fill, modesOfData, preheaderFor, progressFor, type Data } from "./compose";
 import type { DesignSpec, Hero } from "./email-design";
@@ -48,6 +49,46 @@ export function unsubscribeHeaders(site: string, stopToken: string): Record<stri
   return { "List-Unsubscribe": `<${url}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
 }
 
+/**
+ * The placed-member nudge: an ordinary announcement whose email carries the tribe the church placed the member in and three private links made when
+ * it was sent. It names the tribe, when it meets and who leads it, and nothing else about anyone: no answers, no scores, no other members, no number.
+ */
+function placedNudge(p: Params, c: Context, base: { subject: string; paragraphs: string[]; greeting: string; church: ReturnType<typeof churchOf>; stopToken: string; stopUrl: string; prefsUrl: string }) {
+  const placed = obj(p.placed);
+  const secret = str(placed.secret);
+  if (!isNudgeLink(secret)) return null;
+  const leader = str(placed.leader_first) || "Your leader";
+  const tribe = str(placed.tribe) || "your tribe";
+  const where = str(placed.mode) === "online" ? "online" : "in person";
+  const when = placed.meeting_day == null ? "" : `${dayName(num(placed.meeting_day))}s at ${clock(str(placed.meeting_time))}, ${where}`;
+  const link = (a: "confirm" | "change" | "withhold") => `${c.site}/placed/${secret}?a=${a}`;
+  const subject = base.subject.slice(0, SUBJECT_MAX);
+  const paragraphs = withLocked(base.paragraphs);
+  const spec: DesignSpec = {
+    subject,
+    preheader: `${leader} is looking forward to meeting you.`,
+    greeting: base.greeting,
+    paragraphs,
+    hero: { kind: "held", name: tribe, when: when || "Meeting time to be confirmed", leader },
+    button: { label: NUDGE_BUTTONS.yes, url: link("confirm") },
+    options: [
+      { label: NUDGE_BUTTONS.other, url: link("change") },
+      { label: NUDGE_BUTTONS.withhold, url: link("withhold") },
+    ],
+    church: base.church,
+    why: NUDGE_WHY,
+    stopLabel: "Stop announcements",
+    stopUrl: base.stopUrl,
+    prefsUrl: base.prefsUrl,
+  };
+  return {
+    subject,
+    paragraphs,
+    design: spec,
+    ...(base.stopToken.length >= 32 ? { headers: unsubscribeHeaders(c.site, base.stopToken) } : {}),
+  };
+}
+
 function designed(p: Params, c: Context): ReturnType<TemplateDef["email"]> {
   const kind = str(p.kind) === "announcement" ? "announcement" : "reminder";
   const copy = obj(p.copy);
@@ -62,6 +103,18 @@ function designed(p: Params, c: Context): ReturnType<TemplateDef["email"]> {
   const label = str(copy.button_label);
   const progress = journey ? progressFor(journey, data.step, modesOfData(data)) : null;
   const stopToken = str(links.stop);
+  if (kind === "announcement" && p.placed) {
+    const nudge = placedNudge(p, c, {
+      subject,
+      paragraphs,
+      greeting: `Hi ${values.first_name === "friend" ? c.first : values.first_name},`,
+      church: churchOf(p),
+      stopToken,
+      stopUrl: page(c, links.stop) || c.link("/profile"),
+      prefsUrl: page(c, links.prefs) || c.link("/profile"),
+    });
+    if (nudge) return nudge;
+  }
   const spec: DesignSpec = {
     subject,
     preheader: preheaderFor(kind, paragraphs, step <= 1 || kind === "announcement" ? progress : null) || subject,

@@ -17,7 +17,9 @@ export const safeHref = (url: string) => (/^https:\/\//.test(url) || /^http:\/\/
 export type Hero =
   | { kind: "progress"; progress: Progress; label: string }
   | { kind: "tribe"; name: string; leader: string; seats: number; starts: string }
-  | { kind: "gathering"; name: string; when: string; leader: string };
+  | { kind: "gathering"; name: string; when: string; leader: string }
+  /** The placed-member nudge: the tribe the church placed them in, when it meets and who leads it. No answers, no scores, no other members. */
+  | { kind: "held"; name: string; when: string; leader: string };
 
 export type DesignSpec = {
   subject: string;
@@ -65,6 +67,13 @@ function heroHtml(h: Hero | undefined): string {
       `<p class="ut-soft" style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${C.soft}">Your best match</p>` +
         `<p style="margin:0 0 6px;font-size:21px;line-height:1.25;font-weight:800">${esc(h.name)}</p>` +
         `<p style="margin:0;font-size:15px;line-height:1.55">Led by ${esc(h.leader)}<br>${h.seats > 0 ? `<strong style="color:${C.flame}">${h.seats} seat${h.seats === 1 ? "" : "s"} left</strong>` : "Full for now"} · season starts ${esc(h.starts)}</p>`,
+    );
+  }
+  if (h.kind === "held") {
+    return box(
+      `<p class="ut-soft" style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${C.soft}">Your place is held</p>` +
+        `<p style="margin:0 0 6px;font-size:21px;line-height:1.25;font-weight:800">${esc(h.name)}</p>` +
+        `<p style="margin:0;font-size:15px;line-height:1.55">${esc(h.when)} · with ${esc(h.leader)}</p>`,
     );
   }
   return box(
@@ -132,9 +141,11 @@ export function designedText(s: DesignSpec): string {
       ? `${s.hero.progress.percent}% there. You stopped in “${s.hero.progress.section}”, about ${s.hero.progress.minutes} min left.`
       : s.hero?.kind === "tribe"
         ? `Your best match: ${s.hero.name}, led by ${s.hero.leader}. ${s.hero.seats > 0 ? `${s.hero.seats} seat${s.hero.seats === 1 ? "" : "s"} left` : "Full for now"}. Season starts ${s.hero.starts}.`
-        : s.hero?.kind === "gathering"
-          ? `Your next gathering: ${s.hero.when}, ${s.hero.name}, with ${s.hero.leader}.`
-          : undefined;
+        : s.hero?.kind === "held"
+          ? `Your place is held: ${s.hero.name}, ${s.hero.when}, with ${s.hero.leader}.`
+          : s.hero?.kind === "gathering"
+            ? `Your next gathering: ${s.hero.when}, ${s.hero.name}, with ${s.hero.leader}.`
+            : undefined;
   return [
     s.greeting,
     ...s.paragraphs,
