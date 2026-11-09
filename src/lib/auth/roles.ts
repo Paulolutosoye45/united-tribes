@@ -242,6 +242,10 @@ export const REFEREE_CARE_ROLES: readonly Role[] = ["care_lead", "pastor", "dire
 export const CONTACT_GAP_ROLES: readonly Role[] = ["admin", "director", "data_lead", "pastor", "care_lead"];
 export const CONTACT_GAP_ACT_ROLES: readonly Role[] = ["admin", "director", "data_lead"];
 
+/** Reads the Placed members board (where each placed member stands, and who needs a call). The admin and a director also use the call desk, see numbers and act on a row; a pastor only reads the board. The database checks the same. */
+export const PLACED_BOARD_ROLES: readonly Role[] = ["admin", "director", "pastor"];
+export const PLACED_DESK_ROLES: readonly Role[] = ["admin", "director"];
+
 /** Reads the Leader cards board (where each leader's Tribe Card is, and whether their email arrived). The first three also send the email again, tag a department, move the reminders and download the call sheet; the data lead only looks and downloads the sheet for the heads of department. The database checks the same. */
 export const LEADER_CARD_ROLES: readonly Role[] = ["admin", "director", "pastor", "data_lead"];
 export const LEADER_CARD_ACT_ROLES: readonly Role[] = ["admin", "director", "pastor"];

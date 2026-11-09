@@ -1,5 +1,5 @@
 import {
-  ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, CONTACT_GAP_ROLES, DATA_ROLES, LEADER_CARD_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PIPELINE_VIEW_ROLES,
+  ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, CONTACT_GAP_ROLES, DATA_ROLES, LEADER_CARD_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PIPELINE_VIEW_ROLES, PLACED_BOARD_ROLES,
   OVERSIGHT_ROLES, PLACE_ROLES, PRIVACY_ROLES, REFEREE_MANAGER_ROLES, REMINDER_ROLES, REMOVAL_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, TEMPLATE_VIEW_ROLES, hasAnyRole, type Role,
 } from "@/lib/auth/roles";
 
@@ -108,6 +108,17 @@ export const SECTIONS: readonly NavSection[] = [
         about: "Members a leader cannot reach on WhatsApp, and why",
         roles: CONTACT_GAP_ROLES,
         synonyms: ["whatsapp number", "no number", "missing number", "cannot reach", "can't reach", "how to be contacted", "phone number", "number missing", "reach members", "ask for a number"],
+      },
+      {
+        href: "/admin/placed",
+        label: "Placed members",
+        about: "Where each placed member stands, who needs a call, and the call desk",
+        roles: PLACED_BOARD_ROLES,
+        synonyms: ["placed", "placement", "waiting to answer", "have not answered", "not answered", "call list", "call desk", "phone numbers", "follow up", "follow-up", "who to call", "answer sequence", "placed answers", "not this season", "asked for a call", "last call"],
+        children: [
+          { href: "/admin/placed/tribes", label: "By tribe" },
+          { href: "/admin/placed/desk", label: "Call desk" },
+        ],
       },
       {
         href: "/admin/people/leader-cards",

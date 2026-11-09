@@ -2,7 +2,7 @@
 
 *Written by `npm run messages-audit` from the templates in `src/lib/messaging`. Do not edit it here; change the template and run the command again. A test fails when a check below fails or when this file is out of date.*
 
-**161 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 40 for leader, 26 for member, 47 for office, 5 for referee.
+**162 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 40 for leader, 27 for member, 47 for office, 5 for referee.
 
 Each message is written out from believable details and checked for what the office would check by eye:
 
@@ -141,6 +141,7 @@ Each message is written out from believable details and checked for what the off
 | `member_missed_two` | We missed you | We missed you | 64 | 95 | `ut_member_missed_two` | 2 / 0 | database |
 | `member_testimony_shared` | Your testimony was shared | Your testimony was shared | 46 | 70 | email only | 2 / 0 | — |
 | `office_message` | An announcement from the church office | Your tribe is waiting, Ada | 45 | 60 | email only | 3 / 0 | app, database |
+| `placed_seq` | A placed member who has not answered is asked, by email, to say yes, no or call me (the answer sequence) | Did this reach you, Ada? | 181 | 179 | email only | 7 / 0 | database |
 | `placement_reminder` | A gentle reminder about the tribe you were placed in | Builders Tribe is holding your place | 80 | 108 | email only | 4 / 0 | database |
 | `placement_withheld` | Your details are kept private; here is how to reach your tribe | Your details are private. Here is how to join | 110 | 113 | email only | 2 / 1 | database |
 | `placement_your_tribe` | The church has placed you in a tribe | A place for you in Builders Tribe | 196 | 131 | email only | 4 / 1 | database |

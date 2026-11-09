@@ -92,3 +92,21 @@ export async function placedNudgeSettingsAction(input: { firstAfter: number; spa
   const done = await run("god_placed_nudge_settings_set", { p_first_after: input.firstAfter, p_spacing: input.spacing, p_max: input.max, p_reason: reasonOf(input.reason) }, PAGES);
   return done.ok ? { ok: true } : done;
 }
+
+/** The placed answer sequence's numbers: when the second email goes, how often "Still held" goes, when "Last call" goes, the pace, the most emails and phone tries, and whether the call desk may be downloaded with numbers. */
+export async function placedAnswersSettingsAction(input: {
+  secondAfter: number; step3Days: number; lastCall: number; pace: number; max: number; tries: number; download: boolean; reason: string;
+}): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
+  if (!input || ![input.secondAfter, input.step3Days, input.lastCall, input.pace, input.max, input.tries].every(whole) || typeof input.download !== "boolean") return bad();
+  const done = await run(
+    "god_placed_answers_settings_set",
+    {
+      p_second_after: input.secondAfter, p_step3_days: input.step3Days, p_last_call: input.lastCall, p_pace: input.pace, p_max: input.max, p_tries: input.tries,
+      p_download: input.download, p_reason: reasonOf(input.reason),
+    },
+    [...PAGES, "/admin/placed", "/admin/placed/desk"],
+  );
+  return done.ok ? { ok: true } : done;
+}

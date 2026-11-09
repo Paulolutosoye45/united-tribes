@@ -32,6 +32,7 @@ export const FEATURE_KEYS = [
   "reach_series",
   "tribe_note",
   "placed_nudge",
+  "placed_answers",
 ] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 

@@ -110,6 +110,44 @@ export const contactGaps: Guide = {
       ],
     },
     {
+      title: "Follow up the members who have not answered",
+      blurb: "Only once the owner has switched Placed answers on. For the admin and a director; a pastor can read the board.",
+      steps: [
+        {
+          id: "placed-board",
+          title: "Read the Placed members board",
+          do: ["Open **Placed members** in the menu. The five numbers at the top run from placed to answered, and each number opens the members it counts.", "Members who need a call are at the top of the list. Names and tribes show here, never a phone number."],
+          why: "“Page opened” is not “read”: a mail scanner can open a link. The emails use it only to choose their words, and never to stop an email or give up a seat.",
+        },
+        {
+          id: "placed-emails",
+          title: "What each member is sent",
+          do: ["A member who has not answered is sent, in order: **Did this reach you?** (or **Anything stopping you from joining?** if they opened the page), then **Still held** every few days, then **Last call** the day before joining closes.", "Every email has Yes, Not this season, Call me and Stop these reminders, and says the church office may call."],
+          tip: "A tribe whose leader has written one line for new members shows it in these emails as the leader’s own words.",
+          careful: "Nothing is sent to anyone who has answered, asked to stop, asked not to be called, or has a care follow-up open. The emails end by themselves.",
+        },
+        {
+          id: "placed-hold",
+          title: "Hold a seat while you speak to someone",
+          do: ["On the row, press [[Hold this seat]], choose how many days, and write why. The emails to that member wait. Press **Let the emails resume** to end the hold early."],
+          why: "A hold never moves, gives up or confirms the seat. It only pauses the emails.",
+        },
+        {
+          id: "placed-desk",
+          title: "Call from the Call desk",
+          do: ["Open **Call desk**. **Asked for a call** lists members who pressed Call me, oldest first. **Worth a call** lists those placed with a number, no answer yet, and told that the office may call.", "Press [[Show number]] to see one number. Every press is written down: who, which member, when, never the number. Numbers stay hidden outside 8 am to 8 pm, Lagos time.", "After the call, choose how it went and press [[Save the call]]."],
+          why: "Reached and said yes confirms the place. Not this season gives up the seat for this season. Wrong number and Asked not to be called take the member off the desk for good, and nothing is deleted.",
+          careful: "A member who chose a time of day asks for a second, deliberate press at any other time. The desk never lists someone under 18.",
+        },
+        {
+          id: "placed-pause",
+          title: "Pause the sequence",
+          do: ["On the board, press [[Pause the sequence]] and write why. Nothing more is sent until you resume it. Emails already sent stay sent."],
+          why: "The sequence also pauses itself, and tells you, if after 50 emails more than 1 in 100 people stop announcements.",
+        },
+      ],
+    },
+    {
       title: "Keep a copy, and watch it improve",
       blurb: "For the data lead, the director and the admin.",
       steps: [
