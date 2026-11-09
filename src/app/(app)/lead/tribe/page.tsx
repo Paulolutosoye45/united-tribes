@@ -13,6 +13,8 @@ import { AssistantRecommend } from "@/components/matching/AssistantRecommend";
 import { TribeOnboarding } from "@/components/matching/TribeOnboarding";
 import { loadRoster } from "@/lib/matching/server";
 import { GroupAdmit } from "@/components/leaders/GroupAdmit";
+import { SeatLineCard } from "@/components/leaders/SeatLineCard";
+import { loadSeatLine } from "@/lib/placement/answers-server";
 import { loadGroupList } from "@/lib/placement/group-server";
 import { RemovalAsk } from "@/components/removal/RemovalAsk";
 import { loadRemovalMine } from "@/lib/removal/server";
@@ -76,6 +78,8 @@ export default async function TribePage() {
   const removal = roster && card.role === "leader" ? await loadRemovalMine(supabase, card.id) : null;
   // Who may be added to the WhatsApp group (people who said yes), who is still to answer, and who has left. Only extra: if it cannot be read, nothing is shown.
   const group = roster ? await loadGroupList(supabase, card.id) : null;
+  // The one line the leader may add to the church's emails to members placed in the tribe. Only extra: shown only while the placed answer sequence is On or Rehearsal.
+  const seatLine = card.role === "leader" && card.status === "approved" ? await loadSeatLine(supabase, card.id) : null;
   // The leader's own page for recommending an assistant. Only extra: if it cannot be read, nothing is shown.
   const mineAssistant = card.role === "leader" && card.status === "approved" ? await supabase.rpc("assistant_my_state", { p_tribe: card.id }) : null;
   const assistantState = mineAssistant && !mineAssistant.error ? parseMyAssistant(mineAssistant.data) : null;
@@ -104,6 +108,7 @@ export default async function TribePage() {
       {roster ? <TribeOnboarding roster={roster} leaderFirstName={firstName(card.leader.name)} /> : null}
       {roster && group ? <GroupAdmit tribeId={card.id} list={group} /> : null}
       {roster && removal ? <RemovalAsk tribeId={card.id} mine={removal} members={roster.members.map((m) => ({ person_id: m.person_id, first_name: m.first_name }))} /> : null}
+      {seatLine && seatLine.state !== "off" ? <SeatLineCard tribeId={card.id} line={seatLine.line} canEdit={seatLine.canEdit} /> : null}
       {assistantState ? <AssistantRecommend tribeId={card.id} state={assistantState} /> : null}
       {card.role === "leader" ? (
         <TribeBuilder card={card} catalogue={catalogue} applicationStory={story} readyMade={readyMade} goalHints={goalHints} />

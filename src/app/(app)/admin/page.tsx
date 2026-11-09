@@ -8,7 +8,9 @@ import { canOpenDashboard, hatsOf, noticeWarnings, shortcutsFor } from "@/lib/ad
 import { OFFICE_ROLES, ROLE_LABELS } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { formatDate } from "@/lib/dates";
+import { ANSWERS_CARD } from "@/lib/placement/answers";
 import { NUDGE_CARD } from "@/lib/placement/nudge";
+import { loadAnswersOverview } from "@/lib/placement/answers-server";
 import { loadNudgeOverview } from "@/lib/placement/nudge-server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,7 +26,10 @@ export default async function AdminPage() {
   const session = await requireRole(OFFICE_ROLES, "/admin");
   const att = await loadAttention();
   // The placed nudge's card: only while it is On, and only for the people who may use it. Anything wrong means no card.
-  const nudge = await loadNudgeOverview(await createClient());
+  const supabase = await createClient();
+  const nudge = await loadNudgeOverview(supabase);
+  // The placed answer board's line: only while the sequence is On or Rehearsal, and only for the people who may read the board. Anything wrong means no line.
+  const answers = await loadAnswersOverview(supabase);
   const hats = hatsOf(session.roles);
   const shortcuts = shortcutsFor(session.roles);
   const warnings = att ? noticeWarnings(att) : [];
@@ -63,6 +68,23 @@ export default async function AdminPage() {
                 {NUDGE_CARD.button}
               </Link>
             ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {answers.state !== "off" ? (
+        <section aria-labelledby="answers-heading" className="flex flex-col gap-3" data-testid="placed-answers-card">
+          <h2 id="answers-heading" className="t-heading">
+            Placed members
+          </h2>
+          <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
+            <div className="flex flex-col gap-1">
+              <p className="t-body measure">{ANSWERS_CARD.line(answers.needsCall, answers.asked)}</p>
+              {answers.state === "rehearsal" ? <p className="t-small text-soft">{ANSWERS_CARD.rehearsalNote}</p> : null}
+            </div>
+            <Link href="/admin/placed" className={buttonClasses({ size: "md" })} data-testid="placed-answers-go">
+              {ANSWERS_CARD.button}
+            </Link>
           </div>
         </section>
       ) : null}
