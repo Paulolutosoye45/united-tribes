@@ -1,5 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { cache } from "react";
+import { createClient } from "@/lib/supabase/server";
 import {
   parseHolds, parseItems, parseLeadersView, parseOfficeCounts, parseOfficePerson, parseOfficeTribe, parseOfficeTribes, parseOneOptions, parseOverview, parsePersonRemoval, parsePlaced, parseRequests, parseRunView, parseTribeRoster,
   type Hold, type LeadersView, type OfficeCounts, type OfficePerson, type OfficeRequest, type OfficeTribe, type OneOption, type Overview, type PersonRemoval, type PlacedState, type RunView, type TribeRoster,
@@ -34,6 +36,11 @@ export const loadOfficeTribe = async (s: SupabaseClient, tribe: string): Promise
 /** The requests to the owner: all of them for the owner, one's own for an admin or a director. */
 export const loadRequests = async (s: SupabaseClient, person: string | null = null): Promise<OfficeRequest[]> => parseRequests(await load(s, "placement_requests_list", { p_person: person }));
 export const loadOfficeCounts = async (s: SupabaseClient): Promise<OfficeCounts | null> => parseOfficeCounts(await load(s, "placement_office_counts"));
+/**
+ * How many requests from Admin are waiting for the owner, read once per request (the console layout and its pages both show it).
+ * Zero when the database refuses (not the owner, or locked) or is unreachable: the layout has already decided who may be here.
+ */
+export const getRequestsWaiting = cache(async (): Promise<number> => (await loadOfficeCounts(await createClient()))?.requestsOpen ?? 0);
 
 /** A tribe's members with Remove, and what the office took out of it lately. Null when the database refuses. */
 export const loadTribeRoster = async (s: SupabaseClient, tribe: string): Promise<TribeRoster | null> => parseTribeRoster(await load(s, "admin_tribe_members", { p_tribe: tribe }));

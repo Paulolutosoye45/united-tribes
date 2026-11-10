@@ -4,7 +4,7 @@ import { formatLagosTime } from "@/lib/dates";
 import { GodNav } from "./GodNav";
 
 /** Sits above every console page: where you are, how long the access lasts, and the way to end it now. */
-export function OwnerBar({ until }: { until: string | null }) {
+export function OwnerBar({ until, requestsWaiting = 0 }: { until: string | null; requestsWaiting?: number }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-control)] bg-charcoal px-4 py-3 text-white">
@@ -18,7 +18,7 @@ export function OwnerBar({ until }: { until: string | null }) {
           </Button>
         </form>
       </div>
-      <GodNav />
+      <GodNav requestsWaiting={requestsWaiting} />
     </div>
   );
 }

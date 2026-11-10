@@ -639,6 +639,57 @@ describe("ask the owner", () => {
     await started(-30);
   });
 
+  it("marks a request that ran out as lapsed and tells the one who asked, once, and leaves a request still in its 7 days alone", async () => {
+    await c.sql("delete from public.placement_requests");
+    await c.noticesOn();
+    const { w, sunday } = await sundayCase();
+    const other = await readyMember(c.db, c.k, c.season, `AskSun3${tag}`, { times: ["sunday-afternoon"], daysAgo: 30 });
+    const old = await ask(c.admin, sunday, w.C.tribe, ["no_score"]);
+    const fresh = await ask(director2, other.id, w.C.tribe, ["no_score"]);
+    await c.sql("update public.placement_requests set expires_at = now() - interval '1 minute' where id = $1", [old.request]);
+
+    const told = (id: string) => c.sql("select kind, event from public.notice_items where event = $1", [`placement-lapsed:${id}`]);
+    expect(Number((await c.sql("select public.notice_chk_placement_requests(now()) as n"))[0].n)).toBe(1);
+    expect((await request(old.request)).status).toBe("lapsed");
+    expect((await request(fresh.request)).status).toBe("open");
+    expect(await told(old.request)).toEqual([{ kind: "admin_placement_lapsed", event: `placement-lapsed:${old.request}` }]);
+    expect(await told(fresh.request)).toEqual([]);
+    const mail = await c.sql("select person_id, params from public.messages where template = 'admin_placement_lapsed'");
+    expect(mail).toHaveLength(1);
+    expect(mail[0].person_id).toBe(c.admin);
+    // the words carry a first name and a page, never the reason the admin gave
+    expect(JSON.stringify(mail[0].params)).not.toContain(REASON);
+
+    // a second run changes nothing and sends nothing more
+    expect(Number((await c.sql("select public.notice_chk_placement_requests(now()) as n"))[0].n)).toBe(0);
+    expect(await told(old.request)).toHaveLength(1);
+    expect(await c.sql("select 1 from public.messages where template = 'admin_placement_lapsed'")).toHaveLength(1);
+    // the lapsed request no longer counts as waiting, and the person can be asked about again
+    expect(await c.o.call("placement_office_counts")).toMatchObject({ requests_open: 1 });
+    expect((await ask(c.admin, sunday, w.C.tribe, ["no_score"])).ok).toBe(true);
+    await c.sql("delete from public.placement_requests");
+    await started(-30);
+  });
+
+  it("is run by the daily sweep, in the working day, and by nobody who is not the sending service", async () => {
+    await c.sql("delete from public.placement_requests");
+    await c.noticesOn();
+    const { w, sunday } = await sundayCase();
+    const made = await ask(c.admin, sunday, w.C.tribe, ["no_score"]);
+    // it ran out at 02:00 in Lagos today, before either of the two sweeps below
+    await c.sql("update public.placement_requests set expires_at = (public.today_lagos()::timestamp + interval '2 hours') at time zone 'Africa/Lagos' where id = $1", [made.request]);
+    // 03:00 in Lagos is outside the working day: the daily checks wait
+    await c.sql("select public.notice_sweep((public.today_lagos()::timestamp + interval '3 hours') at time zone 'Africa/Lagos')");
+    expect((await request(made.request)).status).toBe("open");
+    // 10:00 is inside it
+    await c.sql("select public.notice_sweep((public.today_lagos()::timestamp + interval '10 hours') at time zone 'Africa/Lagos')");
+    expect((await request(made.request)).status).toBe("lapsed");
+    expect(await c.sql("select 1 from public.notice_items where event = $1", [`placement-lapsed:${made.request}`])).toHaveLength(1);
+    for (const who of [c.admin, c.director]) await expectCode(c.as(who, "notice_chk_placement_requests", new Date().toISOString()), "42501");
+    await c.sql("delete from public.placement_requests");
+    await started(-30);
+  });
+
   it("runs every check again at approval: a closed tribe, a full tribe and a person who has joined another tribe all stop it, and the request stays open", async () => {
     await c.sql("delete from public.placement_requests");
     const { w, sunday } = await sundayCase(4);

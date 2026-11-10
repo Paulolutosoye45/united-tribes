@@ -23,12 +23,12 @@ function message(template: string, params: Params, over: Partial<ClaimedMessage[
 }
 
 const read = (file: string) => readFileSync(join(__dirname, "../../supabase/migrations", file), "utf8");
-const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}\n${read("20270102000100_profiles_stage2.sql")}\n${read("20270103000400_removal_requests.sql")}\n${read("20270108000100_removal_admin.sql")}\n${read("20270109000100_office_placement.sql")}`;
+const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}\n${read("20270102000100_profiles_stage2.sql")}\n${read("20270103000400_removal_requests.sql")}\n${read("20270108000100_removal_admin.sql")}\n${read("20270109000100_office_placement.sql")}\n${read("20270115000100_owner_requests.sql")}`;
 
 describe("the notices, as templates", () => {
-  it("has the 71 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach, the one of stage 2: a person tells the Care Team their age range is not right, and the six of leader removal requests: a request for the coach and for the Care Team, the waiting reminder for each, the week-old one for a director, and a member's appeal, and the two of admin approval: one for admins and directors when a request comes in, one when it has waited three days, and the one of placing from Admin: the answer to an admin or a director who asked the owner), each registered with the sender", () => {
-    expect(keys).toHaveLength(71);
-    expect(new Set(keys).size).toBe(71);
+  it("has the 72 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach, the one of stage 2: a person tells the Care Team their age range is not right, and the six of leader removal requests: a request for the coach and for the Care Team, the waiting reminder for each, the week-old one for a director, and a member's appeal, and the two of admin approval: one for admins and directors when a request comes in, one when it has waited three days, and the one of placing from Admin: the answer to an admin or a director who asked the owner, and the one for a request to the owner that ran out unanswered), each registered with the sender", () => {
+    expect(keys).toHaveLength(72);
+    expect(new Set(keys).size).toBe(72);
     for (const key of keys) expect(TEMPLATES[key], key).toBeDefined();
     expect(NOTICE_CATALOGUE.map((n) => n.key).sort()).toEqual([...keys].sort());
     expect(Object.keys(NOTICE_SAMPLES).sort()).toEqual([...keys].sort());
