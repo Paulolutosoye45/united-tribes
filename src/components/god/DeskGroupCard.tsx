@@ -5,16 +5,18 @@ import { archiveGroupAction, removeMemberAction, suggestMembersAction, addMember
 import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { DeskGroupForm } from "@/components/god/DeskGroupForm";
+import { DeskCheckInterest } from "@/components/god/DeskCheckInterest";
 import { DeskReveal } from "@/components/god/DeskReveal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { DeskChoices } from "@/lib/god/desk-server";
-import { DESK_WORDS as W, describeGroup, type Group, type Suggestion } from "@/lib/god/desk";
+import { DESK_WORDS as W, describeGroup, slotWord, type Group, type Suggestion } from "@/lib/god/desk";
+import { EMPTY_INTEREST, INTEREST_WORDS, type InterestView } from "@/lib/god/desk-send";
 
 const MARK: Record<string, string> = { ok: "✓", fix: "!", wait: "…" };
 
 /** One draft group: who is in it and how well each suits it, the checks the matching itself would make, and the waiting members who would suit it best. */
-export function DeskGroupCard({ group, choices, minTribe }: { group: Group; choices: DeskChoices; minTribe: number }) {
+export function DeskGroupCard({ group, choices, minTribe, interest = EMPTY_INTEREST, rehearsal = true }: { group: Group; choices: DeskChoices; minTribe: number; interest?: InterestView; rehearsal?: boolean }) {
   const d = useDo();
   const [editing, setEditing] = useState(false);
   const [suggested, setSuggested] = useState<Suggestion[] | null>(null);
@@ -81,6 +83,11 @@ export function DeskGroupCard({ group, choices, minTribe }: { group: Group; choi
                 <p className="font-medium">
                   {m.name} <span className="t-small text-soft">scores {m.degree}</span>
                 </p>
+                {interest.members[m.personId] && interest.members[m.personId] !== "none" ? (
+                  <p className="t-small text-soft" data-testid="desk-member-interest">
+                    {INTEREST_WORDS[interest.members[m.personId]]}
+                  </p>
+                ) : null}
                 {m.blocked.map((b) => (
                   <p key={b.code} className="t-small text-danger">
                     {b.text}
@@ -97,6 +104,21 @@ export function DeskGroupCard({ group, choices, minTribe }: { group: Group; choi
           ))}
         </ul>
       ) : null}
+
+      {interest.left.length > 0 ? (
+        <div className="flex flex-col gap-1" data-testid="desk-interest-left">
+          <p className="t-small font-medium">Left the draft by answering</p>
+          <ul className="flex flex-col gap-1">
+            {interest.left.map((l) => (
+              <li key={l.personId} className="t-small text-soft">
+                {l.name}: {l.answer === "other_time" ? (l.slots.length > 0 ? `would rather ${l.slots.map(slotWord).join(", ").toLowerCase()}` : "asked for a different time") : "not for them"}. Still waiting for a tribe.
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <DeskCheckInterest group={group.id} rehearsal={rehearsal} members={group.members.length} />
 
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="solid" loading={asking} onClick={() => void suggest()}>

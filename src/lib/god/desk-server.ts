@@ -14,6 +14,7 @@ import {
   type Pool,
   type WaitingPage,
 } from "./desk";
+import { EMPTY_INTEREST, EMPTY_PROPOSALS, parseInterest, parseProposals, parseSendState, type InterestView, type ProposalsPage, type SendState } from "./desk-send";
 
 // Each loader answers nothing when the database refuses (the desk is switched off, or the person is not the unlocked owner), does not have the function yet, or cannot
 // be reached: a website deployed before the database file is applied behaves exactly as it always did.
@@ -91,4 +92,40 @@ export async function loadDeskChoices(supabase: SupabaseClient): Promise<DeskCho
   } catch {
     return { tracks: [], communities: [], goals: [] };
   }
+}
+
+/** How open the Desk's email is, its limits and today's count. Null when the database refuses or does not have the function yet. */
+export async function loadDeskSendState(supabase: SupabaseClient): Promise<SendState | null> {
+  try {
+    const { data, error } = await supabase.rpc("desk_send_state");
+    return error ? null : parseSendState(data);
+  } catch {
+    return null;
+  }
+}
+
+/** One page of what the Desk sent (or would have sent), newest first. */
+export async function loadDeskProposals(supabase: SupabaseClient, limit: number, offset: number): Promise<ProposalsPage> {
+  try {
+    const { data, error } = await supabase.rpc("desk_proposals_list", { p_kind: null, p_limit: limit, p_offset: offset });
+    return error ? EMPTY_PROPOSALS : parseProposals(data);
+  } catch {
+    return EMPTY_PROPOSALS;
+  }
+}
+
+/** Who in each draft has said what, by group. A group the database cannot answer for is shown as not asked. */
+export async function loadDeskInterest(supabase: SupabaseClient, groups: string[]): Promise<Record<string, InterestView>> {
+  const out: Record<string, InterestView> = {};
+  await Promise.all(
+    groups.map(async (g) => {
+      try {
+        const { data, error } = await supabase.rpc("desk_group_interest", { p_group: g });
+        out[g] = error ? EMPTY_INTEREST : parseInterest(data);
+      } catch {
+        out[g] = EMPTY_INTEREST;
+      }
+    }),
+  );
+  return out;
 }

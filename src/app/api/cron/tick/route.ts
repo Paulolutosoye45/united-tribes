@@ -85,6 +85,15 @@ async function handle(request: Request) {
     } catch {
       reachFaults.push("contact series: could not run this time");
     }
+    // The Leader Desk's emails to members (Phase 2a): a proposal or interest check with no answer in time runs out, and links that have done their work are
+    // forgotten. With the function Off nothing is waiting, so this changes nothing. A fault here is listed but never stops the messages.
+    const deskFaults: string[] = [];
+    try {
+      const ran = await rpc("worker_desk_tick");
+      if (ran.error) deskFaults.push(`leader desk: ${ran.error.message}`);
+    } catch {
+      deskFaults.push("leader desk: could not run this time");
+    }
     const summary = await runDispatch({
       rpc,
       providers: providersFromEnv(),
@@ -96,7 +105,7 @@ async function handle(request: Request) {
     // in "problems" but never turns a working tick into a failed one.
     summary.problems.push(...early);
     const status = summary.problems.length > 0 && summary.sent === 0 && summary.claimed === 0 ? 502 : 200;
-    summary.problems.push(...detailsFaults, ...cardFaults, ...reachFaults);
+    summary.problems.push(...detailsFaults, ...cardFaults, ...reachFaults, ...deskFaults);
     // Reports the database has just made get their opening paragraph. A fault here never stops the messages.
     const reports = await writePendingSummaries(rpc, ai, { budgetMs: 12_000 });
     summary.problems.push(...reports.problems);
