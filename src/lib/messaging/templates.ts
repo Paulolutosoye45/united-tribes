@@ -11,6 +11,7 @@ import { LEADER_CARD_TEMPLATES } from "./templates-leader-cards";
 import { REMOVAL_TEMPLATES } from "./templates-removal";
 import { PLACEMENT_TEMPLATES } from "./templates-placement";
 import { PLACED_SEQ_TEMPLATES } from "./templates-placed-seq";
+import { DESK_TEMPLATES } from "./templates-desk";
 import { salutation } from "@/lib/leaders/status";
 import { digestSummary } from "./summary";
 import type { Context, Params, TemplateDef } from "./types";
@@ -1523,6 +1524,7 @@ export const TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(
     ...NOTICE_TEMPLATES,
     ...PLACEMENT_TEMPLATES,
     ...PLACED_SEQ_TEMPLATES,
+    ...DESK_TEMPLATES,
     ...INVITATION_TEMPLATES,
     ...LEADER_WELCOME_TEMPLATES,
     ...DETAILS_TEMPLATES,

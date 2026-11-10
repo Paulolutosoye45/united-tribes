@@ -19,6 +19,8 @@ const all = [page, actions, loaders, ...components.map((f) => read(`src/componen
 const FUNCTIONS = [
   "desk_overview", "desk_waiting", "desk_leaders", "desk_groups_list", "desk_clusters", "desk_phone_reveal", "desk_group_save", "desk_group_archive",
   "desk_group_member_add", "desk_group_member_remove", "desk_group_suggest",
+  // Phase 2a: the screens only read these three; the five that act live in send-actions.ts (see god-leader-desk-send-wiring.test.ts)
+  "desk_send_state", "desk_proposals_list", "desk_group_interest",
 ];
 
 describe("the Leader Desk page", () => {

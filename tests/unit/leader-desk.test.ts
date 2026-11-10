@@ -40,7 +40,7 @@ describe("the lists and pools", () => {
     expect(isChip(null)).toBe(false);
     for (const p of POOLS) expect(isPool(p.key)).toBe(true);
     expect(isPool("rising")).toBe(false);
-    expect(TABS.map((t) => t.key)).toEqual(["waiting", "proposals", "leaders"]);
+    expect(TABS.map((t) => t.key)).toEqual(["waiting", "proposals", "leaders", "sending"]);
     expect(isTab("proposals")).toBe(true);
     expect(isTab("send")).toBe(false);
     expect(isDeskId(ID)).toBe(true);

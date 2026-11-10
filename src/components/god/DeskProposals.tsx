@@ -3,6 +3,7 @@ import { DeskGroupCard } from "@/components/god/DeskGroupCard";
 import { DeskGroupForm } from "@/components/god/DeskGroupForm";
 import { Badge } from "@/components/ui/Badge";
 import type { DeskChoices } from "@/lib/god/desk-server";
+import type { InterestView } from "@/lib/god/desk-send";
 import { DESK_WORDS as W, kindWord, modeWord, slotWord, type Cluster, type Group, type Overview } from "@/lib/god/desk";
 
 export type StartValues = { track: string; slot: string; mode: "online" | "in_person"; type: "mixed" | "women" | "men"; name: string };
@@ -16,12 +17,14 @@ export function DeskProposals({
   clusters,
   choices,
   start,
+  interest = {},
 }: {
   overview: Overview;
   groups: Group[];
   clusters: Cluster[];
   choices: DeskChoices;
   start: StartValues | null;
+  interest?: Record<string, InterestView>;
 }) {
   return (
     <section aria-labelledby="desk-proposals-h" className="flex flex-col gap-8">
@@ -66,7 +69,7 @@ export function DeskProposals({
         ) : (
           <ul className="flex flex-col gap-4">
             {groups.map((g) => (
-              <DeskGroupCard key={g.id} group={g} choices={choices} minTribe={overview.minTribe} />
+              <DeskGroupCard key={g.id} group={g} choices={choices} minTribe={overview.minTribe} interest={interest[g.id]} rehearsal={overview.mode !== "on"} />
             ))}
           </ul>
         )}
