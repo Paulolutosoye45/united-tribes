@@ -70,3 +70,39 @@ When you go on **On** (after the one-week Phase 1 check and the pastor's approva
 ## Go back
 
 Run `supabase/rollback/20270117000100_desk_proposals.down.sql`. It removes the Desk's email functions and four tables and puts the Phase 1 Switchboard text back. Nothing else changes: no member, seat, tribe, message or notice. Emails already queued stay in the queue; their link will say it cannot be opened. Switch Leader Desk to **Off** first if you want nothing more to go. Put the website files back before you run it.
+
+---
+
+# Leader Desk, Phase 2b-1 (asking a member to lead): how to apply
+
+Apply this **after** Phase 2a is in and working. Leader Desk stays on **Rehearsal**: nothing is sent.
+
+## Before you start
+
+1. **Back up**: Supabase → Database → Backups → manual backup.
+2. Nothing to tell anyone. No member hears anything while the switch is on Rehearsal.
+
+## Deploy, in this order
+
+1. **Database**, one file, once:
+   `supabase/migrations/20270118000100_desk_offers.sql`
+2. **Check**, in the SQL editor:
+   `select count(*) from pg_proc where proname like 'desk\_%' or proname like 'worker\_desk\_%';`
+   It should be **68** (44 up to Phase 2a plus 24 from this file; this file also adds `leader_appoint_core`, which this count leaves out).
+3. **Then the website.** It adds **Recommend a leader** on a draft group, **Leader offers** under Sending, the private page `/o/…`, and the locked fields on the tribe card of a group the Desk formed.
+
+Run the database file **first**. If the website goes out first, **Recommend a leader** says the Desk's offers are not available yet, and the private page says it is not open.
+
+## Check it works (twenty minutes, on Rehearsal)
+
+1. **Proposals**: open a draft group with at least one waiting member. Press **Recommend a leader**. A list appears, best first.
+2. Choose one person and one backup. Press **Write it down**, then confirm. It says "Written down. Nothing was sent." Check **Messages**: no email was made.
+3. **Sending → Leader offers** lists both ("Written down in Rehearsal"). **Withdraw** one; it then shows as "Withdrawn".
+4. Appoint a leader the usual way (**Appoint a leader**) for a member you know. It works exactly as before.
+5. As an admin, a pastor and a member, open `/god/leader-desk?tab=sending`: none of them can see it.
+
+When you go on **On** (after the one-week Phase 1 check and the pastor's approval of the Lead signal), start with **one person you know**, press **Recommend a leader**, open the email on your phone and press **Yes, I will lead** on the private page. You should see the age confirmation and two questions, and after sending, the group shows the leader with the tribe card started and the Academy not yet certified. Open the leader's tribe card: the meeting slot, format, area, kind and seats are locked.
+
+## Go back
+
+Run `supabase/rollback/20270118000100_desk_offers.down.sql`. It puts back the six functions it replaced exactly as they were, narrows the two checks it widened, and removes its own functions, three tables and columns. **Leaders already appointed through the Desk stay appointed** (they are ordinary appointments), and tribe cards already started keep what was written on them (only the extra locks on the slot, format, area, kind and seats are lifted). Emails already queued stay in the queue; their link will say it cannot be opened. Switch Leader Desk to **Off** first if you want nothing more to go. Put the website files back before you run it.
