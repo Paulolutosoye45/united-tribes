@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DeskGroupCard } from "@/components/god/DeskGroupCard";
+import type { GroupLeader } from "@/lib/god/desk-offers";
 import { DeskGroupForm } from "@/components/god/DeskGroupForm";
 import { Badge } from "@/components/ui/Badge";
 import type { DeskChoices } from "@/lib/god/desk-server";
@@ -18,6 +19,7 @@ export function DeskProposals({
   choices,
   start,
   interest = {},
+  leaders = {},
 }: {
   overview: Overview;
   groups: Group[];
@@ -25,6 +27,7 @@ export function DeskProposals({
   choices: DeskChoices;
   start: StartValues | null;
   interest?: Record<string, InterestView>;
+  leaders?: Record<string, GroupLeader>;
 }) {
   return (
     <section aria-labelledby="desk-proposals-h" className="flex flex-col gap-8">
@@ -69,7 +72,7 @@ export function DeskProposals({
         ) : (
           <ul className="flex flex-col gap-4">
             {groups.map((g) => (
-              <DeskGroupCard key={g.id} group={g} choices={choices} minTribe={overview.minTribe} interest={interest[g.id]} rehearsal={overview.mode !== "on"} />
+              <DeskGroupCard key={g.id} group={g} choices={choices} minTribe={overview.minTribe} interest={interest[g.id]} leader={leaders[g.id]} rehearsal={overview.mode !== "on"} />
             ))}
           </ul>
         )}

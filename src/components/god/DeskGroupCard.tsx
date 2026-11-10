@@ -6,17 +6,33 @@ import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { DeskGroupForm } from "@/components/god/DeskGroupForm";
 import { DeskCheckInterest } from "@/components/god/DeskCheckInterest";
+import { DeskLeaderPanel } from "@/components/god/DeskLeaderPanel";
 import { DeskReveal } from "@/components/god/DeskReveal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { DeskChoices } from "@/lib/god/desk-server";
 import { DESK_WORDS as W, describeGroup, slotWord, type Group, type Suggestion } from "@/lib/god/desk";
+import { EMPTY_LEADER, type GroupLeader } from "@/lib/god/desk-offers";
 import { EMPTY_INTEREST, INTEREST_WORDS, type InterestView } from "@/lib/god/desk-send";
 
 const MARK: Record<string, string> = { ok: "✓", fix: "!", wait: "…" };
 
 /** One draft group: who is in it and how well each suits it, the checks the matching itself would make, and the waiting members who would suit it best. */
-export function DeskGroupCard({ group, choices, minTribe, interest = EMPTY_INTEREST, rehearsal = true }: { group: Group; choices: DeskChoices; minTribe: number; interest?: InterestView; rehearsal?: boolean }) {
+export function DeskGroupCard({
+  group,
+  choices,
+  minTribe,
+  interest = EMPTY_INTEREST,
+  leader = EMPTY_LEADER,
+  rehearsal = true,
+}: {
+  group: Group;
+  choices: DeskChoices;
+  minTribe: number;
+  interest?: InterestView;
+  leader?: GroupLeader;
+  rehearsal?: boolean;
+}) {
   const d = useDo();
   const [editing, setEditing] = useState(false);
   const [suggested, setSuggested] = useState<Suggestion[] | null>(null);
@@ -119,6 +135,8 @@ export function DeskGroupCard({ group, choices, minTribe, interest = EMPTY_INTER
       ) : null}
 
       <DeskCheckInterest group={group.id} rehearsal={rehearsal} members={group.members.length} />
+
+      <DeskLeaderPanel group={group.id} state={leader} rehearsal={rehearsal} />
 
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="solid" loading={asking} onClick={() => void suggest()}>

@@ -76,6 +76,32 @@ export function timesFor(day: number | null | undefined): string[] {
   return [];
 }
 
+/** Which of the four slots a day and time fall in, the same windows the database uses (circle_slot_for). Null when the time is not one members can make. */
+export function slotOf(day: number | null | undefined, time: string | null | undefined): string | null {
+  const m = /^(\d{1,2}):(\d{2})/.exec(time ?? "");
+  if (day === null || day === undefined || !m) return null;
+  const t = Number(m[1]) * 60 + Number(m[2]);
+  if (day === 0 && t >= 13 * 60 && t < 18 * 60) return "sunday-afternoon";
+  if (day === 0 && t >= 18 * 60 && t <= 21 * 60 + 30) return "sunday-evening";
+  if (day >= 1 && day <= 5 && t >= 19 * 60 + 30 && t <= 21 * 60 + 30) return "weeknight-evening";
+  if (day === 6 && t >= 7 * 60 && t < 12 * 60) return "saturday-morning";
+  return null;
+}
+
+/** The days of the week a slot can be held on. A tribe formed for one slot keeps to it. */
+export function daysForSlot(slot: string | null | undefined): number[] {
+  if (slot === "weeknight-evening") return [1, 2, 3, 4, 5];
+  if (slot === "saturday-morning") return [6];
+  if (slot === "sunday-afternoon" || slot === "sunday-evening") return [0];
+  return [0, 1, 2, 3, 4, 5, 6];
+}
+
+/** The start times on a day that fall inside one slot. With no slot, every time members can make that day. */
+export function timesForSlot(day: number | null | undefined, slot: string | null | undefined): string[] {
+  const all = timesFor(day);
+  return slot ? all.filter((t) => slotOf(day, t) === slot) : all;
+}
+
 export const SLOT_LABELS: Record<string, string> = {
   "weeknight-evening": "Weeknight evening",
   "saturday-morning": "Saturday morning",

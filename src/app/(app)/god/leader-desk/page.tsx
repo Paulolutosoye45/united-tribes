@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { DeskLeaders } from "@/components/god/DeskLeaders";
+import { DeskOffers } from "@/components/god/DeskOffers";
 import { DeskProposals, type StartValues } from "@/components/god/DeskProposals";
 import { DeskSending } from "@/components/god/DeskSending";
 import { DeskWaiting } from "@/components/god/DeskWaiting";
@@ -21,7 +22,19 @@ import {
   type Pool,
   type Tab,
 } from "@/lib/god/desk";
-import { loadDeskChoices, loadDeskClusters, loadDeskGroups, loadDeskInterest, loadDeskLeaders, loadDeskOverview, loadDeskProposals, loadDeskSendState, loadDeskWaiting } from "@/lib/god/desk-server";
+import {
+  loadDeskChoices,
+  loadDeskClusters,
+  loadDeskGroupLeaders,
+  loadDeskGroups,
+  loadDeskInterest,
+  loadDeskLeaders,
+  loadDeskOffers,
+  loadDeskOverview,
+  loadDeskProposals,
+  loadDeskSendState,
+  loadDeskWaiting,
+} from "@/lib/god/desk-server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Leader Desk" };
@@ -94,11 +107,20 @@ export default async function LeaderDeskPage({ searchParams }: { searchParams: S
     const page = await loadDeskLeaders(supabase, pool, PAGE_SIZE, (pageNo - 1) * PAGE_SIZE);
     body = <DeskLeaders overview={overview} page={page} pool={pool} pageNo={pageNo} />;
   } else if (tab === "sending") {
-    const [state, page] = await Promise.all([loadDeskSendState(supabase), loadDeskProposals(supabase, PAGE_SIZE, (pageNo - 1) * PAGE_SIZE)]);
-    body = <DeskSending state={state} page={page} pageNo={pageNo} />;
+    const [state, page, offers] = await Promise.all([
+      loadDeskSendState(supabase),
+      loadDeskProposals(supabase, PAGE_SIZE, (pageNo - 1) * PAGE_SIZE),
+      loadDeskOffers(supabase, PAGE_SIZE, 0),
+    ]);
+    body = (
+      <div className="flex flex-col gap-8">
+        <DeskSending state={state} page={page} pageNo={pageNo} />
+        <DeskOffers page={offers} />
+      </div>
+    );
   } else {
     const [groups, clusters, choices] = await Promise.all([loadDeskGroups(supabase), loadDeskClusters(supabase), loadDeskChoices(supabase)]);
-    const interest = await loadDeskInterest(supabase, groups.map((g) => g.id));
+    const [interest, leaders] = await Promise.all([loadDeskInterest(supabase, groups.map((g) => g.id)), loadDeskGroupLeaders(supabase, groups.map((g) => g.id))]);
     // "Start a draft" from a line in the list opens the form with that line's answers filled in
     let start: StartValues | null = null;
     const [track, slot, mode, type] = (sp.start ?? "").split(",");
@@ -106,7 +128,7 @@ export default async function LeaderDeskPage({ searchParams }: { searchParams: S
     if (isDeskId(track) && trackName && SLOT_KEYS.includes(slot) && (mode === "online" || mode === "in_person") && (type === "mixed" || type === "women" || type === "men")) {
       start = { track, slot, mode, type, name: `${trackName}, ${slotWord(slot)}` };
     }
-    body = <DeskProposals overview={overview} groups={groups} clusters={clusters} choices={choices} start={start} interest={interest} />;
+    body = <DeskProposals overview={overview} groups={groups} clusters={clusters} choices={choices} start={start} interest={interest} leaders={leaders} />;
   }
 
   return (

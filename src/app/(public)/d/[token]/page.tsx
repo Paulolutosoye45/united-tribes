@@ -59,7 +59,9 @@ export default async function DeskPage({ params, searchParams }: { params: Promi
               {W.site}
             </span>
           </div>
-          <h1 className="t-title rise-in">{info ? (info.kind === "tribe" ? W.tribeTitle(info.first) : W.interestTitle(info.first)) : W.site}</h1>
+          <h1 className="t-title rise-in">
+            {info ? (info.kind === "tribe" ? W.tribeTitle(info.first) : info.kind === "found" ? W.foundTitle(info.first) : W.interestTitle(info.first)) : W.site}
+          </h1>
         </div>
       </header>
 
@@ -71,7 +73,7 @@ export default async function DeskPage({ params, searchParams }: { params: Promi
         ) : null}
         {done ? (
           <p role="status" className="card rise-in p-5 font-semibold" data-testid="desk-done">
-            {W.done[done]}
+            {info?.kind === "found" && (done === "yes" || done === "no") ? W.found[done] : W.done[done]}
           </p>
         ) : null}
         {q.closed ? <Note text={W.closed} /> : null}
@@ -81,7 +83,7 @@ export default async function DeskPage({ params, searchParams }: { params: Promi
         ) : info.stopped ? (
           <Note text={W.done.stop} testid="desk-stopped" />
         ) : info.answered && info.answer && !done ? (
-          <Note text={W.done[info.answer]} testid="desk-answered" />
+          <Note text={info.kind === "found" && (info.answer === "yes" || info.answer === "no") ? W.found[info.answer] : W.done[info.answer]} testid="desk-answered" />
         ) : !info.open ? (
           <>
             <Note text={info.kind === "tribe" ? W.gone : W.closed} testid="desk-closed" />
@@ -89,6 +91,8 @@ export default async function DeskPage({ params, searchParams }: { params: Promi
           </>
         ) : info.kind === "tribe" ? (
           <TribeCard info={info} token={token} pointed={pointed} />
+        ) : info.kind === "found" ? (
+          <FoundCard info={info} token={token} pointed={pointed} />
         ) : (
           <InterestCard info={info} token={token} pointed={pointed} timesMissing={Boolean(q.times)} />
         )}
@@ -148,6 +152,32 @@ function TribeCard({ info, token, pointed }: { info: DeskInfo; token: string; po
       </section>
       <div className={pointed === "no" ? "rounded-[var(--radius-control)] ring-2 ring-gold ring-offset-4 ring-offset-page" : ""}>
         <Answer token={token} answer="no" label={W.buttons.no} variant="quiet" note={W.notice.noIsFine} />
+      </div>
+      <StopForm token={token} />
+    </>
+  );
+}
+
+function FoundCard({ info, token, pointed }: { info: DeskInfo; token: string; pointed: DeskAnswerKey | null }) {
+  const about = [info.community, info.goal].filter(Boolean).join(": ");
+  return (
+    <>
+      <section className="card flex flex-col gap-3 p-6" aria-labelledby="desk-found" data-testid="desk-found">
+        <h2 id="desk-found" className="t-heading">
+          Good news about your group
+        </h2>
+        {about ? <p className="t-body">{about}</p> : null}
+        <p className="t-body">
+          {W.found.about(info.leaderFirst)} It would meet {groupWhen(info.slot, info.mode, info.zone).toLowerCase()}
+          {info.capacity ? `, with up to ${info.capacity} people` : ""}.
+        </p>
+        <p className="t-small text-soft">{W.notice.foundNothingDecided}</p>
+      </section>
+      <div className={pointed === "yes" ? "rounded-[var(--radius-control)] ring-2 ring-gold ring-offset-4 ring-offset-page" : ""}>
+        <Answer token={token} answer="yes" label={W.found.button} variant="primary" />
+      </div>
+      <div className={pointed === "no" ? "rounded-[var(--radius-control)] ring-2 ring-gold ring-offset-4 ring-offset-page" : ""}>
+        <Answer token={token} answer="no" label={W.buttons.no} variant="quiet" note={W.notice.foundNoIsFine} />
       </div>
       <StopForm token={token} />
     </>

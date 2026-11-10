@@ -34,8 +34,8 @@ const mail = (t: "desk_proposal" | "desk_interest", over: Params = {}) => render
 
 describe("the two Desk emails", () => {
   it("are registered, email only, and addressed to a member", () => {
-    expect(DESK_TEMPLATES.map((t) => t.key)).toEqual(["desk_proposal", "desk_interest"]);
-    for (const k of ["desk_proposal", "desk_interest"]) {
+    expect(DESK_TEMPLATES.map((t) => t.key)).toEqual(["desk_proposal", "desk_interest", "desk_found", "desk_offer"]);
+    for (const k of ["desk_proposal", "desk_interest", "desk_found", "desk_offer"]) {
       expect(TEMPLATES[k].emailOnly, k).toBe(true);
       expect(TEMPLATES[k].audience, k).toBe("member");
     }

@@ -2,7 +2,7 @@
 
 *Written by `npm run messages-audit` from the templates in `src/lib/messaging`. Do not edit it here; change the template and run the command again. A test fails when a check below fails or when this file is out of date.*
 
-**165 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 40 for leader, 29 for member, 48 for office, 5 for referee.
+**167 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 40 for leader, 31 for member, 48 for office, 5 for referee.
 
 Each message is written out from believable details and checked for what the office would check by eye:
 
@@ -132,7 +132,9 @@ Each message is written out from believable details and checked for what the off
 | Message | What it is | Subject | Email words | Text characters | WhatsApp name | Links (site / other) | Queued by |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `contact_ask_leader` | A member is asked, by email, to add a number or to say yes to WhatsApp | Grace would like to reach you | 125 | 116 | email only | 1 / 0 | database |
+| `desk_found` | A member who showed interest in a draft group is told, by email, that it has found a leader (the Leader Desk, no seat promised) | Your group has a leader, Ada | 131 | 191 | email only | 4 / 0 | database |
 | `desk_interest` | A member waiting for a tribe is asked, by email, whether a group still being put together would suit them (the Leader Desk's interest check) | Would this group suit you, Ada? | 157 | 170 | email only | 5 / 0 | database |
+| `desk_offer` | A member is asked, by email, whether they would lead a draft group (the Leader Desk's leader offer, with reminders 24 and 12 hours before it closes) | Would you lead this group, Ada? | 251 | 171 | email only | 7 / 0 | database |
 | `desk_proposal` | A member waiting for a tribe is shown one open tribe that fits them, by email, from the Leader Desk | A tribe that could suit you, Ada | 166 | 176 | email only | 4 / 0 | database |
 | `friday_checkin` | Friday: one-tap step check-in and testimony prompt | How did your step go? | 71 | 166 | `ut_friday_checkin` +3 buttons | 5 / 0 | database |
 | `meeting_recap` | The morning after: recap and your step | Last night in Builders Tribe | 60 | 92 | `ut_meeting_recap` | 2 / 0 | app, database |

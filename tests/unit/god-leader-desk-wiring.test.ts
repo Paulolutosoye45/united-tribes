@@ -21,6 +21,8 @@ const FUNCTIONS = [
   "desk_group_member_add", "desk_group_member_remove", "desk_group_suggest",
   // Phase 2a: the screens only read these three; the five that act live in send-actions.ts (see god-leader-desk-send-wiring.test.ts)
   "desk_send_state", "desk_proposals_list", "desk_group_interest",
+  // Phase 2b: the screens only read these two; the five that act live in offer-actions.ts (see god-leader-desk-offers-wiring.test.ts)
+  "desk_group_leader", "desk_offers_list",
 ];
 
 describe("the Leader Desk page", () => {
@@ -77,7 +79,7 @@ describe("the actions", () => {
 
 describe("it only shows", () => {
   it("never calls anything that sends, seats, tells, places or writes to a member", () => {
-    expect(all).not.toMatch(/\b(notify_person|queue_message|send_message|messages|placement_one_place|placement_one_move|placement_office|placement_run|choose_tribe|invite|appoint|offer)\b/i);
+    expect(all).not.toMatch(/\b(notify_person|queue_message|send_message|messages|placement_one_place|placement_one_move|placement_office|placement_run|choose_tribe|invite|god_appoint_leader|leader_appoint_core|desk_offer_complete|desk_offer_accept)\b/i);
     expect(all).not.toMatch(/\.from\("(messages|notice_items|tribe_members|tribes|member_profiles|people|person_roles)"\)\.(insert|update|upsert|delete)/);
   });
 

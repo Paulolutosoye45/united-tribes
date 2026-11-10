@@ -1,6 +1,6 @@
 # Leader Desk (God Mode), Phase 1: see
 
-**God Mode → Leader Desk.** The owner's own page for the people who finished the form and still have no seat, and for the members who could one day lead. **Phase 1 only shows, scores and drafts.** Phase 2a (below) adds two emails a member can answer with one tap. Both start in Rehearsal, where nothing is sent. Recommending a leader and forming a tribe are Phase 2b.
+**God Mode → Leader Desk.** The owner's own page for the people who finished the form and still have no seat, and for the members who could one day lead. **Phase 1 only shows, scores and drafts.** Phase 2a (below) adds two emails a member can answer with one tap. Phase 2b-1 adds asking a member to lead a draft group, and starting its tribe card when they say yes. All of it starts in Rehearsal, where nothing is sent. The rest of Phase 2b (the pastor's "card waiting" email, **Open tribe**, the parity test and the pipeline limits) is still to come.
 
 ## Who can use it, and when
 
@@ -121,6 +121,56 @@ Each change needs a reason (3 to 300 characters). Only you see it; the log line 
 
 No number, no other member's name, nothing about faith, stage, support or age is in either email or on the private page. The reasons are only about the goal, the place and the time. Log lines (`desk.proposal`, `desk.answer`, `desk.stop`, `desk.settings`, `desk.cancelled`) carry no numbers and no reasons.
 
-## What comes next (Phase 2b, not built)
+## Phase 2b-1: asking a member to lead a draft group
 
-Leader offers with backups (72 hours, reminders at 24 and 12), offers to members on a private page, the shared role-granting step, welcome and tribe-card pre-fill, the pastor "card waiting" email, "Your group has a leader" to the draft's members, **Open tribe**, a parity test between the normal route and the Desk route, and settings for pipeline limits.
+**Where:** **Proposals** tab → a draft group → **Recommend a leader**. Offers are listed together under **Sending → Leader offers**.
+
+1. **Choose.** The list is members who could lead this group, best first, each already past every rule below. Choose **one to ask now** and up to **two backups, in the order you pick them**. The first press shows who will be asked; the second confirms (**Ask them**, or **Write it down** in Rehearsal).
+2. **The email.** *Would you lead this group?* It names the community, goal, meeting time, format and size so far and, if an interest check ran, how many have said yes. **It names nobody.** It says plainly that a yes is not the end of the process: a pastor still approves the card and the Academy still certifies the leader.
+3. **The private page** (`/o/…`). Opening it changes nothing; an answer is saved only when a button on it is pressed.
+
+| Button | What it does |
+|---|---|
+| **Yes, I will lead** | Asks for a confirmation that they are **21 or older** and two short answers (how they lead best; whether they have achieved or are pursuing the goal). Only then is anything saved. |
+| **Not this season** | Declines this group and any other asked of them this season. Five reasons can be ticked (too busy, family first, not ready, a different goal, something else). **They are counted and shown to nobody by name.** |
+| **Call me** | Marks the offer "Asked for a call" on the Desk. |
+| **Remind me tomorrow** | One more email tomorrow, if the window is still open. |
+| **Never ask me to lead** | Stops every leader offer to them. Other Desk emails continue. |
+| **Stop these emails** | Ends every Desk email to them and cancels their open offers. |
+
+**72 hours to answer.** Reminders go **24 and 12 hours** before it closes. If the first person says no, never answers, or no longer fits, **the next backup is asked automatically**, unless you press **Pause backups** on that group. When nobody is left, the group says **it has no leader and needs your decision**.
+
+### Who can be offered a group
+
+Members only (a leader who already holds the role keeps using the Leader board). Each of these is checked when you choose, and **again at the moment of the yes**: 21 or older (confirmed by the member), said yes or maybe to serving, established or leading in faith, not already leading, no open offer, no hold, no open care follow-up, no deletion request, a reachable email, a gender that fits a women's or men's group, meeting times that include the group's slot, a goal that is not a sensitive subject, "Not this season" and "Never ask me to lead" honoured, and nobody who pressed **Stop these emails**.
+
+### What a yes does
+
+A yes goes through **one shared step**, the same one the owner's own **Appoint a leader** uses (`leader_appoint_core`). The Desk adds only a yes from the member and the confirmed age.
+
+- **The leader is recorded as appointed**, so the Leader board, coach assignment, the welcome email and card reminders work unchanged.
+- **The tribe card is started from the draft.** Track, community, goal, meeting slot, format, area (for an in-person group), kind and seats are **locked**, so a later edit cannot move the tribe away from the people it was formed for. The leader names it, tells their story and chooses the day and time **inside the slot**. A pastor still approves the card and the Academy still certifies the leader. The database enforces the locks, not only the page.
+- **Below the usual fit,** the offer waits for you: **Appoint them** or **Decline for them**. Nothing is created until you choose.
+- **The draft's members who have not said no get "Your group has a leader":** the leader's first name, no seat promised, and **Yes / Not for me**. Their place is confirmed by the normal "Your tribe" email when the tribe opens.
+- **A group that has a leader** shows where it stands: the card's state and whether the Academy has certified them.
+
+### Rehearsal first
+
+Same three positions as before. In **Rehearsal** each offer is only written down ("Written down in Rehearsal"), nothing is emailed, and the first person is not marked as asked. The Master pause stops every send. **Keep the switch on Rehearsal until Phase 1 has been used for a week and a pastor has approved the Lead signal v1.** Nothing is sent by WhatsApp.
+
+### The scheduled tick
+
+Offer expiry, backups and the 24 and 12 hour reminders run inside the same `worker_desk_tick` the cron already calls. Nothing new to wire.
+
+### Applying and undoing it
+
+* **Apply:** `supabase/migrations/20270118000100_desk_offers.sql`, after Phase 2a. It stops with a clear message if Phase 2a, the leader appointment, the leader welcome or the tribe card migration is missing. See `docs/APPLY-LEADER-DESK.md`.
+* **Undo:** `supabase/rollback/20270118000100_desk_offers.down.sql`. It puts back the six functions it replaces exactly as they were, narrows the two checks it widened, and removes its 24 new Desk functions, `leader_appoint_core`, three tables and the new columns. `tests/db/leader-desk-offers-rollback.test.ts` rehearses it.
+* **It replaces six existing functions:** `god_appoint_leader` (now a thin wrapper over the shared step: same checks, same rows, same event), `save_tribe_card` (honours the locks), and, from Phase 2a, `desk_mail_send`, `worker_desk_info`, `worker_desk_answer` and `desk_tick` (they learn the third kind of email). **It adds 25 functions** (7 the page calls, 2 the private page calls, 16 closed to every signed-in person), **3 tables** and settings columns.
+* **Privacy:** no number, no other member's name and nothing about faith, stage or support in either email or on the private page. Log lines carry no numbers and no reasons.
+
+### Not built in 2b-1
+
+* **"Yes, as assistant"** (assistants offered together with a leader). Offers are for the leader role only.
+* **"Recommend as leader" on a waiting member's row.** The picker is on the draft group card.
+* The pastor "card waiting" email and 24 hour reminder, **Open tribe**, the parity test, and the pipeline limits and "stuck" chips (Phase 2b-2). The settings columns for them are already in the database; nothing reads them yet.

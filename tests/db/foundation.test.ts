@@ -1028,6 +1028,14 @@ describe("locked-down defaults", () => {
       "desk_group_interest",
       "desk_proposals_list",
       "desk_proposal_cancel",
+      // Recommending a leader (Phase 2b-1): the owner's calls, each checking the owner and the Switchboard again inside
+      "desk_offer_candidates",
+      "desk_offer_send",
+      "desk_offer_cancel",
+      "desk_offers_pause",
+      "desk_offer_review",
+      "desk_group_leader",
+      "desk_offers_list",
       "placement_office_person",
       "placement_office_tribes",
       "placement_office_tribe",
@@ -1253,6 +1261,9 @@ describe("locked-down defaults", () => {
       "worker_desk_info",
       "worker_desk_answer",
       "worker_desk_tick",
+      // The private page of a leader offer: what to show and the one-tap answer, each needing the sending token and the link's secret
+      "worker_desk_offer_info",
+      "worker_desk_offer_answer",
       "signin_channel_status",
       // Messages & reminders: the email pages and the sending service, each behind a secret
       "worker_reminders_tick",

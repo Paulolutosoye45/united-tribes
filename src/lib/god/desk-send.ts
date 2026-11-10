@@ -13,7 +13,7 @@ const id = (v: unknown): string | null => (typeof v === "string" && UUID.test(v)
 export const SEND_WORDS = {
   tab: "Sending",
   title: "What the Desk sends",
-  intro: "Two emails, both to members who are waiting for a tribe: one open tribe that fits them, or a question about a group still being put together. Each is answered with one tap on a private page.",
+  intro: "Emails to members who are waiting for a tribe: one open tribe that fits them, a question about a group still being put together, and, once a group has a leader, a note to say so. Leader offers are listed apart, below. Each is answered with one tap on a private page.",
   modes: {
     off: "The Desk is switched off. Nothing is sent.",
     rehearsal: "Rehearsal. Nothing is sent. The Desk writes down who would have been emailed, and you can read it below.",
@@ -32,7 +32,7 @@ export const SEND_WORDS = {
   },
   listTitle: "What was sent",
   listEmpty: "Nothing has been sent, or written down in Rehearsal, yet.",
-  kind: { tribe: "A proposed tribe", interest: "An interest check" } as Record<string, string>,
+  kind: { tribe: "A proposed tribe", interest: "An interest check", found: "Your group has a leader" } as Record<string, string>,
   withdraw: "Withdraw",
   propose: {
     button: "Email a proposed group",
@@ -85,7 +85,7 @@ export function parseSendState(v: unknown): SendState | null {
 
 export type ProposalRow = {
   id: string;
-  kind: "tribe" | "interest";
+  kind: "tribe" | "interest" | "found";
   personId: string;
   name: string;
   target: string | null;
@@ -116,7 +116,7 @@ export function parseProposals(v: unknown): ProposalsPage {
     const rid = id(r.id);
     const pid = id(r.person_id);
     const status = STATUSES.find((s) => s === r.status);
-    if (!rid || !pid || !status || (r.kind !== "tribe" && r.kind !== "interest")) continue;
+    if (!rid || !pid || !status || (r.kind !== "tribe" && r.kind !== "interest" && r.kind !== "found")) continue;
     rows.push({
       id: rid,
       kind: r.kind,

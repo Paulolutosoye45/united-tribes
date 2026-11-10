@@ -105,7 +105,8 @@ export type TribeCard = {
   track: { slug: string; name: string } | null;
   community: { slug: string; name: string } | null;
   goal: { slug: string; title: string } | null;
-  fixed: ("track" | "community" | "goal")[];
+  /** What the card cannot change. An appointment fixes the track, community and goal; a tribe formed by the Leader Desk also fixes the slot, format, area, kind and seats. */
+  fixed: ("track" | "community" | "goal" | "slot" | "mode" | "zone" | "kind" | "capacity")[];
   tribe_type: TribeType;
   story: string | null;
   meeting_day: number | null;
