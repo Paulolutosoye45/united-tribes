@@ -173,4 +173,58 @@ Offer expiry, backups and the 24 and 12 hour reminders run inside the same `work
 
 * **"Yes, as assistant"** (assistants offered together with a leader). Offers are for the leader role only.
 * **"Recommend as leader" on a waiting member's row.** The picker is on the draft group card.
-* The pastor "card waiting" email and 24 hour reminder, **Open tribe**, the parity test, and the pipeline limits and "stuck" chips (Phase 2b-2). The settings columns for them are already in the database; nothing reads them yet.
+* The pastor "card waiting" email and 24 hour reminder, **Open tribe**, the parity test, and the pipeline limits and "stuck" chips: built in Phase 2b-2 (below).
+
+## Phase 2b-2: opening the tribe, the pastors' reminder, the pipeline and its limits
+
+**Where:** **Proposals** tab. The **pipeline** is at the top, the groups are in the middle (each with **Open the tribe** once it has a leader) and the **limits** are at the bottom.
+
+### Open the tribe
+
+On a draft group whose leader has been appointed, whose tribe card a pastor has approved and whose leader the Academy has certified. Until all three are true the button only says which one is missing.
+
+1. **Look first.** **Place the members** (in Rehearsal, **See who would be placed**) changes nothing. It lists every member of the draft: **already in the tribe**, **can be placed**, **cannot be placed** (with the reason, in the office's own words), or **no seat left**. The members who said yes to "Your group has a leader" come first, then the rest in the order they were added.
+2. **Then confirm.** The second press places each person who can be placed, **one at a time, by the same function the office uses to place one person**. The Desk makes no seat of its own and **accepts no warning for anyone**: whatever the office would have to accept by hand is left for you to do by hand. Each person placed gets the ordinary **"Your tribe"** email and the leader the ordinary team list, because that is what a placement does. Nothing about the Desk is in either email.
+3. **Someone cannot be placed? The rest still go.** They are named on the screen with the reason, and nothing was changed for them. Press again later to place whoever is left. When nobody is left, **the draft is archived**.
+4. **Rehearsal places nobody.** It counts who would be placed and says so. With **Placement** switched off the screen says nobody can be placed for real yet, and the database refuses too.
+
+The only trace the Desk leaves is one line in the log (`desk.open_tribe`: how many were placed, how many were left, no names) and the link from the draft to its tribe, which is what makes a tribe "formed by the Desk" in reports. **`tests/db/leader-desk-parity.test.ts` places one member the ordinary way and one through the Desk, and fails if anything but those two things differs**: the seat, the run, the team, the messages to the member and to the leader, the log lines. If a later change touches one route and not the other, that test says so.
+
+### The pastors' reminder
+
+A tribe the Desk formed whose card is still waiting for review **24 hours after the leader sent it in** gives the pastors and directors **one** email, *Is still waiting for review*, through the notice system (so each person's own delivery choice and the notice switches apply). It is sent **once for each time the card was sent in**, only while the Desk is **On**, never to the leader whose card it is, and not for a card that has been waiting more than two weeks. The email every pastor already gets when any card is sent in is **not repeated or changed**, and a tribe that did not come through the Desk gets no extra email. It names the tribe and the leader's first name and nothing else.
+
+### The pipeline
+
+One row for each draft group that is on its way to an open tribe: **asked** (waiting for an answer), **said yes** (waiting for your decision), **card being filled in**, **card waiting for the pastors**, **card approved** (waiting for the Academy), **ready to open**, and **opened, with people still to place**. Each says how long it has been in that stage, and carries a **Stuck** mark once it has passed its limit. Stuck groups come first, and the top of the section says how many there are. Offers written down in Rehearsal and archived groups are not shown.
+
+### Limits
+
+| Limit | Starts at | Allowed |
+|---|---|---|
+| Hours to answer an offer | 72 | 24 to 240 |
+| Backups for each group | 2 | 0 to 2 |
+| Days a yes may wait for you | 2 | 1 to 14 |
+| Days a card may wait for the pastors | 3 | 1 to 14 |
+
+They are settings, not code. Each change needs a reason (3 to 300 characters), which is kept on the settings row; the log line carries the four numbers and not the reason. The offer window and backups apply from the next offer; the two pipeline limits apply from the next look.
+
+### "Check interest" on a group that has a leader
+
+It now refuses, so nobody is told "we are still finding its leader" after it has one.
+
+### Rehearsal first
+
+Same three positions. In **Rehearsal** Open tribe places nobody, and the pastors' reminder is not sent. **Keep the switch on Rehearsal until Phase 1 has been used for a week and a pastor has approved the Lead signal v1.**
+
+### Applying and undoing it
+
+* **Apply:** `supabase/migrations/20270119000100_desk_open.sql`, after Phase 2b-1. It stops with a clear message if 2b-1, the office placement or the notices migration is missing. See `docs/APPLY-LEADER-DESK.md`.
+* **Undo:** `supabase/rollback/20270119000100_desk_open.down.sql`. It puts back the two functions it replaces (`desk_interest_check` as Phase 2a had it, `desk_tick` as Phase 2b-1 had it) exactly as they were, drops its seven functions and the `opened_at` column, and restores the 2b-1 Switchboard text. **People already placed by Open tribe stay placed** (they are ordinary seats; taking them back is **Undo** on the placement), a draft it archived stays archived, a reminder already sent stays sent, and the limits you set stay as they are. `tests/db/leader-desk-open-rollback.test.ts` rehearses it. Phase 2b-1's way back was also changed so that the whole chain of ways back can be run twice: its statements on tables of the earlier phases now skip a table that an earlier way back has already dropped, and the old function text is put back without checking it against tables that no longer exist.
+* **It adds seven functions:** four the screens call (`desk_open_preview`, `desk_open_tribe`, `desk_pipeline`, `desk_pipeline_settings_set`) and three closed to every signed-in person (`desk_open_words`, `desk_open_plan`, `desk_card_tick`).
+* **Privacy:** no number, note or reason is written to a message, a row or a log line. The pastors' email carries the tribe's name and the leader's first name.
+
+### Not built yet
+
+* **The 48-hour clock and the Monday batch.** Nothing opens a tribe by itself: Open tribe is always a press from you. (Phase 3.)
+* **WhatsApp for any of this.** Everything here is email only.

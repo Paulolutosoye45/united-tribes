@@ -14,6 +14,7 @@ import {
   type Pool,
   type WaitingPage,
 } from "./desk";
+import { EMPTY_PIPELINE, parsePipeline, type Pipeline } from "./desk-open";
 import { EMPTY_LEADER, EMPTY_OFFERS, parseGroupLeader, parseOffersList, type GroupLeader, type OffersPage } from "./desk-offers";
 import { EMPTY_INTEREST, EMPTY_PROPOSALS, parseInterest, parseProposals, parseSendState, type InterestView, type ProposalsPage, type SendState } from "./desk-send";
 
@@ -154,5 +155,15 @@ export async function loadDeskOffers(supabase: SupabaseClient, limit: number, of
     return error ? EMPTY_OFFERS : parseOffersList(data);
   } catch {
     return EMPTY_OFFERS;
+  }
+}
+
+/** Where each group stands on its way to an open tribe, how long it has been there, and which have stayed past their limit; with the limits themselves. Nothing when the database cannot answer. */
+export async function loadDeskPipeline(supabase: SupabaseClient): Promise<Pipeline> {
+  try {
+    const { data, error } = await supabase.rpc("desk_pipeline");
+    return error ? EMPTY_PIPELINE : (parsePipeline(data) ?? EMPTY_PIPELINE);
+  } catch {
+    return EMPTY_PIPELINE;
   }
 }

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { DeskLeaders } from "@/components/god/DeskLeaders";
 import { DeskOffers } from "@/components/god/DeskOffers";
+import { DeskPipeline } from "@/components/god/DeskPipeline";
+import { DeskPipelineSettings } from "@/components/god/DeskPipelineSettings";
 import { DeskProposals, type StartValues } from "@/components/god/DeskProposals";
 import { DeskSending } from "@/components/god/DeskSending";
 import { DeskWaiting } from "@/components/god/DeskWaiting";
@@ -31,6 +33,7 @@ import {
   loadDeskLeaders,
   loadDeskOffers,
   loadDeskOverview,
+  loadDeskPipeline,
   loadDeskProposals,
   loadDeskSendState,
   loadDeskWaiting,
@@ -120,7 +123,11 @@ export default async function LeaderDeskPage({ searchParams }: { searchParams: S
     );
   } else {
     const [groups, clusters, choices] = await Promise.all([loadDeskGroups(supabase), loadDeskClusters(supabase), loadDeskChoices(supabase)]);
-    const [interest, leaders] = await Promise.all([loadDeskInterest(supabase, groups.map((g) => g.id)), loadDeskGroupLeaders(supabase, groups.map((g) => g.id))]);
+    const [interest, leaders, pipeline] = await Promise.all([
+      loadDeskInterest(supabase, groups.map((g) => g.id)),
+      loadDeskGroupLeaders(supabase, groups.map((g) => g.id)),
+      loadDeskPipeline(supabase),
+    ]);
     // "Start a draft" from a line in the list opens the form with that line's answers filled in
     let start: StartValues | null = null;
     const [track, slot, mode, type] = (sp.start ?? "").split(",");
@@ -128,7 +135,13 @@ export default async function LeaderDeskPage({ searchParams }: { searchParams: S
     if (isDeskId(track) && trackName && SLOT_KEYS.includes(slot) && (mode === "online" || mode === "in_person") && (type === "mixed" || type === "women" || type === "men")) {
       start = { track, slot, mode, type, name: `${trackName}, ${slotWord(slot)}` };
     }
-    body = <DeskProposals overview={overview} groups={groups} clusters={clusters} choices={choices} start={start} interest={interest} leaders={leaders} />;
+    body = (
+      <div className="flex flex-col gap-8">
+        <DeskPipeline pipeline={pipeline} />
+        <DeskProposals overview={overview} groups={groups} clusters={clusters} choices={choices} start={start} interest={interest} leaders={leaders} />
+        <DeskPipelineSettings settings={pipeline.settings} />
+      </div>
+    );
   }
 
   return (

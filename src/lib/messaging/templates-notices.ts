@@ -150,6 +150,18 @@ add({
 });
 
 add({
+  key: "pastor_card_waiting", audience: "office", group: "pastors", title: "A Tribe Card has waited a day for review",
+  who: "Pastors and directors", when: "Once, a day after a leader sent in the Tribe Card of a group the Leader Desk formed",
+  subject: (p) => `${clean(p.tribe, "A Tribe Card")} is still waiting for review`,
+  body: (p) => [
+    `${clean(p.leader, "A leader")} sent in the Tribe Card for ${clean(p.tribe, "a tribe")} a day ago, and it has not been reviewed yet.`,
+    "The group has members waiting to be told they have a tribe, and they cannot be placed until a pastor has approved the card.",
+  ],
+  button: { label: "Review the card", path: "/review/cards" },
+  sample: { tribe: "Builders Tribe", leader: "Ngozi", path: "/review/cards" },
+});
+
+add({
   key: "pastor_card_overdue", audience: "office", group: "pastors", title: "Tribe Cards are waiting for review",
   who: "Pastors", when: "Once a week, while a card has waited more than 5 days",
   subject: (p) => `${many(count(p), "Tribe Card")} waiting for review`,

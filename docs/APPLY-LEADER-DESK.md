@@ -106,3 +106,39 @@ When you go on **On** (after the one-week Phase 1 check and the pastor's approva
 ## Go back
 
 Run `supabase/rollback/20270118000100_desk_offers.down.sql`. It puts back the six functions it replaced exactly as they were, narrows the two checks it widened, and removes its own functions, three tables and columns. **Leaders already appointed through the Desk stay appointed** (they are ordinary appointments), and tribe cards already started keep what was written on them (only the extra locks on the slot, format, area, kind and seats are lifted). Emails already queued stay in the queue; their link will say it cannot be opened. Switch Leader Desk to **Off** first if you want nothing more to go. Put the website files back before you run it.
+
+---
+
+# Leader Desk, Phase 2b-2 (opening the tribe, the pastors' reminder, the pipeline): how to apply
+
+Apply this **after** Phase 2b-1 is in and working. Leader Desk stays on **Rehearsal**: nobody is placed and nothing is sent.
+
+## Before you start
+
+1. **Back up**: Supabase → Database → Backups → manual backup.
+2. Nothing to tell anyone. No member hears anything while the switch is on Rehearsal.
+
+## Deploy, in this order
+
+1. **Database**, one file, once:
+   `supabase/migrations/20270119000100_desk_open.sql`
+2. **Check**, in the SQL editor:
+   `select count(*) from pg_proc where proname like 'desk\_%' or proname like 'worker\_desk\_%';`
+   It should be **75** (68 up to Phase 2b-1 plus 7 from this file).
+3. **Then the website.** It adds **the pipeline** and **the limits** on the Proposals tab and **Open the tribe** on a draft group that has a leader. The pastors' reminder email needs nothing more: it runs inside the Desk's existing tick.
+
+Run the database file **first**. If the website goes out first, the pipeline shows nothing and **Open the tribe** says it is not available yet.
+
+## Check it works (twenty minutes, on Rehearsal)
+
+1. **Proposals**: the pipeline lists each draft group that has a leader or an open offer, how long it has been in its stage, and says "Nothing is stuck" or how many are.
+2. Change a limit with a reason: it is refused without a reason or with a number outside the range, and saved otherwise.
+3. Open a draft group that has a leader. Press **See who would be placed**. If the card is not approved or the leader is not certified, it says which. Otherwise it lists each member and says who can be placed. Press **Show me**: it says "N people would be placed. Nothing was done." Check **Placements**: nobody was seated.
+4. A pastor sends in a tribe card for a Desk tribe and nobody reviews it. A day later, on **On** only: the pastors and directors get **one** email. Another does not follow.
+5. As an admin, a pastor and a member, open `/god/leader-desk?tab=proposals`: none of them can see it.
+
+When you go on **On** (after the one-week Phase 1 check and the pastor's approval of the Lead signal), set **Placement** to **On**, start with **one small draft you know**, press **Place the members**, check the list, press **Place them**, and open the "Your tribe" email on your phone: it is the same email any other member gets.
+
+## Go back
+
+Run `supabase/rollback/20270119000100_desk_open.down.sql`. It puts back the two functions it replaced exactly as they were, drops its seven functions and one column, and restores the earlier Switchboard text. **Members already placed stay placed**, a draft that was archived stays archived, a reminder already sent stays sent and the limits you set stay as they are. Switch Leader Desk to **Off** first if you want nothing more to go. Put the website files back before you run it.
