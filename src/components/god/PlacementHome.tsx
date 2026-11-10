@@ -22,13 +22,16 @@ type Community = { id: string; name: string };
  */
 export function PlacementHome({ overview, communities, holds, counts, requests }: { overview: Overview; communities: Community[]; holds: Hold[]; counts: OfficeCounts | null; requests: OfficeRequest[] }) {
   const { settings: s, supply } = overview;
+  // A request from Admin is a person waiting for you, so while there is one the section moves to the top of the page.
+  const waiting = requests.some((r) => r.status === "open");
   return (
     <div className="flex flex-col gap-8" data-testid="placement-home">
+      {waiting ? <Office counts={counts} requests={requests} /> : null}
       <Switch mode={s.mode} lastTickAt={s.lastTickAt} />
       <Supply overview={overview} />
       {overview.openRun ? <OpenRun run={overview.openRun} /> : <NewRun settings={s} communities={communities} window={overview.window} />}
       <PlaceOnePointer />
-      <Office counts={counts} requests={requests} />
+      {waiting ? null : <Office counts={counts} requests={requests} />}
       <Choices settings={s} />
       <Holds holds={holds} onHold={supply.onHold} />
       <Past runs={overview.runs} />

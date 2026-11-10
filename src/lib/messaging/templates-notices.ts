@@ -595,6 +595,18 @@ add({
 });
 
 add({
+  key: "admin_placement_lapsed", audience: "office", group: "admin", title: "Your request to the owner lapsed",
+  who: "The admin or director who asked the owner", when: "Once, when a request to place or move a member has waited 7 days without an answer",
+  subject: () => "Your request to place a member lapsed",
+  body: (p) => [
+    `Your request about ${clean(p.member_first, "a member")} was not answered within 7 days, so it lapsed. Nothing has changed for the member.`,
+    "If it still matters, you can ask the owner again from the member’s page.",
+  ],
+  button: { label: "Open the member", path: "/admin/people" },
+  sample: { member_first: "Tobi", path: "/admin/people" },
+});
+
+add({
   key: "coach_removal_waiting", audience: "coach", group: "coaches", title: "A request about a member's place is waiting for you",
   who: "The coach of the tribe", when: "Once, when a request has waited 3 days without an answer",
   subject: () => "A request about a member’s place has waited three days",
