@@ -1019,6 +1019,15 @@ describe("locked-down defaults", () => {
       "desk_group_member_remove",
       "desk_group_suggest",
       "desk_clusters",
+      // The Leader Desk's emails (Phase 2a): the owner's calls, each checking the owner and the Switchboard again inside
+      "desk_send_state",
+      "desk_settings_set",
+      "desk_propose_preview",
+      "desk_propose_tribe",
+      "desk_interest_check",
+      "desk_group_interest",
+      "desk_proposals_list",
+      "desk_proposal_cancel",
       "placement_office_person",
       "placement_office_tribes",
       "placement_office_tribe",
@@ -1240,6 +1249,10 @@ describe("locked-down defaults", () => {
       "worker_placed_nudge_info",
       "worker_placed_choose",
       "worker_placed_new_link",
+      // The Leader Desk's private page (what to show and the one-tap answer) and the heartbeat's step: each needs the sending token, and the page's calls the link's secret
+      "worker_desk_info",
+      "worker_desk_answer",
+      "worker_desk_tick",
       "signin_channel_status",
       // Messages & reminders: the email pages and the sending service, each behind a secret
       "worker_reminders_tick",

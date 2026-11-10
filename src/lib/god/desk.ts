@@ -42,6 +42,7 @@ export const TABS = [
   { key: "waiting", label: "Waiting" },
   { key: "proposals", label: "Proposals" },
   { key: "leaders", label: "Leaders" },
+  { key: "sending", label: "Sending" },
 ] as const;
 export type Tab = (typeof TABS)[number]["key"];
 export const isTab = (v: unknown): v is Tab => TABS.some((t) => t.key === v);

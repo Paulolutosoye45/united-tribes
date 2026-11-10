@@ -33,3 +33,40 @@ Run the database file **first**. If the website goes out first, **Leader Desk** 
 ## Go back
 
 Run `supabase/rollback/20270116000100_leader_desk.down.sql`. It removes only the Desk's functions, three tables and Switchboard entry. Nothing else changes.
+
+---
+
+# Leader Desk, Phase 2a (emails): how to apply
+
+Apply this **after** Phase 1 is in and working. Leader Desk stays on **Rehearsal** for this: nothing is sent.
+
+## Before you start
+
+1. **Back up**: Supabase → Database → Backups → manual backup.
+2. Nothing to tell anyone. No member hears anything while the switch is on Rehearsal.
+
+## Deploy, in this order
+
+1. **Database**, one file, once:
+   `supabase/migrations/20270117000100_desk_proposals.sql`
+2. **Check**, in the SQL editor:
+   `select count(*) from pg_proc where proname like 'desk\_%' or proname like 'worker\_desk\_%';`
+   It should be **44** (21 from Phase 1 plus 23 from this file; Phase 1 also added `leader_desk_any`, which this does not count).
+3. **Then the website.** It adds the **Sending** tab, **Email a proposed group**, **Check interest**, the private page `/d/…`, and the extra call in `/api/cron/tick`.
+
+Run the database file **first**. If the website goes out first, the Sending tab says the Desk's email is not available yet, and the private page says it is not open.
+
+## Check it works (fifteen minutes, on Rehearsal)
+
+1. **God Mode → Leader Desk → Sending**: it says **Rehearsal. Nothing is sent**, today's count, the four limits.
+2. Change a limit with a reason; the reason is required and the new number shows.
+3. **Waiting**: press **Email a proposed group** on a member. It shows the tribe and says nothing is sent. Press **Write it down**. The Sending tab lists it as "Would have been sent". Check **Messages** (or the queue): no email was made.
+4. **Proposals**: put two waiting members in a draft, press **Check interest**, then **Write it down**. The card says "Written down for 2. Nothing was sent." and each member shows "Would be asked".
+5. Press **Check interest** again: it says both were already asked.
+6. As an admin, a pastor and a member, open `/god/leader-desk?tab=sending`: none of them can see it.
+
+When you go on **On** (after the one-week Phase 1 check and the pastor's approval of the Lead signal), start with one member you know, press **Email a proposed group**, and open the email on your phone: three buttons, **Stop these emails** at the bottom, nothing that sounds like a seat has been given.
+
+## Go back
+
+Run `supabase/rollback/20270117000100_desk_proposals.down.sql`. It removes the Desk's email functions and four tables and puts the Phase 1 Switchboard text back. Nothing else changes: no member, seat, tribe, message or notice. Emails already queued stay in the queue; their link will say it cannot be opened. Switch Leader Desk to **Off** first if you want nothing more to go. Put the website files back before you run it.

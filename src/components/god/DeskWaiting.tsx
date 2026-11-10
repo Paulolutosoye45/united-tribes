@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DeskAddToDraft } from "@/components/god/DeskAddToDraft";
+import { DeskPropose } from "@/components/god/DeskPropose";
 import { DeskReveal } from "@/components/god/DeskReveal";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
@@ -70,6 +71,7 @@ function Row({ r }: { r: WaitingRow }) {
         <DeskReveal person={r.personId} masked={r.phone} hasNumber={r.hasNumber} />
         {r.inDraft ? null : <DeskAddToDraft person={r.personId} drafts={r.drafts} />}
       </div>
+      {r.block ? null : <DeskPropose person={r.personId} />}
     </li>
   );
 }
