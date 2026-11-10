@@ -15,6 +15,8 @@ import { makeCast, type Cast } from "./profiles-kit";
 
 let c: Cast;
 let n = 0;
+/** The people a test seated in a tribe. They are taken out again before the next test, because a tribe never holds a 13th active member. */
+const made: string[] = [];
 let other: { leader: { id: string }; tribe: string };
 
 beforeAll(async () => {
@@ -28,6 +30,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await c.reset();
+  if (made.length > 0) await c.db.admin.query("delete from public.tribe_members where person_id = any($1::uuid[])", [made.splice(0)]);
   await c.sql("delete from public.broadcasts");
   await c.sql("delete from public.contact_asks");
   await c.sql("delete from public.reach_prompts");
@@ -52,6 +55,7 @@ const fresh = (name: string) => c.k.tribe(c.season, { name: `${name} ${++n}`, ca
 /** An adult member with a profile and a seat in the seasoned tribe (or another). Nothing else is set: no number, no yes. */
 async function member(name: string, tribe = c.seasoned.tribe) {
   const p = await c.k.seat(tribe, c.season, `${name}${++n}`);
+  made.push(p.id);
   return p.id;
 }
 /** Their cause, as the database says it. */
@@ -546,10 +550,11 @@ describe("a leader asks one person", () => {
 
   it("stops at 20 a day from one leader", async () => {
     await on();
-    const ids: string[] = [];
-    for (let i = 0; i < 21; i++) ids.push(await member(`Many${i}`));
-    for (let i = 0; i < 20; i++) await c.as(c.seasoned.id, "contact_ask_send", ids[i]);
-    await expect(c.as(c.seasoned.id, "contact_ask_send", ids[20])).rejects.toThrow(/20 requests/);
+    // A tribe holds 12 at most, so the twenty earlier requests today are written down directly; the twenty-first is the one asked for
+    const first = await member("Many0");
+    await c.sql("insert into public.contact_asks (person_id, kind, by_person, created_at) select $1, 'no_number', $2, now() - interval '1 hour' from generate_series(1, 20)", [first, c.seasoned.id]);
+    const next = await member("Many1");
+    await expect(c.as(c.seasoned.id, "contact_ask_send", next)).rejects.toThrow(/20 requests/);
   });
 
   it("also lets an assistant and a coach ask", async () => {

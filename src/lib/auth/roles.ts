@@ -246,6 +246,10 @@ export const CONTACT_GAP_ACT_ROLES: readonly Role[] = ["admin", "director", "dat
 export const PLACED_BOARD_ROLES: readonly Role[] = ["admin", "director", "pastor"];
 export const PLACED_DESK_ROLES: readonly Role[] = ["admin", "director"];
 
+/** Reads the Seats page (every seat the church placed that has a clock, and where the clock stands). The first three also keep a seat, give more time, release one now, give one back and pause the clocks; the data lead only looks. The database checks the same. */
+export const SEAT_ROLES: readonly Role[] = ["admin", "director", "pastor", "data_lead"];
+export const SEAT_ACT_ROLES: readonly Role[] = ["admin", "director", "pastor"];
+
 /** Reads the Leader cards board (where each leader's Tribe Card is, and whether their email arrived). The first three also send the email again, tag a department, move the reminders and download the call sheet; the data lead only looks and downloads the sheet for the heads of department. The database checks the same. */
 export const LEADER_CARD_ROLES: readonly Role[] = ["admin", "director", "pastor", "data_lead"];
 export const LEADER_CARD_ACT_ROLES: readonly Role[] = ["admin", "director", "pastor"];

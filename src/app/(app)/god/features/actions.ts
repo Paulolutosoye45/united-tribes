@@ -110,3 +110,21 @@ export async function placedAnswersSettingsAction(input: {
   );
   return done.ok ? { ok: true } : done;
 }
+
+/** The seat window's numbers: the window, when the reminder and the last call go, the days to take a seat back, offers in a row, the day's limit and the bar. Optionally counts seats placed in the last few days too. */
+export async function seatSettingsAction(input: {
+  window: number; remind: number; lastCall: number; takeBack: number; offers: number; dayCap: number; bar: number; includeDays: number | null; reason: string;
+}): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
+  if (!input || ![input.window, input.remind, input.lastCall, input.takeBack, input.offers, input.dayCap, input.bar].every(whole) || (input.includeDays !== null && !whole(input.includeDays))) return bad();
+  const done = await run(
+    "god_seat_settings_set",
+    {
+      p_window: input.window, p_remind: input.remind, p_last_call: input.lastCall, p_take_back: input.takeBack, p_offers: input.offers, p_day_cap: input.dayCap, p_bar: input.bar,
+      p_include_days: input.includeDays, p_reason: reasonOf(input.reason),
+    },
+    [...PAGES, "/admin/seats"],
+  );
+  return done.ok ? { ok: true } : done;
+}

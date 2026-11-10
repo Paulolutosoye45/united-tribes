@@ -162,6 +162,18 @@ add({
 });
 
 add({
+  key: "admin_seat_stopped", audience: "office", group: "admin", title: "Seat releases are being held by a safety limit", urgent: true,
+  who: "Admins and directors", when: "Once a day for each limit, while it holds back a release that is due",
+  subject: () => "Seat releases are being held by a safety limit",
+  body: (p) => [
+    `${clean(p.why, "A safety limit is holding a release")}.`,
+    "No seat has been released that should not have been. The seats that are due stay as they are, and the member is not written to, until the limit clears or you look at it.",
+  ],
+  button: { label: "Open the Seats page", path: "/admin/seats" },
+  sample: { why: "The most seats the church lets go of in one day has been reached", path: "/admin/seats" },
+});
+
+add({
   key: "pastor_card_overdue", audience: "office", group: "pastors", title: "Tribe Cards are waiting for review",
   who: "Pastors", when: "Once a week, while a card has waited more than 5 days",
   subject: (p) => `${many(count(p), "Tribe Card")} waiting for review`,

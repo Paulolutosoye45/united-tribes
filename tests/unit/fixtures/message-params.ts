@@ -8,6 +8,7 @@ import { LEADER_CARD_SAMPLES } from "@/lib/messaging/templates-leader-cards";
 import { REMOVAL_SAMPLES } from "@/lib/messaging/templates-removal";
 import { PLACEMENT_SAMPLES } from "@/lib/messaging/templates-placement";
 import { DESK_SAMPLES } from "@/lib/messaging/templates-desk";
+import { SEAT_WINDOW_SAMPLES } from "@/lib/messaging/templates-seat-window";
 import type { Params } from "@/lib/messaging/types";
 
 /** A believable set of fields, as the database would supply them. Templates read the ones they need. */
@@ -120,6 +121,7 @@ const OVERRIDES: Record<string, Params> = {
   ...REACH_SERIES_SAMPLES,
   ...LEADER_CARD_SAMPLES,
   ...DESK_SAMPLES,
+  ...SEAT_WINDOW_SAMPLES,
 };
 
 export function sampleParams(template: string): Params {

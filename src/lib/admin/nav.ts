@@ -1,5 +1,5 @@
 import {
-  ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, CONTACT_GAP_ROLES, DATA_ROLES, LEADER_CARD_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PIPELINE_VIEW_ROLES, PLACED_BOARD_ROLES,
+  ANNOUNCE_VIEW_ROLES, ASK_ROLES, BOARD_VIEW_ROLES, CONTACT_GAP_ROLES, DATA_ROLES, LEADER_CARD_ROLES, LEADER_QUALITY_ROLES, MODEL_ROLES, MULTIPLY_ROLES, OFFICE_ROLES, PIPELINE_VIEW_ROLES, PLACED_BOARD_ROLES, SEAT_ROLES,
   OVERSIGHT_ROLES, PLACE_ROLES, PRIVACY_ROLES, REFEREE_MANAGER_ROLES, REMINDER_ROLES, REMOVAL_ROLES, SIGNIN_ROLES, SWAP_ROLES, TEEN_ROLES, TEMPLATE_VIEW_ROLES, hasAnyRole, type Role,
 } from "@/lib/auth/roles";
 
@@ -119,6 +119,13 @@ export const SECTIONS: readonly NavSection[] = [
           { href: "/admin/placed/tribes", label: "By tribe" },
           { href: "/admin/placed/desk", label: "Call desk" },
         ],
+      },
+      {
+        href: "/admin/seats",
+        label: "Seats",
+        about: "Every seat the church placed that has a clock: who is waiting, who is held back, what was released, and the way back",
+        roles: SEAT_ROLES,
+        synonyms: ["seat", "seats", "48 hours", "48 hour", "clock", "seat window", "released seats", "last call", "reminder", "give more time", "more time", "hard to fill", "not reached", "bench", "take back", "who lost a seat"],
       },
       {
         href: "/admin/people/leader-cards",
