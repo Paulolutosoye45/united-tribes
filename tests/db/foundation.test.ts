@@ -1036,6 +1036,11 @@ describe("locked-down defaults", () => {
       "desk_offer_review",
       "desk_group_leader",
       "desk_offers_list",
+      // Opening a tribe and the pipeline (Phase 2b-2): the owner's calls, each checking the owner and the Switchboard again inside
+      "desk_open_preview",
+      "desk_open_tribe",
+      "desk_pipeline",
+      "desk_pipeline_settings_set",
       "placement_office_person",
       "placement_office_tribes",
       "placement_office_tribe",

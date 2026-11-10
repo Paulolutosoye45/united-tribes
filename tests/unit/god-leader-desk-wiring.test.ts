@@ -23,6 +23,8 @@ const FUNCTIONS = [
   "desk_send_state", "desk_proposals_list", "desk_group_interest",
   // Phase 2b: the screens only read these two; the five that act live in offer-actions.ts (see god-leader-desk-offers-wiring.test.ts)
   "desk_group_leader", "desk_offers_list",
+  // Phase 2b-2: the screens only read this one; the three that act live in open-actions.ts (see god-leader-desk-open-wiring.test.ts)
+  "desk_pipeline",
 ];
 
 describe("the Leader Desk page", () => {
