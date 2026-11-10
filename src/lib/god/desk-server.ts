@@ -14,6 +14,7 @@ import {
   type Pool,
   type WaitingPage,
 } from "./desk";
+import { EMPTY_LEADER, EMPTY_OFFERS, parseGroupLeader, parseOffersList, type GroupLeader, type OffersPage } from "./desk-offers";
 import { EMPTY_INTEREST, EMPTY_PROPOSALS, parseInterest, parseProposals, parseSendState, type InterestView, type ProposalsPage, type SendState } from "./desk-send";
 
 // Each loader answers nothing when the database refuses (the desk is switched off, or the person is not the unlocked owner), does not have the function yet, or cannot
@@ -128,4 +129,30 @@ export async function loadDeskInterest(supabase: SupabaseClient, groups: string[
     }),
   );
   return out;
+}
+
+/** Where each draft stands on its leader: the offers so far, the leader if there is one, and whether you have to decide something. A group the database cannot answer for shows no offers. */
+export async function loadDeskGroupLeaders(supabase: SupabaseClient, groups: string[]): Promise<Record<string, GroupLeader>> {
+  const out: Record<string, GroupLeader> = {};
+  await Promise.all(
+    groups.map(async (g) => {
+      try {
+        const { data, error } = await supabase.rpc("desk_group_leader", { p_group: g });
+        out[g] = error ? EMPTY_LEADER : parseGroupLeader(data);
+      } catch {
+        out[g] = EMPTY_LEADER;
+      }
+    }),
+  );
+  return out;
+}
+
+/** One page of every leader offer, with counts. Reasons are counted and never shown by name. */
+export async function loadDeskOffers(supabase: SupabaseClient, limit: number, offset: number): Promise<OffersPage> {
+  try {
+    const { data, error } = await supabase.rpc("desk_offers_list", { p_limit: limit, p_offset: offset });
+    return error ? EMPTY_OFFERS : parseOffersList(data);
+  } catch {
+    return EMPTY_OFFERS;
+  }
 }

@@ -13,7 +13,7 @@ import { Chip } from "@/components/ui/Chip";
 import { Segmented } from "@/components/ui/Choice";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { LIMITS, missingFields, storyForCard, valuesFromCard, type CardValues } from "@/lib/academy/card";
-import { CARD_MISSING, CARD_STATUS, TRIBE_TYPES, DAYS, clockLabel, timesFor, ZONES } from "@/lib/academy/options";
+import { CARD_MISSING, CARD_STATUS, TRIBE_TYPES, DAYS, ZONES, ZONE_LABELS, clockLabel, daysForSlot, timesForSlot } from "@/lib/academy/options";
 import type { MyTribe } from "@/lib/academy/types";
 import { prefillLines, type ReadyMade } from "@/lib/cards/templates";
 import type { LeaderCatalogue } from "@/lib/leaders/server";
@@ -112,8 +112,13 @@ export function TribeBuilder({
     else timer.current = setTimeout(() => void flush(), 800);
   }
 
+  // What the card cannot change. A tribe formed by the Leader Desk keeps the meeting slot, format, area, kind and seats of the group it was formed for.
+  const fixed = new Set(card.fixed);
+  const slotLock = fixed.has("slot") ? card.slot : null;
+  const formed = fixed.has("slot");
+
   function setDay(day: number) {
-    const times = timesFor(day);
+    const times = timesForSlot(day, slotLock);
     const keep = times.includes(values.meeting_time) ? values.meeting_time : "";
     change({ meeting_day: day, meeting_time: keep }, true);
   }
@@ -122,8 +127,7 @@ export function TribeBuilder({
   const track = catalogue.tracks.find((t) => t.slug === values.track) ?? null;
   const goal = community?.goals.find((g) => g.slug === values.goal) ?? null;
   const missing = useMemo(() => missingFields(values), [values]);
-  const fixed = new Set(card.fixed);
-  const times = timesFor(values.meeting_day);
+  const times = timesForSlot(values.meeting_day, slotLock);
   const status = CARD_STATUS[card.status];
   // The Success Picture module comes first only when the Academy is required. A missing answer counts as required.
   const moduleBlocks = card.module_needed !== false && !card.module_ok;
@@ -226,6 +230,9 @@ export function TribeBuilder({
             onChange={(e) => change({ name: e.target.value })}
             onBlur={() => void flush()}
           />
+          {fixed.has("kind") ? (
+            <Fixed label="Who it is for" value={TRIBE_TYPES.find((t) => t.id === values.tribe_type)?.label ?? ""} />
+          ) : (
           <div className="flex flex-col gap-2">
             <p className="text-[0.95rem] font-medium">Who it is for</p>
             <Segmented
@@ -237,17 +244,26 @@ export function TribeBuilder({
             />
             <p className="t-small text-soft">{TRIBE_TYPES.find((t) => t.id === values.tribe_type)?.description}.</p>
           </div>
-          <Select label="Seats" name="capacity" value={values.capacity} disabled={!editable} onChange={(e) => change({ capacity: Number(e.target.value) }, true)}>
-            {[4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
-              <option key={n} value={n}>
-                {n} members{n === 12 ? " (the most)" : ""}
-              </option>
-            ))}
-          </Select>
+          )}
+          {fixed.has("capacity") ? (
+            <Fixed label="Seats" value={`${values.capacity} members`} />
+          ) : (
+            <Select label="Seats" name="capacity" value={values.capacity} disabled={!editable} onChange={(e) => change({ capacity: Number(e.target.value) }, true)}>
+              {[4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                <option key={n} value={n}>
+                  {n} members{n === 12 ? " (the most)" : ""}
+                </option>
+              ))}
+            </Select>
+          )}
         </Section>
 
         <Section title="What it is built on" step="2">
-          {hints ? null : fixed.size === 3 ? (
+          {hints ? null : formed ? (
+            <p className="t-small text-soft" data-testid="card-formed">
+              This tribe was formed for the people waiting for it, so the community, goal, meeting time, format, area, kind and seats are already set. You can still name it, tell your story, and choose the day and time inside the slot.
+            </p>
+          ) : fixed.size === 3 ? (
             <p className="t-small text-soft">These come from your approved application, because your tribe is built on the goal you have lived.</p>
           ) : (
             <p className="t-small text-soft">Choose the community and Season Goal your tribe is built on. Anything from your application is already filled in.</p>
@@ -319,7 +335,7 @@ export function TribeBuilder({
               Day
             </p>
             <div role="group" aria-labelledby="day-label" className="flex flex-wrap gap-2">
-              {DAYS.map((d) => (
+              {DAYS.filter((d) => daysForSlot(slotLock).includes(d.value)).map((d) => (
                 <Chip key={d.value} selected={values.meeting_day === d.value} disabled={!editable} onClick={() => setDay(d.value)} aria-label={d.long}>
                   {d.short}
                 </Chip>
@@ -343,27 +359,35 @@ export function TribeBuilder({
           <p className="t-small -mt-2 text-soft">
             Times avoid rush hour: weeknights from 7:30 pm, Saturday mornings, Sunday afternoons and evenings. A meeting is {card.duration_minutes} minutes.
           </p>
-          <div className="flex flex-col gap-2">
-            <p className="text-[0.95rem] font-medium">Format</p>
-            <Segmented
-              name="mode"
-              label="Format"
-              value={values.mode || null}
-              options={[
-                { value: "online", label: "Online" },
-                { value: "in_person", label: "In person" },
-              ]}
-              onChange={(v) => change({ mode: v }, true)}
-            />
-          </div>
-          <Select label="Zone" name="zone" value={values.zone} disabled={!editable} onChange={(e) => change({ zone: e.target.value }, true)}>
-            <option value="">Choose a zone</option>
-            {ZONES.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.label}
-              </option>
-            ))}
-          </Select>
+          {fixed.has("mode") ? (
+            <Fixed label="Format" value={values.mode === "online" ? "Online" : "In person"} />
+          ) : (
+            <div className="flex flex-col gap-2">
+              <p className="text-[0.95rem] font-medium">Format</p>
+              <Segmented
+                name="mode"
+                label="Format"
+                value={values.mode || null}
+                options={[
+                  { value: "online", label: "Online" },
+                  { value: "in_person", label: "In person" },
+                ]}
+                onChange={(v) => change({ mode: v }, true)}
+              />
+            </div>
+          )}
+          {fixed.has("zone") ? (
+            <Fixed label="Zone" value={ZONE_LABELS[values.zone] ?? values.zone} />
+          ) : (
+            <Select label="Zone" name="zone" value={values.zone} disabled={!editable} onChange={(e) => change({ zone: e.target.value }, true)}>
+              <option value="">Choose a zone</option>
+              {ZONES.map((z) => (
+                <option key={z.id} value={z.id}>
+                  {z.label}
+                </option>
+              ))}
+            </Select>
+          )}
           <Input
             label="Area, in general terms"
             name="place_note"

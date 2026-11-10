@@ -1,9 +1,11 @@
 /**
- * The words of the Leader Desk's two emails to members (Phase 2a) and of the private page they open, kept in one place so the email, the page and the tests
+ * The words of the Leader Desk's emails to members (Phase 2a and 2b) and of the private pages they open, kept in one place so the email, the page and the tests
  * cannot say different things. Nothing here reads a number, a score's inner parts, faith, stage, support or anyone else's name.
  *
  *   Tribe proposed    one open tribe a waiting member fits, with the fit and up to three reasons about the goal, the place and the time
  *   Interest check    a group still being put together, with no leader's name, and one question
+ *   Leader found      "Your group has a leader": the leader's first name, no seat promised, and one question
+ *   Leader offer      "Would you lead this group?": asked of one member (and, in turn, up to two backups), answered on a page of its own (OFFER_WORDS below)
  */
 
 export const DESK_SLOTS: Record<string, string> = {
@@ -39,7 +41,7 @@ export const DESK_SUBJECT_MAX = 60;
 const clean = (v: unknown, fallback = "") => (typeof v === "string" ? v : "").replace(/\s+/g, " ").trim() || fallback;
 const whole = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : null);
 
-export type DeskKind = "tribe" | "interest";
+export type DeskKind = "tribe" | "interest" | "found";
 export type DeskAnswerKey = "yes" | "no" | "other_time" | "stop";
 export const isDeskAnswer = (v: unknown): v is DeskAnswerKey => v === "yes" || v === "no" || v === "other_time" || v === "stop";
 
@@ -72,7 +74,7 @@ export type DeskInfo = {
 export function parseDeskInfo(v: unknown): DeskInfo | null {
   if (typeof v !== "object" || v === null) return null;
   const o = v as Record<string, unknown>;
-  if (o.found !== true || (o.kind !== "tribe" && o.kind !== "interest")) return null;
+  if (o.found !== true || (o.kind !== "tribe" && o.kind !== "interest" && o.kind !== "found")) return null;
   const d = (typeof o.details === "object" && o.details !== null ? o.details : {}) as Record<string, unknown>;
   return {
     kind: o.kind,
@@ -130,12 +132,22 @@ export const DESK_WORDS = {
   stop: "Stop these emails",
   tribeTitle: (first: string) => (first ? `${first}, a tribe that could suit you` : "A tribe that could suit you"),
   interestTitle: (first: string) => (first ? `${first}, would this group suit you?` : "Would this group suit you?"),
+  foundTitle: (first: string) => (first ? `${first}, your group has a leader` : "Your group has a leader"),
   notice: {
     nothingDecided: "Nothing is decided for you. If you want this seat, open the tribe and choose it, the same way as any other tribe.",
     nothingYet: "Saying yes does not give you a seat. It only tells us you would like to be in this group. If it goes ahead, we will write to you again.",
     noIsFine: "Saying no is a fine answer, and you stay on our list for another tribe.",
     silence: "If we do not hear from you, nothing changes. We will not place you in a group because you were silent.",
     stopWhy: "Stop these emails ends every email like this from the Leader Desk. You will still hear from your tribe and from the church as usual.",
+    foundNothingDecided:
+      "Saying yes does not give you a seat. The pastors still have to approve this group before it opens. If it goes ahead, we will write to you with your place.",
+    foundNoIsFine: "Saying no is a fine answer, and you stay on our list for another tribe.",
+  },
+  found: {
+    yes: "Thank you. We have noted that you are still interested. If the group goes ahead, we will write to you with your place.",
+    no: "Understood. You are off this group, and you stay on our list for another tribe.",
+    button: "Yes, I am still interested",
+    about: (leader: string) => (leader ? `${leader} has said yes to leading it.` : "Someone has said yes to leading it."),
   },
   done: {
     yes: "Thank you. You are counted in for this group. If it goes ahead, we will write to you again.",
@@ -180,6 +192,172 @@ export const DESK_EMAIL_SAMPLES = {
     zone: "mainland",
     capacity: 8,
     hours: 48,
+    stop: true,
+  },
+} as const;
+
+// ---------------------------------------------------------------------------
+// "Would you lead this group?" (Phase 2b): the email and the page of its own at /o/<secret>
+// ---------------------------------------------------------------------------
+
+/** The answers the offer page can send, as the database reads them (worker_desk_offer_answer). */
+export type OfferAnswerKey = "lead" | "not_season" | "call" | "tomorrow" | "never" | "stop";
+export const OFFER_ANSWERS: OfferAnswerKey[] = ["lead", "not_season", "call", "tomorrow", "never", "stop"];
+export const isOfferAnswer = (v: unknown): v is OfferAnswerKey => typeof v === "string" && (OFFER_ANSWERS as string[]).includes(v);
+
+/** The reasons a member can give for "Not this season". Kept, counted and shown to nobody by name. */
+export const OFFER_REASONS: { id: string; label: string }[] = [
+  { id: "busy", label: "I am too busy right now" },
+  { id: "family", label: "Family or home comes first right now" },
+  { id: "not_ready", label: "I do not feel ready yet" },
+  { id: "other_goal", label: "I would rather lead a different goal" },
+  { id: "other", label: "Something else" },
+];
+export const OFFER_REASON_IDS = OFFER_REASONS.map((r) => r.id);
+export const isOfferReason = (v: unknown): v is string => typeof v === "string" && OFFER_REASON_IDS.includes(v);
+
+export type OfferInfo = {
+  open: boolean;
+  status: string;
+  first: string;
+  answer: string | null;
+  callMe: boolean;
+  reminderSet: boolean;
+  stopped: boolean;
+  ends: string;
+  community: string;
+  goal: string;
+  slot: string;
+  mode: string;
+  zone: string | null;
+  capacity: number | null;
+  members: number;
+  asked: boolean;
+  yes: number;
+  hours: number | null;
+};
+
+/** What the offer page shows, as the database supplies it (worker_desk_offer_info). Anything wrong parses as "no page". */
+export function parseOfferInfo(v: unknown): OfferInfo | null {
+  if (typeof v !== "object" || v === null) return null;
+  const o = v as Record<string, unknown>;
+  if (o.found !== true) return null;
+  const d = (typeof o.details === "object" && o.details !== null ? o.details : {}) as Record<string, unknown>;
+  return {
+    open: o.open === true,
+    status: clean(o.status),
+    first: clean(o.first),
+    answer: typeof o.answer === "string" ? o.answer : null,
+    callMe: o.call_me === true,
+    reminderSet: o.reminder_set === true,
+    stopped: o.stopped === true,
+    ends: typeof d.ends === "string" ? clean(d.ends) : "",
+    community: clean(d.community),
+    goal: clean(d.goal),
+    slot: clean(d.slot),
+    mode: clean(d.mode),
+    zone: typeof d.zone === "string" ? d.zone : null,
+    capacity: whole(d.capacity),
+    members: whole(d.members) ?? 0,
+    asked: d.asked === true,
+    yes: whole(d.yes) ?? 0,
+    hours: whole(d.hours),
+  };
+}
+
+/** "6 people are on its list so far, and 3 of them have said they would like to join." Counts only, and nothing when there is nothing to say. */
+export function offerCountLine(members: number, asked: boolean, yes: number): string | null {
+  if (members < 1) return null;
+  const list = members === 1 ? "1 person is on its list so far" : `${members} people are on its list so far`;
+  if (!asked || yes < 1) return `${list}.`;
+  return `${list}, and ${yes === 1 ? "1 of them has" : `${yes} of them have`} said they would like to join.`;
+}
+
+export const OFFER_WORDS = {
+  site: "United Tribes",
+  title: (first: string) => (first ? `${first}, would you lead this group?` : "Would you lead this group?"),
+  reminder: {
+    "24": "A reminder: this question closes tomorrow.",
+    "12": "A reminder: this question closes in about 12 hours.",
+    tomorrow: "You asked us to remind you about this today.",
+  } as Record<string, string>,
+  buttons: {
+    lead: "Yes, I will lead",
+    notSeason: "Not this season",
+    call: "Call me",
+    tomorrow: "Remind me tomorrow",
+    never: "Never ask me to lead",
+    stop: "Stop these emails",
+    sendYes: "Send my yes",
+    sendReasons: "Send",
+  },
+  notice: {
+    ask: "We think you could lead it. Leading a group means walking with a small group of people through one season, and keeping them going towards a goal.",
+    support: "You would not do this alone. The pastors review the group before it opens, and the Academy walks you through what to do before you start.",
+    nothingYet: "Saying yes starts your tribe card and tells the people who showed interest that this group has a leader. It does not open the group: a pastor still approves the card, and you finish the Academy before members are matched to you.",
+    noIsFine: "Saying no is a fine answer. We will ask someone else, and we will not ask you about this group again.",
+    silence: "If we do not hear from you, the question closes and nothing changes for you.",
+    stopWhy: "Stop these emails ends every email like this from the Leader Desk. You will still hear from the church as usual.",
+    neverWhy: "Never ask me to lead means the Leader Desk will not ask you to lead any group. You will still hear about tribes you could join.",
+    reasonsWhy: "Your reasons are kept private. They are only counted, and nobody sees which are yours.",
+    callWhy: "We will phone you from the church office. You do not need to do anything else.",
+  },
+  yes: {
+    heading: "Before you say yes",
+    age: "I confirm that I am 21 or older.",
+    leadBest: "How do you lead best?",
+    relation: "How do you stand with this goal?",
+    needAge: "Please confirm that you are 21 or older.",
+    needLead: "Please choose how you lead best.",
+    needRelation: "Please say how you stand with this goal.",
+  },
+  reasonsHeading: "Is there a reason? You can choose any, or none.",
+  done: {
+    lead: "Thank you. You are now this group’s leader. Your tribe card has been started, and we will write to you about what comes next.",
+    leadReview: "Thank you. We have your yes. The church office will look at it and write to you soon.",
+    not_season: "Understood. Thank you for answering. We will not ask you about leading again this season.",
+    call: "Thank you. We will call you from the church office.",
+    tomorrow: "Done. We will remind you tomorrow.",
+    tomorrowLate: "This question closes before tomorrow, so we cannot remind you then. You can still answer now.",
+    never: "Understood. The Leader Desk will not ask you to lead again.",
+    stop: "Done. The Leader Desk will not write to you again.",
+  },
+  closed: "This question has closed. Nothing has changed for you.",
+  off: "This page is not open at the moment. Nothing has changed for you.",
+  noPage: "We could not open this page. The link may have run out. Nothing has changed for you.",
+  fault: "Something went wrong on our side. Nothing has changed for you. Please try again in a little while.",
+  problem: "That didn’t save. Please try again.",
+  openTribes: "Open my tribes",
+} as const;
+
+export const OFFER_EMAIL_SAMPLES = {
+  desk_offer: {
+    kind: "offer",
+    first: "Ada",
+    community: "Professionals",
+    goal: "Lead with excellence at work",
+    slot: "weeknight-evening",
+    mode: "in_person",
+    zone: "mainland",
+    capacity: 8,
+    members: 5,
+    asked: true,
+    yes: 3,
+    hours: 72,
+    ends: "Friday 13 November at 11:00 am",
+    reminder: null,
+    stop: true,
+  },
+  desk_found: {
+    kind: "found",
+    first: "Ada",
+    community: "Professionals",
+    goal: "Lead with excellence at work",
+    slot: "weeknight-evening",
+    mode: "in_person",
+    zone: "mainland",
+    capacity: 8,
+    leader_first: "Ngozi",
     stop: true,
   },
 } as const;

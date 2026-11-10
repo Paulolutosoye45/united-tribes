@@ -13,7 +13,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 - Held today in: the leader's tribe (its track), the answer on the leader's application, the office's short form at the appointment; and, once confirmed, the facts store
 - Found by scanning for: `track_id|calling,track|form ->> 'track'|life_stage` in database functions and `life_stage|lifeStage|calling\.track|trackId|track_id` in source files
 
-### Database functions (49)
+### Database functions (51)
 
 | Function | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -40,12 +40,14 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `desk_group_save` | reader | Leader Desk: saves the track a draft group is for |
 | `desk_group_suggest` | reader | Leader Desk: lists the waiting members of a draft group's track who would suit it |
 | `desk_group_view` | reader | Leader Desk: shows a draft group with its track and how each member fits it |
+| `desk_offer_accept` | reader | Leader Desk: checks a member's yes to lead against the draft group's track, goal and community, before the leader is appointed |
+| `desk_offer_complete` | reader | Leader Desk: starts the new leader's tribe on the track of the draft group they said yes to |
 | `export_leaders_roster` | reader | puts each leader's track in the leaders' roster file |
-| `god_appoint_leader` | reader | starts the appointed leader's tribe on the track the office suggested |
 | `god_appointment_inputs` | reader | reads and checks the office's suggested track on the appointment form |
 | `god_person` | reader | shows the owner a person's tribe and track |
 | `god_start_leader_card` | reader | starts a tribe for an approved leader on the track in their application |
 | `intake_stats` | reader | counts joiners by track |
+| `leader_appoint_core` | reader | starts the appointed leader's tribe on the track the office suggested (the one step the owner's appointment and the Desk's accepted offer share) |
 | `leader_ai_list` | reader | shows the track from each application in the panel's list |
 | `leader_fit_inputs` | reader | gives the leader fit model the track from the application |
 | `leader_offer_respond` | reader | starts the tribe on the application's track when a leader accepts |
@@ -89,7 +91,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 - Held today in: the member's profile (their answer on the joining form); and, once confirmed, the facts store
 - Found by scanning for: `age_range_id|age_ranges|age_range` in database functions and `age_range_id|ageRange|age_range|age_ranges` in source files
 
-### Database functions (31)
+### Database functions (32)
 
 | Function | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -112,6 +114,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `desk_clusters` | reader | Leader Desk: finds the track a waiting member's age range belongs to, to count who could fill a group |
 | `desk_group_fit` | reader | Leader Desk: finds the member's track from their age range to score them against a draft group |
 | `desk_group_suggest` | reader | Leader Desk: finds the track from each waiting member's age range to suggest who would suit a draft group |
+| `desk_offer_member_ok` | reader | Leader Desk: leaves out members under 18 when deciding whether a member can be offered a group to lead |
 | `export_my_data` | reader | gives a person their own age range in their data file |
 | `god_person` | reader | shows the owner a person's age range |
 | `intake_stats` | reader | counts joiners by age range |
@@ -169,7 +172,6 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `export_my_data` | reader | puts the name in the data file a person downloads about themselves |
 | `find_people` | reader | finds a person by the name they asked to be called, and shows it |
 | `first_name_of` | reader | gives the name used first in every message, notice and greeting |
-| `god_appoint_leader` | reader | greets the leader being appointed by the name they asked to be called |
 | `god_appointment_find` | reader | finds a person to appoint by the name they use |
 | `god_feature_find` | owner | finds a person for the switchboard by the name they use |
 | `god_feed` | reader | names who did something in the owner's feed when there is no full name |
@@ -177,6 +179,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `god_person` | reader | shows the owner the name a person asked to be called |
 | `god_start_leader_card` | reader | greets the leader whose tribe is being started by the name they use |
 | `handle_new_user` | reader | saves the name from the sign-in provider on the person's record when they first arrive |
+| `leader_appoint_core` | reader | greets the leader being appointed by the name they asked to be called |
 | `leader_goal_guard` | reader | names the leader in the message about their season goal |
 | `leader_offer_respond` | reader | greets the leader accepting an offer by the name they use |
 | `person_display_name` | reader | gives every list and page the one display name for a person |
