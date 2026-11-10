@@ -186,7 +186,8 @@ describe("the way back from 'recommend a leader'", () => {
       .split("\n")
       .filter((l) => !l.trim().startsWith("--"))
       .join("\n")
-      .replace(/\$([a-z_]*)\$[\s\S]*?\$\1\$/gi, "$$$$");
+      // (the bodies of the functions it puts back; the one guard block that deletes the "found" records is kept, it is a statement of the file itself)
+      .replace(/\$(function)?\$[\s\S]*?\$\1\$/gi, "$$$$");
     expect(code).not.toMatch(/\btruncate\b/i);
     expect(code).not.toMatch(/\bdrop\s+(schema|type)\b/i);
     // the rows it changes: the Desk's blurb, the "found" records, and the locks on a Desk tribe card

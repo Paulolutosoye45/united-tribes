@@ -15,17 +15,27 @@
 --   * No member, seat, notice, consent or number is changed.
 -- Put the application files back before this one. Run it as the database owner. Running it twice changes nothing.
 begin;
+-- (the functions below are put back word for word. Their text may name a table that an earlier phase's way back has since dropped, so they are not checked
+-- against the tables as they are now: each is checked against the database as it was, by the rollback test)
+set local check_function_bodies = off;
 
 update public.feature_registry
    set blurb = 'An owner-only page in God Mode. Shows members who finished the form and still have no tribe, why no tribe has fitted them, a masked phone number (opened one at a time, in calling hours), and how well each would suit a draft group. Builds draft groups with the same Degree of Compatibility and the same tribe health rules as matching, lists the groups the waiting members could already fill, and scores each member''s leadership signal. Can email a waiting member one open tribe that fits them, or ask the members of a draft group whether they are interested; each is answered on a private page. In Rehearsal it writes down who would be emailed and sends nothing. Recommending a leader and forming a tribe come next.'
  where key = 'leader_desk';
 
-delete from public.desk_proposals where kind = 'found';
-alter table public.desk_proposals drop constraint if exists desk_proposals_check;
-alter table public.desk_proposals add constraint desk_proposals_check
+-- (the Desk's sent list belongs to Phase 2a: if its way back has already run there is nothing to delete, and the checks below have nothing to narrow)
+do $rb$
+begin
+  if to_regclass('public.desk_proposals') is not null then
+    delete from public.desk_proposals where kind = 'found';
+  end if;
+end;
+$rb$;
+alter table if exists public.desk_proposals drop constraint if exists desk_proposals_check;
+alter table if exists public.desk_proposals add constraint desk_proposals_check
   check ((kind = 'tribe' and tribe_id is not null) or (kind = 'interest' and group_id is not null) or status in ('expired', 'cancelled', 'answered'));
-alter table public.desk_proposals drop constraint if exists desk_proposals_kind_check;
-alter table public.desk_proposals add constraint desk_proposals_kind_check check (kind in ('tribe', 'interest'));
+alter table if exists public.desk_proposals drop constraint if exists desk_proposals_kind_check;
+alter table if exists public.desk_proposals add constraint desk_proposals_kind_check check (kind in ('tribe', 'interest'));
 
 update public.tribes
    set fixed = array(select x from unnest(fixed) x where x in ('track', 'community', 'goal'))
@@ -501,7 +511,7 @@ drop table if exists public.desk_offers;
 drop table if exists public.desk_lead_stops;
 
 drop index if exists public.desk_groups_one_tribe;
-alter table public.desk_groups drop column if exists backups_paused, drop column if exists leader_found_at, drop column if exists tribe_id, drop column if exists leader_id;
-alter table public.desk_settings drop column if exists card_days, drop column if exists said_yes_days, drop column if exists backups, drop column if exists offer_hours;
+alter table if exists public.desk_groups drop column if exists backups_paused, drop column if exists leader_found_at, drop column if exists tribe_id, drop column if exists leader_id;
+alter table if exists public.desk_settings drop column if exists card_days, drop column if exists said_yes_days, drop column if exists backups, drop column if exists offer_hours;
 
 commit;

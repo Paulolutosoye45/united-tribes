@@ -7,6 +7,7 @@ import { useDo } from "@/components/admin/useDo";
 import { DeskGroupForm } from "@/components/god/DeskGroupForm";
 import { DeskCheckInterest } from "@/components/god/DeskCheckInterest";
 import { DeskLeaderPanel } from "@/components/god/DeskLeaderPanel";
+import { DeskOpenTribe } from "@/components/god/DeskOpenTribe";
 import { DeskReveal } from "@/components/god/DeskReveal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -137,6 +138,8 @@ export function DeskGroupCard({
       <DeskCheckInterest group={group.id} rehearsal={rehearsal} members={group.members.length} />
 
       <DeskLeaderPanel group={group.id} state={leader} rehearsal={rehearsal} />
+
+      {leader.leader ? <DeskOpenTribe group={group.id} rehearsal={rehearsal} /> : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="solid" loading={asking} onClick={() => void suggest()}>

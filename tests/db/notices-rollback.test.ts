@@ -47,6 +47,18 @@ const LATER_TABLES = new Set(
     .flatMap((f) => [...fs.readFileSync(path.join(MIGRATIONS, f), "utf8").matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?public\.([a-z_0-9]+)/gi)].map((m) => m[1].toLowerCase())),
 );
 
+/**
+ * The columns and the named checks a feature built after the notices added or widened. Its own way back may take the columns out and put the checks as
+ * they were; a column or a check that the notices (or anything before them) made is still held to "never dropped, never changed".
+ */
+const LATER_SQL = fs
+  .readdirSync(MIGRATIONS)
+  .filter((f) => f.endsWith(".sql") && f.slice(0, 14) > "20261225000200")
+  .map((f) => fs.readFileSync(path.join(MIGRATIONS, f), "utf8"))
+  .join("\n");
+const LATER_COLUMNS = new Set([...LATER_SQL.matchAll(/\badd\s+column\s+(?:if\s+not\s+exists\s+)?([a-z_0-9]+)/gi)].map((m) => m[1].toLowerCase()));
+const LATER_CHECKS = new Set([...LATER_SQL.matchAll(/\badd\s+constraint\s+([a-z_0-9]+)/gi)].map((m) => m[1].toLowerCase()));
+
 let db: TestDb;
 let baseline: Client;
 let baselineName: string;
@@ -146,6 +158,17 @@ describe("the way back from the team's emails", () => {
             // …nor the tables that same feature made, nor the Switchboard's own column and range check it added or widened (a way back puts them as they were)
             .replace(/\bdrop\s+table\s+if\s+exists\s+public\.([a-z_0-9]+)\s*;/gi, (all, t: string) => (LATER_TABLES.has(t.toLowerCase()) ? "" : all))
             .replace(/\balter\s+table\s+public\.feature_registry\b[^;]*;/gi, "")
+            // …nor the rows of a table that same feature made (the records it wrote itself), nor its own table's checks, nor the columns it added to an older
+            // table, nor a named check it widened on one (a way back puts those as they were)
+            .replace(/\bdelete\s+from\s+public\.([a-z_0-9]+)\b[^;]*;/gi, (all, t: string) => (LATER_TABLES.has(t.toLowerCase()) ? "" : all))
+            .replace(/\balter\s+table\s+(?:if\s+exists\s+)?public\.([a-z_0-9]+)\b([^;]*);/gi, (all, t: string, rest: string) => {
+              if (LATER_TABLES.has(t.toLowerCase())) return "";
+              const cols = [...rest.matchAll(/\bdrop\s+column\s+if\s+exists\s+([a-z_0-9]+)/gi)].map((m) => m[1].toLowerCase());
+              const onlyColumns = rest.replace(/\bdrop\s+column\s+if\s+exists\s+[a-z_0-9]+\s*,?/gi, "").trim() === "";
+              if (cols.length > 0 && onlyColumns && cols.every((c) => LATER_COLUMNS.has(c))) return "";
+              const check = /^\s*(?:drop|add)\s+constraint\s+(?:if\s+exists\s+)?([a-z_0-9]+)/i.exec(rest);
+              return check && LATER_CHECKS.has(check[1].toLowerCase()) ? "" : all;
+            })
             // …and the holds the removal change put on people (a removal or a care hold exists only since that change; the older code cannot end a hold)
             .replace(/\bdelete\s+from\s+public\.placement_holds\s+where\s+source\s+in\s+\('removal',\s*'care'\)\s*;/gi, "")
         : lines;
