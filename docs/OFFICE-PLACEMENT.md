@@ -38,6 +38,8 @@ A check runs first and changes nothing. It sorts what it finds into **blockers**
 * The owner sees the request under **Placed from Admin**, with who asked, about whom, the words, and whether the admin said the member told them they agree. **Look again before you answer** runs every check again with today's facts; if a blocker has appeared, approving is not possible.
 * **Approve and place** places the member. The run is recorded as the admin's placement (`placed_by` = the admin, `placed_via` = office), with the owner as `approved_by`. The admin is told by a notice (`admin_placement_answer`, in the admin group). **Decline** tells the admin too, with an optional word from the owner.
 * A request **lapses after 7 days** if it is not answered. The admin can take it back until then. An admin or director sees only their own requests.
+* **Where the owner sees them.** The requests are the first thing on **Placement** while any is waiting (otherwise under **Placed from Admin**, in the same place as the by-person counts). The **Placement** tab carries the number waiting, and the console's Overview shows the same number in a banner and a tile. The owner is not emailed: the platform never emails the owner, so the console is where a request is seen.
+* **When one runs out.** The daily check marks it lapsed and tells the admin or director who asked, once (`admin_placement_lapsed`, in the admin group), with the member's first name and a link to the member's page. They can ask again from there.
 
 ## Limits and safety
 

@@ -5,6 +5,7 @@ import { Feed } from "@/components/god/Feed";
 import { LiveRefresh } from "@/components/god/LiveRefresh";
 import { EVERY_AREA } from "@/lib/auth/roles";
 import { getOverview, loadFeed } from "@/lib/god/server";
+import { getRequestsWaiting } from "@/lib/placement/server";
 import { clock } from "@/lib/god/wording";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,7 +38,7 @@ export default async function ConsolePage({ searchParams }: { searchParams: Sear
   const search = (q ?? "").trim().slice(0, 40) || null;
   const beforeId = before && /^\d{1,15}$/.test(before) ? Number(before) : null;
   const supabase = await createClient();
-  const [o, events] = await Promise.all([getOverview(), loadFeed(supabase, { limit: 60, before: beforeId, search })]);
+  const [o, events, requestsWaiting] = await Promise.all([getOverview(), loadFeed(supabase, { limit: 60, before: beforeId, search }), getRequestsWaiting()]);
   if (!o) return <p className="card t-body p-6 text-soft">The console could not load. Try again in a moment.</p>;
 
   const approved = o.tribes.approved ?? 0;
@@ -54,6 +55,15 @@ export default async function ConsolePage({ searchParams }: { searchParams: Sear
           You can open every page and change anything. Admin, review, care and the leader and member sides all open for you, and nobody below you can see that you are here.
         </p>
       </header>
+
+      {requestsWaiting > 0 ? (
+        <Link href="/god/placement" className="card press flex items-start gap-3 border-l-4 border-l-gold p-4" data-testid="requests-waiting-banner">
+          <span className="t-body">
+            <span className="font-semibold">{requestsWaiting === 1 ? "An admin is waiting for you." : `${requestsWaiting} admins are waiting for you.`}</span>{" "}
+            {requestsWaiting === 1 ? "A request to place a member needs your answer." : "Requests to place members need your answer."} They lapse after 7 days.
+          </span>
+        </Link>
+      ) : null}
 
       {watch > 0 ? (
         <Link href="/god/record" className="card press flex items-start gap-3 border-l-4 border-l-flame p-4">
@@ -75,6 +85,7 @@ export default async function ConsolePage({ searchParams }: { searchParams: Sear
           <Stat label="Tribes running" value={approved} note={waiting > 0 ? `${waiting} waiting on review` : "none waiting"} href="/god/tribes" />
           <Stat label="Seats filled" value={o.seats} />
           <Stat label="Care tasks open" value={o.care_open} href="/care" />
+          <Stat label="Waiting for you" value={requestsWaiting} note={requestsWaiting > 0 ? "placement requests from Admin" : "no requests from Admin"} href="/god/placement" />
           <Stat
             label="Messages"
             value={o.messages.sent_today}

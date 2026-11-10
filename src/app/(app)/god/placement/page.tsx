@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { PlacementHome } from "@/components/god/PlacementHome";
-import { loadHolds, loadPlacementOverview } from "@/lib/placement/server";
+import { loadHolds, loadOfficeCounts, loadPlacementOverview, loadRequests } from "@/lib/placement/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Placement" };
@@ -9,10 +9,12 @@ export const metadata: Metadata = { title: "Placement" };
 export default async function GodPlacementPage() {
   await connection();
   const supabase = await createClient();
-  const [overview, holds, communities] = await Promise.all([
+  const [overview, holds, communities, counts, requests] = await Promise.all([
     loadPlacementOverview(supabase),
     loadHolds(supabase),
     supabase.from("communities").select("id, name").eq("active", true).order("name"),
+    loadOfficeCounts(supabase),
+    loadRequests(supabase),
   ]);
 
   return (
@@ -28,8 +30,8 @@ export default async function GodPlacementPage() {
           overview={overview}
           communities={((communities.data as { id: string; name: string }[] | null) ?? []).map((c) => ({ id: String(c.id), name: String(c.name) }))}
           holds={holds}
-          counts={null}
-          requests={[]}
+          counts={counts}
+          requests={requests}
         />
       ) : (
         <p className="card t-body p-5 text-soft">Placement is not available right now. Reload the page, or unlock the console again.</p>

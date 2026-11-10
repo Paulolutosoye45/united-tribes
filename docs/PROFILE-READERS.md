@@ -13,7 +13,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 - Held today in: the leader's tribe (its track), the answer on the leader's application, the office's short form at the appointment; and, once confirmed, the facts store
 - Found by scanning for: `track_id|calling,track|form ->> 'track'|life_stage` in database functions and `life_stage|lifeStage|calling\.track|trackId|track_id` in source files
 
-### Database functions (43)
+### Database functions (49)
 
 | Function | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -34,6 +34,12 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `assistant_tribe_young` | reader | tells whether a tribe is the teen track, which changes who may assist |
 | `church_views` | reader | groups the pastors' counts of tribes and members by track |
 | `dashboard_core` | reader | groups the dashboard's tribes by track |
+| `desk_block_reason` | reader | Leader Desk: says why no tribe has fitted a waiting member, starting from the member's track |
+| `desk_clusters` | reader | Leader Desk: counts waiting members of the same track who could already fill a group |
+| `desk_group_fit` | reader | Leader Desk: scores a member against a draft group of the same track, by the matching's own rules |
+| `desk_group_save` | reader | Leader Desk: saves the track a draft group is for |
+| `desk_group_suggest` | reader | Leader Desk: lists the waiting members of a draft group's track who would suit it |
+| `desk_group_view` | reader | Leader Desk: shows a draft group with its track and how each member fits it |
 | `export_leaders_roster` | reader | puts each leader's track in the leaders' roster file |
 | `god_appoint_leader` | reader | starts the appointed leader's tribe on the track the office suggested |
 | `god_appointment_inputs` | reader | reads and checks the office's suggested track on the appointment form |
@@ -61,7 +67,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `tribe_queue` | reader | shows each card's track in the pastor's queue |
 | `worker_pending_leader_jobs` | reader | gives the sending service each leader's track for their messages |
 
-### Source files (7)
+### Source files (10)
 
 | File | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -70,8 +76,11 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `src/components/god/DetailsConsole.tsx` | owner | the owner's Details Check console: which fact to ask about |
 | `src/lib/profile/types.ts` | owner | the shapes of a fact |
 | `src/lib/profile/wording.ts` | owner | the words of each stage and each way a change ends |
+| `src/components/god/DeskGroupCard.tsx` | reader | Leader Desk: shows a draft group's track and lets the owner change it |
+| `src/components/god/DeskProposals.tsx` | reader | Leader Desk: starts a draft group on the track of a group waiting members could fill |
 | `src/components/leaders/ApplySteps.tsx` | reader | the leader's application asks for a track |
 | `src/lib/ai/sensitive.ts` | reader | words the assistant treats as sensitive |
+| `src/lib/god/desk.ts` | reader | Leader Desk: reads a draft group's track and the track of a group waiting members could fill |
 
 ## Age range (`age_range`)
 
@@ -80,7 +89,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 - Held today in: the member's profile (their answer on the joining form); and, once confirmed, the facts store
 - Found by scanning for: `age_range_id|age_ranges|age_range` in database functions and `age_range_id|ageRange|age_range|age_ranges` in source files
 
-### Database functions (26)
+### Database functions (31)
 
 | Function | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -98,6 +107,11 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `activity_build_people` | reader | groups people by age range in the activity report |
 | `admin_catalogue` | reader | lists each track's age ranges for the admin |
 | `church_views` | reader | counts members by age range for the pastors' views |
+| `desk_base` | reader | Leader Desk: leaves out members under 18, who are placed only with an assistant |
+| `desk_block_reason` | reader | Leader Desk: tells a waiting member's reason no tribe fits, including that an under-18 needs an assistant |
+| `desk_clusters` | reader | Leader Desk: finds the track a waiting member's age range belongs to, to count who could fill a group |
+| `desk_group_fit` | reader | Leader Desk: finds the member's track from their age range to score them against a draft group |
+| `desk_group_suggest` | reader | Leader Desk: finds the track from each waiting member's age range to suggest who would suit a draft group |
 | `export_my_data` | reader | gives a person their own age range in their data file |
 | `god_person` | reader | shows the owner a person's age range |
 | `intake_stats` | reader | counts joiners by age range |
@@ -208,7 +222,7 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 - Held today in: the member's profile (their answer on the joining form: one of five areas, and a short note)
 - Found by scanning for: `(^|[^a-z_])(mp|me|prof|ap|r)\.zone([^a-z_]|$)|area_note|when 'area' then|p_key = 'area'` in database functions and `answers\.zone|areaNote|areaSlug|area_note|form\.zone|options\.zone|input\.zone|profile\.zone|area\.zone|live\.zone|row\.zone|context\.zone|\ba\.zone` in source files
 
-### Database functions (17)
+### Database functions (21)
 
 | Function | Role | What it uses the fact for |
 | --- | --- | --- |
@@ -223,6 +237,10 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `activity_compare` | reader | compares groups by area in the activity report |
 | `activity_funnels` | reader | counts the joining funnel by area |
 | `activity_member_rows` | reader | lists each member's area for the activity report |
+| `desk_block_reason` | reader | Leader Desk: says when the member's area is too far from the in-person tribes shown |
+| `desk_clusters` | reader | Leader Desk: counts waiting members who could meet in person in the same place |
+| `desk_group_fit` | reader | Leader Desk: keeps in-person draft groups close to the member and scores a nearer area higher |
+| `desk_waiting` | reader | Leader Desk: shows the owner each waiting member's area |
 | `god_person` | reader | shows the owner a member's area |
 | `match_candidates` | reader | keeps in-person tribes close to the member and scores a nearer area higher |
 | `match_me` | reader | saves the member's area with the list of tribes suggested for them |
@@ -230,10 +248,11 @@ and is not listed here, or is listed and no longer reads it, so a new reader can
 | `placement_run_approve` | reader | carries the member's area into the placement when a run is approved |
 | `placement_run_new` | reader | lets the office start a placement run for one area |
 
-### Source files (15)
+### Source files (16)
 
 | File | Role | What it uses the fact for |
 | --- | --- | --- |
+| `src/app/(app)/god/leader-desk/actions.ts` | reader | Leader Desk: saves the Lagos area a draft group meets in |
 | `src/app/(app)/god/people/[id]/page.tsx` | reader | shows the owner a member's area beside how they like to meet |
 | `src/app/(app)/god/placement/actions.ts` | reader | lets the office start a placement run for one area |
 | `src/app/(focus)/join/actions.ts` | reader | the joining form saves the area and the note |

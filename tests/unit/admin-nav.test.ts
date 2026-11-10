@@ -49,7 +49,8 @@ describe("the one list of Admin pages", () => {
     expect(new Set(hrefs).size).toBe(hrefs.length);
     expect(new Set(PAGES.map((p) => p.label)).size).toBe(PAGES.length);
     for (const href of hrefs) expect(SECTIONS.filter((s) => s.pages.some((p) => p.href === href)), href).toHaveLength(1);
-    expect(PAGES).toHaveLength(31);
+    // 32: the Placed members page (the answer board and the call desk) came after the count of 31 was written
+    expect(PAGES).toHaveLength(32);
   });
 
   it("has a page for every address under Admin, so a new page cannot be left out of the menu", () => {
