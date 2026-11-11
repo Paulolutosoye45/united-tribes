@@ -23,6 +23,8 @@ Some members say they never see the emails. Email is one road to a person. This 
    `select key, default_position from public.feature_registry where key = 'sign_in_prompt';` should say **off**.
 3. **Then the website.** It adds the screen (drawn once, in the layout every signed-in page shares), the **Sign-in prompt** counts on the **Placed members** board, and the owner's **Sign-in prompt** card in God Mode → Features.
 
+**If a file stops with "must be applied first" or "already exists":** do not run files again to see what happens. Paste `supabase/check-applied.sql` into the SQL editor (it only reads) and it lists the files this database has not had applied, or had only half applied, oldest first. Apply the oldest missing one first, then carry on in order.
+
 Run the database file **first**. If the website goes out first, the screen simply never appears (the database says nothing is owed) and the counts and the owner's card are not shown. The file replaces nothing, so there is nothing to put back by hand.
 
 ## What a person sees

@@ -16,8 +16,11 @@
 
 do $guard$
 begin
-  if to_regprocedure('public.placed_desk_mask(text)') is null or to_regprocedure('public.placement_season()') is null then
-    raise exception 'Apply Package 6b (20270114000100_placed_answers.sql) before this file.';
+  if to_regprocedure('public.placed_desk_mask(text)') is null then
+    raise exception 'Apply Package 6b (20270114000100_placed_answers.sql) before this file. (Its function placed_desk_mask is missing.)';
+  end if;
+  if to_regprocedure('public.placement_season()') is null then
+    raise exception 'Apply the in-season placement file (20270104000100_inseason_placement.sql) before this file. (Its function placement_season is missing. If Package 6b is already applied, do not run it again.)';
   end if;
 end
 $guard$;
