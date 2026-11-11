@@ -7,6 +7,17 @@
 -- Replaced functions (their old text is in the rollback file): reach_step (only its last lines), seat_ledger_write (a release for no contact is a release, not a
 -- leaving) and worker_seat_window_tick (it now also runs the two notes).
 
+-- This file builds on the seat window (Package 6): without it the seat clocks and their settings are not there, and the switch below would point at a switch that is not.
+do $guard$
+begin
+  if to_regprocedure('public.seat_pick(uuid, uuid, uuid)') is null
+     or to_regclass('public.seat_window_settings') is null
+     or not exists (select 1 from public.feature_registry where key = 'seat_window') then
+    raise exception 'Apply Package 6 (20270120000100_seat_window.sql) before this file. (Its seat window is missing.)';
+  end if;
+end
+$guard$;
+
 -- ---------------------------------------------------------------------------
 -- The switch
 -- ---------------------------------------------------------------------------
