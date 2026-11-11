@@ -77,3 +77,23 @@ export async function seatHistoryAction(clock: string): Promise<SeatEvent[]> {
   if (!session || !isUuid(clock) || !(session.god === "open" || hasAnyRole(session.roles, SEAT_ROLES))) return [];
   return loadSeatHistory(await createClient(), clock);
 }
+
+/** Places today's plan. The database checks again who may, that the plan is today's and unplaced, that every check is green, and then each person once more. */
+export async function autopilotApproveAction(plan: string): Promise<{ ok: true; placed: number; skipped: number } | { ok: false; message: string }> {
+  if (!(await getSession())) return { ok: false, message: SESSION_ENDED };
+  if (!(await canAct())) return { ok: false, message: NOT_YOURS };
+  if (!isUuid(plan)) return { ok: false, message: TRY_AGAIN };
+  const done = await run<{ placed?: unknown; skipped?: unknown }>("autopilot_approve", { p_plan: plan }, PAGES);
+  if (!done.ok) return done;
+  const r = typeof done.data === "object" && done.data !== null ? done.data : {};
+  return { ok: true, placed: typeof r.placed === "number" ? r.placed : 0, skipped: typeof r.skipped === "number" ? r.skipped : 0 };
+}
+
+/** Stops autopilot (or starts it again). Needs a reason, which is kept in the log. */
+export async function autopilotPauseAction(paused: boolean, reason: string): Promise<Result> {
+  if (!(await getSession())) return { ok: false, message: SESSION_ENDED };
+  if (!(await canAct())) return { ok: false, message: NOT_YOURS };
+  if (typeof paused !== "boolean") return { ok: false, message: TRY_AGAIN };
+  const done = await run("autopilot_pause_set", { p_paused: paused, p_reason: text(reason, 300) }, PAGES);
+  return done.ok ? { ok: true } : done;
+}

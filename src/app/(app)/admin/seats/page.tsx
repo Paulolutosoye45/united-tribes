@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHead } from "@/components/admin/PageHead";
+import { AutopilotPanel } from "@/components/seat/AutopilotPanel";
 import { SeatPause, SeatRowActions, SeatTestSend } from "@/components/seat/SeatControls";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SEAT_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { SEAT_FILTERS, SEAT_FLAGS, SEAT_WORDS as W, hoursWords, isSeatFilter, lagosWhen, type SeatFilter } from "@/lib/seat/seat";
-import { loadSeatBoard } from "@/lib/seat/seat-server";
+import { loadAutopilot, loadSeatBoard } from "@/lib/seat/seat-server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Seats" };
@@ -27,7 +28,7 @@ export default async function SeatsPage({ searchParams }: { searchParams: Search
   const filter: SeatFilter | null = isSeatFilter(q.show) ? q.show : null;
   const page = Math.max(1, Math.min(500, Number.parseInt(q.page ?? "1", 10) || 1));
   const supabase = await createClient();
-  const board = await loadSeatBoard(supabase, filter, PAGE, (page - 1) * PAGE);
+  const [board, autopilot] = await Promise.all([loadSeatBoard(supabase, filter, PAGE, (page - 1) * PAGE), loadAutopilot(supabase)]);
 
   if (!board) {
     return (
@@ -80,6 +81,8 @@ export default async function SeatsPage({ searchParams }: { searchParams: Search
           </div>
         ) : null}
       </section>
+
+      {autopilot ? <AutopilotPanel view={autopilot} /> : null}
 
       <section aria-label="Where the seats stand" className="flex flex-col gap-3">
         <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4" data-testid="seats-tiles">

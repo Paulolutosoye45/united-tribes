@@ -128,3 +128,18 @@ export async function seatSettingsAction(input: {
   );
   return done.ok ? { ok: true } : done;
 }
+
+/** The autopilot's numbers: Suggest or Auto, the bar, new members to one tribe in a day, placements in a day, the days it keeps placing after joining closes, and when a tribe is called small. */
+export async function autopilotSettingsAction(input: {
+  mode: string; bar: number; perTribe: number; dayCap: number; extra: number; small: number; reason: string;
+}): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
+  if (!input || (input.mode !== "suggest" && input.mode !== "auto") || ![input.bar, input.perTribe, input.dayCap, input.extra, input.small].every(whole)) return bad();
+  const done = await run(
+    "god_autopilot_settings_set",
+    { p_mode: input.mode, p_bar: input.bar, p_per_tribe: input.perTribe, p_day_cap: input.dayCap, p_extra: input.extra, p_small: input.small, p_reason: reasonOf(input.reason) },
+    [...PAGES, "/admin/seats"],
+  );
+  return done.ok ? { ok: true } : done;
+}

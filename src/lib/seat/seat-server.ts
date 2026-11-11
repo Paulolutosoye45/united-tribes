@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseAutopilot, parseAutopilotSettings, type AutopilotSettings, type AutopilotView } from "./autopilot";
 import { parseLeaderStrip, parseLeaveState, parseSeatBoard, parseSeatHistory, parseSeatSettings, type LeaderStrip, type LeaveState, type SeatBoard, type SeatEvent, type SeatFilter, type SeatSettings } from "./seat";
 
 // Each loader answers nothing when the database refuses, does not have the function yet, or cannot be reached: a website deployed before the database file is applied
@@ -52,5 +53,25 @@ export async function loadLeaveState(supabase: SupabaseClient): Promise<LeaveSta
     return error ? { can: false, tribe: "", until: null } : parseLeaveState(data);
   } catch {
     return { can: false, tribe: "", until: null };
+  }
+}
+
+/** The autopilot on the Seats page: the switch, today's plan and what was counted when it was made. Null for anyone who may not read it, and before Package 8 is applied. */
+export async function loadAutopilot(supabase: SupabaseClient): Promise<AutopilotView | null> {
+  try {
+    const { data, error } = await supabase.rpc("autopilot_overview");
+    return error ? null : parseAutopilot(data);
+  } catch {
+    return null;
+  }
+}
+
+/** The owner's numbers for the autopilot. Null for anyone but the owner. */
+export async function loadAutopilotSettings(supabase: SupabaseClient): Promise<AutopilotSettings | null> {
+  try {
+    const { data, error } = await supabase.rpc("god_autopilot_settings");
+    return error ? null : parseAutopilotSettings(data);
+  } catch {
+    return null;
   }
 }

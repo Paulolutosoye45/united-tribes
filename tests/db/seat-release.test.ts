@@ -351,7 +351,8 @@ describe("the office's email at 7 am", () => {
     await seatTick();
     expect((await c.one("select count(*)::int n from public.messages where template = 'admin_seat_morning'")).n).toBe(after);
     const nums = (await c.one("select public.seat_morning_numbers() as r")).r as Record<string, number>;
-    expect(Object.keys(nums).sort()).toEqual(["hard", "in_series", "left", "not_reached", "over", "refilled", "released", "small", "stopped", "taken", "yes"]);
+    // Package 8 adds auto_placed and lapsed to the same numbers
+    expect(Object.keys(nums).sort()).toEqual(["auto_placed", "hard", "in_series", "lapsed", "left", "not_reached", "over", "refilled", "released", "small", "stopped", "taken", "yes"]);
     expect(nums.over).toBe(0);
   });
 

@@ -23,12 +23,12 @@ function message(template: string, params: Params, over: Partial<ClaimedMessage[
 }
 
 const read = (file: string) => readFileSync(join(__dirname, "../../supabase/migrations", file), "utf8");
-const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}\n${read("20270102000100_profiles_stage2.sql")}\n${read("20270103000400_removal_requests.sql")}\n${read("20270108000100_removal_admin.sql")}\n${read("20270109000100_office_placement.sql")}\n${read("20270115000100_owner_requests.sql")}\n${read("20270119000100_desk_open.sql")}\n${read("20270120000100_seat_window.sql")}\n${read("20270121000100_seat_release.sql")}`;
+const SQL = `${read("20261225000100_notices.sql")}\n${read("20261225000200_notice_triggers.sql")}\n${read("20261229000100_application_sent_notice.sql")}\n${read("20261231000100_exports.sql")}\n${read("20270101000100_profiles_stage1.sql")}\n${read("20270102000100_profiles_stage2.sql")}\n${read("20270103000400_removal_requests.sql")}\n${read("20270108000100_removal_admin.sql")}\n${read("20270109000100_office_placement.sql")}\n${read("20270115000100_owner_requests.sql")}\n${read("20270119000100_desk_open.sql")}\n${read("20270120000100_seat_window.sql")}\n${read("20270121000100_seat_release.sql")}\n${read("20270122000100_seat_autopilot.sql")}`;
 
 describe("the notices, as templates", () => {
-  it("has the 75 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach, the one of stage 2: a person tells the Care Team their age range is not right, and the six of leader removal requests: a request for the coach and for the Care Team, the waiting reminder for each, the week-old one for a director, and a member's appeal, and the two of admin approval: one for admins and directors when a request comes in, one when it has waited three days, and the one of placing from Admin: the answer to an admin or a director who asked the owner, and the one for a request to the owner that ran out unanswered, and the one of the Leader Desk: a Tribe Card it formed that has waited a day for the pastors, and the two of the seat window: a safety limit that holds a release back, and the office's email at 7 am), each registered with the sender", () => {
-    expect(keys).toHaveLength(75);
-    expect(new Set(keys).size).toBe(75);
+  it("has the 76 notices (the 57 of the blueprint, the one for a new application, the one for an unusual number of named files, the two of Profiles stage 1: a stage change for a pastor, a leader who has not confirmed for a coach, the one of stage 2: a person tells the Care Team their age range is not right, and the six of leader removal requests: a request for the coach and for the Care Team, the waiting reminder for each, the week-old one for a director, and a member's appeal, and the two of admin approval: one for admins and directors when a request comes in, one when it has waited three days, and the one of placing from Admin: the answer to an admin or a director who asked the owner, and the one for a request to the owner that ran out unanswered, and the one of the Leader Desk: a Tribe Card it formed that has waited a day for the pastors, and the two of the seat window: a safety limit that holds a release back, and the office's email at 7 am, and the one of the seat autopilot: the day's plan is ready for an admin or a director to approve), each registered with the sender", () => {
+    expect(keys).toHaveLength(76);
+    expect(new Set(keys).size).toBe(76);
     for (const key of keys) expect(TEMPLATES[key], key).toBeDefined();
     expect(NOTICE_CATALOGUE.map((n) => n.key).sort()).toEqual([...keys].sort());
     expect(Object.keys(NOTICE_SAMPLES).sort()).toEqual([...keys].sort());
@@ -360,7 +360,7 @@ describe("the catalogue the Notifications page shows", () => {
 
   it("marks as 'at once' only what the database sends at once", () => {
     const urgent = NOTICE_CATALOGUE.filter((n) => n.urgent).map((n) => n.key).sort();
-    expect(urgent).toEqual(["admin_application_sent", "admin_data_request_due", "admin_queue_stuck", "admin_role_changed", "admin_seat_morning", "admin_seat_stopped", "director_removal_escalated", "pastor_referee_concern", "staff_role_welcome"]);
+    expect(urgent).toEqual(["admin_application_sent", "admin_autopilot_ready", "admin_data_request_due", "admin_queue_stuck", "admin_role_changed", "admin_seat_morning", "admin_seat_stopped", "director_removal_escalated", "pastor_referee_concern", "staff_role_welcome"]);
   });
 
   it("never lists the same group twice, and only groups that have a digest say so", () => {
