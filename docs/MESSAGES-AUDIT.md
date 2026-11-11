@@ -2,7 +2,7 @@
 
 *Written by `npm run messages-audit` from the templates in `src/lib/messaging`. Do not edit it here; change the template and run the command again. A test fails when a check below fails or when this file is out of date.*
 
-**176 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 41 for leader, 35 for member, 52 for office, 5 for referee.
+**177 messages**, 16 for applicant, 11 for care, 14 for coach, 1 for guardian, 1 for invitee, 42 for leader, 35 for member, 52 for office, 5 for referee.
 
 Each message is written out from believable details and checked for what the office would check by eye:
 
@@ -97,6 +97,7 @@ Each message is written out from believable details and checked for what the off
 | `celebration_prompt` | Something to celebrate in your tribe | Celebrate with Ada | 51 | 108 | `ut_celebration_prompt` | 2 / 1 | database |
 | `champion_month` | Your community this month | Your community this month | 33 | 64 | email only | 2 / 0 | — |
 | `champion_waiting` | Members are waiting in your community | 0 people waiting in your community | 51 | 73 | email only | 2 / 0 | — |
+| `desk_assistant_offer` | A new leader is told that a member asked to lead their group said they would assist, and has been put forward to the church office (the Leader Desk) | Dayo would like to assist Builders Tribe | 110 | 132 | email only | 2 / 0 | database |
 | `details_check_code` | A six-digit code to open a private link | 482913 is your United Tribes code | 60 | 65 | email only | 1 / 0 | database |
 | `details_check_reminder` | A reminder to check the details held for a tribe | A reminder: please check the details for your tribe | 82 | 197 | `ut_details_check_request` (reused) | 2 / 0 | database |
 | `details_check_request` | A request to check the details held for a tribe | Please check the details we hold for your tribe | 92 | 190 | `ut_details_check_request` +1 button | 2 / 0 | database |
@@ -112,7 +113,7 @@ Each message is written out from believable details and checked for what the off
 | `leader_missed_one` | A member missed a meeting: a warm message to forward | Ada wasn’t at Builders Tribe | 77 | 187 | `ut_leader_missed_one` | 2 / 0 | database |
 | `leader_missed_two` | Two meetings missed in a row: call them | Please call Ada | 76 | 92 | `ut_leader_missed_two` | 2 / 0 | database |
 | `leader_next_season` | Next season: continue, multiply or rest? | Next season: continue, multiply or rest? | 47 | 74 | email only | 2 / 0 | — |
-| `leader_offer` | An offer to lead a tribe where members are waiting | Would you lead a tribe this season? | 91 | 114 | email only | 2 / 0 | database |
+| `leader_offer` | An offer to lead a tribe where members are waiting | Would you lead a tribe this season? | 91 | 114 | email only | 2 / 0 | app, database |
 | `leader_prep` | Monday: your prep pack | Prep for week 3: Pray with expectation, not performance | 75 | 111 | `ut_leader_prep` | 2 / 0 | database |
 | `leader_seat_note` | A leader is told, once a day at 5 pm and only on a day something changed, how the seats in their tribe moved (the seat window) | Builders Tribe: 2 said yes, 2 seats opened | 97 | 153 | email only | 2 / 0 | database |
 | `leader_seats` | Seats are nearly gone | Builders Tribe has 2 seats left | 40 | 71 | email only | 2 / 0 | — |
@@ -133,10 +134,10 @@ Each message is written out from believable details and checked for what the off
 | Message | What it is | Subject | Email words | Text characters | WhatsApp name | Links (site / other) | Queued by |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `contact_ask_leader` | A member is asked, by email, to add a number or to say yes to WhatsApp | Grace would like to reach you | 125 | 116 | email only | 1 / 0 | database |
-| `desk_found` | A member who showed interest in a draft group is told, by email, that it has found a leader (the Leader Desk, no seat promised) | Your group has a leader, Ada | 131 | 191 | email only | 4 / 0 | database |
-| `desk_interest` | A member waiting for a tribe is asked, by email, whether a group still being put together would suit them (the Leader Desk's interest check) | Would this group suit you, Ada? | 157 | 170 | email only | 5 / 0 | database |
-| `desk_offer` | A member is asked, by email, whether they would lead a draft group (the Leader Desk's leader offer, with reminders 24 and 12 hours before it closes) | Would you lead this group, Ada? | 251 | 171 | email only | 7 / 0 | database |
-| `desk_proposal` | A member waiting for a tribe is shown one open tribe that fits them, by email, from the Leader Desk | A tribe that could suit you, Ada | 166 | 176 | email only | 4 / 0 | database |
+| `desk_found` | A member who showed interest in a draft group is told that it has found a leader (the Leader Desk, no seat promised; email, or WhatsApp when the Desk's switch is On) | Your group has a leader, Ada | 131 | 191 | `ut_desk_proposal` (reused) | 4 / 0 | database |
+| `desk_interest` | A member waiting for a tribe is asked whether a group still being put together would suit them (the Leader Desk's interest check; email, or WhatsApp when the Desk's switch is On) | Would this group suit you, Ada? | 157 | 170 | `ut_desk_proposal` (reused) | 5 / 0 | database |
+| `desk_offer` | A member is asked whether they would lead a draft group (the Leader Desk's leader offer, with reminders 24 and 12 hours before it closes; email, or WhatsApp when the Desk's switch is On) | Would you lead this group, Ada? | 255 | 171 | `ut_desk_proposal` (reused) | 8 / 0 | database |
+| `desk_proposal` | A member waiting for a tribe is shown one open tribe that fits them, from the Leader Desk (email, or WhatsApp when the Desk's switch is On) | A tribe that could suit you, Ada | 166 | 176 | `ut_desk_proposal` | 4 / 0 | database |
 | `friday_checkin` | Friday: one-tap step check-in and testimony prompt | How did your step go? | 71 | 166 | `ut_friday_checkin` +3 buttons | 5 / 0 | database |
 | `meeting_recap` | The morning after: recap and your step | Last night in Builders Tribe | 60 | 92 | `ut_meeting_recap` | 2 / 0 | app, database |
 | `meeting_reminder` | Two hours before the meeting | Tonight at 8:00 pm: Builders Tribe | 42 | 72 | `ut_meeting_reminder` | 1 / 1 | app, database |

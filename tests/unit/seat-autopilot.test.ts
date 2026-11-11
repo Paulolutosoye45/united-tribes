@@ -287,7 +287,7 @@ describe("the wiring", () => {
   });
 
   it("registers the switch, starts it Off, and asks for Seat window", () => {
-    expect(read("src/lib/features/types.ts")).toMatch(/"reach_release",\s+"seat_autopilot",\s+\] as const/);
+    expect(read("src/lib/features/types.ts")).toMatch(/"reach_release",\s+"seat_autopilot",/);
     const sql = read("supabase/migrations/20270122000100_seat_autopilot.sql");
     expect(sql).toMatch(/\('seat_autopilot', 'Seat autopilot'[\s\S]*?array\['seat_window'\], array\['off', 'rehearsal', 'on'\], 'off', true, 35, false\)/);
   });

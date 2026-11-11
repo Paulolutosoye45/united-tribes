@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-type Search = { a?: string; done?: string; closed?: string; off?: string; invalid?: string; problem?: string; need?: string; review?: string; late?: string };
+type Search = { a?: string; done?: string; closed?: string; taken?: string; off?: string; invalid?: string; problem?: string; need?: string; review?: string; late?: string };
 
 export default async function OfferPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<Search> }) {
   await connection();
@@ -65,6 +65,7 @@ export default async function OfferPage({ params, searchParams }: { params: Prom
           </p>
         ) : null}
         {q.closed ? <Note text={W.closed} /> : null}
+        {q.taken ? <Note text={W.taken} testid="offer-assist-taken" /> : null}
         {q.off ? <Note text={W.off} /> : null}
         {!info ? (
           <Note text={fault ? W.fault : W.noPage} testid="offer-nopage" />
@@ -76,6 +77,8 @@ export default async function OfferPage({ params, searchParams }: { params: Prom
           <Note text={W.done.leadReview} testid="offer-review" />
         ) : info.answer === "never" ? (
           <Note text={W.done.never} testid="offer-never" />
+        ) : info.answer === "assist" ? (
+          <Note text={W.done.assist} testid="offer-assisting" />
         ) : info.answer === "not_season" ? (
           <Note text={W.done.not_season} testid="offer-declined" />
         ) : !info.open ? (
@@ -124,6 +127,8 @@ const ring = "rounded-[var(--radius-control)] ring-2 ring-gold ring-offset-4 rin
 function Open({ info, token, pointed, need }: { info: OfferInfo; token: string; pointed: OfferAnswerKey | null; need: string | null }) {
   const about = [info.community, info.goal].filter(Boolean).join(": ");
   const counts = offerCountLine(info.members, info.asked, info.yes);
+  // A missing answer on one form must not open or mark the other
+  const leadNeed = pointed === "lead" ? need : null;
   return (
     <>
       <section className="card flex flex-col gap-3 p-6" aria-labelledby="offer-group" data-testid="offer-group">
@@ -141,7 +146,7 @@ function Open({ info, token, pointed, need }: { info: OfferInfo; token: string; 
         <p className="t-small text-soft">{W.notice.silence}</p>
       </section>
 
-      <details className={`card p-5 ${pointed === "lead" || need ? ring : ""}`} open={pointed === "lead" || Boolean(need)} data-testid="offer-lead">
+      <details className={`card p-5 ${pointed === "lead" ? ring : ""}`} open={pointed === "lead"} data-testid="offer-lead">
         <summary className="t-heading min-h-11 cursor-pointer">{W.buttons.lead}</summary>
         <form action={offerAnswerAction} className="mt-4 flex flex-col gap-5">
           <input type="hidden" name="token" value={token} />
@@ -151,7 +156,7 @@ function Open({ info, token, pointed, need }: { info: OfferInfo; token: string; 
             <input type="checkbox" name="age" className="mt-1 size-5" required />
             <span className="t-body">{W.yes.age}</span>
           </label>
-          {need === "age" ? <Need text={W.yes.needAge} /> : null}
+          {leadNeed === "age" ? <Need text={W.yes.needAge} /> : null}
           <fieldset className="flex flex-col gap-2">
             <legend className="t-body mb-1 font-semibold">{W.yes.leadBest}</legend>
             {LEAD_BEST.map((o) => (
@@ -164,7 +169,7 @@ function Open({ info, token, pointed, need }: { info: OfferInfo; token: string; 
               </label>
             ))}
           </fieldset>
-          {need === "lead" ? <Need text={W.yes.needLead} /> : null}
+          {leadNeed === "lead" ? <Need text={W.yes.needLead} /> : null}
           <fieldset className="flex flex-col gap-2">
             <legend className="t-body mb-1 font-semibold">{W.yes.relation}</legend>
             {GOAL_RELATIONS.map((o) => (
@@ -177,12 +182,32 @@ function Open({ info, token, pointed, need }: { info: OfferInfo; token: string; 
               </label>
             ))}
           </fieldset>
-          {need === "relation" ? <Need text={W.yes.needRelation} /> : null}
+          {leadNeed === "relation" ? <Need text={W.yes.needRelation} /> : null}
           <Button type="submit" variant="primary" size="lg" fullWidth>
             {W.buttons.sendYes}
           </Button>
         </form>
       </details>
+
+      {info.assistOpen ? (
+        <details className={`card p-5 ${pointed === "assist" ? ring : ""}`} open={pointed === "assist"} data-testid="offer-assist">
+          <summary className="t-heading min-h-11 cursor-pointer">{W.buttons.assist}</summary>
+          <form action={offerAnswerAction} className="mt-4 flex flex-col gap-4">
+            <input type="hidden" name="token" value={token} />
+            <input type="hidden" name="answer" value="assist" />
+            <p className="t-small text-soft">{W.notice.assistWhy}</p>
+            <p className="t-small text-soft">{W.notice.assistNothingYet}</p>
+            <label className="flex min-h-11 items-start gap-3">
+              <input type="checkbox" name="age" className="mt-1 size-5" required />
+              <span className="t-body">{W.yes.assistAge}</span>
+            </label>
+            {pointed === "assist" && need === "age" ? <Need text={W.yes.needAssistAge} /> : null}
+            <Button type="submit" variant="primary" size="lg" fullWidth>
+              {W.buttons.sendAssist}
+            </Button>
+          </form>
+        </details>
+      ) : null}
 
       <details className={`card p-5 ${pointed === "not_season" ? ring : ""}`} open={pointed === "not_season"} data-testid="offer-not-season">
         <summary className="t-heading min-h-11 cursor-pointer">{W.buttons.notSeason}</summary>

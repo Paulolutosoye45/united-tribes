@@ -16,14 +16,16 @@ const publicPage = read("src/app/(public)/d/[token]/page.tsx");
 const cron = read("src/app/api/cron/tick/route.ts");
 const desk = read("src/lib/god/desk.ts");
 const NEW = ["DeskSending", "DeskSettings", "DeskWithdraw", "DeskPropose", "DeskCheckInterest"].map((n) => read(`src/components/god/${n}.tsx`));
+const WHATSAPP_SWITCH = read("src/components/god/DeskWhatsApp.tsx");
 
-const OWNER_FUNCTIONS = ["desk_propose_preview", "desk_propose_tribe", "desk_interest_check", "desk_proposal_cancel", "desk_settings_set"];
+// (the sixth, desk_whatsapp_set, is the one switch for WhatsApp on the Desk: Off to begin with, with a reason; it sends nothing itself)
+const OWNER_FUNCTIONS = ["desk_propose_preview", "desk_propose_tribe", "desk_interest_check", "desk_proposal_cancel", "desk_settings_set", "desk_whatsapp_set"];
 
 describe("the owner's actions for the Desk's email", () => {
   const names = [...sendActions.matchAll(/export async function (\w+Action)\(/g)].map((m) => m[1]);
 
-  it("are exactly five, and each refuses anyone but the unlocked owner before the database is asked", () => {
-    expect([...names].sort()).toEqual(["cancelProposalAction", "interestCheckAction", "previewProposalAction", "saveSettingsAction", "sendProposalAction"]);
+  it("are exactly six, and each refuses anyone but the unlocked owner before the database is asked", () => {
+    expect([...names].sort()).toEqual(["cancelProposalAction", "interestCheckAction", "previewProposalAction", "saveSettingsAction", "sendProposalAction", "whatsappSwitchAction"]);
     for (const n of names) {
       const body = sendActions.slice(sendActions.indexOf(`export async function ${n}(`)).split(/\nexport (?:async function|type) /)[0];
       expect(body, n).toMatch(/if \(!\(await ownerOnly\(\)\)\) return NOT_AVAILABLE;/);
@@ -40,7 +42,7 @@ describe("the owner's actions for the Desk's email", () => {
     expect(settings).toContain("Number.isInteger");
   });
 
-  it("call only the five owner functions", () => {
+  it("call only the six owner functions", () => {
     const called = [...sendActions.matchAll(/run(?:<[^>]*>)?\(\s*"([a-z_]+)"/g)].map((m) => m[1]);
     expect(new Set(called)).toEqual(new Set(OWNER_FUNCTIONS));
   });
@@ -66,7 +68,16 @@ describe("the screens", () => {
     const text = NEW.join("\n") + sendActions;
     expect(text).not.toMatch(/\b(enqueue_message|notify_person|queue_message|send_message|placement_one_place|placement_one_move|placement_office|placement_run|choose_tribe|appoint|god_appoint_leader|desk_mail_send|worker_desk)\b/i);
     expect(text).not.toMatch(/\.from\("/);
-    expect(text).not.toMatch(/phone|e164|whatsapp/i);
+    // No number, and no address that opens a chat or a call, appears on these screens. (They do name WhatsApp, for the Desk's own switch, which holds none.)
+    expect(text).not.toMatch(/phone|e164|tel:|wa\.me|api\.whatsapp\.com/i);
+  });
+
+  it("keep the WhatsApp switch to one card that names no number, no address and no function that sends", () => {
+    expect(WHATSAPP_SWITCH).toContain("whatsappSwitchAction");
+    expect(WHATSAPP_SWITCH).not.toMatch(/phone|e164|tel:|wa\.me|enqueue_message|\.from\("/i);
+    // it needs a reason, as every setting does
+    expect(WHATSAPP_SWITCH).toMatch(/reason\.trim\(\)\.length < 3/);
+    expect(sendActions).toMatch(/desk_whatsapp_set/);
   });
 
   it("make the owner tap twice, and say in Rehearsal that nothing is sent", () => {

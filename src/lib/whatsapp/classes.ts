@@ -75,6 +75,11 @@ export const DEFAULT_CLASSES: Record<string, MessageClass> = {
   referee_reverify: "C",
   report_ready: "C",
   guardian_update: "C",
+  // The Leader Desk (added with the Desk's WhatsApp switch, supabase/migrations/20270125000100_desk_extras.sql). The question to someone asked to lead has a clock on it.
+  desk_offer: "A",
+  desk_proposal: "C",
+  desk_interest: "C",
+  desk_found: "C",
 };
 
 /** A message the table does not know stays on WhatsApp, exactly as it does today (the database does the same). */

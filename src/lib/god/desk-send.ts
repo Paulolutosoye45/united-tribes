@@ -243,3 +243,38 @@ export function checkSummary(r: CheckResult): string {
   const left = r.skipped.map((s) => `${s.count} ${SKIP_WORDS[s.code] ?? s.code}`);
   return left.length > 0 ? `${done} Left out: ${left.join(", ")}.` : done;
 }
+
+// ---------------------------------------------------------------------------
+// WhatsApp for the Desk: one switch, Off to begin with
+// ---------------------------------------------------------------------------
+
+export const WA_WORDS = {
+  title: "WhatsApp",
+  help: "While this is Off, every Desk message goes by email only. When it is On, each member gets the Desk's messages the way they agreed to be reached: on WhatsApp if they gave a number and agreed, otherwise by email. WhatsApp mode (Full, Saver or Free), the Master pause and the weekly limit still apply, and email is the fallback when WhatsApp cannot be used. The Desk's own limits, its blocks and Rehearsal are the same either way, and a Rehearsal sends nothing.",
+  off: "Off. The Desk sends email only.",
+  on: "On. The Desk uses WhatsApp for members who agreed to it, and email for everyone else.",
+  mode: (mode: string) => (mode === "free" ? "WhatsApp mode is Free, so nothing goes through Meta even with this On." : mode === "saver" ? "WhatsApp mode is Saver: only the question to someone asked to lead stays on WhatsApp; the rest goes by email." : "WhatsApp mode is Full."),
+  paused: "WhatsApp is paused, so nothing goes by WhatsApp whatever this says.",
+  reach: (reach: number, waiting: number) => `${reach} of the ${waiting} members waiting for a tribe have a number on file and have agreed to WhatsApp, so they would be reached there.`,
+  approval: "Meta must approve the Desk's WhatsApp wording before it can send. Until then a message is turned down and goes by email instead.",
+  turnOn: "Turn WhatsApp on for the Desk",
+  turnOff: "Turn WhatsApp off for the Desk",
+  reason: { label: "Why you are changing this", hint: "3 to 300 characters. Only you see it." },
+  savedOn: "Saved. The Desk will use WhatsApp from the next message.",
+  savedOff: "Saved. The Desk is email only again, and anything waiting to be sent has gone back to email.",
+} as const;
+
+export type WhatsAppState = { on: boolean; mode: "full" | "saver" | "free"; paused: boolean; waiting: number; reach: number; reason: string | null; changedAt: string | null };
+
+export function parseWhatsAppState(v: unknown): WhatsAppState | null {
+  if (!isObj(v) || typeof v.on !== "boolean") return null;
+  return {
+    on: v.on,
+    mode: v.mode === "saver" || v.mode === "free" ? v.mode : "full",
+    paused: v.paused === true,
+    waiting: int(v.waiting),
+    reach: int(v.reach),
+    reason: text(v.reason),
+    changedAt: text(v.changed_at),
+  };
+}

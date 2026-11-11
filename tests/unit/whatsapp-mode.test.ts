@@ -18,7 +18,8 @@ import { sampleParams } from "./fixtures/message-params";
 // message, a sign-in code on the official route, the account check), and when it cannot tell what the mode is it does not speak to Meta either.
 
 const SITE = "https://unitedtribes.example";
-const MIGRATION = readFileSync(path.resolve(__dirname, "../../supabase/migrations/20270105000100_whatsapp_mode.sql"), "utf8");
+// The table is seeded by WhatsApp mode's own migration, and added to by the later migration that put the Leader Desk on WhatsApp
+const MIGRATION = ["20270105000100_whatsapp_mode.sql", "20270125000100_desk_extras.sql"].map((f) => readFileSync(path.resolve(__dirname, "../../supabase/migrations", f), "utf8")).join("\n");
 
 /** A fetch that fails the test if anything at all asks it for anything. */
 const meta = () => vi.fn(async () => new Response(JSON.stringify({ messages: [{ id: "wamid.1" }] }), { status: 200, headers: { "content-type": "application/json" } }));
@@ -62,19 +63,19 @@ describe("every message that can go by WhatsApp has a class", () => {
 
   it("covers each of them and nothing else, so a new message cannot slip in unclassified", () => {
     expect(Object.keys(DEFAULT_CLASSES).sort()).toEqual(capable());
-    expect(capable()).toHaveLength(58);
+    expect(capable()).toHaveLength(62);
   });
 
   it("puts only the messages that must reach in class A, and never an email-only message anywhere", () => {
     const a = Object.entries(DEFAULT_CLASSES).filter(([, c]) => c === "A").map(([k]) => k).sort();
-    expect(a).toEqual(["care_task_overdue", "care_urgent", "details_check_reminder", "details_check_request", "guardian_request", "referee_code", "swap_offered", "whatsapp_test"]);
+    expect(a).toEqual(["care_task_overdue", "care_urgent", "desk_offer", "details_check_reminder", "details_check_request", "guardian_request", "referee_code", "swap_offered", "whatsapp_test"]);
     for (const key of ["placement_your_tribe", "placement_reminder", "whatsapp_paused", "whatsapp_signal", "whatsapp_mode_alert"]) expect(DEFAULT_CLASSES[key]).toBeUndefined();
     expect(classOf("no_such_message")).toBe("A");
     expect(CLASS_WORDS.A.saver).toMatch(/stays/);
   });
 
   it("is the same table the database starts with", () => {
-    const seeded = new Map([...MIGRATION.matchAll(/^\s*\('([a-z0-9_]+)', '([ABC])'\)[,;]\s*$/gm)].map((m) => [m[1], m[2]]));
+    const seeded = new Map([...MIGRATION.matchAll(/^\s*\('([a-z0-9_]+)', '([ABC])'\)[,;]?\s*$/gm)].map((m) => [m[1], m[2]]));
     expect(Object.fromEntries(seeded)).toEqual(DEFAULT_CLASSES);
   });
 });

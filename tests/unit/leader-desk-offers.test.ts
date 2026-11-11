@@ -50,8 +50,9 @@ const foundMail = (over: Params = {}) => renderEmail(message("desk_found", { ...
 const linksIn = (html: string, path: string) => [...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, "&")).filter((u) => u.includes(path));
 
 describe("the 'Would you lead this group?' email", () => {
-  it("is registered, email only, and addressed to a member", () => {
-    expect(TEMPLATES.desk_offer.emailOnly).toBe(true);
+  it("is registered, goes by WhatsApp too once the Desk's switch is On, and is addressed to a member", () => {
+    expect(TEMPLATES.desk_offer.emailOnly).toBeUndefined();
+    expect(TEMPLATES.desk_offer.whatsappAs).toBe("desk_proposal");
     expect(TEMPLATES.desk_offer.audience).toBe("member");
   });
 
@@ -83,13 +84,13 @@ describe("the 'Would you lead this group?' email", () => {
 
   it("has every answer on the page, and the main button is the yes", () => {
     const { text, html } = offerMail();
-    for (const label of ["Yes, I will lead", "Not this season", "Call me", "Remind me tomorrow", "Never ask me to lead", "Stop these emails"]) expect(text, label).toContain(label);
+    for (const label of ["Yes, I will lead", "Yes, as assistant", "Not this season", "Call me", "Remind me tomorrow", "Never ask me to lead", "Stop these emails"]) expect(text, label).toContain(label);
     expect(text).not.toContain("Skip");
     const links = linksIn(html, "/o/");
-    expect(links.length).toBeGreaterThanOrEqual(6);
+    expect(links.length).toBeGreaterThanOrEqual(7);
     const seen = new Set<string>();
     for (const u of links) {
-      expect(u, u).toMatch(new RegExp(`^${SITE}/o/${SECRET}\\?a=(lead|not_season|call|tomorrow|never|stop)$`));
+      expect(u, u).toMatch(new RegExp(`^${SITE}/o/${SECRET}\\?a=(lead|assist|not_season|call|tomorrow|never|stop)$`));
       seen.add(u.split("a=")[1]);
     }
     expect([...seen].sort()).toEqual([...OFFER_ANSWERS].sort());
@@ -140,8 +141,8 @@ describe("the 'Would you lead this group?' email", () => {
 });
 
 describe("the 'Your group has a leader' email", () => {
-  it("is registered, email only, addressed to a member, and short enough for a lock screen", () => {
-    expect(TEMPLATES.desk_found.emailOnly).toBe(true);
+  it("is registered, goes by WhatsApp too once the Desk's switch is On, addressed to a member, and short enough for a lock screen", () => {
+    expect(TEMPLATES.desk_found.emailOnly).toBeUndefined();
     expect(TEMPLATES.desk_found.audience).toBe("member");
     const { subject } = foundMail();
     expect(subject.length).toBeLessThanOrEqual(DESK_SUBJECT_MAX);
@@ -262,7 +263,7 @@ describe("the owner's screens' reading of leader offers", () => {
     expect(g.paused).toBe(true);
     expect(g.leader).toMatchObject({ name: "Ngozi", certified: false, tribeStatus: "draft" });
     expect(g.offers.map((o) => o.status)).toEqual(["open", "queued"]);
-    expect(parseGroupLeader("x")).toEqual({ problem: null, paused: false, leader: null, needsDecision: false, offers: [] });
+    expect(parseGroupLeader("x")).toEqual({ problem: null, paused: false, assistant: null, leader: null, needsDecision: false, offers: [] });
     expect(parseGroupLeader({ leader: { person_id: "bad" } }).leader).toBeNull();
   });
 

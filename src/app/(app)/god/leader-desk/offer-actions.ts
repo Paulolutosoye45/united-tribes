@@ -3,7 +3,7 @@
 import { run } from "@/lib/admin/rpc";
 import { getSession } from "@/lib/auth/session";
 import { TRY_AGAIN, isUuid } from "@/lib/leaders/errors";
-import { parseCandidates, type Candidates } from "@/lib/god/desk-offers";
+import { parseCandidates, parseLeadOptions, type Candidates, type LeadOptions } from "@/lib/god/desk-offers";
 
 const PAGES = ["/god/leader-desk"];
 
@@ -25,6 +25,16 @@ export async function candidatesAction(group: string): Promise<{ ok: true; candi
   if (!done.ok) return done;
   const candidates = parseCandidates(done.data);
   return candidates ? { ok: true, candidates } : bad();
+}
+
+/** The draft groups one waiting member could be offered to lead right now, by the same rules as the group's own card. Sends nothing. */
+export async function leadOptionsAction(person: string): Promise<{ ok: true; options: LeadOptions } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  if (!isUuid(person)) return bad();
+  const done = await run("desk_person_lead_options", { p_person: person }, []);
+  if (!done.ok) return done;
+  const options = parseLeadOptions(done.data);
+  return options ? { ok: true, options } : bad();
 }
 
 /** Offers a draft group to one member to lead, and to up to two backups in order. In Rehearsal it is only written down. The database checks every rule again. */

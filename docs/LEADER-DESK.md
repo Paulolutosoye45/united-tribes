@@ -171,8 +171,7 @@ Offer expiry, backups and the 24 and 12 hour reminders run inside the same `work
 
 ### Not built in 2b-1
 
-* **"Yes, as assistant"** (assistants offered together with a leader). Offers are for the leader role only.
-* **"Recommend as leader" on a waiting member's row.** The picker is on the draft group card.
+* **"Yes, as assistant"**, **"Recommend as leader" on a waiting member's row** and **WhatsApp for the Desk** were left out of 2b-1 and are built since: see "The three extras" below.
 * The pastor "card waiting" email and 24 hour reminder, **Open tribe**, the parity test, and the pipeline limits and "stuck" chips: built in Phase 2b-2 (below).
 
 ## Phase 2b-2: opening the tribe, the pastors' reminder, the pipeline and its limits
@@ -224,7 +223,37 @@ Same three positions. In **Rehearsal** Open tribe places nobody, and the pastors
 * **It adds seven functions:** four the screens call (`desk_open_preview`, `desk_open_tribe`, `desk_pipeline`, `desk_pipeline_settings_set`) and three closed to every signed-in person (`desk_open_words`, `desk_open_plan`, `desk_card_tick`).
 * **Privacy:** no number, note or reason is written to a message, a row or a log line. The pastors' email carries the tribe's name and the leader's first name.
 
+## The three extras: assistant, "Recommend as leader" on the row, WhatsApp
+
+Three things Phase 2 left out. All three are the owner's, all three start where nothing changes, and none of them can reach a person who is not already reachable by the Desk's own rules.
+
+### "Yes, as assistant"
+
+The page behind "Would you lead this group?" gets one more honest answer, **Yes, as assistant**, for a member who would rather help than lead.
+
+* It is recorded as a **no to leading**: the next backup is asked, exactly as for "Not this season", and the member is not shut out of future offers. The group remembers who offered (shown on the group's card as "Offered to assist").
+* It **appoints nobody and promises nothing.** When someone else says yes to leading, the offer is passed on the way the church already does it: a **recommendation** on the new tribe's Assistants list, which the church office approves or declines, and a pastor decides every assistant application. A member who is not yet an approved assistant leader is invited to apply, as before. The new leader gets an email saying who offered, and can withdraw it from their tribe page.
+* Only one member can offer to assist a group, and nobody is asked twice. When a group is put forward, the assistant's name is removed from the draft list.
+* **Rehearsal and Off** behave as they do for every offer: nothing reaches a member.
+
+### "Recommend as leader" on a waiting member's row
+
+**Waiting for a tribe** now has the button on each row, as well as on the draft group card. It opens the list of draft groups that one member could be offered to lead **right now** and sends through the same function as the card (`desk_offer_send`), so the same checks, the daily limit, the backups and Rehearsal apply. A group the member cannot be offered shows why, in words.
+
+### WhatsApp for the Desk
+
+**Desk → Sending → WhatsApp** is one switch, **Off to begin with**, set by the owner with a reason (kept on the settings row; the log line carries no reason).
+
+* **Off:** every Desk message is forced to email, as before. Nothing changes.
+* **On:** the Desk stops forcing email, and the ordinary rules choose the channel for each person: what they agreed to, WhatsApp mode (Full, Saver, Free), the Master pause, the weekly limit, and email as the fallback when WhatsApp cannot be used or Meta turns the message down. The Desk's own limits (a day, a gap, a season), its blocks (under 18, stopped, care, bounced) and Rehearsal are untouched, and **a Rehearsal still sends nothing**.
+* Turning it **Off** puts any Desk message still waiting back to email.
+* The Desk's four messages are Class C in WhatsApp mode. They share **one** WhatsApp wording, so **one** template (`desk_proposal`) has to be approved by Meta before WhatsApp can carry them: run `npm run templates`, then wait for Meta's approval. Until it is approved the message goes by email.
+
+### Applying and undoing it
+
+* **Apply:** `supabase/migrations/20270125000100_desk_extras.sql`, after Phase 2b-2 (it stops with a clear message if 2b-2, the assistant recommendations or WhatsApp mode is missing). Then deploy the website. See `docs/APPLY-LEADER-DESK-EXTRAS.md`.
+* **Undo:** `supabase/rollback/20270125000100_desk_extras.down.sql`. It puts back, exactly as they were, the seven functions it replaced, drops its five functions and its seven columns, narrows the check, and sends any waiting Desk message back to email. A recommendation already put forward to the church office stays (the office decides it on the Assistants page as usual). `tests/db/leader-desk-extras-rollback.test.ts` rehearses it.
+
 ### Not built yet
 
 * **The 48-hour clock and the Monday batch.** Nothing opens a tribe by itself: Open tribe is always a press from you. (Phase 3.)
-* **WhatsApp for any of this.** Everything here is email only.

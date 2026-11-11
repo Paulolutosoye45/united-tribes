@@ -5,7 +5,7 @@ import { DESK_EMAIL_SAMPLES, DESK_SUBJECT_MAX, DESK_WORDS, becauseLine, groupWhe
 import { INTEREST_WORDS, checkSummary, parseCheck, parseInterest, parsePreview, parseProposals, parseSendState, previewLine, statusWord, canWithdraw } from "@/lib/god/desk-send";
 import { renderEmail, renderSms, renderWhatsApp } from "@/lib/messaging/render";
 import { TEMPLATES } from "@/lib/messaging/templates";
-import { DESK_TEMPLATES } from "@/lib/messaging/templates-desk";
+import { DESK_SAMPLES, DESK_TEMPLATES } from "@/lib/messaging/templates-desk";
 import type { ClaimedMessage, Params } from "@/lib/messaging/types";
 
 // The Leader Desk's two emails (Phase 2a) and the way the owner's screens read what the database says about them.
@@ -33,12 +33,38 @@ const interest = DESK_EMAIL_SAMPLES.desk_interest as unknown as Params;
 const mail = (t: "desk_proposal" | "desk_interest", over: Params = {}) => renderEmail(message(t, { ...(t === "desk_proposal" ? proposal : interest), ...over }), SITE);
 
 describe("the two Desk emails", () => {
-  it("are registered, email only, and addressed to a member", () => {
-    expect(DESK_TEMPLATES.map((t) => t.key)).toEqual(["desk_proposal", "desk_interest", "desk_found", "desk_offer"]);
+  it("are registered, addressed to a member, and share one WhatsApp wording (the Desk's WhatsApp switch is Off to begin with, so they go by email)", () => {
+    expect(DESK_TEMPLATES.map((t) => t.key)).toEqual(["desk_proposal", "desk_interest", "desk_found", "desk_offer", "desk_assistant_offer"]);
     for (const k of ["desk_proposal", "desk_interest", "desk_found", "desk_offer"]) {
-      expect(TEMPLATES[k].emailOnly, k).toBe(true);
       expect(TEMPLATES[k].audience, k).toBe("member");
+      // not email only any more: when the switch is On, each member gets them the way they agreed to be reached. One of them is put to Meta; the others reuse it.
+      expect(TEMPLATES[k].emailOnly, k).toBeUndefined();
     }
+    expect(TEMPLATES.desk_proposal.whatsappAs).toBeUndefined();
+    for (const k of ["desk_interest", "desk_found", "desk_offer"]) expect(TEMPLATES[k].whatsappAs, k).toBe("desk_proposal");
+  });
+
+  it("send the same WhatsApp wording under the one name Meta approves, with the private link in it", () => {
+    const wa = (k: string) => TEMPLATES[k].whatsapp({ ...(DESK_SAMPLES[k] as unknown as Params) }, { site: SITE, first: "Ada", link: (p: string) => `${SITE}${p}`, reply: () => null, token: "ab".repeat(32) });
+    const bodies = new Set(["desk_proposal", "desk_interest", "desk_found", "desk_offer"].map((k) => wa(k).body));
+    expect(bodies.size).toBe(1);
+    for (const k of ["desk_proposal", "desk_interest", "desk_found", "desk_offer"]) {
+      const { vars } = wa(k);
+      expect(vars[2], k).toMatch(new RegExp(`^${SITE}/(d|o)/${"ab".repeat(32)}\\?a=`));
+      expect(vars.join(" "), k).not.toMatch(/\+?234\d{8,}|@/);
+    }
+  });
+
+  it("tell a new leader, by email only, that a member who was asked to lead has offered to assist", () => {
+    const t = TEMPLATES.desk_assistant_offer;
+    expect(t.emailOnly).toBe(true);
+    expect(t.audience).toBe("leader");
+    const mailed = renderEmail(message("desk_assistant_offer", { tribe: "Builders Tribe", assistant_first: "Dayo" }), SITE);
+    expect(mailed.subject.length).toBeLessThanOrEqual(DESK_SUBJECT_MAX);
+    expect(mailed.text).toContain("Dayo");
+    expect(mailed.text).toMatch(/Nothing is decided/);
+    expect(mailed.text).toMatch(/withdraw/);
+    expect(mailed.text).not.toMatch(/\+?234\d{8,}/);
   });
 
   it("have a subject that fits a phone's lock screen", () => {

@@ -37,6 +37,7 @@ export const FEATURE_KEYS = [
   "seat_window",
   "reach_release",
   "seat_autopilot",
+  "sign_in_prompt",
 ] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 

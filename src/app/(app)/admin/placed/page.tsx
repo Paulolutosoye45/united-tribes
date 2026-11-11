@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageHead } from "@/components/admin/PageHead";
 import { HoldControl, PlacedPause } from "@/components/placed/PlacedControls";
 import { PlacedTabs } from "@/components/placed/PlacedTabs";
+import { PromptResults } from "@/components/placed/PromptResults";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PLACED_BOARD_ROLES } from "@/lib/auth/roles";
@@ -21,6 +22,8 @@ import {
   type TileKey,
 } from "@/lib/placement/answers";
 import { loadBoardRows, loadBoardSummary, loadBoardTribes } from "@/lib/placement/answers-server";
+import { parsePromptOverview } from "@/lib/prompt/office";
+import { loadPromptOverview } from "@/lib/prompt/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Placed members" };
@@ -50,11 +53,13 @@ export default async function PlacedBoardPage({ searchParams }: { searchParams: 
   const opened = pick(q.opened, ["yes", "no"] as const);
   const page = Math.max(1, Math.min(500, Number.parseInt(q.page ?? "1", 10) || 1));
   const supabase = await createClient();
-  const [summary, tribes, board] = await Promise.all([
+  const [summary, tribes, board, promptRaw] = await Promise.all([
     loadBoardSummary(supabase),
     loadBoardTribes(supabase),
     loadBoardRows(supabase, { tile, tribe, step, answer, flag, call, opened }, PAGE, (page - 1) * PAGE),
+    loadPromptOverview(supabase),
   ]);
+  const prompt = parsePromptOverview(promptRaw);
 
   if (!summary) {
     return (
@@ -135,6 +140,8 @@ export default async function PlacedBoardPage({ searchParams }: { searchParams: 
         </ul>
         <p className="t-small max-w-[64ch] text-soft">{W.honest}</p>
       </section>
+
+      {prompt ? <PromptResults overview={prompt} /> : null}
 
       <section aria-labelledby="health-h" className="flex flex-col gap-2" data-testid="placed-health">
         <h2 id="health-h" className="t-heading">{W.health}</h2>

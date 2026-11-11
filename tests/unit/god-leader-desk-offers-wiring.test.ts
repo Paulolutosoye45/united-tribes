@@ -21,14 +21,15 @@ const groupCard = read("src/components/god/DeskGroupCard.tsx");
 const builder = read("src/components/academy/TribeBuilder.tsx");
 const sql = read("supabase/migrations/20270118000100_desk_offers.sql");
 
-const OWNER_FUNCTIONS = ["desk_offer_candidates", "desk_offer_send", "desk_offer_cancel", "desk_offers_pause", "desk_offer_review"];
+// (the sixth, desk_person_lead_options, only reads: it lists the draft groups one waiting member could be offered, for the button on their row)
+const OWNER_FUNCTIONS = ["desk_offer_candidates", "desk_offer_send", "desk_offer_cancel", "desk_offers_pause", "desk_offer_review", "desk_person_lead_options"];
 
 describe("the owner's actions for leader offers", () => {
   const names = [...offerActions.matchAll(/export async function (\w+Action)\(/g)].map((m) => m[1]);
   const bodyOf = (n: string) => offerActions.slice(offerActions.indexOf(`export async function ${n}(`)).split(/\nexport async function /)[0];
 
-  it("are exactly five, and each refuses anyone but the unlocked owner before the database is asked", () => {
-    expect([...names].sort()).toEqual(["cancelOfferAction", "candidatesAction", "pauseBackupsAction", "reviewOfferAction", "sendOfferAction"]);
+  it("are exactly six, and each refuses anyone but the unlocked owner before the database is asked", () => {
+    expect([...names].sort()).toEqual(["cancelOfferAction", "candidatesAction", "leadOptionsAction", "pauseBackupsAction", "reviewOfferAction", "sendOfferAction"]);
     for (const n of names) expect(bodyOf(n), n).toMatch(/if \(!\(await ownerOnly\(\)\)\) return NOT_AVAILABLE;/);
     expect(offerActions).toContain('session?.god === "open"');
   });
@@ -44,7 +45,7 @@ describe("the owner's actions for leader offers", () => {
     expect(bodyOf("reviewOfferAction")).toContain('typeof approve !== "boolean"');
   });
 
-  it("call only the five owner functions", () => {
+  it("call only the six owner functions", () => {
     const called = [...offerActions.matchAll(/run(?:<[^>]*>)?\(\s*"([a-z_]+)"/g)].map((m) => m[1]);
     expect(new Set(called)).toEqual(new Set(OWNER_FUNCTIONS));
   });

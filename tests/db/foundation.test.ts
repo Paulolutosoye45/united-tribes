@@ -1028,7 +1028,21 @@ describe("locked-down defaults", () => {
       "desk_group_interest",
       "desk_proposals_list",
       "desk_proposal_cancel",
+      // The Desk's three extras: a waiting member's "Recommend as leader" list, and the WhatsApp switch (each the owner's, checked again inside)
+      "desk_person_lead_options",
+      "desk_whatsapp_state",
+      "desk_whatsapp_set",
       // Recommending a leader (Phase 2b-1): the owner's calls, each checking the owner and the Switchboard again inside
+      // The sign-in prompt: what a signed-in person owes on this visit, and how each answer is recorded. Each answers about the signed-in person only,
+      // except the overview (the office) and the settings (the owner's), each checked again inside. Off until the owner moves the switch.
+      "my_prompt_queue",
+      "prompt_log_set",
+      "prompt_placement_answer",
+      "prompt_save_number",
+      "prompt_whatsapp_answer",
+      "prompt_overview",
+      "god_prompt_settings",
+      "god_prompt_settings_set",
       "desk_offer_candidates",
       "desk_offer_send",
       "desk_offer_cancel",

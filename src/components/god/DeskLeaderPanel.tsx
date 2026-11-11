@@ -55,6 +55,11 @@ export function DeskLeaderPanel({ group, state, rehearsal }: { group: string; st
           Leader: {state.leader.name} <Badge tone="flame">Said yes</Badge>
         </p>
         <p className="t-small text-soft">{leaderStage(state.leader)}</p>
+        {state.assistant ? (
+          <p className="t-small text-soft" data-testid="desk-assistant">
+            {O.assistant.putForward(state.assistant.name)} {state.assistant.status ? (O.assistant.status[state.assistant.status] ?? "") : ""}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -65,6 +70,11 @@ export function DeskLeaderPanel({ group, state, rehearsal }: { group: string; st
       {state.needsDecision ? (
         <p className="t-small rounded-[var(--radius-control)] border border-gold px-3 py-2" role="status" data-testid="desk-needs-decision">
           {O.needsDecision}
+        </p>
+      ) : null}
+      {state.assistant ? (
+        <p className="t-small rounded-[var(--radius-control)] border border-line px-3 py-2" data-testid="desk-assistant">
+          {O.assistant.waiting(state.assistant.name)}
         </p>
       ) : null}
       {state.paused ? (
