@@ -8,6 +8,7 @@ import { isUuid } from "@/lib/leaders/errors";
 import { clock, dayName } from "@/lib/messaging/format";
 import { siteUrl } from "@/lib/messaging/worker";
 import { loadTribeWeek } from "@/lib/rhythm/server";
+import { isLockedGuide } from "@/lib/rhythm/types";
 import { createClient } from "@/lib/supabase/server";
 import { loadHandContext } from "@/lib/whatsapp/mode-server";
 
@@ -41,11 +42,13 @@ export default async function LeadHandPage({ searchParams }: { searchParams: Sea
   }
 
   const cw = await loadTribeWeek(supabase, tribeId, null);
+  // The week asked for here is the current one, which is always open; a week that has not opened would have nothing to send
+  const guide = cw && !isLockedGuide(cw.guide) ? cw.guide : null;
   const week = {
     week: cw?.state === "running" ? cw.week : null,
-    title: cw?.guide.title ?? "",
-    passage: cw?.guide.passage ?? "",
-    bigIdea: cw?.guide.big_idea ?? "",
+    title: guide?.title ?? "",
+    passage: guide?.passage ?? "",
+    bigIdea: guide?.big_idea ?? "",
     tribe: ctx.tribe.name,
     meetingDay: cw ? dayName(cw.tribe.meeting_day) : "",
     meetingTime: cw ? clock(cw.tribe.meeting_time) : "",

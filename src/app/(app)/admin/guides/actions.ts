@@ -49,3 +49,9 @@ export async function saveGoalIdeaAction(goal: string, p: number, value: string)
   if (!isUuid(goal) || !phase(p)) return bad;
   return plain(await run("save_goal_idea", { p_goal: goal, p_phase: p, p_text: text(value, 600) }, ["/admin/guides/layers"]));
 }
+
+/** When leaders can read the next week: Off, or On at a time. The database allows only an admin, a director or a pastor, and checks the numbers again. */
+export async function guideReleaseAction(weekly: boolean, hour: number, minute: number): Promise<Result> {
+  if (typeof weekly !== "boolean" || !Number.isInteger(hour) || !Number.isInteger(minute)) return bad;
+  return plain(await run("guide_release_set", { p_weekly: weekly, p_hour: hour, p_minute: minute }, ["/admin/guides", "/lead/week"]));
+}

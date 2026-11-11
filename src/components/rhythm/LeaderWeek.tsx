@@ -2,7 +2,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { clockLabel } from "@/lib/academy/options";
 import { formatDate, plural } from "@/lib/dates";
-import type { TribeWeek, LogExtras, PendingTestimony, WeekLayer } from "@/lib/rhythm/types";
+import { RELEASE_WORDS, nextOpensLine } from "@/lib/rhythm/release";
+import { isLockedGuide, type TribeWeek, type LogExtras, type PendingTestimony, type WeekLayer } from "@/lib/rhythm/types";
+import { lagosWhen } from "@/lib/seat/seat";
 import { STATUS_LABELS, meetingDay, weekRange } from "@/lib/rhythm/wording";
 import { FollowUpList, type FollowUpRow } from "./FollowUpList";
 import { LogForm } from "./LogForm";
@@ -56,6 +58,40 @@ export function LeaderWeek({
   }));
   const running = week.state === "running";
   const stepsChosen = r.steps_set;
+  const guide = week.guide;
+  const lastOpen = week.release?.weekly ? week.release.open_week : null;
+  // The arrow forward goes as far as the weeks that have opened: this week and the ones before it, or the next one once it has opened
+  const canForward = week.week < week.weeks && (lastOpen !== null ? week.week < lastOpen : week.current_week === null || week.week < week.current_week + 1);
+  const opensLine = nextOpensLine(week);
+
+  if (isLockedGuide(guide)) {
+    // A week that has not opened: the leader is told when, and shown nothing of it
+    return (
+      <div className="flex flex-col gap-8" data-testid="week-closed">
+        <section className="night rise-in flex flex-col gap-4 rounded-[var(--radius-sheet)] p-6 sm:p-10" aria-labelledby="lw-heading">
+          <p className="t-small text-white/70">
+            {week.tribe.name} · Week {week.week} of {week.weeks}
+          </p>
+          <h1 id="lw-heading" className="t-title">{RELEASE_WORDS.closedTitle(week.week)}</h1>
+          <p className="t-body text-white/80">{RELEASE_WORDS.closedBody(week.week, guide.opens_at ? lagosWhen(guide.opens_at) : null)}</p>
+        </section>
+        <nav aria-label="Weeks" className="flex items-center justify-between gap-3">
+          {week.week > 1 ? (
+            <Link href={href(week.week - 1)} className="press rounded-lg px-2 py-2 text-[0.95rem] font-medium text-soft hover:text-ink">
+              ← Week {week.week - 1}
+            </Link>
+          ) : (
+            <span />
+          )}
+          {week.current_week ? (
+            <Link href={base} className="press rounded-lg px-2 py-2 text-[0.95rem] font-medium text-soft hover:text-ink">
+              This week
+            </Link>
+          ) : null}
+        </nav>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -64,7 +100,7 @@ export function LeaderWeek({
           {week.tribe.name} · {running ? (week.week === week.current_week ? "This week" : "Week") : week.state === "before" ? "Preparing" : "Season complete"} · Week {week.week} of {week.weeks} · {weekRange(week.week_starts_on)}
         </p>
         <h1 id="lw-heading" className="t-title">
-          {week.state === "before" ? `Your season starts on ${formatDate(week.starts_on)}.` : week.guide.title}
+          {week.state === "before" ? `Your season starts on ${formatDate(week.starts_on)}.` : guide.title}
         </h1>
         <p className="t-body text-white/80">
           Your tribe meets on {meetingDay(week.meeting_date)} at {clockLabel(week.tribe.meeting_time)}.
@@ -103,7 +139,7 @@ export function LeaderWeek({
             This week
           </Link>
         ) : null}
-        {week.week < week.weeks && (week.current_week === null || week.week < week.current_week + 1) ? (
+        {canForward ? (
           <Link href={href(week.week + 1)} className="press rounded-lg px-2 py-2 text-[0.95rem] font-medium text-soft hover:text-ink">
             Week {week.week + 1} →
           </Link>
@@ -111,6 +147,11 @@ export function LeaderWeek({
           <span />
         )}
       </nav>
+      {opensLine ? (
+        <p className="t-small -mt-4 text-soft" data-testid="next-week-opens">
+          {opensLine}
+        </p>
+      ) : null}
 
       <dl className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
@@ -158,7 +199,7 @@ export function LeaderWeek({
 
       {week.state !== "before" ? <LogForm key={`${week.tribe.id}-${week.week}`} week={week} extras={extras} /> : null}
       {week.picture.can_refine ? <PictureForm week={week} /> : null}
-      <PrepPack week={week} />
+      <PrepPack week={week} guide={guide} />
       <ConfessionCard layer={layer} />
       <CommunityLayerCard layer={layer} />
       {extras ? <PrayerList extras={extras} canEdit={week.can_edit} /> : null}

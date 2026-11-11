@@ -307,9 +307,18 @@ describe("which guide belongs to which page", () => {
     expect(slugOf(["member", "care_lead"], "/growth/removals")).toBe("decide-a-place-change");
     expect(slugOf(["member"], "/growth/removals")).toBeNull();
     expect(slugOf(["member"], "/admin/messages")).toBeNull();
-    // On the leader's Tribe Card both the appointed leader's guide and the one about asking apply; a member sees neither
-    expect(helpForAll(helpEntriesFor(["member", "leader"]), "/lead/tribe").map((e) => e.slug)).toEqual(["appointed-to-lead", "ask-about-a-place"]);
+    // On the leader's Tribe Card the appointed leader's guide, the one about asking and the questions leaders ask all apply; a member sees none of them
+    expect(helpForAll(helpEntriesFor(["member", "leader"]), "/lead/tribe").map((e) => e.slug)).toEqual(["appointed-to-lead", "ask-about-a-place", "leader-questions"]);
     expect(helpForAll(helpEntriesFor(["member"]), "/lead/tribe").map((e) => e.slug)).not.toContain("ask-about-a-place");
+    expect(helpForAll(helpEntriesFor(["member"]), "/lead/tribe").map((e) => e.slug)).not.toContain("leader-questions");
+  });
+  it("offers the questions leaders ask on every Lead page, after the page's own guide, to a leader only", () => {
+    for (const path of ["/lead", "/lead/week", "/lead/tribe", "/lead/progress"]) {
+      const slugs = helpForAll(helpEntriesFor(["member", "leader"]), path).map((e) => e.slug);
+      expect(slugs, path).toContain("leader-questions");
+      expect(slugs[0], path).not.toBe("leader-questions");
+    }
+    expect(helpForAll(helpEntriesFor(["member", "coach"]), "/lead/week").map((e) => e.slug)).not.toContain("leader-questions");
   });
   it("matches a page and the pages under it, but not a page that only starts with the same letters", () => {
     expect(slugOf(["member", "leader"], "/lead")).toBe("appointed-to-lead");

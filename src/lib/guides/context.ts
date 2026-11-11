@@ -27,6 +27,8 @@ export const HELP_LINES: readonly Line[] = [
   { prefix: "/lead", exact: true, slug: "appointed-to-lead", when: holds("leader") },
   { prefix: "/lead", exact: true, slug: "reach-your-tribe", when: holds("leader") },
   { prefix: "/lead", exact: true, slug: "apply-to-lead" },
+  // The questions leaders ask: follows the main guide on every Lead page, for a leader
+  { prefix: "/lead", slug: "leader-questions", when: holds("leader") },
   { prefix: "/care", slug: "assistant-leader", when: holds("assistant_leader") },
   { prefix: "/join", slug: "find-your-tribe" },
   { prefix: "/tribe/testimony", slug: "share-a-testimony" },

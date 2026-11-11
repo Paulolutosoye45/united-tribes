@@ -1,11 +1,10 @@
 import { Badge } from "@/components/ui/Badge";
 import { plural } from "@/lib/dates";
-import type { TribeWeek } from "@/lib/rhythm/types";
+import type { LeaderGuide, TribeWeek } from "@/lib/rhythm/types";
 import { THEME_LABELS, celebrationLine, percent } from "@/lib/rhythm/wording";
 
 /** What a leader needs before the meeting: the week's idea, the 75 minutes, what to say, and who to thank. */
-export function PrepPack({ week }: { week: TribeWeek }) {
-  const g = week.guide;
+export function PrepPack({ week, guide: g }: { week: TribeWeek; guide: LeaderGuide }) {
   const last = week.last_report;
   return (
     <section aria-labelledby="prep-heading" className="flex flex-col gap-5">
