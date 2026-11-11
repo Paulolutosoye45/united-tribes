@@ -32,6 +32,10 @@ export async function offerAnswerAction(formData: FormData) {
     if (!LEAD.includes(lead)) redirect(`/o/${token}?a=lead&need=lead`);
     if (!RELATION.includes(relation)) redirect(`/o/${token}?a=lead&need=relation`);
   }
+  if (answer === "assist") {
+    age = formData.get("age") === "on";
+    if (!age) redirect(`/o/${token}?a=assist&need=age`);
+  }
   if (answer === "not_season") reasons = [...new Set(formData.getAll("reason").map(String).filter(isOfferReason))].slice(0, 5);
 
   const { data, error } = await workerRpc(secret)("worker_desk_offer_answer", {
@@ -45,7 +49,7 @@ export async function offerAnswerAction(formData: FormData) {
   if (error) redirect(`/o/${token}?problem=1`);
   const result = (data ?? {}) as { ok?: boolean; reason?: string; answer?: string; review?: boolean; later?: boolean };
   if (!result.ok) {
-    redirect(`/o/${token}?${result.reason === "closed" ? "closed=1" : result.reason === "off" ? "off=1" : result.reason === "invalid" || result.reason === "not_available" ? "invalid=1" : "problem=1"}`);
+    redirect(`/o/${token}?${result.reason === "closed" ? "closed=1" : result.reason === "off" ? "off=1" : result.reason === "taken" ? "taken=1" : result.reason === "invalid" || result.reason === "not_available" ? "invalid=1" : "problem=1"}`);
   }
   const done = isOfferAnswer(result.answer) ? result.answer : answer;
   const extra = done === "lead" && result.review ? "&review=1" : done === "tomorrow" && result.later === false ? "&late=1" : "";

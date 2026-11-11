@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Crest } from "@/components/brand/Crest";
+import { AnswerDone, MemberAnswers } from "@/components/placed/MemberAnswers";
 import { Button } from "@/components/ui/Button";
 import { clockLabel, dayName } from "@/lib/academy/options";
 import { getSupabaseEnv } from "@/lib/env";
@@ -13,6 +14,7 @@ import { parsePlaced, type PlacedState } from "@/lib/placement/types";
 import { PLACED_REACH_WORDS, ADD_NUMBER_WORDS, parsePlacedReach, type PlacedReach } from "@/lib/reach/series";
 import { PLACED_CONTACT_WORDS, PLACED_PROMISES } from "@/lib/placement/wording";
 import { FRESH_LINK_WORDS, LINK_WORDS, NUDGE_PAGE_OFF, NUDGE_PAGE_WORDS, parseLinkState, parseNudgePageInfo, type LinkState, type NudgePageInfo } from "@/lib/placement/nudge";
+import { ANSWERS_OFF, isAnswerLink, isDone, isPointed, parseAnswersInfo, type AnswersInfo, type Done, type Pointed } from "@/lib/placement/answers";
 import { placedAction, placedChooseAction, placedFreshLinkAction } from "./actions";
 
 // The link is a secret: keep it out of search results and referrer headers.
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-type Search = { a?: string; done?: string; late?: string; started?: string; invalid?: string; problem?: string; number?: string; m?: string; c?: string; other?: string; fresh?: string };
+type Search = { a?: string; done?: string; late?: string; started?: string; invalid?: string; problem?: string; number?: string; m?: string; c?: string; other?: string; fresh?: string; again?: string; w?: string; cn?: string; rc?: string };
 
 const CHOICES = ["confirm", "change", "withhold"] as const;
 type Choice = (typeof CHOICES)[number];
@@ -68,9 +70,21 @@ export default async function PlacedPage({ params, searchParams }: { params: Pro
       reach = null;
     }
   }
+  // The other answers (Not this season with its reasons, Call me, Remind me tonight, Stop, Don't call me): only while the seat is waiting. Anything wrong means none.
+  let answers: AnswersInfo = ANSWERS_OFF;
+  if (state?.active && !state.confirmed && isAnswerLink(token) && secret && getSupabaseEnv()) {
+    try {
+      const { data } = await workerRpc(secret)("worker_placed_answers_info", { p_link: token });
+      answers = parseAnswersInfo(data);
+    } catch {
+      answers = ANSWERS_OFF;
+    }
+  }
   // Which button the email's link pointed at. It is only highlighted: nothing happens until it is pressed.
   const pointed = (CHOICES as readonly string[]).includes(q.a ?? "") ? (q.a as Choice) : null;
+  const pointedAnswer: Pointed | null = isPointed(q.a) ? q.a : null;
   const done = (CHOICES as readonly string[]).includes(q.done ?? "") ? (q.done as Choice) : null;
+  const doneAnswer: Done | null = isDone(q.done) ? q.done : null;
 
   return (
     <div className="min-h-dvh bg-page">
@@ -92,19 +106,21 @@ export default async function PlacedPage({ params, searchParams }: { params: Pro
       <main className="mx-auto flex max-w-xl flex-col gap-6 px-5 pb-16 pt-8 sm:px-8">
         {done === "change" && !state?.active && /^[a-f0-9]{64}$/.test(token) ? (
           <GaveUp />
+        ) : doneAnswer === "notnow" && !state?.active && isAnswerLink(token) ? (
+          <AnswerDone kind="notnow" again={false} window={null} />
         ) : !state ? (
           <NoPage why={why} token={token} fresh={Boolean(q.fresh)} problem={Boolean(q.problem)} invalid={Boolean(q.invalid)} />
         ) : !state.active ? (
           <Notice title="You are not in this tribe now." body="You gave up this place, or the church changed it. Open the app to look at tribes that fit you." />
         ) : (
-          <Page state={state} done={done} pointed={pointed} token={token} q={q} reach={reach} nudge={nudge} />
+          <Page state={state} done={done} pointed={pointed} token={token} q={q} reach={reach} nudge={nudge} answers={answers} pointedAnswer={pointedAnswer} doneAnswer={doneAnswer} />
         )}
       </main>
     </div>
   );
 }
 
-function Page({ state, done, pointed, token, q, reach, nudge }: { state: PlacedState; done: Choice | null; pointed: Choice | null; token: string; q: Search; reach: PlacedReach | null; nudge: NudgePageInfo }) {
+function Page({ state, done, pointed, token, q, reach, nudge, answers, pointedAnswer, doneAnswer }: { state: PlacedState; done: Choice | null; pointed: Choice | null; token: string; q: Search; reach: PlacedReach | null; nudge: NudgePageInfo; answers: AnswersInfo; pointedAnswer: Pointed | null; doneAnswer: Done | null }) {
   const t = state.tribe;
   const meets = `${dayName(t.meetingDay)}s at ${clockLabel(t.meetingTime)}, ${t.mode === "online" ? "online" : `in person${t.placeNote ? ` (${t.placeNote})` : ""}`}`;
   const picture = [
@@ -124,6 +140,7 @@ function Page({ state, done, pointed, token, q, reach, nudge }: { state: PlacedS
       ) : done === "confirm" ? (
         <p role="status" className="card rise-in p-5 font-semibold">Thank you. You are in {t.name}. Your leader is looking forward to meeting you.</p>
       ) : null}
+      {doneAnswer && doneAnswer !== "notnow" ? <AnswerDone kind={doneAnswer} again={Boolean(q.again)} window={q.w ?? null} /> : null}
       {done === "withhold" ? (
         <p role="status" className="card rise-in p-5 font-semibold">
           {q.late ? "Your leader has already been given your details, so this could not be undone. Tell them if you would rather they did not use them." : "Understood. Your leader can see your name, but will not be given your email or your WhatsApp number."}
@@ -203,6 +220,8 @@ function Page({ state, done, pointed, token, q, reach, nudge }: { state: PlacedS
         {state.canChange ? <Answer token={token} choice="change" pointed={pointed === "change"} label="Show me other tribes" note={PLACED_PROMISES.change} /> : null}
         {!state.withheld && !state.contactLate ? <Answer token={token} choice="withhold" pointed={pointed === "withhold"} label="Don’t share my details" note={PLACED_PROMISES.withhold} /> : null}
       </section>
+
+      {!state.confirmed ? <MemberAnswers token={token} info={answers} pointed={pointedAnswer} badNumber={Boolean(q.cn)} remindIssue={q.rc === "closed" || q.rc === "too_late" ? q.rc : null} /> : null}
 
       <p className="t-small text-soft">
         You can also do all of this signed in, on <Link href="/tribe" className="underline underline-offset-4">your tribe page</Link>.

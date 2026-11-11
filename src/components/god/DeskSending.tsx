@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { DeskSettings } from "@/components/god/DeskSettings";
+import { DeskWhatsApp } from "@/components/god/DeskWhatsApp";
 import { DeskWithdraw } from "@/components/god/DeskWithdraw";
 import { Badge } from "@/components/ui/Badge";
 import { PAGE_SIZE, slotWord } from "@/lib/god/desk";
-import { SEND_WORDS as S, canWithdraw, statusWord, type ProposalRow, type ProposalsPage, type SendState } from "@/lib/god/desk-send";
+import { SEND_WORDS as S, canWithdraw, statusWord, type ProposalRow, type ProposalsPage, type SendState, type WhatsAppState } from "@/lib/god/desk-send";
 
 const href = (page: number) => `/god/leader-desk?${new URLSearchParams({ tab: "sending", ...(page > 1 ? { page: String(page) } : {}) }).toString()}`;
 
@@ -37,7 +38,7 @@ function Row({ r }: { r: ProposalRow }) {
 }
 
 /** The Sending tab: whether the Desk's email is on, the limits it works within, and every email it sent or, in Rehearsal, only wrote down. */
-export function DeskSending({ state, page, pageNo }: { state: SendState | null; page: ProposalsPage; pageNo: number }) {
+export function DeskSending({ state, page, pageNo, whatsapp = null }: { state: SendState | null; page: ProposalsPage; pageNo: number; whatsapp?: WhatsAppState | null }) {
   if (!state) {
     return (
       <p className="card t-body p-5 text-soft" data-testid="desk-sending-missing">
@@ -65,6 +66,8 @@ export function DeskSending({ state, page, pageNo }: { state: SendState | null; 
       </div>
 
       <DeskSettings state={state} />
+
+      {whatsapp ? <DeskWhatsApp state={whatsapp} /> : null}
 
       <div className="flex flex-col gap-3">
         <h3 className="t-heading">{S.listTitle}</h3>

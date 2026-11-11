@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseReleaseSettings } from "@/lib/rhythm/release";
 import type {
   AdminCatalogue,
   AdminSeasons,
@@ -31,6 +32,11 @@ export const loadSeasons = (s: SupabaseClient) => load<AdminSeasons>(s, "admin_s
 export const loadAdminCatalogue = (s: SupabaseClient) => load<AdminCatalogue>(s, "admin_catalogue");
 export const loadWriteIns = (s: SupabaseClient, min = 2) => load<WriteIn[]>(s, "goal_write_ins", { p_min: min });
 export const loadGuides = (s: SupabaseClient) => load<GuideList>(s, "admin_guides");
+/** When leaders can read the next week. Null for someone outside the office, or from a database that does not have the setting yet. */
+export async function loadGuideRelease(supabase: SupabaseClient) {
+  const { data, error } = await supabase.rpc("guide_release_get");
+  return error ? null : parseReleaseSettings(data);
+}
 export const loadGuide = (s: SupabaseClient, week: number) => load<Guide>(s, "admin_guide", { p_week: week });
 export const loadLayers = (s: SupabaseClient) => load<Layers>(s, "admin_layers");
 export const loadChurchSettings = (s: SupabaseClient) => load<ChurchSettings>(s, "church_settings");

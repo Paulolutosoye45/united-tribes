@@ -18,7 +18,7 @@ export const metadata: Metadata = { title: "Call desk" };
  * An admin and a director use it; a pastor sees the board only.
  */
 export default async function PlacedDeskPage() {
-  const session = await requireRole(PLACED_BOARD_ROLES, "/admin/placed");
+  const session = await requireRole(PLACED_BOARD_ROLES, "/admin/placed/desk");
   const canDesk = hasAnyRole(session.roles, PLACED_DESK_ROLES);
   const desk = canDesk ? await loadDeskList(await createClient()) : null;
   return (

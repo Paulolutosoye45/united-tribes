@@ -3,6 +3,7 @@
 import { run, type Done } from "@/lib/admin/rpc";
 import { getSession } from "@/lib/auth/session";
 import { isFeatureKey, isPosition, isScope, parseFound } from "@/lib/features/parse";
+import { isPromptKind } from "@/lib/prompt/prompt";
 import { ROLE_FILTERS } from "@/lib/features/wording";
 import type { Found } from "@/lib/features/types";
 import { TRY_AGAIN, isUuid } from "@/lib/leaders/errors";
@@ -107,6 +108,52 @@ export async function placedAnswersSettingsAction(input: {
       p_download: input.download, p_reason: reasonOf(input.reason),
     },
     [...PAGES, "/admin/placed", "/admin/placed/desk"],
+  );
+  return done.ok ? { ok: true } : done;
+}
+
+/** The seat window's numbers: the window, when the reminder and the last call go, the days to take a seat back, offers in a row, the day's limit and the bar. Optionally counts seats placed in the last few days too. */
+export async function seatSettingsAction(input: {
+  window: number; remind: number; lastCall: number; takeBack: number; offers: number; dayCap: number; bar: number; includeDays: number | null; reason: string;
+}): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
+  if (!input || ![input.window, input.remind, input.lastCall, input.takeBack, input.offers, input.dayCap, input.bar].every(whole) || (input.includeDays !== null && !whole(input.includeDays))) return bad();
+  const done = await run(
+    "god_seat_settings_set",
+    {
+      p_window: input.window, p_remind: input.remind, p_last_call: input.lastCall, p_take_back: input.takeBack, p_offers: input.offers, p_day_cap: input.dayCap, p_bar: input.bar,
+      p_include_days: input.includeDays, p_reason: reasonOf(input.reason),
+    },
+    [...PAGES, "/admin/seats"],
+  );
+  return done.ok ? { ok: true } : done;
+}
+
+/** The autopilot's numbers: Suggest or Auto, the bar, new members to one tribe in a day, placements in a day, the days it keeps placing after joining closes, and when a tribe is called small. */
+export async function autopilotSettingsAction(input: {
+  mode: string; bar: number; perTribe: number; dayCap: number; extra: number; small: number; reason: string;
+}): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
+  if (!input || (input.mode !== "suggest" && input.mode !== "auto") || ![input.bar, input.perTribe, input.dayCap, input.extra, input.small].every(whole)) return bad();
+  const done = await run(
+    "god_autopilot_settings_set",
+    { p_mode: input.mode, p_bar: input.bar, p_per_tribe: input.perTribe, p_day_cap: input.dayCap, p_extra: input.extra, p_small: input.small, p_reason: reasonOf(input.reason) },
+    [...PAGES, "/admin/seats"],
+  );
+  return done.ok ? { ok: true } : done;
+}
+
+/** The sign-in prompt's numbers: hours away that start a new visit, tasks in a visit, hours before release with no Not now, Not nows before a call is worth it, and the kinds turned off. */
+export async function promptSettingsAction(input: { visit: number; tasks: number; last: number; worth: number; kindsOff: string[]; reason: string }): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
+  if (!input || ![input.visit, input.tasks, input.last, input.worth].every(whole) || !Array.isArray(input.kindsOff) || input.kindsOff.length > 20 || !input.kindsOff.every(isPromptKind)) return bad();
+  const done = await run(
+    "god_prompt_settings_set",
+    { p_visit_hours: input.visit, p_max_tasks: input.tasks, p_last_hours: input.last, p_worth: input.worth, p_kinds_off: input.kindsOff, p_reason: reasonOf(input.reason) },
+    [...PAGES, "/admin/placed"],
   );
   return done.ok ? { ok: true } : done;
 }

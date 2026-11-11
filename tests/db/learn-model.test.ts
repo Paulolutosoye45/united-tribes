@@ -117,16 +117,16 @@ describe("what the system reads", () => {
     expect(p.ready).toBe(false);
 
     // A member who moved tribe has no run, so they are left out of what is learned
-    const tribe = (await k.sql("select id from public.tribes where season_id = $1 limit 1", [seasonZ]))[0].id;
+    // (in a tribe of its own: the five above are full, and a tribe never holds a 13th active member)
+    const zm = await k.tribe(seasonZ, { name: "Zed Mover", certified: true });
+    const tribe = zm.tribe;
     const mover = await k.person("Mover");
     await db.admin.query(
       `insert into public.tribe_members (tribe_id, person_id, season_id, agreement_version, covenant, first_meeting_by)
        values ($1, $2, $3, 'test', '{}'::jsonb, current_date + 14)`,
       [tribe, mover.id, seasonZ],
     );
-    for (let w = 1; w <= 12; w++) {
-      await db.admin.query("insert into public.tribe_attendance (tribe_id, week, person_id, status) values ($1, $2, $3, 'present')", [tribe, w, mover.id]);
-    }
+    await k.meetings(tribe, zm.leader.id, 12, [[mover.id, 12]]);
     await k.pulse(tribe, mover.id, 12, 5);
     expect((await preview(admin)).sample.n).toBe(60);
 

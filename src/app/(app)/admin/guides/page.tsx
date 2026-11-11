@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GuideReleaseCard } from "@/components/admin/GuideReleaseCard";
 import { PageHead } from "@/components/admin/PageHead";
 import { Badge } from "@/components/ui/Badge";
 import { OFFICE_ROLES } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
-import { loadGuides } from "@/lib/admin/server";
+import { loadGuideRelease, loadGuides } from "@/lib/admin/server";
 import { formatShortDate } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = { title: "Weekly guides" };
 export default async function GuidesPage() {
   await requireRole(OFFICE_ROLES, "/admin/guides");
   const supabase = await createClient();
-  const data = await loadGuides(supabase);
+  const [data, release] = await Promise.all([loadGuides(supabase), loadGuideRelease(supabase)]);
   const approved = data?.guides.filter((g) => g.reviewed_at).length ?? 0;
 
   return (
@@ -21,6 +22,7 @@ export default async function GuidesPage() {
       <PageHead title="Weekly guides">
         Twelve guides, one for each week of a season. Each has the passage, the questions, the confession and a tip for the leader. When the sermon topic changes, edit one guide and every tribe receives the update. The wording is a draft until the pastorate has read and approved it.
       </PageHead>
+      {release ? <GuideReleaseCard settings={release} /> : null}
       {data ? (
         <>
           <p className="t-body">

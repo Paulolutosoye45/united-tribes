@@ -59,6 +59,8 @@ export function PlaceOne({
   // A fixed tribe is checked as soon as the panel opens
   const fixedId = fixedTribe?.id;
   useEffect(() => {
+    // The check is meant to start when the panel opens on a fixed tribe (and again if the person or the tribe changes); choose() also clears the last result first.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (fixedId) void choose(fixedId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fixedId, person]);

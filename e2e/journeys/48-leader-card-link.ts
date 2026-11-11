@@ -83,7 +83,6 @@ async function main() {
     if (!(await one("select 1 as there from public.leader_fit_models where active"))) {
       await adapter.asUser(pastorId, (run) => run("select public.leader_fit_model_activate('lf-1')"));
     }
-    const S = (await one("select id from public.seasons order by starts_on desc limit 1"))!.id as string;
     await q.query("update public.leader_pipeline_settings set academy_mode = 'off', declaration_mode = 'off'");
     await q.query("delete from public.feature_settings");
     await q.query("delete from public.feature_log");

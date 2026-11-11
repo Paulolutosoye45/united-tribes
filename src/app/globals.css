@@ -687,6 +687,34 @@ body {
   }
 }
 
+/* The sign-in prompt: one screen on top of the page. Full screen on a phone, a centred box from the small breakpoint up. The browser holds focus inside it and keeps the page behind it still. */
+dialog.prompt-dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--page);
+  color: var(--ink);
+  overflow: auto;
+}
+dialog.prompt-dialog::backdrop { background: rgb(14 13 12 / 0.62); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+@media (min-width: 40rem) {
+  dialog.prompt-dialog {
+    width: min(34rem, calc(100vw - 3rem));
+    height: auto;
+    max-height: calc(100dvh - 3rem);
+    margin: auto;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-pop);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog.prompt-dialog[open] { animation: fade-in 220ms ease both; }
+}
+
 /* Printing: a report becomes a clean A4 page. Screen furniture goes; cards lose their shadows. */
 .print-only { display: none; }
 @media print {

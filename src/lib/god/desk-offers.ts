@@ -10,7 +10,7 @@ const id = (v: unknown): string | null => (typeof v === "string" && UUID.test(v)
 
 export const OFFER_STATUSES = ["would_send", "queued", "open", "review", "accepted", "declined", "expired", "cancelled", "skipped"] as const;
 export type OfferStatus = (typeof OFFER_STATUSES)[number];
-const ANSWERS = ["lead", "not_season", "never", "stop", "owner"] as const;
+const ANSWERS = ["lead", "assist", "not_season", "never", "stop", "owner"] as const;
 export type OfferAnswer = (typeof ANSWERS)[number];
 
 export const OWNER_OFFER_WORDS = {
@@ -57,7 +57,28 @@ export const OWNER_OFFER_WORDS = {
     cancelled: "Withdrawn",
     skipped: "Skipped, no longer fits",
   } as Record<OfferStatus, string>,
-  answer: { lead: "said yes", not_season: "not this season", never: "never ask me to lead", stop: "stopped all Desk email", owner: "declined by you" } as Record<OfferAnswer, string>,
+  answer: {
+    lead: "said yes",
+    assist: "would rather assist",
+    not_season: "not this season",
+    never: "never ask me to lead",
+    stop: "stopped all Desk email",
+    owner: "declined by you",
+  } as Record<OfferAnswer, string>,
+  assistant: {
+    title: "Offered to assist",
+    waiting: (name: string) => `${name} said yes as assistant. If someone else leads this group, the church office will be asked to consider them as its assistant leader. Nothing is decided for them.`,
+    putForward: (name: string) => `${name} offered to assist, and has been put forward to the church office for this tribe.`,
+    status: {
+      requested: "The church office has not decided yet.",
+      invited: "The church office agreed. They have been invited to apply as an assistant leader.",
+      paired: "They are now the tribe's assistant leader.",
+      declined: "The church office did not go ahead.",
+      withdrawn: "The leader withdrew it.",
+      expired: "It lapsed. They were not approved in time.",
+      replaced: "Someone else is now the assistant.",
+    } as Record<string, string>,
+  },
   tribe: {
     draft: "The tribe card has been started. The leader is filling it in.",
     changes_requested: "The pastors asked for changes to the tribe card.",
@@ -67,7 +88,30 @@ export const OWNER_OFFER_WORDS = {
   } as Record<string, string>,
   certified: "Certified.",
   notCertified: "Not yet certified by the Academy.",
+  row: {
+    button: "Recommend as leader",
+    looking: "Looking at the draft groups…",
+    pick: "Choose the draft group to ask them to lead. They are the only one asked, with no backups. Use the group's own card to add backups.",
+    ask: (group: string) => `Ask them to lead ${group}`,
+    none: "No draft group can be offered to them right now.",
+  },
 } as const;
+
+export type LeadOption = { groupId: string; name: string; community: string | null; goal: string | null };
+export type LeadOptions = { rows: LeadOption[]; why: string | null };
+
+/** The draft groups one waiting member could be offered to lead, as desk_person_lead_options sends them. Anything wrong parses as nothing. */
+export function parseLeadOptions(v: unknown): LeadOptions | null {
+  if (!isObj(v)) return null;
+  const rows: LeadOption[] = [];
+  for (const r of list(v.rows)) {
+    if (!isObj(r)) continue;
+    const gid = id(r.group_id);
+    if (!gid) continue;
+    rows.push({ groupId: gid, name: text(r.name) ?? "A group", community: text(r.community), goal: text(r.goal) });
+  }
+  return { rows, why: text(v.why) };
+}
 
 export type Candidate = { personId: string; name: string; score: number; pool: string; notes: string[]; inGroup: boolean; phone: string | null; hasNumber: boolean };
 export type Candidates = { problem: string | null; rows: Candidate[] };
@@ -114,11 +158,13 @@ export type OfferRow = {
 export type GroupLeader = {
   problem: string | null;
   paused: boolean;
+  /** A member who said yes as assistant, and where that stands once the group has a leader. */
+  assistant: { personId: string; name: string; since: string | null; status: string | null } | null;
   leader: { personId: string; name: string; foundAt: string | null; tribeId: string | null; tribeStatus: string | null; certified: boolean } | null;
   needsDecision: boolean;
   offers: OfferRow[];
 };
-export const EMPTY_LEADER: GroupLeader = { problem: null, paused: false, leader: null, needsDecision: false, offers: [] };
+export const EMPTY_LEADER: GroupLeader = { problem: null, paused: false, assistant: null, leader: null, needsDecision: false, offers: [] };
 
 function parseOffer(r: unknown): OfferRow | null {
   if (!isObj(r)) return null;
@@ -148,9 +194,12 @@ export function parseGroupLeader(v: unknown): GroupLeader {
   if (!isObj(v)) return EMPTY_LEADER;
   const l = isObj(v.leader) ? v.leader : null;
   const lid = l ? id(l.person_id) : null;
+  const a = isObj(v.assistant) ? v.assistant : null;
+  const aid = a ? id(a.person_id) : null;
   return {
     problem: text(v.problem),
     paused: v.paused === true,
+    assistant: a && aid ? { personId: aid, name: text(a.name) ?? "A member", since: text(a.since), status: text(a.status) } : null,
     leader:
       l && lid
         ? { personId: lid, name: text(l.name) ?? "The leader", foundAt: text(l.found_at), tribeId: id(l.tribe_id), tribeStatus: text(l.tribe_status), certified: l.certified === true }
@@ -201,6 +250,7 @@ export function parseOffersList(v: unknown): OffersPage {
 /** What the screen says about one offer: who, in what order, and where it stands. */
 export function offerLine(o: Pick<OfferRow, "status" | "answer" | "seq" | "callMe">): string {
   const base = OWNER_OFFER_WORDS.status[o.status];
+  // "Said no, would rather assist" says it right: it is a no to leading, and a yes to helping
   const answered = o.status === "declined" && o.answer ? `, ${OWNER_OFFER_WORDS.answer[o.answer]}` : "";
   return `${base}${answered}${o.callMe && o.status === "open" ? `. ${OWNER_OFFER_WORDS.callMe}` : ""}`;
 }

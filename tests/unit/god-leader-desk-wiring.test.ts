@@ -21,6 +21,8 @@ const FUNCTIONS = [
   "desk_group_member_add", "desk_group_member_remove", "desk_group_suggest",
   // Phase 2a: the screens only read these three; the five that act live in send-actions.ts (see god-leader-desk-send-wiring.test.ts)
   "desk_send_state", "desk_proposals_list", "desk_group_interest",
+  // The Desk's WhatsApp switch: the screens only read it; the switch itself is in send-actions.ts
+  "desk_whatsapp_state",
   // Phase 2b: the screens only read these two; the five that act live in offer-actions.ts (see god-leader-desk-offers-wiring.test.ts)
   "desk_group_leader", "desk_offers_list",
   // Phase 2b-2: the screens only read this one; the three that act live in open-actions.ts (see god-leader-desk-open-wiring.test.ts)
@@ -97,7 +99,8 @@ describe("it only shows", () => {
     expect(reveal).toContain("href={`tel:${full}`}");
     for (const f of components.filter((c) => c !== "DeskReveal.tsx")) {
       const src = read(`src/components/god/${f}`);
-      expect(src, f).not.toMatch(/tel:|whatsapp|wa\.me/i);
+      // (the Desk's WhatsApp switch names WhatsApp, but never an address or a number)
+      expect(src, f).not.toMatch(/tel:|wa\.me|api\.whatsapp\.com/i);
     }
     expect(reveal).toContain("setTimeout(() => setFull(null), 60_000)");
     expect(page + loaders).not.toMatch(/searchParams.*(phone|number)/);

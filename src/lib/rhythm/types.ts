@@ -160,6 +160,23 @@ export interface Celebration {
   on?: string;
 }
 
+/** A week that has not opened for leaders yet: nothing of it but the week and the moment it opens. */
+export interface LockedGuide {
+  week: number;
+  locked: true;
+  opens_at: string | null;
+}
+export type TribeGuide = LeaderGuide | LockedGuide;
+export const isLockedGuide = (g: TribeGuide): g is LockedGuide => "locked" in g && g.locked === true;
+
+/** Where the weekly release stands: whether it is On, the last week open, and when the next one opens. */
+export interface ReleaseView {
+  weekly: boolean;
+  open_week: number;
+  next_week: number | null;
+  next_opens_at: string | null;
+}
+
 export interface TribeWeek {
   tribe: { id: string; name: string; status: string; capacity: number; meeting_day: number; meeting_time: string };
   state: "before" | "running" | "complete";
@@ -172,7 +189,9 @@ export interface TribeWeek {
   meeting_date: string;
   can_edit: boolean;
   log_open: boolean;
-  guide: LeaderGuide;
+  guide: TribeGuide;
+  /** Null from a database that does not have the release yet. */
+  release?: ReleaseView | null;
   picture: Picture & { can_refine: boolean };
   log: { held: boolean; highlight: string | null; logged_at: string } | null;
   members: WeekMember[];

@@ -489,7 +489,7 @@ describe("the private page", () => {
   });
 
   it("shows who it is for, hides the number's middle, and changes nothing but a counter when opened", async () => {
-    const { m, l, t } = await started();
+    const { m, l } = await started();
     const before = await c.one("select count(*)::int n from public.consents where person_id = $1", [m]);
     const r = await info(l);
     expect(r).toMatchObject({ found: true, state: "form", kind: "no_number", tribe: expect.any(String) });

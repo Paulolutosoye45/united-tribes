@@ -210,7 +210,7 @@ async function main() {
   await shot(admin.page, "31-assistants");
   await row1.getByLabel(/A note for yourself/).fill("Known to us");
   await row1.getByRole("button", { name: "Approve", exact: true }).click();
-  await row1.getByText(/They are now the assistant/).waitFor({ timeout: 15000 });
+  await admin.page.getByTestId("assistant-said").getByText(/They are now the assistant/).waitFor({ timeout: 15000 });
   check((await one("select assistant_id from public.tribes where id = $1", [T.tribe]))?.assistant_id === first.id, "approving pairs the person at once, because they are already an approved assistant leader");
   check((await n("select count(*)::int n from public.messages where template = 'assistant_decided' and person_id = $1", [T.leader.id])) >= 1, "…and the leader is told in a line");
   check(!JSON.stringify((await q.query("select params from public.messages where template = 'assistant_decided' and person_id = $1", [T.leader.id])).rows).includes("Known to us"), "…without the office’s own note");
@@ -224,7 +224,7 @@ async function main() {
   check((await row2.getByRole("button", { name: "Approve", exact: true }).count()) === 0, "with an assistant already in place there is no plain Approve");
   check(/Current assistant: /.test(await row2.innerText()), "…the page names the one who would be replaced");
   await row2.getByRole("button", { name: /^Replace / }).click();
-  await row2.getByText(/They are now the assistant/).waitFor({ timeout: 15000 });
+  await admin.page.getByTestId("assistant-said").getByText(/They are now the assistant/).waitFor({ timeout: 15000 });
   check((await one("select assistant_id from public.tribes where id = $1", [T.tribe]))?.assistant_id === second.id, "Replace makes the new person the assistant in one step");
   check((await n("select count(*)::int n from public.tribes where id = $1 and assistant_id is null", [T.tribe])) === 0, "…the tribe is never without one");
   check((await n("select count(*)::int n from public.messages where template = 'assistant_replaced' and person_id = $1", [first.id])) >= 1, "…and the one replaced is told");

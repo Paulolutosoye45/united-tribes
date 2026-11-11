@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Placed members by tribe" };
 
 /** Which tribes still have the most people waiting, with the leader to speak to, and which tribes are thin (fewer than five who have said yes). Names of tribes and leaders; no member and no number. */
 export default async function PlacedTribesPage() {
-  const session = await requireRole(PLACED_BOARD_ROLES, "/admin/placed");
+  const session = await requireRole(PLACED_BOARD_ROLES, "/admin/placed/tribes");
   const tribes = await loadBoardTribes(await createClient());
   return (
     <div className="flex flex-col gap-8">

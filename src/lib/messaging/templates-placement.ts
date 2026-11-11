@@ -1,4 +1,4 @@
-import { flat, meetsText, num, shortDay, smsLine, str } from "./format";
+import { flat, meetsText, shortDay, smsLine, str } from "./format";
 import type { Context, EmailContent, Params, TemplateDef } from "./types";
 
 /**
@@ -345,10 +345,12 @@ const officeAssistant = build({
   title: "A leader recommended an assistant leader",
   subject: () => "An assistant leader was recommended",
   path: "/admin/assistants",
-  line: (p) => `an assistant leader was recommended for ${clean(p.tribe, "a tribe")}.`,
+  line: (p) => (p.from_desk === true ? `a member who offered to assist was put forward for ${clean(p.tribe, "a tribe")}.` : `an assistant leader was recommended for ${clean(p.tribe, "a tribe")}.`),
   email: (p, c) => ({
     paragraphs: [
-      `${firstOf(p, "leader_first", "A leader")} has recommended an assistant leader for ${clean(p.tribe, "a tribe")}.`,
+      p.from_desk === true
+        ? `A member who was asked to lead ${clean(p.tribe, "a tribe")} said they would rather assist, and has been put forward as its assistant leader. The leader has been told and can withdraw it.`
+        : `${firstOf(p, "leader_first", "A leader")} has recommended an assistant leader for ${clean(p.tribe, "a tribe")}.`,
       ...(p.young === true ? ["The tribe has young members, so a pastor or a director decides."] : []),
       "Nothing is decided until someone in the office does.",
     ],

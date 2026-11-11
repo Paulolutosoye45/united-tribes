@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DeskAddToDraft } from "@/components/god/DeskAddToDraft";
 import { DeskPropose } from "@/components/god/DeskPropose";
+import { DeskRecommend } from "@/components/god/DeskRecommend";
 import { DeskReveal } from "@/components/god/DeskReveal";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
@@ -13,7 +14,7 @@ const href = (chip: Chip | null, page = 1) => {
   return `/god/leader-desk?${q.toString()}`;
 };
 
-function Row({ r }: { r: WaitingRow }) {
+function Row({ r, rehearsal }: { r: WaitingRow; rehearsal: boolean }) {
   const times = r.times.length === 0 ? "Any time" : r.times.map((t) => SLOTS[t] ?? t).join(", ");
   return (
     <li className="card flex flex-col gap-3 p-4" data-testid="desk-waiting-row">
@@ -72,6 +73,7 @@ function Row({ r }: { r: WaitingRow }) {
         {r.inDraft ? null : <DeskAddToDraft person={r.personId} drafts={r.drafts} />}
       </div>
       {r.block ? null : <DeskPropose person={r.personId} />}
+      <DeskRecommend person={r.personId} rehearsal={rehearsal} />
     </li>
   );
 }
@@ -114,7 +116,7 @@ export function DeskWaiting({ overview, page, chip, pageNo }: { overview: Overvi
       ) : (
         <ul className="flex flex-col gap-3">
           {page.rows.map((r) => (
-            <Row key={r.personId} r={r} />
+            <Row key={r.personId} r={r} rehearsal={overview.mode !== "on"} />
           ))}
         </ul>
       )}

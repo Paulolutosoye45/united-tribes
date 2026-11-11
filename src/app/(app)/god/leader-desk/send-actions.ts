@@ -65,3 +65,11 @@ export async function saveSettingsAction(input: SettingsInput): Promise<{ ok: tr
   const done = await run("desk_settings_set", { p_daily: input.daily, p_gap: input.gap, p_season: input.season, p_hours: input.hours, p_reason: input.reason }, PAGES);
   return done.ok ? { ok: true } : done;
 }
+
+/** Turns WhatsApp on or off for the Desk, with the reason. Off sends anything waiting back to email. The database checks the reason again. */
+export async function whatsappSwitchAction(on: boolean, reason: string): Promise<{ ok: true } | Fail> {
+  if (!(await ownerOnly())) return NOT_AVAILABLE;
+  if (typeof on !== "boolean" || typeof reason !== "string" || reason.length > 600) return bad();
+  const done = await run("desk_whatsapp_set", { p_on: on, p_reason: reason }, PAGES);
+  return done.ok ? { ok: true } : done;
+}

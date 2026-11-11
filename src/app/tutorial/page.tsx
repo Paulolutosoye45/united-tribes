@@ -1098,6 +1098,8 @@ export default function TribeCardGuidePage() {
           aria-label={screen.name}
           className="animate-[stepIn_.25s_ease] pb-7 pt-2 motion-reduce:animate-none"
         >
+          {/* goToId is only called from the click handlers the screens attach, never while rendering. */}
+          {/* eslint-disable-next-line react-hooks/refs */}
           {screen.content(goToId)}
         </section>
       </main>

@@ -162,6 +162,58 @@ add({
 });
 
 add({
+  key: "admin_seat_stopped", audience: "office", group: "admin", title: "Seat releases are being held by a safety limit", urgent: true,
+  who: "Admins and directors", when: "Once a day for each limit, while it holds back a release that is due",
+  subject: () => "Seat releases are being held by a safety limit",
+  body: (p) => [
+    `${clean(p.why, "A safety limit is holding a release")}.`,
+    "No seat has been released that should not have been. The seats that are due stay as they are, and the member is not written to, until the limit clears or you look at it.",
+  ],
+  button: { label: "Open the Seats page", path: "/admin/seats" },
+  sample: { why: "The most seats the church lets go of in one day has been reached", path: "/admin/seats" },
+});
+
+add({
+  key: "admin_seat_morning", audience: "office", group: "admin", title: "Seats this morning", urgent: true,
+  who: "Admins and directors", when: "Once a day at 7 am, while the seat window is On",
+  subject: (p) => (count(p, "needs", 0) > 0 ? `Seats this morning: ${many(count(p, "needs", 0), "thing")} for you` : "Seats this morning: nothing needs you"),
+  body: (p) => [
+    `Yesterday: ${many(count(p, "taken", 0), "seat")} taken, ${count(p, "yes", 0)} said yes, ${count(p, "released", 0)} released, ${count(p, "left", 0)} left, ${count(p, "refilled", 0)} refilled from the bench.`,
+    ...(count(p, "auto_placed", 0) > 0 || count(p, "lapsed", 0) > 0
+      ? [
+          [
+            count(p, "auto_placed", 0) > 0 ? `Autopilot placed ${many(count(p, "auto_placed", 0), "person", "people")}.` : "",
+            count(p, "lapsed", 0) > 0 ? `${many(count(p, "lapsed", 0), "placement")} in yesterday's plan ran out because nobody placed them.` : "",
+          ].filter(Boolean).join(" "),
+        ]
+      : []),
+    count(p, "needs", 0) > 0
+      ? [
+          count(p, "not_reached", 0) > 0 ? `${many(count(p, "not_reached", 0), "seat")} where our email did not reach the person` : "",
+          count(p, "hard", 0) > 0 ? `${many(count(p, "hard", 0), "seat")} that is hard to fill` : "",
+          count(p, "stopped", 0) > 0 ? `${many(count(p, "stopped", 0), "safety limit")} holding releases` : "",
+          count(p, "small", 0) > 0 ? `${many(count(p, "small", 0), "tribe")} with fewer than 5 people` : "",
+          count(p, "over", 0) > 0 ? `${many(count(p, "over", 0), "tribe")} over its capacity` : "",
+        ].filter(Boolean).join(". ") + "."
+      : "Nothing needs a person this morning.",
+  ],
+  button: { label: "Open the Seats page", path: "/admin/seats" },
+  sample: { taken: 6, yes: 3, released: 1, left: 1, refilled: 1, needs: 2, not_reached: 1, hard: 1, stopped: 0, small: 0, over: 0, path: "/admin/seats" },
+});
+
+add({
+  key: "admin_autopilot_ready", audience: "office", group: "admin", title: "Placements are ready for you to approve", urgent: true,
+  who: "Admins and directors", when: "Once a day, when autopilot has made a plan and is set to Suggest",
+  subject: (p) => `${many(count(p, "n", 0), "placement")} ready to approve`,
+  body: (p) => [
+    `Autopilot has made today's plan: ${many(count(p, "n", 0), "person", "people")} to put with their best fit.`,
+    "Look at the list, then place them with one tap. Each person gets the same email and the same Undo as a placement made by hand. A plan nobody places runs out at midnight, and a new one is made the next morning.",
+  ],
+  button: { label: "Look at the plan", path: "/admin/seats" },
+  sample: { n: 4, path: "/admin/seats" },
+});
+
+add({
   key: "pastor_card_overdue", audience: "office", group: "pastors", title: "Tribe Cards are waiting for review",
   who: "Pastors", when: "Once a week, while a card has waited more than 5 days",
   subject: (p) => `${many(count(p), "Tribe Card")} waiting for review`,

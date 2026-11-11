@@ -16,7 +16,7 @@ import {
 } from "./desk";
 import { EMPTY_PIPELINE, parsePipeline, type Pipeline } from "./desk-open";
 import { EMPTY_LEADER, EMPTY_OFFERS, parseGroupLeader, parseOffersList, type GroupLeader, type OffersPage } from "./desk-offers";
-import { EMPTY_INTEREST, EMPTY_PROPOSALS, parseInterest, parseProposals, parseSendState, type InterestView, type ProposalsPage, type SendState } from "./desk-send";
+import { EMPTY_INTEREST, EMPTY_PROPOSALS, parseInterest, parseProposals, parseSendState, parseWhatsAppState, type InterestView, type ProposalsPage, type SendState, type WhatsAppState } from "./desk-send";
 
 // Each loader answers nothing when the database refuses (the desk is switched off, or the person is not the unlocked owner), does not have the function yet, or cannot
 // be reached: a website deployed before the database file is applied behaves exactly as it always did.
@@ -101,6 +101,16 @@ export async function loadDeskSendState(supabase: SupabaseClient): Promise<SendS
   try {
     const { data, error } = await supabase.rpc("desk_send_state");
     return error ? null : parseSendState(data);
+  } catch {
+    return null;
+  }
+}
+
+/** Whether the Desk may use WhatsApp, and who it would reach. Null when the database refuses or does not have the function yet. */
+export async function loadDeskWhatsApp(supabase: SupabaseClient): Promise<WhatsAppState | null> {
+  try {
+    const { data, error } = await supabase.rpc("desk_whatsapp_state");
+    return error ? null : parseWhatsAppState(data);
   } catch {
     return null;
   }

@@ -81,11 +81,14 @@ export default async function LeaderCardsPage({ searchParams }: { searchParams: 
       </section>
 
       <section aria-label="Lists to download" className="flex flex-wrap items-center gap-x-6 gap-y-2">
-        <a href="/admin/people/leader-cards/download?sheet=hod" data-testid="lc-download-hod" className="t-body font-medium underline">
+        <a href="/admin/people/leader-cards/download?sheet=hod" download data-testid="lc-download-hod" className="t-body font-medium underline">
           Download the list for the heads of department (spreadsheet)
         </a>
+        <Link href="/admin/people/leader-cards/reconcile" data-testid="lc-reconcile" className="t-body font-medium underline">
+          Check the list of heads of department against the platform
+        </Link>
         {act ? (
-          <a href="/admin/people/leader-cards/download?sheet=call" data-testid="lc-download-call" className="t-body font-medium underline">
+          <a href="/admin/people/leader-cards/download?sheet=call" download data-testid="lc-download-call" className="t-body font-medium underline">
             Download the call sheet, with numbers and addresses (spreadsheet)
           </a>
         ) : (

@@ -201,8 +201,8 @@ export const DESK_EMAIL_SAMPLES = {
 // ---------------------------------------------------------------------------
 
 /** The answers the offer page can send, as the database reads them (worker_desk_offer_answer). */
-export type OfferAnswerKey = "lead" | "not_season" | "call" | "tomorrow" | "never" | "stop";
-export const OFFER_ANSWERS: OfferAnswerKey[] = ["lead", "not_season", "call", "tomorrow", "never", "stop"];
+export type OfferAnswerKey = "lead" | "assist" | "not_season" | "call" | "tomorrow" | "never" | "stop";
+export const OFFER_ANSWERS: OfferAnswerKey[] = ["lead", "assist", "not_season", "call", "tomorrow", "never", "stop"];
 export const isOfferAnswer = (v: unknown): v is OfferAnswerKey => typeof v === "string" && (OFFER_ANSWERS as string[]).includes(v);
 
 /** The reasons a member can give for "Not this season". Kept, counted and shown to nobody by name. */
@@ -224,6 +224,8 @@ export type OfferInfo = {
   callMe: boolean;
   reminderSet: boolean;
   stopped: boolean;
+  /** Whether "Yes, as assistant" is still free for this group (only one member can offer to assist a group). */
+  assistOpen: boolean;
   ends: string;
   community: string;
   goal: string;
@@ -251,6 +253,7 @@ export function parseOfferInfo(v: unknown): OfferInfo | null {
     callMe: o.call_me === true,
     reminderSet: o.reminder_set === true,
     stopped: o.stopped === true,
+    assistOpen: o.assist_open === true,
     ends: typeof d.ends === "string" ? clean(d.ends) : "",
     community: clean(d.community),
     goal: clean(d.goal),
@@ -283,6 +286,8 @@ export const OFFER_WORDS = {
   } as Record<string, string>,
   buttons: {
     lead: "Yes, I will lead",
+    assist: "Yes, as assistant",
+    sendAssist: "Send my yes",
     notSeason: "Not this season",
     call: "Call me",
     tomorrow: "Remind me tomorrow",
@@ -301,6 +306,8 @@ export const OFFER_WORDS = {
     neverWhy: "Never ask me to lead means the Leader Desk will not ask you to lead any group. You will still hear about tribes you could join.",
     reasonsWhy: "Your reasons are kept private. They are only counted, and nobody sees which are yours.",
     callWhy: "We will phone you from the church office. You do not need to do anything else.",
+    assistWhy: "Not ready to lead, or would rather help? You can say yes as an assistant instead. It is a no to leading this group, so we will ask someone else to lead it.",
+    assistNothingYet: "Saying yes as assistant promises nothing and appoints nobody. If someone else leads this group, the church office will be asked to consider you as its assistant leader, the new leader will be told your first name, and you would be invited to apply. A pastor decides every application, and training comes first. If the office says no, nothing changes for you.",
   },
   yes: {
     heading: "Before you say yes",
@@ -310,11 +317,14 @@ export const OFFER_WORDS = {
     needAge: "Please confirm that you are 21 or older.",
     needLead: "Please choose how you lead best.",
     needRelation: "Please say how you stand with this goal.",
+    assistAge: "I confirm that I am 18 or older.",
+    needAssistAge: "Please confirm that you are 18 or older.",
   },
   reasonsHeading: "Is there a reason? You can choose any, or none.",
   done: {
     lead: "Thank you. You are now this group’s leader. Your tribe card has been started, and we will write to you about what comes next.",
     leadReview: "Thank you. We have your yes. The church office will look at it and write to you soon.",
+    assist: "Thank you. We have noted that you would be glad to assist this group. We will ask someone else to lead it. If a leader says yes, the church office will be asked to consider you as its assistant leader, and if it agrees we will write to you.",
     not_season: "Understood. Thank you for answering. We will not ask you about leading again this season.",
     call: "Thank you. We will call you from the church office.",
     tomorrow: "Done. We will remind you tomorrow.",
@@ -322,6 +332,7 @@ export const OFFER_WORDS = {
     never: "Understood. The Leader Desk will not ask you to lead again.",
     stop: "Done. The Leader Desk will not write to you again.",
   },
+  taken: "Another member has already offered to assist this group, so there is nothing more to do about that here. You can still answer the question about leading. Nothing has changed for you.",
   closed: "This question has closed. Nothing has changed for you.",
   off: "This page is not open at the moment. Nothing has changed for you.",
   noPage: "We could not open this page. The link may have run out. Nothing has changed for you.",

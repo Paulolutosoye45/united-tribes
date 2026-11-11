@@ -12,6 +12,7 @@ import { REMOVAL_TEMPLATES } from "./templates-removal";
 import { PLACEMENT_TEMPLATES } from "./templates-placement";
 import { PLACED_SEQ_TEMPLATES } from "./templates-placed-seq";
 import { DESK_TEMPLATES } from "./templates-desk";
+import { SEAT_WINDOW_TEMPLATES } from "./templates-seat-window";
 import { salutation } from "@/lib/leaders/status";
 import { digestSummary } from "./summary";
 import type { Context, Params, TemplateDef } from "./types";
@@ -1525,6 +1526,7 @@ export const TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(
     ...PLACEMENT_TEMPLATES,
     ...PLACED_SEQ_TEMPLATES,
     ...DESK_TEMPLATES,
+    ...SEAT_WINDOW_TEMPLATES,
     ...INVITATION_TEMPLATES,
     ...LEADER_WELCOME_TEMPLATES,
     ...DETAILS_TEMPLATES,

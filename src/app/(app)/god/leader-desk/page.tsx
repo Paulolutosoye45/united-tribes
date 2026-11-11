@@ -36,6 +36,7 @@ import {
   loadDeskPipeline,
   loadDeskProposals,
   loadDeskSendState,
+  loadDeskWhatsApp,
   loadDeskWaiting,
 } from "@/lib/god/desk-server";
 import { createClient } from "@/lib/supabase/server";
@@ -110,14 +111,15 @@ export default async function LeaderDeskPage({ searchParams }: { searchParams: S
     const page = await loadDeskLeaders(supabase, pool, PAGE_SIZE, (pageNo - 1) * PAGE_SIZE);
     body = <DeskLeaders overview={overview} page={page} pool={pool} pageNo={pageNo} />;
   } else if (tab === "sending") {
-    const [state, page, offers] = await Promise.all([
+    const [state, page, offers, whatsapp] = await Promise.all([
       loadDeskSendState(supabase),
       loadDeskProposals(supabase, PAGE_SIZE, (pageNo - 1) * PAGE_SIZE),
       loadDeskOffers(supabase, PAGE_SIZE, 0),
+      loadDeskWhatsApp(supabase),
     ]);
     body = (
       <div className="flex flex-col gap-8">
-        <DeskSending state={state} page={page} pageNo={pageNo} />
+        <DeskSending state={state} page={page} pageNo={pageNo} whatsapp={whatsapp} />
         <DeskOffers page={offers} />
       </div>
     );

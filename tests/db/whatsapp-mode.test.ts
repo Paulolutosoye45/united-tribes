@@ -90,7 +90,7 @@ describe("it ships Off, and Off is the outbox as it was", () => {
 
   it("starts with a class for every message that can go by WhatsApp, the starting rates and a ceiling of US$100", async () => {
     const n = await c.one("select count(*)::int n, count(*) filter (where class = 'A')::int a, count(*) filter (where class = 'B')::int b, count(*) filter (where class = 'C')::int c from public.whatsapp_message_class");
-    expect(n).toMatchObject({ n: 58, a: 8, b: 33, c: 17 });
+    expect(n).toMatchObject({ n: 62, a: 9, b: 33, c: 20 });
     expect((await c.sql("select category, usd::float from public.whatsapp_rates order by category")).map((r) => `${r.category}:${r.usd}`)).toEqual(["marketing:0.0516", "utility:0.0101"]);
     expect(Number((await row()).ceiling_usd)).toBe(100);
   });
@@ -458,7 +458,7 @@ describe("the pages for the office", () => {
     expect(Object.keys(view).sort()).toEqual(
       ["auto", "canChange", "changedAt", "changedBy", "chosen", "classes", "effective", "guard", "hand", "log", "marketing", "month", "paused", "rates", "reason", "settings", "state", "week"].sort(),
     );
-    expect(view.classes).toHaveLength(58);
+    expect(view.classes).toHaveLength(62);
     expect((await c.as(c.admin, "whatsapp_mode_overview")).canChange).toBe(true);
     await expectCode(c.as(c.member, "whatsapp_mode_overview"), "42501");
     await expectCode(c.as(c.member, "whatsapp_cost_report"), "42501");

@@ -94,6 +94,24 @@ async function handle(request: Request) {
     } catch {
       deskFaults.push("leader desk: could not run this time");
     }
+    // The placed answer sequence (Package 6b) and the seat window (Package 6): each seat the church placed is looked at once, and what is due is queued so it goes
+    // out in this same beat. Each has its own switch and does nothing while Off or while the Master pause is on. The seat window beats here too, which is what the
+    // switch's "the heartbeat is late" check reads. A fault in either is listed but never stops the messages.
+    const seatFaults: string[] = [];
+    let seatWindow: { ran: boolean } = { ran: false };
+    try {
+      const seq = await rpc("worker_placed_seq_tick");
+      if (seq.error) seatFaults.push(`answer sequence: ${seq.error.message}`);
+    } catch {
+      seatFaults.push("answer sequence: could not run this time");
+    }
+    try {
+      const ran = await rpc("worker_seat_window_tick");
+      if (ran.error) seatFaults.push(`seat window: ${ran.error.message}`);
+      else if (ran.data && typeof ran.data === "object") seatWindow = { ran: (ran.data as { ran?: boolean }).ran === true };
+    } catch {
+      seatFaults.push("seat window: could not run this time");
+    }
     const summary = await runDispatch({
       rpc,
       providers: providersFromEnv(),
@@ -105,7 +123,7 @@ async function handle(request: Request) {
     // in "problems" but never turns a working tick into a failed one.
     summary.problems.push(...early);
     const status = summary.problems.length > 0 && summary.sent === 0 && summary.claimed === 0 ? 502 : 200;
-    summary.problems.push(...detailsFaults, ...cardFaults, ...reachFaults, ...deskFaults);
+    summary.problems.push(...detailsFaults, ...cardFaults, ...reachFaults, ...deskFaults, ...seatFaults);
     // Reports the database has just made get their opening paragraph. A fault here never stops the messages.
     const reports = await writePendingSummaries(rpc, ai, { budgetMs: 12_000 });
     summary.problems.push(...reports.problems);
@@ -163,7 +181,7 @@ async function handle(request: Request) {
     }
     // A daily job that failed (the numbers, the clean-up) is listed too, so a monitor on this endpoint hears of it.
     summary.problems.push(...dailyJobFaults(summary.calendar));
-    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, exportsSwept, signin, placement, leaderCards, reachSeries }, { status, headers: NO_STORE });
+    return Response.json({ ...summary, summaries: reports.written, leaderChecks, activity, notices, exportsSwept, signin, placement, leaderCards, reachSeries, seatWindow }, { status, headers: NO_STORE });
   } catch (error) {
     console.error("cron tick failed", error instanceof Error ? error.message : "unknown");
     return Response.json({ error: "tick failed" }, { status: 500, headers: NO_STORE });

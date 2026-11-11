@@ -34,6 +34,10 @@ export const FEATURE_KEYS = [
   "placed_nudge",
   "placed_answers",
   "leader_desk",
+  "seat_window",
+  "reach_release",
+  "seat_autopilot",
+  "sign_in_prompt",
 ] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
