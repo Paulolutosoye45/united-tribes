@@ -24,6 +24,22 @@ const SLOT = "weeknight-evening";
 const inWindow = (open: boolean) => c.db.admin.query(`create or replace function public.seat_in_window() returns boolean language sql stable set search_path = '' as $$ select ${open} $$`);
 const realWindow = () =>
   c.db.admin.query(`create or replace function public.seat_in_window() returns boolean language sql stable set search_path = '' as $$ select public.seat_open_at(now()) = now() $$`);
+// The moments the clock is built from are moved to the next 9 am in Lagos. These tests must not depend on the hour they happen to run in, so the move is switched off
+// for all of them except the one that tests it (which puts the real function back).
+const noMove = () => c.db.admin.query("create or replace function public.seat_open_at(p_at timestamptz) returns timestamptz language sql stable set search_path = '' as $$ select p_at $$");
+const realMove = () =>
+  c.db.admin.query(`create or replace function public.seat_open_at(p_at timestamptz) returns timestamptz language plpgsql stable set search_path = '' as $$
+declare
+  l timestamp := p_at at time zone 'Africa/Lagos';
+begin
+  if l::time >= time '09:00' and l::time < time '19:00' then
+    return p_at;
+  elsif l::time < time '09:00' then
+    return (l::date + time '09:00') at time zone 'Africa/Lagos';
+  end if;
+  return ((l::date + 1) + time '09:00') at time zone 'Africa/Lagos';
+end;
+$$`);
 const tick = async () => (await c.one("select public.seat_clock_tick() as r")).r as { ran: boolean; enrolled?: number; steps?: Record<string, number> };
 const beat = () => c.sql("update public.seat_window_settings set last_tick_at = now()");
 const on = async () => {
@@ -107,12 +123,14 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await realWindow();
+  await realMove();
   await c?.db.close();
 });
 
 beforeEach(async () => {
   await c.reset();
   await inWindow(true);
+  await noMove();
   await c.sql("delete from public.seat_clock_log");
   await c.sql("delete from public.seat_clocks");
   await c.sql("delete from public.seat_chain");
@@ -182,6 +200,7 @@ describe("who is put on the clock", () => {
   });
 
   it("the deadline is 48 hours after the email, moved to 9 am when it would fall at night, and the reminder and last call likewise", async () => {
+    await realMove();
     const at = async (iso: string) => (await c.one("select public.seat_open_at($1::timestamptz) as t", [iso])).t as Date;
     expect((await at("2026-11-10T10:00:00+01:00")).toISOString()).toBe("2026-11-10T09:00:00.000Z"); // inside the window: unchanged
     expect((await at("2026-11-10T20:30:00+01:00")).toISOString()).toBe("2026-11-11T08:00:00.000Z"); // 9 am the next morning, Lagos

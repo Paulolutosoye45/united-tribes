@@ -174,6 +174,26 @@ add({
 });
 
 add({
+  key: "admin_seat_morning", audience: "office", group: "admin", title: "Seats this morning", urgent: true,
+  who: "Admins and directors", when: "Once a day at 7 am, while the seat window is On",
+  subject: (p) => (count(p, "needs", 0) > 0 ? `Seats this morning: ${many(count(p, "needs", 0), "thing")} for you` : "Seats this morning: nothing needs you"),
+  body: (p) => [
+    `Yesterday: ${many(count(p, "taken", 0), "seat")} taken, ${count(p, "yes", 0)} said yes, ${count(p, "released", 0)} released, ${count(p, "left", 0)} left, ${count(p, "refilled", 0)} refilled from the bench.`,
+    count(p, "needs", 0) > 0
+      ? [
+          count(p, "not_reached", 0) > 0 ? `${many(count(p, "not_reached", 0), "seat")} where our email did not reach the person` : "",
+          count(p, "hard", 0) > 0 ? `${many(count(p, "hard", 0), "seat")} that is hard to fill` : "",
+          count(p, "stopped", 0) > 0 ? `${many(count(p, "stopped", 0), "safety limit")} holding releases` : "",
+          count(p, "small", 0) > 0 ? `${many(count(p, "small", 0), "tribe")} with fewer than 5 people` : "",
+          count(p, "over", 0) > 0 ? `${many(count(p, "over", 0), "tribe")} over its capacity` : "",
+        ].filter(Boolean).join(". ") + "."
+      : "Nothing needs a person this morning.",
+  ],
+  button: { label: "Open the Seats page", path: "/admin/seats" },
+  sample: { taken: 6, yes: 3, released: 1, left: 1, refilled: 1, needs: 2, not_reached: 1, hard: 1, stopped: 0, small: 0, over: 0, path: "/admin/seats" },
+});
+
+add({
   key: "pastor_card_overdue", audience: "office", group: "pastors", title: "Tribe Cards are waiting for review",
   who: "Pastors", when: "Once a week, while a card has waited more than 5 days",
   subject: (p) => `${many(count(p), "Tribe Card")} waiting for review`,

@@ -6,6 +6,7 @@ import { SWAP_REASONS } from "@/lib/growth/types";
 import { normaliseWhatsapp } from "@/lib/intake/answers";
 import { SESSION_ENDED, TRY_AGAIN, friendly, isUuid } from "@/lib/leaders/errors";
 import { AGREEMENT_VERSION } from "@/lib/matching/wording";
+import { isLeaveReason } from "@/lib/seat/seat";
 import { createClient } from "@/lib/supabase/server";
 
 type Result = { ok: true } | { ok: false; message: string };
@@ -145,4 +146,17 @@ export async function withholdPlacementAction(): Promise<{ ok: true; late: boole
   if (d.ok !== true) return { ok: false, message: "That place is no longer yours to change." };
   refresh();
   return { ok: true, late: d.late === true };
+}
+
+/** The member leaves their tribe, in the first two weeks of the season. The reason is optional and is one of a short list. The database checks that the seat is theirs and that the two weeks are not over. */
+export async function leaveTribeAction(why: string | null): Promise<{ ok: true; tribe: string } | { ok: false; message: string; later?: boolean }> {
+  const supabase = await authed();
+  if (!supabase) return { ok: false, message: SESSION_ENDED };
+  if (why !== null && !isLeaveReason(why)) return { ok: false, message: TRY_AGAIN };
+  const { data, error } = await supabase.rpc("my_tribe_leave", { p_why: why });
+  if (error) return { ok: false, message: friendly(error) };
+  const r = (typeof data === "object" && data !== null ? data : {}) as { ok?: boolean; reason?: string; tribe?: string };
+  if (r.ok !== true) return { ok: false, message: r.reason === "later" ? "later" : TRY_AGAIN, later: r.reason === "later" };
+  refresh();
+  return { ok: true, tribe: typeof r.tribe === "string" ? r.tribe : "your tribe" };
 }

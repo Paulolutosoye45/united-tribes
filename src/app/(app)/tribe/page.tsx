@@ -5,6 +5,8 @@ import { PlacedBanner } from "@/components/matching/PlacedBanner";
 import { groupNote } from "@/lib/placement/placed";
 import { PlacementView } from "@/components/matching/PlacementView";
 import { SwapCard } from "@/components/growth/SwapCard";
+import { LeaveTribeCard } from "@/components/tribe/LeaveTribeCard";
+import { loadLeaveState } from "@/lib/seat/seat-server";
 import { TeenWaiting } from "@/components/guardian/TeenWaiting";
 import { LeadingStrip } from "@/components/leaders/LeadingTribe";
 import { WeekView } from "@/components/rhythm/WeekView";
@@ -33,10 +35,11 @@ export default async function TribePage({ searchParams }: { searchParams: Search
   const view = week && /^\d{1,2}$/.test(week) ? Number(week) : null;
   const [rhythm, progress] = await Promise.all([loadMyWeek(supabase, view), loadMyProgress(supabase)]);
   if (rhythm.placed && rhythm.state !== "before") {
-    const [layer, words, swap] = await Promise.all([
+    const [layer, words, swap, leave] = await Promise.all([
       loadWeekLayer(supabase, rhythm.tribe.id, rhythm.viewing ?? rhythm.week),
       loadWordDays(supabase),
       loadMySwap(supabase),
+      loadLeaveState(supabase),
     ]);
     // An offer waiting for an answer goes first: the week is a long page and it must not be missed
     const offer = swap.in_tribe && swap.request?.status === "offered";
@@ -46,6 +49,7 @@ export default async function TribePage({ searchParams }: { searchParams: Search
         {offer ? card : null}
         <WeekView week={rhythm} progress={progress} layer={layer} words={words} />
         {offer ? null : card}
+        <LeaveTribeCard leave={leave} />
       </div>
     );
   }
@@ -68,12 +72,13 @@ export default async function TribePage({ searchParams }: { searchParams: Search
 
   if (match?.placement) {
     // A member the church placed is asked, above their tribe, to say yes or to keep their details private
-    const placedByChurch = await loadMyPlacement(supabase);
+    const [placedByChurch, leave] = await Promise.all([loadMyPlacement(supabase), loadLeaveState(supabase)]);
     return (
       <div className="flex flex-col gap-8">
         {strip}
         {placedByChurch?.active ? <PlacedBanner state={placedByChurch} /> : null}
         <PlacementView placement={match.placement} justJoined={joined === "1"} groupNote={groupNote(placedByChurch)} />
+        <LeaveTribeCard leave={leave} />
       </div>
     );
   }

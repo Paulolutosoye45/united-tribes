@@ -10,6 +10,11 @@ import type { Context, EmailContent, Params, TemplateDef } from "./types";
  *   seat_last_call   hour 40: the last email before the seat is offered to someone else, plain, no threat
  *   seat_released    after the deadline: kind, "you did nothing wrong", and the way back while the seat is still free
  *
+ * Package 7 adds two more, on the same rules:
+ *   reach_released   the end of the six-day contact series, for a member who did nothing: the same kindness and the same way back
+ *   leader_seat_note the leader's one note a day, at 5 pm, and only on a day something changed: counts, and the first names of those who said yes. Never the
+ *                    name of anyone who was released or who left, and never a reason.
+ *
  * Rules the wording keeps, and the tests check:
  *   - it never says the person did something wrong, never says whether they opened a page (a mail scanner can open a link), and never names another member
  *   - it carries no phone number, no faith journey, support need, score or age
@@ -99,27 +104,110 @@ function releasedEmail(p: Params, c: Context): EmailContent {
   };
 }
 
+function reachReleasedEmail(p: Params, c: Context): EmailContent {
+  const tribe = tribeOf(p);
+  const days = typeof p.take_back_days === "number" ? Math.floor(p.take_back_days) : 0;
+  const emails = typeof p.emails === "number" && p.emails > 0 ? Math.floor(p.emails) : 0;
+  const can = days > 0;
+  return {
+    subject: tagged(p, fit(`${c.first}, your seat in ${tribe} has been offered on`, "Your seat has been offered to someone else")),
+    greeting: `Hi ${c.first},`,
+    paragraphs: [
+      `${emails > 0 ? `We wrote to you ${emails} times over six days` : "We wrote to you over six days"} so that your leader can reach you, and we could not hear back, so we have offered your seat in ${tribe} to someone else. You did nothing wrong. A tribe works when its leader can reach everyone in it, and we try to keep every tribe moving.`,
+      can
+        ? `If you still want it and it is still free, you can take it back for ${days} ${days === 1 ? "day" : "days"}. If it has gone, you are first in line for the next place that opens.`
+        : "If you would still like a tribe this season, sign in and look at the ones that are open.",
+      "If you would like to talk it over, reply to this email or ask the church office. We would love to help you find a place.",
+    ],
+    cta: can ? { label: "Take my seat back", url: seatLink(c) } : { label: "Look at the open tribes", url: c.link("/tribe") },
+    options: can ? [{ label: "Look at other tribes", url: c.link("/tribe") }] : undefined,
+    signoff: ["The church office", "United Tribes"],
+  };
+}
+
+const num = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : 0);
+const many = (n: number, one: string, more: string) => `${n} ${n === 1 ? one : more}`;
+const joinNames = (v: unknown): string => {
+  const names = (Array.isArray(v) ? v : []).map((x) => clean(x).slice(0, 30)).filter(Boolean).slice(0, 4);
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+};
+
+/** What happened in a tribe today, as short lines. Only counts and the first names of those who said yes. */
+export function leaderNoteLines(p: Params): string[] {
+  const yes = num(p.yes_n);
+  const opened = num(p.no_reply_n) + num(p.series_n) + num(p.left_n);
+  const out: string[] = [];
+  if (yes > 0) out.push(joinNames(p.yes_names) && yes <= 4 ? `${joinNames(p.yes_names)} said yes.` : `${many(yes, "member said", "members said")} yes.`);
+  if (opened > 0) {
+    const why = [
+      num(p.no_reply_n) > 0 ? `${num(p.no_reply_n)} did not reply in time` : "",
+      num(p.series_n) > 0 ? `${num(p.series_n)} could not be reached after the contact emails` : "",
+      num(p.left_n) > 0 ? `${num(p.left_n)} chose to leave` : "",
+    ].filter(Boolean);
+    out.push(`${many(opened, "seat opened", "seats opened")}: ${why.join(", ")}.`);
+  }
+  if (num(p.replaced_n) > 0) out.push(`${many(num(p.replaced_n), "place was", "places were")} offered to the next person in line.`);
+  if (num(p.numbers_n) > 0) out.push(`${many(num(p.numbers_n), "member", "members")} added their contact details.`);
+  if (num(p.waiting_n) > 0) out.push(`${many(num(p.waiting_n), "seat is", "seats are")} still waiting for a yes.`);
+  out.push(num(p.open_n) > 0 ? `You have ${many(num(p.open_n), "free seat", "free seats")}.` : "Your tribe is full.");
+  return out;
+}
+
+function leaderNoteEmail(p: Params, c: Context): EmailContent {
+  const tribe = tribeOf(p);
+  const yes = num(p.yes_n);
+  const opened = num(p.no_reply_n) + num(p.series_n) + num(p.left_n);
+  const bits = [yes > 0 ? `${yes} said yes` : "", opened > 0 ? many(opened, "seat opened", "seats opened") : ""].filter(Boolean).join(", ");
+  return {
+    subject: tagged(p, fit(`${tribe}: ${bits || "today’s seats"}`, `Today in ${tribe}`, "Today in your tribe")),
+    greeting: `Hi ${c.first},`,
+    paragraphs: [`Here is what changed in ${tribe} today.`, ...leaderNoteLines(p), "This is the only note about seats you will get today."],
+    cta: { label: "Open my Tribe Card", url: c.link("/lead/tribe") },
+    signoff: ["The church office", "United Tribes"],
+  };
+}
+
+const noteLine = (p: Params) => `${tribeOf(p)}: ${leaderNoteLines(p).slice(0, 2).join(" ")}`;
+
 const line = (p: Params) => `${tribeOf(p)}: your seat is held until ${when(p)}.`;
-function makeDef(key: string, title: string, email: (p: Params, c: Context) => EmailContent, cta: (c: Context) => string): TemplateDef {
+const releasedLine = (p: Params) => `${tribeOf(p)}: your seat has been offered to someone else. You did nothing wrong.`;
+function makeDef(key: string, title: string, email: (p: Params, c: Context) => EmailContent, cta: (c: Context) => string, say: (p: Params) => string = line): TemplateDef {
   return {
     key,
     audience: "member",
     title,
     emailOnly: true,
     email,
-    sms: (p, c) => smsLine(`United Tribes: ${line(p)}`, cta(c)),
+    sms: (p, c) => smsLine(`United Tribes: ${say(p)}`, cta(c)),
     whatsapp: (p, c) => ({
       body: "Hi {{1}}, a note from United Tribes: {{2}} You can open it here: {{3}}",
       example: ["Ada", "Builders Tribe: your seat is held until Thursday 12 November, 9 am.", cta(c)],
-      vars: [flat(c.first), flat(line(p)), flat(cta(c))],
+      vars: [flat(c.first), flat(say(p)), flat(cta(c))],
     }),
   };
 }
 
+const leaderNote: TemplateDef = {
+  key: "leader_seat_note",
+  audience: "leader",
+  title: "A leader is told, once a day at 5 pm and only on a day something changed, how the seats in their tribe moved (the seat window)",
+  emailOnly: true,
+  email: leaderNoteEmail,
+  sms: (p, c) => smsLine(`United Tribes: ${noteLine(p)}`, c.link("/lead/tribe")),
+  whatsapp: (p, c) => ({
+    body: "Hi {{1}}, a note from United Tribes: {{2}} You can open it here: {{3}}",
+    example: ["Ngozi", "Builders Tribe: Ada said yes. 1 seat is still waiting for a yes.", c.link("/lead/tribe")],
+    vars: [flat(c.first), flat(noteLine(p)), flat(c.link("/lead/tribe"))],
+  }),
+};
+
 export const SEAT_WINDOW_TEMPLATES: TemplateDef[] = [
   makeDef("seat_reminder", "A placed member who has not answered is reminded, 24 hours in, that the seat is held for them (the seat window)", reminderEmail, (c) => placedLink(c, "confirm")),
   makeDef("seat_last_call", "A placed member who has not answered is told, 40 hours in, that this is the last email before the seat is offered on (the seat window)", lastCallEmail, (c) => placedLink(c, "confirm")),
-  makeDef("seat_released", "A member whose seat was offered to someone else is told kindly, and given the way back (the seat window)", releasedEmail, seatLink),
+  makeDef("seat_released", "A member whose seat was offered to someone else is told kindly, and given the way back (the seat window)", releasedEmail, seatLink, releasedLine),
+  makeDef("reach_released", "A member who did nothing in the six-day contact series is told kindly that the seat was offered on, and given the way back", reachReleasedEmail, seatLink, releasedLine),
+  leaderNote,
 ];
 
 /** Believable fields as the database supplies them (placement_member_params plus the seat window's own). Used by the tests and the template list. */
@@ -140,4 +228,6 @@ export const SEAT_WINDOW_SAMPLES: Record<string, Params> = {
   seat_reminder: { ...BASE },
   seat_last_call: { ...BASE },
   seat_released: { ...BASE },
+  reach_released: { ...BASE, emails: 4 },
+  leader_seat_note: { tribe: "Builders Tribe", yes_n: 2, yes_names: ["Ada", "Tunde"], no_reply_n: 1, series_n: 0, left_n: 1, replaced_n: 1, numbers_n: 1, waiting_n: 3, open_n: 2 },
 };

@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseLeaderStrip, parseSeatBoard, parseSeatHistory, parseSeatSettings, type LeaderStrip, type SeatBoard, type SeatEvent, type SeatFilter, type SeatSettings } from "./seat";
+import { parseLeaderStrip, parseLeaveState, parseSeatBoard, parseSeatHistory, parseSeatSettings, type LeaderStrip, type LeaveState, type SeatBoard, type SeatEvent, type SeatFilter, type SeatSettings } from "./seat";
 
 // Each loader answers nothing when the database refuses, does not have the function yet, or cannot be reached: a website deployed before the database file is applied
 // behaves exactly as it always did.
@@ -42,5 +42,15 @@ export async function loadLeaderStrip(supabase: SupabaseClient, tribe: string): 
     return error ? null : parseLeaderStrip(data);
   } catch {
     return null;
+  }
+}
+
+/** Whether the signed-in member may leave their tribe now (the first 14 days of the season). Never "yes" when the database cannot say. */
+export async function loadLeaveState(supabase: SupabaseClient): Promise<LeaveState> {
+  try {
+    const { data, error } = await supabase.rpc("my_tribe_leave_state");
+    return error ? { can: false, tribe: "", until: null } : parseLeaveState(data);
+  } catch {
+    return { can: false, tribe: "", until: null };
   }
 }

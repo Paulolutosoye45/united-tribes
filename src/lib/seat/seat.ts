@@ -350,3 +350,40 @@ export function parseSeatInfo(v: unknown): SeatInfo {
   const state = v.state === "free" || v.state === "back" || v.state === "gone" || v.state === "closed" ? v.state : null;
   return { found: state !== null, state, tribe: text(v.tribe) ?? "your tribe", leader: text(v.leader) ?? "", first: text(v.first) ?? "", until: text(v.until) };
 }
+
+// ---------------------------------------------------------------------------
+// "I need to leave this tribe" (Package 7)
+// ---------------------------------------------------------------------------
+export type LeaveState = { can: boolean; tribe: string; until: string | null };
+
+/** What the member's own page needs to know: can they leave now, from which tribe, and the last day. Anything odd is "no". */
+export function parseLeaveState(v: unknown): LeaveState {
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return { can: false, tribe: "", until: null };
+  const o = v as Record<string, unknown>;
+  const text = (x: unknown) => (typeof x === "string" && x.trim() !== "" ? x.trim().slice(0, 120) : "");
+  const until = typeof o.until === "string" && /^\d{4}-\d{2}-\d{2}/.test(o.until) ? o.until.slice(0, 10) : null;
+  return { can: o.can === true && text(o.tribe) !== "", tribe: text(o.tribe), until };
+}
+
+/** The reasons offered, all optional. A reason is only ever one of these, never typed, and it goes to the log, never to the leader. */
+export const LEAVE_REASONS = [
+  { key: "time", label: "The time does not work for me" },
+  { key: "place", label: "The place is too far, or the meeting is online and I would rather meet in person" },
+  { key: "fit", label: "It does not feel like the right fit" },
+  { key: "other", label: "Something else" },
+] as const;
+export type LeaveReason = (typeof LEAVE_REASONS)[number]["key"];
+export const isLeaveReason = (v: unknown): v is LeaveReason => LEAVE_REASONS.some((r) => r.key === v);
+
+export const LEAVE_WORDS = {
+  open: "I need to leave this tribe",
+  title: "Need to leave this tribe?",
+  intro: (tribe: string, until: string | null) =>
+    `That is all right. In the first two weeks you can leave ${tribe} at any time${until ? `, until ${new Date(`${until}T12:00:00Z`).toLocaleDateString("en-GB", { timeZone: "Africa/Lagos", day: "numeric", month: "long" })}` : ""}, and your seat opens for the next person in line. Your leader is told that a seat has opened, not why.`,
+  ask: "Would you like to tell us why? You can skip this.",
+  confirm: "Yes, I am leaving this tribe",
+  keep: "No, I will stay",
+  done: (tribe: string) => `You have left ${tribe}. Thank you for telling us. You can look at the other tribes that are open.`,
+  look: "Look at the open tribes",
+  later: "The first two weeks are over, so we ask you to talk to your coach or the church office about moving. Nothing has changed.",
+} as const;

@@ -2,9 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { renderEmail, renderSms } from "@/lib/messaging/render";
-import { SEAT_WINDOW_SAMPLES, SEAT_WINDOW_TEMPLATES } from "@/lib/messaging/templates-seat-window";
+import { SEAT_WINDOW_SAMPLES, SEAT_WINDOW_TEMPLATES, leaderNoteLines } from "@/lib/messaging/templates-seat-window";
 import type { ClaimedMessage, Params } from "@/lib/messaging/types";
 import {
+  LEAVE_REASONS,
+  LEAVE_WORDS,
   LEADER_SEAT_WORDS,
   MEMBER_WORDS,
   SEAT_FILTERS,
@@ -12,10 +14,12 @@ import {
   SEAT_SUBJECT_MAX,
   checkSeatSettings,
   hoursWords,
+  isLeaveReason,
   isSeatFilter,
   isSeatLink,
   lagosWhen,
   parseLeaderStrip,
+  parseLeaveState,
   parseSeatBoard,
   parseSeatInfo,
   parseSeatSettings,
@@ -47,10 +51,10 @@ const KEYS = ["seat_reminder", "seat_last_call", "seat_released"] as const;
 const mail = (k: string, over: Partial<Params> = {}) => renderEmail(message(k, over), SITE);
 
 describe("the three emails", () => {
-  it("are registered, member-facing and email only", () => {
-    expect(SEAT_WINDOW_TEMPLATES.map((t) => t.key)).toEqual([...KEYS]);
+  it("are registered, member-facing and email only; the series' release and the leader's note come after them", () => {
+    expect(SEAT_WINDOW_TEMPLATES.map((t) => t.key)).toEqual([...KEYS, "reach_released", "leader_seat_note"]);
     for (const t of SEAT_WINDOW_TEMPLATES) {
-      expect(t.audience).toBe("member");
+      expect(t.audience).toBe(t.key === "leader_seat_note" ? "leader" : "member");
       expect(t.emailOnly).toBe(true);
     }
   });
@@ -294,5 +298,81 @@ describe("the wiring", () => {
     const admin = read("src/app/(app)/admin/seats/actions.ts");
     expect(admin).toMatch(/hasAnyRole|SEAT_ACT_ROLES|SEAT_ROLES/);
     expect(read("src/app/(app)/lead/tribe/seat-window-actions.ts")).toMatch(/isUuid/);
+  });
+});
+
+describe("Package 7: the series' release, the leader's note and leaving a tribe", () => {
+  const rel = (over: Partial<Params> = {}) => mail("reach_released", over);
+  const note = (over: Partial<Params> = {}) => renderEmail({ ...message("leader_seat_note", over), to: { email: "ngozi@example.org", phone: null, name: "Ngozi Eze", first_name: "Ngozi" } }, SITE);
+
+  it("tells a member released at the end of the series, kindly, how many emails were sent, and never blames or says whether they opened one", () => {
+    const m = rel();
+    expect(m.text).toMatch(/We wrote to you 4 times over six days/);
+    expect(m.text).toMatch(/You did nothing wrong/);
+    expect(m.text.toLowerCase()).not.toMatch(/opened|did not read|ignored|failed to|your fault/);
+    expect(m.subject.length).toBeLessThanOrEqual(SEAT_SUBJECT_MAX);
+    expect(m.html).toContain(`${SITE}/seat/${SECRET}`);
+    expect(rel({ emails: 0 }).text).toMatch(/We wrote to you over six days/);
+    expect(rel({ take_back_days: 0 }).html).not.toContain(`${SITE}/seat/`);
+    expect(`${m.subject}${m.text}`).not.toMatch(/\+?\d[\d\s-]{8,}\d/);
+  });
+
+  it("says the same in a short text, without the number of a phone", () => {
+    const sms = renderSms({ ...message("reach_released"), channel: "sms" }, SITE);
+    expect(sms).toMatch(/offered to someone else/);
+    expect(sms).not.toMatch(/held until/);
+  });
+
+  it("gives a leader counts and the first names of those who said yes, and never the name of anyone released or who left, nor a reason", () => {
+    const lines = leaderNoteLines(SEAT_WINDOW_SAMPLES.leader_seat_note);
+    expect(lines[0]).toBe("Ada and Tunde said yes.");
+    expect(lines.join(" ")).toMatch(/2 seats opened: 1 did not reply in time, 1 chose to leave/);
+    expect(lines.join(" ")).toMatch(/3 seats are still waiting for a yes/);
+    expect(lines[lines.length - 1]).toBe("You have 2 free seats.");
+    const m = note();
+    expect(m.text).toContain("Hi Ngozi,");
+    expect(m.subject.length).toBeLessThanOrEqual(SEAT_SUBJECT_MAX);
+    expect(m.subject).toMatch(/Builders Tribe/);
+    expect(m.html).toContain(`${SITE}/lead/tribe`);
+    expect(m.text).not.toMatch(/time does not work|fit|why/i);
+  });
+
+  it("says a full tribe is full, says one seat in the singular, and never shows more than four names", () => {
+    expect(leaderNoteLines({ tribe: "T", yes_n: 1, yes_names: ["Ada"], open_n: 0 })).toEqual(["Ada said yes.", "Your tribe is full."]);
+    expect(leaderNoteLines({ tribe: "T", left_n: 1, open_n: 1 })).toEqual(["1 seat opened: 1 chose to leave.", "You have 1 free seat."]);
+    expect(leaderNoteLines({ tribe: "T", yes_n: 6, yes_names: ["A", "B", "C", "D"], open_n: 3 })[0]).toBe("6 members said yes.");
+    expect(note({ yes_n: 2, yes_names: ["<script>alert(1)</script>", "Tunde"] }).html).not.toContain("<script>");
+  });
+
+  it("reads whether a member may leave, and anything odd is no", () => {
+    expect(parseLeaveState({ can: true, tribe: "Builders", until: "2026-11-14" })).toEqual({ can: true, tribe: "Builders", until: "2026-11-14" });
+    for (const v of [null, undefined, "x", [], { can: "yes", tribe: "B" }, { can: true }, { can: true, tribe: "  " }]) expect(parseLeaveState(v).can, JSON.stringify(v)).toBe(false);
+    expect(parseLeaveState({ can: true, tribe: "B", until: "tomorrow" }).until).toBeNull();
+  });
+
+  it("offers a short list of reasons, none required, and never a free-text one", () => {
+    expect(LEAVE_REASONS.map((r) => r.key)).toEqual(["time", "place", "fit", "other"]);
+    for (const k of ["time", "place", "fit", "other"]) expect(isLeaveReason(k)).toBe(true);
+    for (const v of ["", "I do not like the leader", null, 3]) expect(isLeaveReason(v)).toBe(false);
+    expect(LEAVE_WORDS.intro("Builders", "2026-11-14")).toMatch(/until 14 November/);
+    expect(LEAVE_WORDS.intro("Builders", null)).not.toMatch(/until/);
+    expect(LEAVE_WORDS.intro("Builders", null)).toMatch(/not why/);
+    expect(LEAVE_WORDS.later).toMatch(/Nothing has changed/);
+  });
+
+  it("is wired to the member's own page, behind the sign-in, and the action only passes a reason from the list", () => {
+    expect(read("src/app/(app)/tribe/page.tsx")).toMatch(/LeaveTribeCard/);
+    const act = read("src/app/(app)/tribe/actions.ts");
+    expect(act).toMatch(/leaveTribeAction[\s\S]*?isLeaveReason/);
+    expect(act).toMatch(/rpc\("my_tribe_leave"/);
+    expect(read("src/lib/seat/seat-server.ts")).toMatch(/my_tribe_leave_state/);
+  });
+
+  it("only runs on the worker's beat, and the beat reports each part", () => {
+    const sql = read("supabase/migrations/20270121000100_seat_release.sql");
+    expect(sql).toMatch(/worker_seat_window_tick[\s\S]*seat_notes_tick[\s\S]*seat_morning_tick/);
+    expect(sql).toMatch(/v_hour < 17 or v_hour >= 19/);
+    expect(sql).toMatch(/v_hour < 7 or v_hour >= 9/);
+    expect(sql).toMatch(/'No contact in time'/);
   });
 });

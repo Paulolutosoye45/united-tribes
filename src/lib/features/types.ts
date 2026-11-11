@@ -35,6 +35,7 @@ export const FEATURE_KEYS = [
   "placed_answers",
   "leader_desk",
   "seat_window",
+  "reach_release",
 ] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
