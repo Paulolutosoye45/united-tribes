@@ -181,7 +181,7 @@ export default async function ContactGapsPage({ searchParams }: { searchParams: 
           </p>
         ) : null}
         {act && report.total + gaps > 0 ? (
-          <a href="/admin/people/contact-gaps/download" data-testid="gaps-download" className="t-body font-medium underline">
+          <a href="/admin/people/contact-gaps/download" download data-testid="gaps-download" className="t-body font-medium underline">
             Download the whole list (spreadsheet)
           </a>
         ) : null}

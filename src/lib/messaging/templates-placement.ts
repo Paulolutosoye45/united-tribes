@@ -1,4 +1,4 @@
-import { flat, meetsText, num, shortDay, smsLine, str } from "./format";
+import { flat, meetsText, shortDay, smsLine, str } from "./format";
 import type { Context, EmailContent, Params, TemplateDef } from "./types";
 
 /**

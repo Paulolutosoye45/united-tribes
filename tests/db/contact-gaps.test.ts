@@ -65,7 +65,6 @@ const causeOf = async (id: string) =>
     [id],
   )).c as string | null;
 const phoneOf = (id: string, phone: string) => c.sql("insert into public.contact_preferences (person_id, phone, preferred) values ($1, $2, 'email')", [id, phone]);
-const yes = (id: string) => c.sql("insert into public.consents (person_id, purpose, granted, version) values ($1, 'whatsapp', true, 'contact-v1')", [id]);
 const emailOff = (id: string) => c.sql("insert into public.consents (person_id, purpose, granted, version) values ($1, 'email', false, 'contact-v1')", [id]);
 async function makeTeen(id: string) {
   await c.db.admin.query("begin");

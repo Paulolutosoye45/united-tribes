@@ -110,7 +110,6 @@ const noNumber = (v: unknown) =>
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "")
     .replace(/\d{4}-\d{2}-\d{2}T[\d:.]+(Z|[+-]\d{2}:?\d{2})?/g, "")
     .replace(/[0-9a-f]{64}/g, "");
-const link = async (tm: string, person: string) => (await c.sql("select public.placement_token_mint($1, $2, 14) as t", [tm, person]))[0].t as string;
 
 beforeAll(async () => {
   c = await makeCast();
