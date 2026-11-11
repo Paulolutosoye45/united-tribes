@@ -1,6 +1,6 @@
 import { decodeText, parseCsv } from "@/lib/leaders/referee/sheet/csv";
 import { CARD_WORDS, type CardState } from "./cards";
-import { readXlsx, type Sheet, type SheetRow } from "@/lib/leaders/referee/sheet/xlsx";
+import { readXlsx, writeXlsx, type OutSheet, type Sheet, type SheetRow } from "@/lib/leaders/referee/sheet/xlsx";
 import { ZipError } from "@/lib/leaders/referee/sheet/zip";
 
 /**
@@ -287,4 +287,52 @@ export function hodListCsv(report: Extract<HodReport, { ok: true }>): string {
 /** The leaders on the platform who are not on the list. Names, tribe, department and where the card is: no number and no address. */
 export function hodMissingCsv(report: Extract<HodReport, { ok: true }>): string {
   return csv(["Name", "Tribe", "Department", "Where their card is"], report.missing.map((m) => [m.name, m.tribe, m.department || "No department yet", CARD_WORDS[m.state as CardState] ?? m.state]));
+}
+
+/**
+ * One workbook, one sheet for each department (each head of department gets their own): the people on the list under that department, and the leaders the platform has
+ * in that department that the list left out. A first sheet adds up the whole report. The list's emails and numbers are there only for those who act.
+ */
+export function hodWorkbook(report: Extract<HodReport, { ok: true }>): Buffer {
+  const act = report.role === "act";
+  const NONE = "No department";
+  type Group = { name: string; rows: HodReportRow[]; missing: HodMissing[] };
+  const groups = new Map<string, Group>();
+  const group = (dept: string): Group => {
+    const name = dept.trim().replace(/\s+/g, " ") || NONE;
+    const key = name.toLowerCase();
+    let g = groups.get(key);
+    if (!g) groups.set(key, (g = { name, rows: [], missing: [] }));
+    return g;
+  };
+  for (const r of report.rows) group(r.department).rows.push(r);
+  for (const m of report.missing) group(m.department).missing.push(m);
+
+  const counts = hodCounts(report.rows);
+  const sheets: OutSheet[] = [
+    {
+      name: "Summary",
+      header: ["Where they stand", "People"],
+      rows: [...HOD_RESULTS.map((k) => [HOD_WORDS[k].label, String(counts[k])]), ["Leaders on the platform, not on the list", String(report.missing.length)]],
+      widths: [44, 10],
+    },
+  ];
+  const used = new Set<string>(["summary"]);
+  const sheetName = (name: string): string => {
+    const base = name.replace(/[\\/?*[\]:]/g, " ").replace(/\s+/g, " ").trim().slice(0, 28) || "Sheet";
+    let n = base;
+    for (let i = 2; used.has(n.toLowerCase()); i++) n = `${base.slice(0, 28 - String(i).length - 1)} ${i}`;
+    used.add(n.toLowerCase());
+    return n;
+  };
+  const ordered = [...groups.values()].sort((a, b) => (a.name === NONE ? 1 : b.name === NONE ? -1 : a.name.localeCompare(b.name, "en")));
+  for (const g of ordered) {
+    const head = ["Line", "Name", "Where they stand", "Note", "Department on the platform", ...(act ? ["Email", "Phone"] : [])];
+    const rows = [
+      ...g.rows.map((r) => [String(r.line), r.name, HOD_WORDS[r.result].label, r.note, r.leaderDept, ...(act ? [r.email, r.phone] : [])]),
+      ...g.missing.map((m) => ["", m.name, "On the platform, not on your list", [m.tribe, m.state ? `card: ${(CARD_WORDS[m.state as CardState] ?? m.state).toLowerCase()}` : ""].filter(Boolean).join(", "), m.department, ...(act ? ["", ""] : [])]),
+    ];
+    sheets.push({ name: sheetName(g.name), header: head, rows, widths: [7, 28, 34, 40, 26, ...(act ? [30, 18] : [])] });
+  }
+  return writeXlsx(sheets);
 }

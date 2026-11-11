@@ -48,7 +48,7 @@ export default async function HodReconcilePage({ searchParams }: { searchParams:
     const show = HOD_RESULTS.find((r) => r === q.show) ?? null;
     const shown = show ? report.rows.filter((r) => r.result === show) : report.rows;
     const href = (r: HodResult | null) => `/admin/people/leader-cards/reconcile?run=${runId}${r ? `&show=${r}` : ""}`;
-    const dl = (part: "list" | "missing") => `/admin/people/leader-cards/reconcile/download?run=${runId}&part=${part}`;
+    const dl = (part: "list" | "missing" | "sheets") => `/admin/people/leader-cards/reconcile/download?run=${runId}&part=${part}`;
 
     return (
       <div className="flex flex-col gap-8">
@@ -149,6 +149,9 @@ export default async function HodReconcilePage({ searchParams }: { searchParams:
         </section>
 
         <section aria-label="Lists to download" className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <a href={dl("sheets")} data-testid="hod-download-sheets" className="t-body font-medium underline">
+            Download one sheet for each head of department (Excel)
+          </a>
           <a href={dl("list")} data-testid="hod-download-list" className="t-body font-medium underline">
             Download the list with where each person stands (spreadsheet)
           </a>
@@ -157,6 +160,14 @@ export default async function HodReconcilePage({ searchParams }: { searchParams:
           </a>
           {act ? null : <span className="t-small text-soft">You can read the report and download it. Emails and numbers are for the office.</span>}
         </section>
+
+        <p className="t-small text-soft">
+          Leaders on the platform appear on the{" "}
+          <Link href="/admin/people/leader-cards?filter=all" className="underline">
+            Leader cards board
+          </Link>{" "}
+          under their department, with where each card is. Putting the departments on (below) is what groups them there.
+        </p>
 
         {act ? (
           <HodActions

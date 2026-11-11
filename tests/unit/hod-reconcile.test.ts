@@ -2,11 +2,11 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SECTIONS, crumbsFor } from "@/lib/admin/nav";
-import { writeXlsx } from "@/lib/leaders/referee/sheet/xlsx";
+import { readXlsx, writeXlsx } from "@/lib/leaders/referee/sheet/xlsx";
 import { LEADER_CARD_ACT_ROLES, LEADER_CARD_ROLES } from "@/lib/auth/roles";
 import {
   HOD_HEADER, HOD_MAX_ROWS, HOD_RESULTS, HOD_TEMPLATE, HOD_WORDS, hodActions, hodCounts, hodHeadline, hodListCsv, hodMissingCsv, parseHodList, parseHodReport,
-  pickEmail, pickPhone, readHodRows, readHodSheet, readHodText, type HodReport, type HodReportRow,
+  hodWorkbook, pickEmail, pickPhone, readHodRows, readHodSheet, readHodText, type HodReport, type HodReportRow,
 } from "@/lib/leader-cards/hod";
 
 // Fix 7: the report on the heads-of-department list. What these prove:
@@ -246,6 +246,59 @@ describe("the two spreadsheets", () => {
   });
 });
 
+describe("one sheet for each head of department", () => {
+  const r = report(
+    [
+      row({ line: 1, name: "Ada Obi", department: "Ushers", result: "appointed", email: "ada@example.org", phone: "0803", leaderDept: "Ushers" }),
+      row({ line: 2, name: "Ben Ade", department: "ushers ", result: "no_account", email: "ben@example.org", phone: "" }),
+      row({ line: 3, name: "Cee Eze", department: "Choir", result: "has_account", note: "Already holds the leader role", email: "", phone: "0805" }),
+      row({ line: 4, name: "Dee", department: "", result: "unclear", email: "", phone: "" }),
+      row({ line: 5, name: "Eve", department: "A/B: C?", result: "no_account", email: "eve@example.org", phone: "" }),
+      row({ line: 6, name: "Fay", department: "A B  C ", result: "no_account", email: "fay@example.org", phone: "" }),
+    ],
+    { missing: [{ name: "Gus Ola", tribe: "Gus’s tribe", department: "Choir", state: "submitted" }, { name: "Hal", tribe: "Hal’s tribe", department: "", state: "" }] },
+  );
+  const sheets = (rep: Extract<HodReport, { ok: true }>) => readXlsx(hodWorkbook(rep));
+  const cells = (rows: { cells: string[] }[]) => rows.map((x) => x.cells);
+
+  it("opens with a summary, then a sheet for each department in order, and the ones with none last", () => {
+    const s = sheets(r);
+    expect(s.map((x) => x.name)).toEqual(["Summary", "A B C", "A B C 2", "Choir", "Ushers", "No department"]);
+    expect(cells(s[0].rows)).toEqual([
+      ["Where they stand", "People"], ["Already a leader", "1"], ["Has an account, not appointed", "1"], ["No account yet", "3"], ["On the list twice", "0"], ["Could not tell", "1"],
+      ["Leaders on the platform, not on the list", "2"],
+    ]);
+  });
+
+  it("puts the people on the list and the leaders the list left out on their own department's sheet, and merges departments written two ways", () => {
+    const s = sheets(r);
+    const ushers = cells(s.find((x) => x.name === "Ushers")!.rows);
+    expect(ushers[0]).toEqual(["Line", "Name", "Where they stand", "Note", "Department on the platform", "Email", "Phone"]);
+    expect(ushers.slice(1).map((x) => x[1])).toEqual(["Ada Obi", "Ben Ade"]);
+    const choir = cells(s.find((x) => x.name === "Choir")!.rows);
+    expect(choir.slice(1).map((x) => [x[1], x[2], x[3]])).toEqual([
+      ["Cee Eze", "Has an account, not appointed", "Already holds the leader role"],
+      ["Gus Ola", "On the platform, not on your list", "Gus’s tribe, card: sent in"],
+    ]);
+    const none = cells(s.find((x) => x.name === "No department")!.rows);
+    expect(none.slice(1).map((x) => x[1])).toEqual(["Dee", "Hal"]);
+  });
+
+  it("gives the contacts from the list to the office and nobody else", () => {
+    const act = cells(sheets(r).find((x) => x.name === "Ushers")!.rows).flat().join("|");
+    expect(act).toContain("ada@example.org");
+    const look = cells(sheets({ ...r, role: "look" }).find((x) => x.name === "Ushers")!.rows);
+    expect(look[0]).toEqual(["Line", "Name", "Where they stand", "Note", "Department on the platform"]);
+    expect(look.flat().join("|")).not.toMatch(/@|0803/);
+  });
+
+  it("keeps a sheet name to what a workbook allows, and still makes a workbook of a report with one person", () => {
+    const long = report([row({ department: "x".repeat(60) })]);
+    expect(sheets(long)[1].name.length).toBeLessThanOrEqual(31);
+    expect(sheets(report([row()])).map((x) => x.name)).toEqual(["Summary", "Ushers"]);
+  });
+});
+
 describe("who may, and what it never does", () => {
   const page = read("src/app/(app)/admin/people/leader-cards/reconcile/page.tsx");
   const actions = read("src/app/(app)/admin/people/leader-cards/reconcile/actions.ts");
@@ -267,6 +320,7 @@ describe("who may, and what it never does", () => {
 
   it("checks the address of a report before it asks the database for it", () => {
     expect(page).toMatch(/isUuid\(q\.run\)/);
+    expect(route).toMatch(/part !== "list" && part !== "missing" && part !== "sheets"/);
     expect(route).toMatch(/isUuid\(run\)/);
     expect(actions.match(/isUuid\(id\)/g)?.length).toBe(4);
   });

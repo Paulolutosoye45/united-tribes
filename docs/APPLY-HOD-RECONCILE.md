@@ -37,7 +37,7 @@ Open **Admin → People → Leader cards → Check the list of heads of departme
    A person is found by their email, or by any number the platform holds for them (the one they gave for contact, the one they gave for WhatsApp, or the one they signed in with), written in any usual way (0803…, +234 803…, 2348031234567).
 4. **Leaders the list left out.** Every leader on the platform this season who nobody on the list matched, with their tribe, department and where their card is. They may be on the list under another address.
 5. **Read again every time.** The report is not frozen: a person who has since signed up or been appointed shows as they are now. The first line says how many of each, in words.
-6. **Downloads**: the list with where each person stands (with the list's own emails and numbers, for the office only), and the leaders not on the list (no numbers, no addresses).
+6. **Downloads**: the list with where each person stands (with the list's own emails and numbers, for the office only), the leaders not on the list (no numbers, no addresses), and **one Excel workbook with a sheet for each department** (a Summary first, then each department's people from the list together with the leaders the platform has in that department that the list left out, and a "No department" sheet last), so each head of department can be handed their own sheet. A report stays on the page, so it can be reopened and downloaded again later. The report also links to the **Leader cards board**, where the same leaders sit under their department with where each card is.
 
 Then, each its own tap:
 
@@ -45,7 +45,7 @@ Then, each its own tap:
 - **Invite them** sends the existing leader invitation (the same email as inviting someone in People) to each person with no account who gave a usable email address, once per report. Admin or director only, as inviting anyone is. It shows how many first and asks you to confirm.
 - **Delete the report** removes the report and the names, emails and numbers it holds. Nobody on the platform is changed.
 
-The data lead can read a report and download both lists, with the names, departments and results but not the list's emails or numbers. They cannot make, tag, invite or delete.
+The data lead can read a report and download the lists and the workbook, with the names, departments and results but not the list's emails or numbers. They cannot make, tag, invite or delete.
 
 ## Check it works (ten minutes)
 
