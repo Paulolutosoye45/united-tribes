@@ -1202,6 +1202,54 @@ describe("locked-down defaults", () => {
       "export_feed_renew",
       "export_feed_revoke",
       "export_feed_read",
+      // Package 6b: the Placed members board and call desk, the holds, the leader's one line to new members, and the owner's numbers for the answer sequence
+      "placed_board_summary",
+      "placed_board_rows",
+      "placed_board_tribes",
+      "placed_answers_overview",
+      "placed_answers_pause_set",
+      "placed_hold_set",
+      "placed_hold_clear",
+      "placed_desk_list",
+      "placed_desk_reveal",
+      "placed_desk_record",
+      "placed_desk_download",
+      "tribe_seat_line_get",
+      "tribe_seat_line_set",
+      "god_placed_answers_settings",
+      "god_placed_answers_settings_set",
+      // Package 6: the seat window (the Seats page, the office's actions, the leader's strip, and the owner's numbers)
+      "seat_board",
+      "seat_clock_history",
+      "seat_keep",
+      "seat_extend",
+      "seat_release_now",
+      "seat_give_back",
+      "seat_test_send",
+      "seat_pause_set",
+      "seat_leader_strip",
+      "seat_leader_more_time",
+      "god_seat_settings",
+      "god_seat_settings_set",
+      // Package 7: a member leaving their own tribe
+      "my_tribe_leave_state",
+      "my_tribe_leave",
+      // Package 8: the seat autopilot (the plan, approving it, stopping it, and the owner's numbers)
+      "autopilot_overview",
+      "autopilot_approve",
+      "autopilot_pause_set",
+      "god_autopilot_settings",
+      "god_autopilot_settings_set",
+      // Fix 8: when the weekly guide opens for leaders
+      "guide_release_get",
+      "guide_release_set",
+      // Fix 7: checking the heads-of-department list against the platform
+      "hod_reconcile_run",
+      "hod_reconcile_get",
+      "hod_reconcile_list",
+      "hod_reconcile_tag",
+      "hod_reconcile_invite",
+      "hod_reconcile_delete",
     ]);
     // The only things someone who is not signed in may do: open a referee or guardian link and
     // answer it, and the sending service's calls. Each needs a secret: the link's, or the sending token.
@@ -1298,6 +1346,13 @@ describe("locked-down defaults", () => {
       "worker_details_tick",
       // A tool that fetches a standing feed link has no account: the secret in the address is the credential, and any wrong secret gets nothing
       "export_feed_read",
+      // The placed answer sequence's heartbeat step and the private page's answers, and the seat window's heartbeat step, the private page and "take my seat back" (each needs the sending token or the link's secret)
+      "worker_placed_seq_tick",
+      "worker_placed_answers_info",
+      "worker_placed_answer",
+      "worker_seat_window_tick",
+      "worker_seat_info",
+      "worker_seat_take_back",
       "ping",
     ]);
     const { rows } = await db.admin.query(`
