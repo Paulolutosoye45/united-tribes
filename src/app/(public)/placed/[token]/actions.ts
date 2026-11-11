@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { AGREEMENT_VERSION } from "@/lib/matching/wording";
 import { workerRpc, workerToken } from "@/lib/messaging/worker";
+import { DONE_OF, isAnswerKind, isAnswerLink, isReason, isWindow, parseAnswerResult } from "@/lib/placement/answers";
 import { parseChoose } from "@/lib/placement/nudge";
 
 const FUNCTIONS = { confirm: "worker_placed_confirm", withhold: "worker_placed_withhold", change: "worker_placed_change" } as const;
@@ -80,4 +81,41 @@ export async function placedFreshLinkAction(formData: FormData) {
   if (!secret) redirect(`/placed/${token}?problem=1`);
   const { error } = await workerRpc(secret)("worker_placed_new_link", { p_link: token });
   redirect(`/placed/${token}?${error ? "problem=1" : "fresh=1"}`);
+}
+
+/**
+ * The other answers on the page: Not this season (with one optional reason chip), Call me (a time of day, and a number if we hold none), Remind me tonight, Stop
+ * these reminders and Don't call me. Opening the page saves nothing; each is one press. The database decides whether the answer may be given (the switch, the seat,
+ * the day) and says why not in a word; the page turns the word into a sentence. Everything sent is a choice from a short list, except the number.
+ */
+export async function placedAnswerAction(formData: FormData) {
+  const token = String(formData.get("token") ?? "");
+  const kind = String(formData.get("kind") ?? "");
+  if (!isAnswerLink(token) || !isAnswerKind(kind)) redirect("/");
+  const secret = workerToken();
+  if (!secret) redirect(`/placed/${token}?problem=1`);
+
+  const reason = String(formData.get("reason") ?? "");
+  const window = String(formData.get("window") ?? "");
+  const phone = String(formData.get("phone") ?? "").trim().slice(0, 40);
+  const { data, error } = await workerRpc(secret)("worker_placed_answer", {
+    p_link: token,
+    p_kind: kind,
+    p_reason: kind === "not_this_season" && isReason(reason) ? reason : null,
+    p_window: kind === "call_me" && isWindow(window) ? window : null,
+    p_topic: null,
+    p_phone: kind === "call_me" && phone ? phone : null,
+  });
+  // A number that does not look right (22023) stops the request for a call and nothing is saved
+  if (error) redirect(`/placed/${token}?${error.code === "22023" && kind === "call_me" ? "cn=1&a=call" : "problem=1"}`);
+  const result = parseAnswerResult(data);
+  if (!result.ok) {
+    const why = (data ?? {}) as { reason?: string };
+    redirect(
+      `/placed/${token}?${
+        why.reason === "started" ? "started=1" : result.reason === "invalid" || result.reason === "not_active" ? "invalid=1" : result.reason === "closed" || result.reason === "too_late" ? `rc=${result.reason}&a=remind` : "problem=1"
+      }`,
+    );
+  }
+  redirect(`/placed/${token}?done=${DONE_OF[result.kind]}${result.again ? "&again=1" : ""}${result.window ? `&w=${result.window}` : ""}`);
 }
