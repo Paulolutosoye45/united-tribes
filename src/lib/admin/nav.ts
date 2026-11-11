@@ -132,7 +132,8 @@ export const SECTIONS: readonly NavSection[] = [
         label: "Leader cards",
         about: "Where each leader’s Tribe Card is, and whether their email arrived",
         roles: LEADER_CARD_ROLES,
-        synonyms: ["tribe card", "leader card", "appointed leaders", "did not get the email", "email did not arrive", "has not started", "not started", "remind leaders", "chase leaders", "heads of department", "hod", "call sheet", "department", "send the email again", "leaders who have not signed in"],
+        synonyms: ["tribe card", "leader card", "appointed leaders", "did not get the email", "email did not arrive", "has not started", "not started", "remind leaders", "chase leaders", "heads of department", "hod", "call sheet", "department", "send the email again", "leaders who have not signed in", "check the hod list", "hod list", "missing leaders", "who is not on the platform", "upload a list of leaders"],
+        children: [{ href: "/admin/people/leader-cards/reconcile", label: "Check the heads-of-department list" }],
       },
       {
         href: "/admin/champions",

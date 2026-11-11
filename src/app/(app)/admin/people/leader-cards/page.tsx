@@ -84,6 +84,9 @@ export default async function LeaderCardsPage({ searchParams }: { searchParams: 
         <a href="/admin/people/leader-cards/download?sheet=hod" data-testid="lc-download-hod" className="t-body font-medium underline">
           Download the list for the heads of department (spreadsheet)
         </a>
+        <Link href="/admin/people/leader-cards/reconcile" data-testid="lc-reconcile" className="t-body font-medium underline">
+          Check the list of heads of department against the platform
+        </Link>
         {act ? (
           <a href="/admin/people/leader-cards/download?sheet=call" data-testid="lc-download-call" className="t-body font-medium underline">
             Download the call sheet, with numbers and addresses (spreadsheet)
