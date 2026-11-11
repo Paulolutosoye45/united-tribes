@@ -90,6 +90,9 @@ async function main() {
   check((await page.locator("textarea[name=story]").inputValue()) === first, "tapping one puts it in the box to be made her own");
   const listening = page.getByRole("region", { name: "What your Companion has picked up" });
   await listening.waitFor({ timeout: 5000 });
+  // The Companion reads what she writes a moment after she writes it (the box is shown at once, the chips follow), so wait for the first chip rather than
+  // counting the instant the box appears. On a slow machine (the CI runner) the count came first and found none.
+  await listening.locator(".cmp-chip").first().waitFor({ timeout: 10000 }).catch(() => undefined);
   check((await listening.locator(".cmp-chip").count()) >= 1, "…and the Companion has already understood it: chips appear as she writes");
 
   await page.locator("textarea[name=story]").fill(STORY);
@@ -122,6 +125,7 @@ async function main() {
   // community: sharper now that she has confirmed what was heard
   const suggestedCommunities = page.getByRole("radiogroup", { name: "Suggested communities" });
   await suggestedCommunities.waitFor({ timeout: 5000 });
+  await suggestedCommunities.locator('input[value="business-entrepreneurship"]:checked').waitFor({ timeout: 10000 }).catch(() => undefined);
   check(await suggestedCommunities.locator('input[value="business-entrepreneurship"]').isChecked(), "after she confirmed her work and children, Business & Entrepreneurship is picked for her");
   check((await suggestedCommunities.locator("label.choice").count()) >= 2 && (await suggestedCommunities.locator('input[value="parents-family"]').count()) === 1, "…and Parents & Family is offered beside it, because she is both");
   check(/Because you run your own business/.test(await text(page)), "the reason says what she told us");
@@ -140,6 +144,7 @@ async function main() {
   // goal: suggestions for the community she chose
   const goals = page.getByRole("radiogroup", { name: "Suggested goals" });
   await goals.waitFor({ timeout: 5000 });
+  await goals.locator("label.choice").first().waitFor({ timeout: 10000 }).catch(() => undefined);
   check((await goals.locator("label.choice").count()) >= 1, "goals for her community are suggested too");
   await shot(page, "4-goal");
   await goals.locator("label.choice").first().click();
@@ -231,6 +236,8 @@ async function main() {
   await dp.getByRole("button", { name: "Turn them on" }).click();
   const suggested = dp.getByRole("radiogroup", { name: "Suggested communities" });
   await suggested.waitFor({ timeout: 5000 });
+  // The community is picked a moment after the list appears, for the same reason: wait for it to be ticked rather than looking the instant the list shows
+  await suggested.locator('input[value="global-citizens"]:checked').waitFor({ timeout: 10000 }).catch(() => undefined);
   check(await suggested.locator('input[value="global-citizens"]').isChecked(), "turned back on, Global Citizens is picked for him, because he lives abroad");
   await next(dp, "Continue", "Where are you on your walk with God?");
   await choice(dp, "faith", "growing").click();
@@ -239,6 +246,7 @@ async function main() {
   await next(dp, "Continue", "In twelve weeks, what would you love to say?");
   await dp.getByRole("radiogroup", { name: "Where you are on this goal today" }).getByText("3", { exact: true }).click();
   await next(dp, "Continue", "How and when could you meet?");
+  await dp.locator('input[name="meetingMode"][value="online"]:checked').waitFor({ timeout: 10000 }).catch(() => undefined);
   check(await dp.locator('input[name="meetingMode"][value="online"]').isChecked(), "his tribe is set to meet online without his having to say so");
   check(/Because you’re based outside Nigeria, your tribe meets online/.test(await text(dp)), "…and the screen says why");
   check((await dp.getByRole("button", { name: "Continue" }).isEnabled()), "…and he can carry on");

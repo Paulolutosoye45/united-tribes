@@ -12,8 +12,16 @@ import { STATUS_WORDS, type AssistantRow } from "@/lib/placement/assistants";
 
 /** The recommendations waiting for the office, and the last few answered. Nothing is decided until someone here presses a button. */
 export function AssistantBoard({ open, recent }: { open: AssistantRow[]; recent: AssistantRow[] }) {
+  // What the last answer did is said up here, not inside the row: once an answer is saved the page refreshes and the row moves down to "Recently answered",
+  // and a message kept in the row would be gone before anyone could read it.
+  const [said, setSaid] = useState<string | null>(null);
   return (
     <div className="flex flex-col gap-8" data-testid="assistant-board">
+      {said ? (
+        <div data-testid="assistant-said">
+          <Notice error={null} saved={said} />
+        </div>
+      ) : null}
       <section aria-labelledby="open-heading" className="flex flex-col gap-3">
         <h2 id="open-heading" className="t-heading">
           Waiting for a decision
@@ -21,7 +29,7 @@ export function AssistantBoard({ open, recent }: { open: AssistantRow[]; recent:
         {open.length === 0 ? <p className="card t-body p-5 text-soft">Nothing is waiting.</p> : null}
         <ul className="flex flex-col gap-3">
           {open.map((r) => (
-            <Row key={r.id} row={r} />
+            <Row key={r.id} row={r} onSaid={setSaid} />
           ))}
         </ul>
       </section>
@@ -46,17 +54,16 @@ export function AssistantBoard({ open, recent }: { open: AssistantRow[]; recent:
   );
 }
 
-function Row({ row: r }: { row: AssistantRow }) {
+function Row({ row: r, onSaid }: { row: AssistantRow; onSaid: (said: string) => void }) {
   const d = useDo();
   const [note, setNote] = useState("");
-  const [said, setSaid] = useState<string | null>(null);
   const hasOne = r.tribe.assistant !== null;
   const invited = r.status === "invited";
 
   async function decide(approve: boolean, replace: boolean, key: string) {
     await d.go(key, async () => {
       const x = await decideAssistantAction(r.id, approve, note, replace);
-      if (x.ok) setSaid(x.status === "paired" ? "They are now the assistant." : x.status === "invited" ? "Accepted. They are invited to apply." : "Declined.");
+      if (x.ok) onSaid(x.status === "paired" ? "They are now the assistant." : x.status === "invited" ? "Accepted. They are invited to apply." : "Declined.");
       return x.ok ? { ok: true as const } : x;
     });
   }
@@ -90,7 +97,7 @@ function Row({ row: r }: { row: AssistantRow }) {
         {r.nominee.pairedElsewhere ? <li>Already the assistant of another tribe</li> : null}
         {hasOne ? <li>Current assistant: {r.tribe.assistant}</li> : <li>No assistant now</li>}
       </ul>
-      <Notice error={d.error} saved={said} />
+      <Notice error={d.error} />
       {invited ? (
         <p className="t-small text-soft">Accepted. They are paired by itself when they are approved as an assistant leader.</p>
       ) : r.canDecide ? (

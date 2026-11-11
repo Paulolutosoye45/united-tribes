@@ -25,13 +25,16 @@ export function MemberAnswers({ token, info, pointed, badNumber, remindIssue }: 
   const showStop = info.on || pointed === "stop";
   if (!info.on && !showStop) return null;
   return (
-    <section className="flex flex-col gap-4" aria-labelledby="more-answers" data-testid="placed-answers">
+    <section className="flex flex-col gap-4" aria-labelledby="more-answers" data-testid={info.on ? "placed-more" : "placed-stop-only"}>
       {info.on ? (
         <div className="flex flex-col gap-1">
           <h2 id="more-answers" className="t-heading">
             {W.moreTitle}
           </h2>
           <p className="t-body text-soft">{W.moreBody}</p>
+          <p className="t-body" data-testid="placed-deadline">
+            {info.closed ? W.closedLine(info.deadline) : W.heldUntil(info.deadline)}
+          </p>
         </div>
       ) : (
         <h2 id="more-answers" className="sr-only">
@@ -44,14 +47,18 @@ export function MemberAnswers({ token, info, pointed, badNumber, remindIssue }: 
       {info.on ? <Remind token={token} info={info} pointed={pointed === "remind"} issue={remindIssue} /> : null}
       {showStop ? <Simple token={token} kind="stop_reminders" label={W.stopButton} note={info.stopped ? W.doneStop.title : W.stopNote} pointed={pointed === "stop"} done={info.stopped} /> : null}
       {info.on ? <Simple token={token} kind="dont_call" label={W.noCallButton} note={W.noCallNote} pointed={false} done={false} /> : null}
-      {info.on ? <p className="t-small text-soft">{W.officeMayCall}</p> : null}
+      {info.on ? (
+        <p className="t-small text-soft" data-testid="placed-may-call">
+          {W.officeMayCall}
+        </p>
+      ) : null}
     </section>
   );
 }
 
 function NotThisSeason({ token, pointed }: { token: string; pointed: boolean }) {
   return (
-    <details className={`card p-5 ${pointed ? RING : ""}`} open={pointed} data-testid="answer-notnow">
+    <details className={`card p-5 ${pointed ? RING : ""}`} open={pointed} data-testid="placed-notnow-box">
       <summary className="t-heading min-h-11 cursor-pointer">{W.notNowButton}</summary>
       <form action={placedAnswerAction} className="mt-4 flex flex-col gap-3">
         <input type="hidden" name="token" value={token} />
@@ -66,7 +73,7 @@ function NotThisSeason({ token, pointed }: { token: string; pointed: boolean }) 
             </label>
           ))}
         </fieldset>
-        <Button type="submit" variant="quiet" size="lg" fullWidth>
+        <Button type="submit" variant="quiet" size="lg" fullWidth data-testid="placed-notnow-confirm">
           {W.notNowConfirm}
         </Button>
       </form>
@@ -76,7 +83,7 @@ function NotThisSeason({ token, pointed }: { token: string; pointed: boolean }) 
 
 function CallMe({ token, info, pointed, badNumber }: { token: string; info: AnswersInfo; pointed: boolean; badNumber: boolean }) {
   return (
-    <details className={`card p-5 ${pointed ? RING : ""}`} open={pointed} data-testid="answer-call">
+    <details className={`card p-5 ${pointed ? RING : ""}`} open={pointed} data-testid="placed-call-box">
       <summary className="t-heading min-h-11 cursor-pointer">{info.closed ? W.callOffice : W.callButton}</summary>
       {info.callPending ? (
         <p role="status" className="t-body mt-4 font-semibold">
@@ -103,21 +110,21 @@ function CallMe({ token, info, pointed, badNumber }: { token: string; info: Answ
             </label>
           </fieldset>
           <div className="flex flex-col gap-1.5">
-            <p className="t-small text-soft" data-testid="answer-number-line">
+            <p className="t-small text-soft" data-testid="placed-call-number-line">
               {info.number ? W.haveNumber(info.number) : W.noNumber}
             </p>
-            <label htmlFor="answer-phone" className="text-[0.95rem] font-medium">
+            <label htmlFor="call-phone" className="text-[0.95rem] font-medium">
               {W.numberLabel}
             </label>
-            <input id="answer-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+234 803 123 4567" maxLength={40} required={!info.number} className={FIELD} />
+            <input id="call-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+234 803 123 4567" maxLength={40} required={!info.number} className={FIELD} />
             <p className="t-small text-soft">{W.numberHint}</p>
             {badNumber ? (
-              <p role="alert" className="t-small font-medium text-danger" data-testid="answer-number-problem">
+              <p role="alert" className="t-small font-medium text-danger" data-testid="placed-call-number-problem">
                 {W.badNumber}
               </p>
             ) : null}
           </div>
-          <Button type="submit" variant="quiet" size="lg" fullWidth>
+          <Button type="submit" variant="quiet" size="lg" fullWidth data-testid="placed-call-confirm">
             {W.callConfirm}
           </Button>
         </form>
@@ -129,7 +136,7 @@ function CallMe({ token, info, pointed, badNumber }: { token: string; info: Answ
 function Remind({ token, info, pointed, issue }: { token: string; info: AnswersInfo; pointed: boolean; issue: "closed" | "too_late" | null }) {
   if (info.remindSet) {
     return (
-      <p role="status" className="t-body font-semibold" data-testid="answer-remind-set">
+      <p role="status" className="t-body font-semibold" data-testid="placed-remind-set">
         {W.doneRemindAgain}
       </p>
     );
@@ -138,16 +145,16 @@ function Remind({ token, info, pointed, issue }: { token: string; info: AnswersI
     // Nothing to press. Said only when the email's button pointed here or a press was refused, so the page is not cluttered with a button that cannot be used.
     const closed = info.closed || issue === "closed";
     return pointed || issue ? (
-      <p role="status" className={`t-body ${pointed ? RING : ""}`} data-testid="answer-remind-closed">
+      <p role="status" className={`t-body ${pointed ? RING : ""}`} data-testid="placed-remind-closed">
         {closed ? W.closedRemind : W.remindClosed}
       </p>
     ) : null;
   }
   return (
-    <form action={placedAnswerAction} className={`flex flex-col gap-2 ${pointed ? RING : ""}`} data-testid="answer-remind">
+    <form action={placedAnswerAction} className={`flex flex-col gap-2 ${pointed ? RING : ""}`} data-testid="placed-remind-form">
       <input type="hidden" name="token" value={token} />
       <input type="hidden" name="kind" value="remind_tonight" />
-      <Button type="submit" variant="quiet" size="lg" fullWidth>
+      <Button type="submit" variant="quiet" size="lg" fullWidth data-testid="placed-remind">
         {info.remindTomorrow ? W.remindButtonTomorrow : W.remindButton}
       </Button>
       <p className="t-small text-soft">{info.remindTomorrow ? W.remindNoteTomorrow : W.remindNote}</p>
@@ -156,18 +163,19 @@ function Remind({ token, info, pointed, issue }: { token: string; info: AnswersI
 }
 
 function Simple({ token, kind, label, note, pointed, done }: { token: string; kind: "stop_reminders" | "dont_call"; label: string; note: string; pointed: boolean; done: boolean }) {
+  const slug = kind === "stop_reminders" ? "stop" : "dont-call";
   if (done) {
     return (
-      <p role="status" className="t-body font-semibold" data-testid={`answer-${kind}-done`}>
+      <p role="status" className="t-body font-semibold" data-testid={`placed-${slug}-done`}>
         {note}
       </p>
     );
   }
   return (
-    <form action={placedAnswerAction} className={`flex flex-col gap-2 ${pointed ? RING : ""}`} data-testid={`answer-${kind}`}>
+    <form action={placedAnswerAction} className={`flex flex-col gap-2 ${pointed ? RING : ""}`} data-testid={`placed-${slug}-form`}>
       <input type="hidden" name="token" value={token} />
       <input type="hidden" name="kind" value={kind} />
-      <Button type="submit" variant="quiet" size="lg" fullWidth>
+      <Button type="submit" variant="quiet" size="lg" fullWidth data-testid={`placed-${slug}`}>
         {label}
       </Button>
       <p className="t-small text-soft">{note}</p>
@@ -192,7 +200,7 @@ export function AnswerDone({ kind, again, window }: { kind: Done; again: boolean
             ? W.doneStop
             : W.doneNoCall;
   return (
-    <div role="status" className="card rise-in flex flex-col gap-2 p-6" data-testid={`answer-done-${kind}`}>
+    <div role="status" className="card rise-in flex flex-col gap-2 p-6" data-testid={kind === "notnow" ? "placed-notnow" : "placed-answer-done"} data-kind={kind}>
       <h2 className="t-heading">{said.title}</h2>
       {said.body ? <p className="t-body text-soft">{said.body}</p> : null}
     </div>

@@ -111,7 +111,7 @@ async function main() {
   await q.query("delete from public.care_flags where person_id = any($1)", [ids]);
   await q.query("insert into public.contact_preferences (person_id, phone, preferred) values ($1, '+2348035672233', 'whatsapp')", [dayo.id]);
   await q.query("insert into public.consents (person_id, purpose, granted, version) values ($1, 'whatsapp', true, 'e2e')", [dayo.id]);
-  await q.query("update auth.users set phone = '2348036665544' where id = $1", [ada.id]);
+  await q.query("update auth.users set phone = '2348037770052' where id = $1", [ada.id]);
 
   // the church placed all seven (the seat says so), and told each by email: five of them a day and a half ago, Fola two hours ago
   await q.query("begin");
@@ -287,7 +287,7 @@ async function main() {
     check((await page.locator("#placed-phone").inputValue()) === "", "…which is empty");
     check(!(await page.getByTestId("placed-signin").isChecked()), "…and the sign-in tick is not ticked for them");
     has("…which names the number they sign in with, middle hidden", /Use [^\n]*•[^\n]*, the number I sign in with/, await text(page));
-    check(!/2348036665544|\+2348036665544|234 803 666 5544/.test(await text(page)), "…and never shows it whole");
+    check(!/2348037770052|\+2348037770052|234 803 777 0052/.test(await text(page)), "…and never shows it whole");
     check((await seatOf(ada.id))?.confirmed_at === null && (await yes(ada.id)) === 0, "opening the page saved nothing");
     await noOverflow(page, "the nudge page on a phone");
     await shot(page, "52-page-phone");
@@ -300,7 +300,7 @@ async function main() {
     has("Ada presses the first button: it thanks her, says her leader can message her, and says her number is confirmed", /You are in Nudge Alpha\. Lara can now message you on WhatsApp[\s\S]*number you sign in with, so it is confirmed/, await text(page));
     check((await seatOf(ada.id))?.confirmed_at !== null, "her place is confirmed");
     check((await yes(ada.id)) === 1, "…with her yes to WhatsApp, in the words of this answer");
-    check((await phoneOf(ada.id)).phone === "+2348036665544", "…and her sign-in number saved");
+    check((await phoneOf(ada.id)).phone === "+2348037770052", "…and her sign-in number saved");
     check((await confirmed(ada.id)) === "signin", "…which counts as confirmed, with no message needed");
     await shot(page, "52-page-thanks");
     await m.ctx.close();

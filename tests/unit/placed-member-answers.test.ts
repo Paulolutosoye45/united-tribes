@@ -99,7 +99,7 @@ describe("what the page shows", () => {
   });
 
   it("has no reminder button when there is no time, and says why only when the email pointed at it or the press was refused", () => {
-    expect(flat(html({ remindPossible: false }))).not.toContain("answer-remind");
+    expect(flat(html({ remindPossible: false }))).not.toContain("placed-remind");
     expect(flat(html({ remindPossible: false }, { pointed: "remind" }))).toContain(W.remindClosed);
     expect(flat(html({ remindPossible: false, closed: true }, { pointed: "remind" }))).toContain(W.closedRemind);
     expect(flat(html({}, { remindIssue: "too_late" }))).toContain(W.remindClosed);
@@ -118,18 +118,34 @@ describe("what the page shows", () => {
   });
 
   it("rings the answer the email pointed at, opens it, and rings nothing else", () => {
-    for (const [pointed, testid] of [["notnow", "answer-notnow"], ["call", "answer-call"], ["remind", "answer-remind"], ["stop", "answer-stop_reminders"]] as const) {
+    for (const [pointed, testid] of [["notnow", "placed-notnow-box"], ["call", "placed-call-box"], ["remind", "placed-remind-form"], ["stop", "placed-stop-form"]] as const) {
       expect(rung(flat(html({}, { pointed }))), pointed).toEqual([testid]);
     }
     expect(rung(flat(html()))).toEqual([]);
     const notnow = tags(flat(html({}, { pointed: "notnow" })), "details");
-    expect(notnow.filter((t) => / open/.test(t)).map((t) => attr(t, "data-testid"))).toEqual(["answer-notnow"]);
+    expect(notnow.filter((t) => / open/.test(t)).map((t) => attr(t, "data-testid"))).toEqual(["placed-notnow-box"]);
     expect(tags(flat(html()), "details").some((t) => / open/.test(t))).toBe(false);
+  });
+
+  it("says until when the seat is held, and has the test ids the browser journey (53) looks for", () => {
+    const out = flat(html({ deadline: "2026-11-22" }, { pointed: "call" }));
+    expect(out).toContain('data-testid="placed-more"');
+    expect(out).toMatch(/data-testid="placed-deadline">Your seat is held for you\. You can switch tribes until \w+day \d+ \w+\./);
+    expect(flat(html({ closed: true, deadline: "2026-11-22" }))).toMatch(/data-testid="placed-deadline">Joining closed on /);
+    for (const id of ["placed-call-box", "placed-call-number-line", "placed-call-confirm", "placed-may-call", "placed-notnow-box", "placed-notnow-confirm", "placed-remind", "placed-stop", "placed-dont-call"]) {
+      expect(out, id).toContain(`data-testid="${id}"`);
+    }
+    expect(out).toContain('id="call-phone"');
+    // Off, with an old email's Stop link: only the Stop button, under its own name
+    const stopOnly = flat(html({ on: false }, { pointed: "stop" }));
+    expect(stopOnly).toContain('data-testid="placed-stop-only"');
+    expect(stopOnly).not.toContain('data-testid="placed-more"');
+    expect(stopOnly).toContain('data-testid="placed-stop"');
   });
 
   it("opens Call me and shows the number problem when the number did not look right", () => {
     const out = flat(html({}, { badNumber: true }));
-    expect(tags(out, "details").filter((t) => / open/.test(t)).map((t) => attr(t, "data-testid"))).toEqual(["answer-call"]);
+    expect(tags(out, "details").filter((t) => / open/.test(t)).map((t) => attr(t, "data-testid"))).toEqual(["placed-call-box"]);
     expect(out).toContain(W.badNumber);
     expect(flat(html())).not.toContain(W.badNumber);
   });
@@ -164,7 +180,7 @@ describe("what the page says after an answer", () => {
     expect(say("remind", true)).toContain(W.doneRemindAgain);
     expect(say("stop")).toContain(W.doneStop.title);
     expect(say("nocall")).toContain(W.doneNoCall.title);
-    for (const k of ["notnow", "call", "remind", "stop", "nocall"] as const) expect(say(k), k).toContain(`data-testid="answer-done-${k}"`);
+    for (const k of ["notnow", "call", "remind", "stop", "nocall"] as const) expect(say(k), k).toContain(k === "notnow" ? 'data-testid="placed-notnow"' : `data-testid="placed-answer-done" data-kind="${k}"`);
   });
 });
 

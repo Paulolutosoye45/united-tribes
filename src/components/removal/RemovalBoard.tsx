@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { decideRemovalAction, reinstateRemovalAction, upholdRemovalAction } from "@/app/(app)/growth/removals/actions";
+import { decideRemovalAction, recommendRemovalAction, reinstateRemovalAction, upholdRemovalAction } from "@/app/(app)/growth/removals/actions";
 import { Notice } from "@/components/admin/Notice";
 import { useDo } from "@/components/admin/useDo";
 import { Badge } from "@/components/ui/Badge";
@@ -91,6 +91,17 @@ function RequestCard({ r }: { r: BoardRequest }) {
       {r.under_18 ? <p className="t-small rounded-[var(--radius-control)] bg-surface px-4 py-3">{REMOVAL_WORDS.under18}</p> : null}
       {r.status === "open" && r.restricted ? <p className="t-small text-soft">{r.can_decide ? REMOVAL_WORDS.restricted : REMOVAL_WORDS.restrictedRead}</p> : null}
 
+      {r.recommendation ? (
+        <div className="flex flex-col gap-1 rounded-[var(--radius-control)] border border-line px-4 py-3" data-testid="removal-recommendation">
+          <p className="t-small">
+            <span className="font-semibold">{REMOVAL_WORDS.recommendationBy(r.recommendation.by)}: </span>
+            {REMOVAL_WORDS.recommendationWord[r.recommendation.decision]}
+          </p>
+          {r.recommendation.note ? <p className="t-small">“{r.recommendation.note}”</p> : null}
+          {r.status === "open" && r.can_decide ? <p className="t-small text-soft">{REMOVAL_WORDS.decideFirst}</p> : null}
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-2 rounded-[var(--radius-control)] bg-surface px-4 py-3">
         <p className="t-small">
           <span className="font-semibold">What the leader wrote: </span>
@@ -132,6 +143,7 @@ function RequestCard({ r }: { r: BoardRequest }) {
       ) : null}
 
       {r.status === "open" && r.can_decide ? <DecideForm r={r} /> : null}
+      {r.status === "open" && r.can_recommend && !r.can_decide ? <RecommendForm r={r} /> : null}
       {r.status === "approved" && (r.can_reinstate || r.can_judge_appeal) ? <AfterwardsForm r={r} /> : null}
     </li>
   );
@@ -176,6 +188,53 @@ function DecideForm({ r }: { r: BoardRequest }) {
       <div>
         <Button type="submit" size="md" variant="solid" loading={d.busy === "decide"} disabled={!choice || problem !== null}>
           Send my decision
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+const RECOMMENDATIONS = [
+  { id: "approve", title: REMOVAL_WORDS.recommendApprove },
+  { id: "decline", title: REMOVAL_WORDS.recommendDecline },
+  { id: "ask", title: REMOVAL_WORDS.recommendAsk },
+] as const;
+
+/** The coach of the tribe says what they would do. It decides nothing: the person deciding reads it first, and the leader never sees it. */
+function RecommendForm({ r }: { r: BoardRequest }) {
+  const d = useDo();
+  const mine = r.recommendation;
+  const [choice, setChoice] = useState<string>(mine?.decision ?? "");
+  const [note, setNote] = useState(mine?.note ?? "");
+  const problem = noteProblem(note, DECISION_NOTE_MIN, DECISION_NOTE_MAX);
+  return (
+    <form
+      noValidate
+      className="flex flex-col gap-4 border-t border-line pt-4"
+      data-testid="removal-recommend"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!choice || problem) return;
+        void d.go("recommend", () => recommendRemovalAction(r.id, choice, note), { saved: REMOVAL_WORDS.recommendSent });
+      }}
+    >
+      <p className="t-small text-soft">{REMOVAL_WORDS.coachReadOnly}</p>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-[0.95rem] font-medium">{REMOVAL_WORDS.recommendHeading}</legend>
+        {RECOMMENDATIONS.map((c) => (
+          <Choice key={c.id} name={`recommendation-${r.id}`} value={c.id} checked={choice === c.id} onChange={() => setChoice(c.id)} title={c.title} />
+        ))}
+      </fieldset>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-[0.95rem] font-medium">{REMOVAL_WORDS.noteForDecision}</span>
+        <textarea className="input min-h-24 py-3" value={note} maxLength={DECISION_NOTE_MAX + 50} onChange={(e) => setNote(e.target.value)} data-testid="removal-recommend-note" />
+        <span className="t-small text-soft">{REMOVAL_WORDS.recommendHint}</span>
+      </label>
+      {note.trim().length > 0 && problem ? <p className="t-small text-soft">{problem}</p> : null}
+      <Notice error={d.error} saved={d.saved} />
+      <div>
+        <Button type="submit" size="md" variant="solid" loading={d.busy === "recommend"} disabled={!choice || problem !== null}>
+          {mine ? REMOVAL_WORDS.recommendUpdate : REMOVAL_WORDS.recommendSubmit}
         </Button>
       </div>
     </form>
