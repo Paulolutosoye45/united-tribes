@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { leadOptionsAction, sendOfferAction } from "@/app/(app)/god/leader-desk/offer-actions";
 import { Notice } from "@/components/admin/Notice";
@@ -54,7 +55,10 @@ export function DeskRecommend({ person, rehearsal }: { person: string; rehearsal
       </Button>
       {rows && rows.length === 0 ? (
         <p className="t-small text-soft" data-testid="desk-recommend-none">
-          {why ?? O.row.none}
+          {why ?? O.row.none}{" "}
+          <Link href="/god/leader-desk?tab=proposals" className="underline" data-testid="desk-recommend-proposals">
+            {O.row.openProposals}
+          </Link>
         </p>
       ) : null}
       {rows && rows.length > 0 && !chosen ? (

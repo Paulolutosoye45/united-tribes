@@ -94,6 +94,7 @@ export const OWNER_OFFER_WORDS = {
     pick: "Choose the draft group to ask them to lead. They are the only one asked, with no backups. Use the group's own card to add backups.",
     ask: (group: string) => `Ask them to lead ${group}`,
     none: "No draft group can be offered to them right now.",
+    openProposals: "Open the Proposals tab",
   },
 } as const;
 

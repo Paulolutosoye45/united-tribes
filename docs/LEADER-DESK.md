@@ -257,3 +257,7 @@ The page behind "Would you lead this group?" gets one more honest answer, **Yes,
 ### Not built yet
 
 * **The 48-hour clock and the Monday batch.** Nothing opens a tribe by itself: Open tribe is always a press from you. (Phase 3.)
+
+### Where a draft group is started (and what "Recommend as leader" needs)
+
+The Desk has four tabs: **Waiting**, **Proposals**, **Leaders**, **Sending**. There is no Groups tab. **Draft groups are started on the Proposals tab**: pick **Start a draft** beside a cluster of waiting people who could form a group, or open **Start a draft group** at the bottom of that tab and fill in the track, time, way of meeting, type and a name. **Recommend as leader** on a waiting member's row lists the draft groups that member could be offered to lead; with no draft it says so and links to the Proposals tab. Patch for a database that applied `20270125000100_desk_extras.sql` before the wording was corrected: `supabase/patches/desk-lead-options-wording.sql` (one function, same text but one sentence).

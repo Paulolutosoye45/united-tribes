@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { OFFER_ANSWERS, OFFER_WORDS as OW, isOfferAnswer, parseOfferInfo } from "@/lib/desk/wording";
 import { OWNER_OFFER_WORDS as O, offerLine, parseGroupLeader, parseLeadOptions } from "@/lib/god/desk-offers";
+import { TABS } from "@/lib/god/desk";
 import { WA_WORDS, parseWhatsAppState } from "@/lib/god/desk-send";
 import { renderEmail } from "@/lib/messaging/render";
 import type { ClaimedMessage, Params } from "@/lib/messaging/types";
@@ -133,6 +134,15 @@ describe("Recommend as leader, on a waiting member's row", () => {
     expect(row).toContain("setChosen(g)");
     expect(row).toContain("rehearsal ? O.confirmRehearsal : O.confirm");
     expect(row).not.toMatch(/phone|e164|tel:|whatsapp/i);
+  });
+
+  it("when no group can be offered, points to the Proposals tab (the Desk has no Groups tab), where a draft group is started", () => {
+    const row = read("src/components/god/DeskRecommend.tsx");
+    expect(row).toContain('href="/god/leader-desk?tab=proposals"');
+    expect(TABS.map((t) => t.key)).toContain("proposals");
+    expect(TABS.map((t) => t.label.toLowerCase())).not.toContain("groups");
+    expect(read("src/components/god/DeskProposals.tsx")).toContain("Start a draft group");
+    expect(read("supabase/migrations/20270125000100_desk_extras.sql")).not.toContain("Groups tab");
   });
 
   it("uses the group card's own sending, so the card's limits and Rehearsal are the row's too", () => {

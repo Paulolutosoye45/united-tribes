@@ -324,7 +324,7 @@ begin
   return jsonb_build_object(
     'rows', v_rows,
     'why', case when jsonb_array_length(v_rows) > 0 then null
-                when v_drafts = 0 then 'There is no draft group waiting for a leader. Start one on the Groups tab.'
+                when v_drafts = 0 then 'There is no draft group waiting for a leader. Start one on the Proposals tab (Start a draft group).'
                 else v_why end);
 end;
 $$;
